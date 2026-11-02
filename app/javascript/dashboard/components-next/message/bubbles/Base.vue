@@ -25,6 +25,8 @@ const {
   marcadoEquipe,
   primeiroDoAutor,
   sender,
+  content: textoDaMensagem,
+  attachments: anexosDaMensagem,
 } = useMessageContext();
 const { t } = useI18n();
 
@@ -39,6 +41,11 @@ const EQUIPE_BOLHA =
   '[&_.prosemirror-mention-node]:font-semibold [&_.prosemirror-mention-node]:text-n-blue-11 data-[bubble-name=audio]:p-2';
 const EQUIPE_MARCADO =
   'shadow-[inset_3px_0_0_rgb(var(--blue-11))] [&_.prosemirror-mention-node]:bg-n-blue-9/[.18] [&_.prosemirror-mention-node]:rounded [&_.prosemirror-mention-node]:px-[3px]';
+// FORK(ramon): hora na última linha do texto (.rodape do mockup). O float não sobe de
+// dentro do <p>; então a hora é absoluta e um espaço invisível no fim do texto reserva
+// o lugar dela. Sem espaço na linha, ele quebra e abre uma linha para a hora.
+const EQUIPE_HORA_NA_LINHA =
+  "relative [&_.prose>:last-child]:after:inline-block [&_.prose>:last-child]:after:w-[3.75rem] [&_.prose>:last-child]:after:content-['']";
 
 const varaintBaseMap = {
   [MESSAGE_VARIANTS.AGENT]: ENVIADA,
@@ -72,6 +79,12 @@ const flexOrientationClass = computed(() => {
   return map[orientation.value];
 });
 
+// Só em texto puro: anexo vem depois do texto, e a hora iria por cima dele.
+const horaNaLinha = computed(
+  () =>
+    isEquipe.value && !!textoDaMensagem.value && !anexosDaMensagem.value?.length
+);
+
 const messageClass = computed(() => {
   const classToApply = [varaintBaseMap[variant.value]];
 
@@ -83,6 +96,7 @@ const messageClass = computed(() => {
 
   if (isEquipe.value) classToApply.push(EQUIPE_BOLHA);
   if (marcadoEquipe.value) classToApply.push(EQUIPE_MARCADO);
+  if (horaNaLinha.value) classToApply.push(EQUIPE_HORA_NA_LINHA);
 
   return classToApply;
 });
@@ -156,7 +170,9 @@ const replyToPreview = computed(() => {
     <MessageMeta
       v-if="shouldShowMeta"
       :class="[
-        isEquipe ? 'justify-end mt-0.5' : [flexOrientationClass, 'mt-2'],
+        horaNaLinha ? 'absolute bottom-1 ltr:right-2.5 rtl:left-2.5' : '',
+        isEquipe && !horaNaLinha ? 'justify-end mt-0.5' : '',
+        !isEquipe ? [flexOrientationClass, 'mt-2'] : '',
         variant === MESSAGE_VARIANTS.EMAIL ? 'px-3 pb-3' : '',
       ]"
       class="text-n-slate-11"

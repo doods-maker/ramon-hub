@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import Message from '../Message.vue';
+import MessageMeta from '../MessageMeta.vue';
 import { useEquipeStore } from 'dashboard/stores/equipe';
 
 const CAIXA_EQUIPE = 7;
@@ -139,9 +140,17 @@ describe('Message na caixa Equipe', () => {
       expect(nome(montar({ primeiroDoAutor: false })).exists()).toBe(false);
     });
 
-    it('grupo: foto só na última do bloco', () => {
-      expect(foto(montar({ groupWithNext: false }))).toBe(true);
-      expect(foto(montar({ groupWithNext: true }))).toBe(false);
+    it('grupo: foto só na primeira do bloco, junto do nome', () => {
+      const primeira = { primeiroDoAutor: true, groupWithNext: true };
+      const ultima = { primeiroDoAutor: false, groupWithNext: false };
+      expect(foto(montar(primeira))).toBe(true);
+      expect(foto(montar(ultima))).toBe(false);
+    });
+
+    it('fora da Equipe a foto segue a regra nativa', () => {
+      const cliente = { ...minha, inboxId: CAIXA_CLIENTE };
+      expect(foto(montar({ ...cliente, groupWithNext: false }))).toBe(true);
+      expect(foto(montar({ ...cliente, groupWithNext: true }))).toBe(false);
     });
 
     it('minha mensagem não tem nome nem foto', () => {
@@ -271,6 +280,32 @@ describe('Message na caixa Equipe', () => {
           translate: true,
         })
       );
+    });
+  });
+
+  describe('hora na linha do texto', () => {
+    const hora = w => w.findComponent(MessageMeta).classes();
+    const anexo = { id: 1, fileType: 'file', dataUrl: 'x.pdf' };
+
+    it('texto puro: hora sobre a última linha, com espaço reservado', () => {
+      const w = montar();
+      expect(hora(w)).toContain('absolute');
+      expect(bolha(w)).toContain('relative');
+      expect(bolha(w)).toContain('after:inline-block');
+    });
+
+    it('texto com anexo: hora abaixo, sem sobrepor o anexo', () => {
+      const w = montar({ attachments: [anexo, { ...anexo, id: 2 }] });
+      expect(hora(w)).not.toContain('absolute');
+      expect(hora(w)).toContain('justify-end');
+      expect(bolha(w)).not.toContain('after:inline-block');
+    });
+
+    it('fora da Equipe a hora segue abaixo do texto', () => {
+      const w = montar({ inboxId: CAIXA_CLIENTE });
+      expect(hora(w)).not.toContain('absolute');
+      expect(hora(w)).toContain('mt-2');
+      expect(bolha(w)).not.toContain('after:inline-block');
     });
   });
 

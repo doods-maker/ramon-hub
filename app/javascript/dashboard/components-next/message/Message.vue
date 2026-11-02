@@ -136,7 +136,7 @@ const props = defineProps({
   inboxSupportsReplyTo: { type: Object, default: () => ({}) },
   inReplyTo: { type: Object, default: null }, // eslint-disable-line vue/no-unused-properties
   isEmailInbox: { type: Boolean, default: false },
-  primeiroDoAutor: { type: Boolean, default: false }, // eslint-disable-line vue/no-unused-properties
+  primeiroDoAutor: { type: Boolean, default: false },
   private: { type: Boolean, default: false },
   additionalAttributes: { type: Object, default: () => ({}) }, // eslint-disable-line vue/no-unused-properties
   sender: { type: Object, default: null },
@@ -365,7 +365,8 @@ const shouldGroupWithNext = computed(() => {
 
 const shouldShowAvatar = computed(() => {
   if (props.messageType === MESSAGE_TYPES.ACTIVITY) return false;
-  if (isEquipe.value) return mostrarAutor.value;
+  // FORK(ramon): na Equipe a foto vai na primeira do bloco, junto do nome
+  if (isEquipe.value) return mostrarAutor.value && props.primeiroDoAutor;
   if (orientation.value === ORIENTATION.LEFT) return false;
 
   return true;
@@ -668,7 +669,7 @@ provideMessageContext({
       }"
     >
       <div
-        v-if="!shouldGroupWithNext && shouldShowAvatar"
+        v-if="(isEquipe || !shouldGroupWithNext) && shouldShowAvatar"
         v-tooltip.left-end="avatarTooltip"
         class="[grid-area:avatar] flex items-end"
       >
