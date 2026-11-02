@@ -36,12 +36,14 @@ module Ramon::Peticionamento::RegrasDaPasta
     vistos = {}
     ok = validos.filter_map do |i|
       k = chave(i[:name])
-      if k.nil? then recusas << "sem_numero:#{i[:name]}"
-      elsif vistos[k] then recusas << "numero_repetido:#{i[:name]}"
-      else
-        vistos[k] = true
-        i.merge(chave: k, nome_limpo: i[:name].sub(NUMERO, ''))
+      motivo = k.nil? ? 'sem_numero' : ('numero_repetido' if vistos[k])
+      if motivo
+        recusas << "#{motivo}:#{i[:name]}"
+        next # filter_map descarta o nil; antes o retorno de << (array) entrava em ok
       end
+
+      vistos[k] = true
+      i.merge(chave: k, nome_limpo: i[:name].sub(NUMERO, ''))
     end
     ok.sort_by { |i| i[:chave] }
   end
