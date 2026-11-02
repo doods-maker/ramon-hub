@@ -4,7 +4,7 @@ import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { ATTACHMENT_ICONS } from 'shared/constants/messages';
 import {
   prefixoPrevia,
-  textoLimpo,
+  trechosPrevia,
 } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 export default {
@@ -50,8 +50,10 @@ export default {
     parsedLastMessage() {
       const { content_attributes: contentAttributes } = this.message;
       const { email: { subject } = {} } = contentAttributes || {};
-      const texto = subject || this.message.content;
-      return this.getPlainText(this.equipe ? textoLimpo(texto) : texto);
+      return this.getPlainText(subject || this.message.content);
+    },
+    trechosEquipe() {
+      return trechosPrevia(this.message.content);
     },
     prefixoEquipe() {
       if (!this.equipe) return '';
@@ -110,6 +112,14 @@ export default {
         icon="image"
       />
       {{ $t('CHAT_LIST.ATTACHMENTS.image.CONTENT') }}
+    </span>
+    <span v-else-if="message.content && equipe">
+      <span
+        v-for="(trecho, indice) in trechosEquipe"
+        :key="indice"
+        :class="{ 'font-semibold text-n-blue-11': trecho.marcacao }"
+        >{{ trecho.texto }}</span
+      >
     </span>
     <span v-else-if="message.content">
       {{ parsedLastMessage }}

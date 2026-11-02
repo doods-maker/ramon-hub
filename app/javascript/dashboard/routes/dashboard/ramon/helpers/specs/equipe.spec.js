@@ -8,6 +8,7 @@ import {
   resumoReacoes,
   rotuloDia,
   horaLista,
+  trechosPrevia,
   prefixoPrevia,
   autorCitacao,
   textoCitacao,
@@ -150,6 +151,33 @@ describe('helpers/equipe', () => {
     expect(rotuloDia(seg('2026-11-01T14:00:00Z'), agora)).toBe('HOJE');
     expect(rotuloDia(seg('2026-11-01T01:00:00Z'), agora)).toBe('ONTEM');
     expect(rotuloDia(seg('2026-10-20T15:00:00Z'), agora)).toBe('20/10/2026');
+  });
+
+  it('trechosPrevia separa a marcação, com nome com espaço', () => {
+    expect(
+      trechosPrevia(
+        'oi [@Dr. Ramon Antonio](mention://user/3/Dr.%20Ramon%20Antonio) tudo bem'
+      )
+    ).toEqual([
+      { texto: 'oi ', marcacao: false },
+      { texto: '@Dr. Ramon Antonio', marcacao: true },
+      { texto: ' tudo bem', marcacao: false },
+    ]);
+  });
+
+  it('trechosPrevia: @todos e marcação no começo', () => {
+    expect(trechosPrevia('[@todos](mention://todos/0/todos) reunião')).toEqual([
+      { texto: '@todos', marcacao: true },
+      { texto: ' reunião', marcacao: false },
+    ]);
+  });
+
+  it('trechosPrevia: texto sem marcação vem inteiro e sem markdown', () => {
+    expect(trechosPrevia('**oi** gente')).toEqual([
+      { texto: 'oi gente', marcacao: false },
+    ]);
+    expect(trechosPrevia('')).toEqual([]);
+    expect(trechosPrevia(null)).toEqual([]);
   });
 
   it('horaLista: hoje em HH:mm, ontem em rótulo, antes em data, no fuso de São Paulo', () => {

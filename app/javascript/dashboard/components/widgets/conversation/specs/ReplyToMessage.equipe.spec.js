@@ -50,6 +50,15 @@ describe('ReplyToMessage', () => {
     expect(w.emitted('dismiss')).toBeTruthy();
   });
 
+  it('o X é maior na Equipe', () => {
+    const tamanho = props =>
+      montar({ message: mensagem, ...props })
+        .findComponent({ name: 'Button' })
+        .props('size');
+    expect(tamanho({ equipe: true, meuId: 1 })).toBe('sm');
+    expect(tamanho({})).toBe('xs');
+  });
+
   it('fora da Equipe fica como o nativo: "Respondendo a", sem autor', () => {
     const w = montar({ message: mensagem });
     expect(w.text()).toContain('CONVERSATION.REPLYBOX.REPLYING_TO');

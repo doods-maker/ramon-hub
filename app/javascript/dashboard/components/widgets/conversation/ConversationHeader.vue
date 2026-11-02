@@ -113,7 +113,7 @@ const digitandoEquipe = computed(() => {
     store.getters['conversationTypingStatus/getUserList'](props.chat.id) || [];
   if (!equipe.value || !pessoas.length) return '';
   const [chave, params] = getTypingUsersText(pessoas);
-  return t(chave, params);
+  return `${t(chave, params)}…`;
 });
 const participantesEquipe = computed(() => {
   const total = equipeStore.participantes[props.chat.id]?.length;

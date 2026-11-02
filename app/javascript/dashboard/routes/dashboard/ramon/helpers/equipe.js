@@ -10,8 +10,19 @@ export const marcaUsuario = (content, userId) =>
   (content.includes('mention://todos/') ||
     content.includes(`mention://user/${userId}/`));
 
-export const textoLimpo = content =>
-  (content || '').replace(/\[(@[^\]]*)\]\(mention:\/\/[^)]*\)/g, '$1');
+const MENCAO = /\[(@[^\]]*)\]\(mention:\/\/[^)]*\)/g;
+
+export const textoLimpo = content => (content || '').replace(MENCAO, '$1');
+
+// Marcadores de uso privado atravessam o markdown; partir o texto antes dele comeria os espaços.
+export const trechosPrevia = content =>
+  new MessageFormatter(
+    (content || '').replace(MENCAO, '\uE000$1\uE001')
+  ).plainText
+    .trim()
+    .split(/[\uE000\uE001]/)
+    .map((texto, i) => ({ texto, marcacao: i % 2 === 1 }))
+    .filter(trecho => trecho.texto);
 
 export const listaMarcacao = (participantes, meuId, tipo) => {
   const pessoas = (participantes || [])

@@ -516,7 +516,8 @@ export default {
           </li>
         </transition>
       </template>
-      <template #unreadBadge>
+      <!-- FORK(ramon): a Equipe não tem a pílula de não lidas entre as bolhas -->
+      <template v-if="!equipe" #unreadBadge>
         <li
           v-show="unreadMessageCount != 0"
           class="list-none flex justify-center items-center"

@@ -104,8 +104,10 @@ const showLabelsSection = computed(() => {
 
 const messagePreviewClass = computed(() => {
   return [
-    hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
-    marcado.value ? 'ltr:pr-10 rtl:pl-10' : '',
+    hasUnread.value && !equipe.value
+      ? 'font-medium text-n-slate-12'
+      : 'text-n-slate-11',
+    marcado.value ? 'ltr:pr-12 rtl:pl-12' : '',
     !marcado.value && !props.compact && hasUnread.value
       ? 'ltr:pr-4 rtl:pl-4'
       : '',
@@ -281,16 +283,21 @@ watch(
           />
         </span>
         <div
-          v-if="marcado"
+          v-if="equipe && (marcado || hasUnread)"
           class="flex items-center gap-1 ltr:ml-auto rtl:mr-auto mt-1"
         >
           <span
+            v-if="marcado"
             data-equipe-selo
-            class="bg-n-blue-9/[.18] rounded-full h-4 min-w-4 px-1 font-semibold text-xxs leading-3 text-n-blue-11 inline-grid place-items-center flex-shrink-0"
+            class="bg-n-blue-9/[.18] rounded-full h-5 min-w-5 px-1.5 font-semibold text-[11px] leading-3 text-n-blue-11 inline-grid place-items-center flex-shrink-0"
           >
             {{ $t('RAMON.EQUIPE.SELO_MARCACAO') }}
           </span>
-          <UnreadBadge v-if="hasUnread" :count="unreadCount" />
+          <UnreadBadge
+            v-if="hasUnread"
+            :count="unreadCount"
+            class="!h-5 !min-w-5 !max-w-none !px-1.5 !text-[11px]"
+          />
         </div>
         <UnreadBadge
           v-else-if="hasUnread"

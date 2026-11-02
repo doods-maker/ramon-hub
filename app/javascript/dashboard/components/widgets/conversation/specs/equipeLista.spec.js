@@ -43,6 +43,17 @@ describe('MessagePreview', () => {
     expect(w.text()).toBe('Ana: @Eu oi');
   });
 
+  it('a marcação sai em azul, sem HTML cru, e o resto não', () => {
+    const w = previa({
+      content: '[@Eu](mention://user/1/Eu) <b>oi</b>',
+      sender: ana,
+      message_type: 1,
+    });
+    const azuis = w.findAll('.text-n-blue-11');
+    expect(azuis.map(s => s.text())).toEqual(['@Eu']);
+    expect(w.find('b').exists()).toBe(false);
+  });
+
   it('minha mensagem leva "Você:" e sem ícone de tipo', () => {
     const w = previa({ content: 'fechado', sender: eu, message_type: 1 });
     expect(w.text()).toBe('RAMON.EQUIPE.VOCE: fechado');
@@ -190,6 +201,26 @@ describe('ConversationCard', () => {
     expect(irmaos[1].className).toContain('contador');
   });
 
+  it('selo e contador têm 20 px, como no mockup', () => {
+    const w = montar({ ...chatBase, unread_count: 3, equipe_marcado: true });
+    expect(selo(w).classes()).toEqual(
+      expect.arrayContaining(['h-5', 'min-w-5'])
+    );
+    expect(w.find('.contador').classes()).toEqual(
+      expect.arrayContaining(['!h-5', '!min-w-5'])
+    );
+  });
+
+  it('prévia sem negrito com não lida só na Equipe', () => {
+    const classes = equipe =>
+      montar({ ...chatBase, unread_count: 3 }, equipe)
+        .findComponent(MessagePreview)
+        .classes();
+    expect(classes(true)).toContain('text-n-slate-11');
+    expect(classes(true)).not.toContain('font-medium');
+    expect(classes(false)).toContain('font-medium');
+  });
+
   it('sem marcação não tem selo, só o contador', () => {
     const w = montar({ ...chatBase, unread_count: 3 });
     expect(selo(w).exists()).toBe(false);
@@ -256,6 +287,7 @@ describe('ConversationCard', () => {
     expect(w.text()).toContain('Fulano');
     expect(selo(w).exists()).toBe(false);
     expect(w.find('.contador').text()).toBe('1');
+    expect(w.find('.contador').classes()).not.toContain('!h-5');
     expect(w.findComponent(MessagePreview).props('equipe')).toBe(null);
     expect(w.findComponent({ name: 'TimeAgoFalso' }).classes()).toEqual([]);
     expect(hora(w).exists()).toBe(false);

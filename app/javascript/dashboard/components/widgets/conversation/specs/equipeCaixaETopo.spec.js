@@ -110,7 +110,7 @@ describe('ConversationHeader', () => {
     useEquipeStore().participantes[43] = [{ id: 1 }, { id: 2 }];
     estado.digitando = [{ id: 2, name: 'Gabriela' }];
     const w = montarTopo(grupo);
-    expect(w.text()).toContain('TYPING.ONE');
+    expect(w.text()).toContain('TYPING.ONE…');
     expect(w.text()).not.toContain('PARTICIPANTES');
   });
 

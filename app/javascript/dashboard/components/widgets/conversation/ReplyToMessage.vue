@@ -64,8 +64,8 @@ const texto = computed(() => textoCitacao(props.message, t));
     <Button
       v-tooltip="$t('CONVERSATION.REPLYBOX.DISMISS_REPLY')"
       ghost
-      xs
       slate
+      :size="equipe ? 'sm' : 'xs'"
       icon="i-lucide-x"
       class="flex-shrink-0"
       @click.stop="emit('dismiss')"
