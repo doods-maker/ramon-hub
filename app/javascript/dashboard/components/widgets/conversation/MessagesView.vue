@@ -307,6 +307,9 @@ export default {
       // start empty, this ensures that the label suggestions are not shown
       this.labelSuggestions = [];
 
+      // FORK(ramon): nada na caixa Equipe pode acionar IA (hub surdo).
+      if (this.equipe) return;
+
       if (this.isLabelSuggestionDismissed()) {
         return;
       }

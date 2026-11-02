@@ -165,6 +165,35 @@ describe('MessagesView: faixa de só leitura', () => {
   });
 });
 
+describe('MessagesView: sugestão de etiquetas por IA', () => {
+  const buscar = async equipe => {
+    const ctx = {
+      equipe,
+      labelSuggestions: ['antiga'],
+      isLabelSuggestionDismissed: () => false,
+      currentChat: { id: 43, labels: [] },
+      captainTasksEnabled: true,
+      isLabelSuggestionFeatureEnabled: true,
+      getLabelSuggestions: vi.fn(() => Promise.resolve(['nova'])),
+      $nextTick: vi.fn(),
+    };
+    await MessagesView.methods.fetchSuggestions.call(ctx);
+    return ctx;
+  };
+
+  it('na Equipe não chama a IA e limpa a lista', async () => {
+    const ctx = await buscar(true);
+    expect(ctx.getLabelSuggestions).not.toHaveBeenCalled();
+    expect(ctx.labelSuggestions).toEqual([]);
+  });
+
+  it('fora da Equipe continua sugerindo', async () => {
+    const ctx = await buscar(false);
+    expect(ctx.getLabelSuggestions).toHaveBeenCalled();
+    expect(ctx.labelSuggestions).toEqual(['nova']);
+  });
+});
+
 describe('ReplyBox: tecla de envio', () => {
   const valido = (over, tecla) =>
     ReplyBox.methods.isAValidEvent.call(
