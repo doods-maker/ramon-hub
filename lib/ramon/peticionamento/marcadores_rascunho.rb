@@ -2,7 +2,9 @@
 module Ramon::Peticionamento::MarcadoresRascunho
   LISTA = [
     '[CAMPO', '[CONFERIR]', '[NB]', '[DIB]', '[CPF]', '[VALOR]', '[DATA]', '[OAB]', '[NOME DA PARTE]',
-    '[ADVOGADO(A) ASSOCIADO(A)]', 'CONTROLE INTERNO', 'RASCUNHO', 'Notas ao advogado', 'Conferência humana',
+    '[ADVOGADO(A) ASSOCIADO(A)]', '[RG]', '[ENDEREÇO]', '[DATA DE NASCIMENTO]', '[EMPREGADOR]', '[CIDADE]', '[DCB]', '[CID]',
+    '[DER]', '[NOME DE TERCEIRO]', '[VARA', '[RITO ORDINÁRIO', '[RITO JEF', '[NATUREZA]', '[DATA DO ACIDENTE]',
+    '[DATA DE INÍCIO]', '[ESCOLHER', '[TRANSCREVER', 'CONTROLE INTERNO', 'RASCUNHO', 'Notas ao advogado', 'Conferência humana',
     'O que esta minuta NÃO faz'
   ].freeze
 
