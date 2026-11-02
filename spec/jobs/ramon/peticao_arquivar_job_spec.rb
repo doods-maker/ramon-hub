@@ -86,6 +86,16 @@ RSpec.describe Ramon::PeticaoArquivarJob do
     expect(peticao.reload.drive_pasta_id).to end_with("2026-10-30 — Inicial (##{peticao.id})")
   end
 
+  it 'pela pasta: não sobe cópia, só o comprovante, e apaga do disco' do
+    peticao.update_columns(pela_pasta: true, drive_pasta_id: 'pasta') # rubocop:disable Rails/SkipsModelValidations
+    peticao.arquivos.each { |a| a.update_columns(drive_file_id: "o#{a.id}") } # rubocop:disable Rails/SkipsModelValidations
+    allow(Ramon::DriveClient).to receive(:upload).and_return('c1')
+    described_class.perform_now(peticao.id)
+    expect(Ramon::DriveClient).to have_received(:upload).once.with(hash_including(parent_id: 'pasta', name: /Comprovante/))
+    expect(peticao.reload.arquivada_em).to be_present
+    expect(peticao.arquivos.first.file).not_to be_attached
+  end
+
   it 'não faz nada sem Drive configurado' do
     allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
     allow(Ramon::DriveClient).to receive(:upload)

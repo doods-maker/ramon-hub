@@ -18,6 +18,22 @@
 #available at https://guides.rubyonrails.org/i18n.html.
 pt_BR:
   hello: 'Olá, mundo'
+  activerecord:
+    errors:
+      models:
+        peticao:
+          attributes:
+            base:
+              em_conferencia: 'Petição em conferência: confirme tribunal e número antes de protocolar'
+              ja_protocolada: 'Petição já protocolada'
+              pacote_com_problemas: 'Pacote com problemas: confira os avisos'
+              sem_comprovante: 'Informe o número do evento e anexe o comprovante do protocolo'
+              fora_da_conferencia: 'Só uma petição em conferência pode ser confirmada'
+              leitura_em_andamento: 'A leitura da pasta ainda está em andamento'
+              leitura_com_erro: 'A leitura da pasta falhou: leia a pasta de novo'
+              recusa_na_leitura: 'A pasta tem pendências que impedem a petição: corrija a pasta e leia de novo'
+              marcador_na_principal: 'A peça principal tem sobra de rascunho: troque o arquivo'
+              alertas_nao_confirmados: 'Há alertas na conferência: confirme que estão certos para seguir'
   inbox:
     reauthorization:
       success: 'Canal reautenticado com sucesso'

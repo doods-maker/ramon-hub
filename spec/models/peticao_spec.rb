@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'prawn'
 
 RSpec.describe Peticao do
   let(:account) { create(:account) }
@@ -112,10 +113,48 @@ RSpec.describe Peticao do
       expect(p.reload.status).to eq('conferencia')
     end
 
+    def com_pacote(peticao, bytes = nil)
+      a = peticao.arquivos.create!(nome: 'A.pdf', tipo: 'peticao', posicao: 1, principal: true, origem: 'drive', tamanho: 4)
+      a.file.attach(io: StringIO.new(bytes || Prawn::Document.new { text 'ok' }.render), filename: 'A.pdf', content_type: 'application/pdf')
+      peticao
+    end
+
     it 'confirmar! com número e tribunal vira rascunho' do
-      p = em_conferencia(tribunal: 'trf4', numero_processo: numero_valido_trf4)
+      p = com_pacote(em_conferencia(tribunal: 'trf4', numero_processo: numero_valido_trf4))
       p.confirmar!
       expect(p.reload.status).to eq('rascunho')
+    end
+
+    it 'confirmar! trava com recusa, leitura em andamento ou com erro, e sem pacote' do
+      dados = { tribunal: 'trf4', numero_processo: numero_valido_trf4 }
+      { 'recusas' => ['sem_pdf'], 'estado' => 'lendo' }.each do |chave, valor|
+        p = com_pacote(em_conferencia(**dados, leitura: { chave => valor }))
+        expect { p.confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+        expect(p.reload.status).to eq('conferencia')
+      end
+      expect { com_pacote(em_conferencia(**dados, leitura: { 'estado' => 'erro' })).confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+      expect { em_conferencia(**dados).confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+
+    it 'confirmar! trava com alerta não confirmado' do
+      p = com_pacote(em_conferencia(tribunal: 'trf4', numero_processo: numero_valido_trf4,
+                                    leitura: { 'cpf_pasta' => '12345678909', 'campos' => { 'cpf' => '98765432100' } }))
+      expect { p.confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+      p.confirmar!(confirmar_alertas: true)
+      expect(p.reload.status).to eq('rascunho')
+    end
+
+    it 'confirmar! trava com marcador de rascunho na principal' do
+      p = com_pacote(em_conferencia(tribunal: 'trf4', numero_processo: numero_valido_trf4), Prawn::Document.new { text '[CONFERIR] x' }.render)
+      expect { p.confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+      expect(p.errors[:base]).not_to be_empty
+    end
+
+    it 'confirmar! não mexe em petição protocolada' do
+      p = com_pacote(em_conferencia(tribunal: 'trf4', numero_processo: numero_valido_trf4))
+      p.update_columns(status: 'protocolada') # rubocop:disable Rails/SkipsModelValidations
+      expect { p.confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+      expect(p.reload.status).to eq('protocolada')
     end
 
     it 'problemas não acusa limite enquanto não há tribunal' do

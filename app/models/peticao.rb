@@ -5,6 +5,7 @@ class Peticao < ApplicationRecord
   STATUS = %w[conferencia rascunho protocolada].freeze
   ZONA = 'America/Sao_Paulo'.freeze
   PRAZO_PERTO_DIAS_UTEIS = 2
+  LEITURA_BLOQUEADA = { 'lendo' => :leitura_em_andamento, 'erro' => :leitura_com_erro }.freeze
 
   belongs_to :account
   belongs_to :criado_por, class_name: 'User'
@@ -58,14 +59,20 @@ class Peticao < ApplicationRecord
     prazo <= limite
   end
 
-  # Conferência -> rascunho: exige tribunal e número válidos (a Task 6 acrescenta as travas de alertas).
-  def confirmar!(confirmar_alertas: false) # rubocop:disable Lint/UnusedMethodArgument
-    with_lock do
+  # Conferência -> rascunho: travas da leitura, do pacote e dos alertas; depois exige tribunal e número válidos.
+  def confirmar!(confirmar_alertas: false)
+    with_lock do # recarrega: as travas olham o estado gravado
+      bloqueio = confirmar_bloqueado(confirmar_alertas)
+      if bloqueio
+        errors.add(:base, bloqueio)
+        raise ActiveRecord::RecordInvalid, self
+      end
+
       self.status = 'rascunho'
       save!
     end
   rescue ActiveRecord::RecordInvalid
-    self.status = 'conferencia'
+    restore_attributes(['status'])
     raise
   end
 
@@ -104,6 +111,28 @@ class Peticao < ApplicationRecord
   end
 
   def pessoa(usuario) = { id: usuario.id, name: usuario.name }
+
+  # Chave i18n do primeiro motivo para não confirmar; nil = pode.
+  def confirmar_bloqueado(confirmar_alertas)
+    return :fora_da_conferencia unless conferencia?
+    return LEITURA_BLOQUEADA[leitura['estado']] if LEITURA_BLOQUEADA.key?(leitura['estado'])
+    return :recusa_na_leitura if Array(leitura['recusas']).any?
+    return :pacote_com_problemas if problemas.any?
+    return :marcador_na_principal if marcador_na_principal?
+
+    :alertas_nao_confirmados if alertas_sem_confirmar?(confirmar_alertas)
+  end
+
+  def alertas_sem_confirmar?(confirmar_alertas) = !confirmar_alertas && Ramon::Peticionamento::AlertasDaPasta.call(self)[:alertas].any?
+
+  # A principal pode ter sido trocada na conferência: confere o PDF que está no pacote agora.
+  def marcador_na_principal?
+    arquivo = arquivos.find(&:principal)
+    return false unless arquivo&.file&.attached?
+
+    texto = arquivo.file.open { |io| Ramon::Peticionamento::MarcadoresRascunho.texto_do_pdf(io.read) }
+    Ramon::Peticionamento::MarcadoresRascunho.no_texto(texto).any?
+  end
 
   # Anti-objetivo da spec: nada vira "protocolada" sem número do evento e comprovante (arquivo de verdade, não "").
   def protocolo_bloqueado(numero_evento, comprovante)
