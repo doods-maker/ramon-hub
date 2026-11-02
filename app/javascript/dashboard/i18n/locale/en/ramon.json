@@ -177,7 +177,9 @@
     "EQUIPE": {
       "NOVA_1A1": "New direct message…",
       "AVISO_ADMIN": "Administrators can read the conversations.",
-      "ERRO": "Something went wrong — try again."
+      "ERRO": "Something went wrong — try again.",
+      "HOJE": "Today",
+      "ONTEM": "Yesterday"
     },
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",

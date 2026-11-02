@@ -5,6 +5,8 @@ import { MESSAGE_TYPES } from './constants.js';
 import { useCamelCase } from 'dashboard/composables/useTransformKeys';
 import { useMapGetter } from 'dashboard/composables/store.js';
 import MessageApi from 'dashboard/api/inbox/message.js';
+import { useI18n } from 'vue-i18n';
+import { rotuloDia } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 /**
  * Props definition for the component
@@ -49,6 +51,36 @@ const allMessages = computed(() => {
 });
 
 const currentChat = useMapGetter('getSelectedChat');
+
+// FORK(ramon): caixa Equipe: blocos por autor e dia, com separador de dia.
+const { t } = useI18n();
+const inboxGetter = useMapGetter('inboxes/getInbox');
+const isEquipe = computed(
+  () => !!inboxGetter.value(currentChat.value?.inbox_id)?.equipe
+);
+const rotulosDia = computed(() => {
+  if (!isEquipe.value) return [];
+  const agora = Date.now();
+  return allMessages.value.map(m => rotuloDia(m.createdAt, agora));
+});
+const separadorDia = index => {
+  const rotulo = rotulosDia.value[index];
+  if (!rotulo || rotulo === rotulosDia.value[index - 1]) return null;
+  if (rotulo === 'HOJE') return t('RAMON.EQUIPE.HOJE');
+  return rotulo === 'ONTEM' ? t('RAMON.EQUIPE.ONTEM') : rotulo;
+};
+const mesmoBlocoEquipe = (i, j) => {
+  const [a, b] = [allMessages.value[i], allMessages.value[j]];
+  return (
+    !!a &&
+    !!b &&
+    a.messageType === b.messageType &&
+    (a.senderId ?? a.sender?.id) === (b.senderId ?? b.sender?.id) &&
+    rotulosDia.value[i] === rotulosDia.value[j]
+  );
+};
+const primeiroDoAutor = index =>
+  isEquipe.value && !mesmoBlocoEquipe(index - 1, index);
 
 // Cache for fetched reply messages to avoid duplicate API calls
 const fetchedReplyMessages = reactive(new Map());
@@ -123,6 +155,12 @@ const shouldGroupWithNext = (index, searchList) => {
   return Math.floor(next.createdAt / 60) === Math.floor(current.createdAt / 60);
 };
 
+const agruparComProxima = index =>
+  isEquipe.value
+    ? allMessages.value[index + 1]?.status !== 'failed' &&
+      mesmoBlocoEquipe(index, index + 1)
+    : shouldGroupWithNext(index, allMessages.value);
+
 /**
  * Gets the message that was replied to
  * @param {Object} parentMessage - The message containing the reply reference
@@ -166,15 +204,28 @@ const getInReplyToMessage = parentMessage => {
   <ul class="px-4 bg-n-surface-1">
     <slot name="beforeAll" />
     <template v-for="(message, index) in allMessages" :key="message.id">
+      <li
+        v-if="separadorDia(index)"
+        class="flex justify-center my-2 list-none"
+        data-testid="equipe-dia"
+      >
+        <span
+          class="px-2.5 py-[3px] text-[11px] rounded-lg text-n-slate-11 bg-n-slate-3"
+        >
+          {{ separadorDia(index) }}
+        </span>
+      </li>
       <slot
         v-if="firstUnreadId && message.id === firstUnreadId"
         name="unreadBadge"
       />
       <Message
         v-bind="message"
+        :inbox-id="message.inboxId ?? currentChat?.inbox_id"
         :is-email-inbox="isAnEmailChannel"
         :in-reply-to="getInReplyToMessage(message)"
-        :group-with-next="shouldGroupWithNext(index, allMessages)"
+        :group-with-next="agruparComProxima(index)"
+        :primeiro-do-autor="primeiroDoAutor(index)"
         :inbox-supports-reply-to="inboxSupportsReplyTo"
         :current-user-id="currentUserId"
         data-clarity-mask="True"

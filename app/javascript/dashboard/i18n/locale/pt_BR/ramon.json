@@ -177,7 +177,9 @@
     "EQUIPE": {
       "NOVA_1A1": "Nova conversa 1:1…",
       "AVISO_ADMIN": "Administradores podem ler as conversas.",
-      "ERRO": "Algo deu errado — tente de novo."
+      "ERRO": "Algo deu errado — tente de novo.",
+      "HOJE": "Hoje",
+      "ONTEM": "Ontem"
     },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",

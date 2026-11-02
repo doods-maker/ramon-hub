@@ -68,6 +68,27 @@ describe('#MessageFormatter', () => {
     });
   });
 
+  describe('mentions', () => {
+    it('renders @todos (chat Equipe) as a mention node', () => {
+      const message = '[@todos](mention://todos/0/todos) reunião às 17h';
+      expect(new MessageFormatter(message).formattedMessage).toMatch(
+        '<span class="prosemirror-mention-node">@todos</span>'
+      );
+    });
+
+    it('keeps user and team mentions working', () => {
+      const message =
+        '[@Brenda](mention://user/2/Brenda) [@Setor](mention://team/3/Setor)';
+      const { formattedMessage } = new MessageFormatter(message);
+      expect(formattedMessage).toMatch(
+        '<span class="prosemirror-mention-node">@Brenda</span>'
+      );
+      expect(formattedMessage).toMatch(
+        '<span class="prosemirror-mention-node">@Setor</span>'
+      );
+    });
+  });
+
   describe('tweets', () => {
     it('should return the same string if not tags or @mentions', () => {
       const message = 'Chatwoot is an opensource tool';

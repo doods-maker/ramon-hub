@@ -1,5 +1,6 @@
 // Process [@mention](mention://user/1/Pranav)
-const USER_MENTIONS_REGEX = /mention:\/\/(user|team)\/(\d+)\/(.+)/gm;
+// FORK(ramon): todos = @todos do chat Equipe
+const USER_MENTIONS_REGEX = /mention:\/\/(user|team|todos)\/(\d+)\/(.+)/gm;
 
 const buildMentionTokens = () => (state, silent) => {
   var label;

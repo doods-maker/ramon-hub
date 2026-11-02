@@ -15,13 +15,30 @@ const props = defineProps({
   hideMeta: { type: Boolean, default: false },
 });
 
-const { variant, orientation, inReplyTo, shouldGroupWithNext } =
-  useMessageContext();
+const {
+  variant,
+  orientation,
+  inReplyTo,
+  shouldGroupWithNext,
+  isEquipe,
+  mostrarAutor,
+  marcadoEquipe,
+  primeiroDoAutor,
+  sender,
+} = useMessageContext();
 const { t } = useI18n();
 
 // Hub: o que o escritório envia (agente, automação, modelo) fica no verde do
 // WhatsApp; nota privada em âmbar translúcido com rótulo (05/10/2026).
 const ENVIADA = 'bg-[rgb(var(--ramon-enviada))] text-n-slate-12';
+
+// FORK(ramon): Equipe: @ em azul; marcação minha com fundo azul translúcido e fileta
+// (.marcado do mockup). O áudio não tem padding próprio para o nome e a hora.
+// ponytail: o destaque vale para todo @ da bolha que me marca; por pessoa exige casar o rótulo.
+const EQUIPE_BOLHA =
+  '[&_.prosemirror-mention-node]:font-semibold [&_.prosemirror-mention-node]:text-n-blue-11 data-[bubble-name=audio]:p-2';
+const EQUIPE_MARCADO =
+  'shadow-[inset_3px_0_0_rgb(var(--blue-11))] [&_.prosemirror-mention-node]:bg-n-blue-9/[.18] [&_.prosemirror-mention-node]:rounded [&_.prosemirror-mention-node]:px-[3px]';
 
 const varaintBaseMap = {
   [MESSAGE_VARIANTS.AGENT]: ENVIADA,
@@ -64,6 +81,9 @@ const messageClass = computed(() => {
     classToApply.push('rounded-lg');
   }
 
+  if (isEquipe.value) classToApply.push(EQUIPE_BOLHA);
+  if (marcadoEquipe.value) classToApply.push(EQUIPE_MARCADO);
+
   return classToApply;
 });
 
@@ -76,7 +96,8 @@ const scrollToMessage = () => {
 const shouldShowMeta = computed(
   () =>
     !props.hideMeta &&
-    !shouldGroupWithNext.value &&
+    // FORK(ramon): na Equipe toda bolha mostra a hora, mesmo agrupada
+    (!shouldGroupWithNext.value || isEquipe.value) &&
     variant.value !== MESSAGE_VARIANTS.ACTIVITY
 );
 
@@ -107,6 +128,13 @@ const replyToPreview = computed(() => {
       },
     ]"
   >
+    <p
+      v-if="mostrarAutor && primeiroDoAutor"
+      class="mb-px text-xs font-semibold text-n-blue-11"
+      data-testid="equipe-autor"
+    >
+      {{ sender?.name }}
+    </p>
     <div
       v-if="inReplyTo"
       class="p-2 -mx-1 mb-2 rounded-lg cursor-pointer bg-n-alpha-black1"
@@ -128,10 +156,10 @@ const replyToPreview = computed(() => {
     <MessageMeta
       v-if="shouldShowMeta"
       :class="[
-        flexOrientationClass,
+        isEquipe ? 'justify-end mt-0.5' : [flexOrientationClass, 'mt-2'],
         variant === MESSAGE_VARIANTS.EMAIL ? 'px-3 pb-3' : '',
       ]"
-      class="mt-2 text-n-slate-11"
+      class="text-n-slate-11"
     />
   </div>
 </template>
