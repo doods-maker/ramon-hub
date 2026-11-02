@@ -8,6 +8,7 @@ class Ramon::DriveClient
   SHORTCUT_MIME = 'application/vnd.google-apps.shortcut'.freeze
   FILTRO_TIPOS = "(mimeType = '#{FOLDER_MIME}' or mimeType = 'application/pdf' or mimeType = 'image/jpeg' or mimeType = 'image/png')".freeze
   MARCADOR_PASTA_PRONTA = '_pasta-pronta.json'.freeze
+  MARCADOR_PASTA_USADA = '_pasta-pronta.usada.json'.freeze
   SCOPE = 'https://www.googleapis.com/auth/drive'.freeze
 
   class << self
@@ -59,7 +60,7 @@ class Ramon::DriveClient
     end
 
     def rename(file_id, name)
-      service.update_file(file_id, { name: name }, fields: 'id')
+      service.update_file(file_id, { name: name }, fields: 'id', supports_all_drives: true)
     end
 
     # Navegador de arquivos do Drive (Peticionamento): só pastas, PDF e JPG/PNG; pastas primeiro.
@@ -79,9 +80,9 @@ class Ramon::DriveClient
         .map { |f| { id: f.id, parents: f.parents, size: f.size&.to_i } }
     end
 
-    # Marcador já usado: sai da lista (a esteira ignora arquivos _*).
-    def para_lixeira(file_id)
-      service.update_file(file_id, { trashed: true }, fields: 'id', supports_all_drives: true)
+    # Marcador já usado: renomeado sai da busca. Lixeira não serve: no Drive só o dono manda à lixeira, e renomear basta ser editor.
+    def aposentar_marcador(file_id)
+      rename(file_id, MARCADOR_PASTA_USADA)
     end
 
     # A pasta está dentro da raiz do escritório (sobe até `niveis` pais)?
