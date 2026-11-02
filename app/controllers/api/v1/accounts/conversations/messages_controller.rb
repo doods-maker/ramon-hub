@@ -1,5 +1,7 @@
 class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::Conversations::BaseController
   before_action :ensure_api_inbox, only: :update
+  before_action :equipe_pode_escrever!, only: [:create, :retry] # ramon: Equipe, admin de fora só lê
+  before_action :equipe_pode_apagar!, only: :destroy # ramon: Equipe, só a própria (ou admin participante)
 
   def index
     @messages = message_finder.perform
@@ -55,6 +57,14 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   private
+
+  def equipe_pode_escrever!
+    head :forbidden unless Ramon::Equipe.pode_escrever?(@conversation, Current.user || @resource)
+  end
+
+  def equipe_pode_apagar!
+    head :forbidden unless Ramon::Equipe.pode_apagar?(message, Current.user || @resource, Current.account_user)
+  end
 
   def message
     @message ||= @conversation.messages.find(permitted_params[:id])

@@ -95,7 +95,7 @@ class Notification < ApplicationRecord
     }
   end
 
-  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def push_message_title
     notification_title_map = {
       'conversation_creation' => 'notifications.notification_title.conversation_creation',
@@ -121,7 +121,9 @@ class Notification < ApplicationRecord
     i18n_key = notification_title_map[notification_type]
     return '' unless i18n_key
 
-    if notification_type == 'conversation_creation'
+    if (equipe = Ramon::Equipe.titulo_marcacao(self)) # FORK(ramon): "Ana te marcou em Geral"
+      equipe
+    elsif notification_type == 'conversation_creation'
       I18n.t(i18n_key, display_id: conversation.display_id, inbox_name: primary_actor.inbox.name)
     elsif %w[conversation_assignment assigned_conversation_new_message participating_conversation_new_message
              conversation_mention].include?(notification_type)
@@ -136,7 +138,7 @@ class Notification < ApplicationRecord
       I18n.t(i18n_key, display_id: primary_actor.display_id)
     end
   end
-  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
   def push_message_body
     case notification_type

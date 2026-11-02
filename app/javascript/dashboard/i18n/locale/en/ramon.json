@@ -177,7 +177,14 @@
     "EQUIPE": {
       "NOVA_1A1": "New direct message…",
       "AVISO_ADMIN": "Administrators can read the conversations.",
-      "ERRO": "Something went wrong — try again."
+      "ERRO": "Something went wrong — try again.",
+      "HOJE": "Today",
+      "ONTEM": "Yesterday",
+      "SO_LEITURA": "You are reading as an administrator",
+      "MENSAGEM": "Message",
+      "PARTICIPANTES": "{n} participant | {n} participants",
+      "NESTE_CHAT": "In this chat",
+      "AVISA_TODOS": "Notifies {n} person in this chat | Notifies the {n} in this chat"
     },
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",

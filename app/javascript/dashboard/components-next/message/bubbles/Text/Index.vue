@@ -8,7 +8,8 @@ import { MESSAGE_TYPES } from '../../constants';
 import { useMessageContext } from '../../provider.js';
 import { useTranslations } from 'dashboard/composables/useTranslations';
 
-const { content, attachments, contentAttributes, messageType } =
+// FORK(ramon): isEquipe = padding do mockup na caixa Equipe
+const { content, attachments, contentAttributes, messageType, isEquipe } =
   useMessageContext();
 
 const { hasTranslations, translationContent } =
@@ -42,7 +43,11 @@ const handleSeeOriginal = () => {
 </script>
 
 <template>
-  <BaseBubble class="px-4 py-3" data-bubble-name="text">
+  <BaseBubble
+    :class="isEquipe ? 'px-2.5 pt-1.5 pb-[5px]' : 'px-4 py-3'"
+    data-bubble-name="text"
+  >
+    <!-- FORK(ramon): padding da bolha na Equipe (.bolha do mockup) -->
     <div class="gap-3 flex flex-col">
       <span v-if="isEmpty" class="text-n-slate-11">
         {{ $t('CONVERSATION.NO_CONTENT') }}

@@ -15,13 +15,37 @@ const props = defineProps({
   hideMeta: { type: Boolean, default: false },
 });
 
-const { variant, orientation, inReplyTo, shouldGroupWithNext } =
-  useMessageContext();
+const {
+  variant,
+  orientation,
+  inReplyTo,
+  shouldGroupWithNext,
+  isEquipe,
+  mostrarAutor,
+  marcadoEquipe,
+  primeiroDoAutor,
+  sender,
+  content: textoDaMensagem,
+  attachments: anexosDaMensagem,
+} = useMessageContext();
 const { t } = useI18n();
 
 // Hub: o que o escritório envia (agente, automação, modelo) fica no verde do
 // WhatsApp; nota privada em âmbar translúcido com rótulo (05/10/2026).
 const ENVIADA = 'bg-[rgb(var(--ramon-enviada))] text-n-slate-12';
+
+// FORK(ramon): Equipe: @ em azul; marcação minha com fundo azul translúcido e fileta
+// (.marcado do mockup). O áudio não tem padding próprio para o nome e a hora.
+// ponytail: o destaque vale para todo @ da bolha que me marca; por pessoa exige casar o rótulo.
+const EQUIPE_BOLHA =
+  '[&_.prosemirror-mention-node]:font-semibold [&_.prosemirror-mention-node]:text-n-blue-11 data-[bubble-name=audio]:px-2.5 data-[bubble-name=audio]:pt-1.5 data-[bubble-name=audio]:pb-[5px]';
+const EQUIPE_MARCADO =
+  'shadow-[inset_3px_0_0_rgb(var(--blue-11))] [&_.prosemirror-mention-node]:bg-n-blue-9/[.18] [&_.prosemirror-mention-node]:rounded [&_.prosemirror-mention-node]:px-[3px]';
+// FORK(ramon): hora na última linha do texto (.rodape do mockup). O float não sobe de
+// dentro do <p>; então a hora é absoluta e um espaço invisível no fim do texto reserva
+// o lugar dela. Sem espaço na linha, ele quebra e abre uma linha para a hora.
+const EQUIPE_HORA_NA_LINHA =
+  "relative [&_.prose>:last-child]:after:inline-block [&_.prose>:last-child]:after:w-[3.75rem] [&_.prose>:last-child]:after:content-['']";
 
 const varaintBaseMap = {
   [MESSAGE_VARIANTS.AGENT]: ENVIADA,
@@ -55,6 +79,12 @@ const flexOrientationClass = computed(() => {
   return map[orientation.value];
 });
 
+// FORK(ramon): só em texto puro; anexo vem depois do texto, e a hora iria por cima dele.
+const horaNaLinha = computed(
+  () =>
+    isEquipe.value && !!textoDaMensagem.value && !anexosDaMensagem.value?.length
+);
+
 const messageClass = computed(() => {
   const classToApply = [varaintBaseMap[variant.value]];
 
@@ -63,6 +93,10 @@ const messageClass = computed(() => {
   } else {
     classToApply.push('rounded-lg');
   }
+
+  if (isEquipe.value) classToApply.push(EQUIPE_BOLHA);
+  if (marcadoEquipe.value) classToApply.push(EQUIPE_MARCADO);
+  if (horaNaLinha.value) classToApply.push(EQUIPE_HORA_NA_LINHA);
 
   return classToApply;
 });
@@ -76,7 +110,8 @@ const scrollToMessage = () => {
 const shouldShowMeta = computed(
   () =>
     !props.hideMeta &&
-    !shouldGroupWithNext.value &&
+    // FORK(ramon): na Equipe toda bolha mostra a hora, mesmo agrupada
+    (!shouldGroupWithNext.value || isEquipe.value) &&
     variant.value !== MESSAGE_VARIANTS.ACTIVITY
 );
 
@@ -107,6 +142,14 @@ const replyToPreview = computed(() => {
       },
     ]"
   >
+    <!-- FORK(ramon): nome do autor na primeira do bloco; usuário apagado não tem nome -->
+    <p
+      v-if="mostrarAutor && primeiroDoAutor && sender?.name"
+      class="mb-px text-xs font-semibold text-n-blue-11"
+      data-testid="equipe-autor"
+    >
+      {{ sender?.name }}
+    </p>
     <div
       v-if="inReplyTo"
       class="p-2 -mx-1 mb-2 rounded-lg cursor-pointer bg-n-alpha-black1"
@@ -125,13 +168,16 @@ const replyToPreview = computed(() => {
       {{ t('RAMON.NOTA_PRIVADA_ROTULO') }}
     </p>
     <slot />
+    <!-- FORK(ramon): na Equipe a hora fica na linha do texto ou abaixo, à direita -->
     <MessageMeta
       v-if="shouldShowMeta"
       :class="[
-        flexOrientationClass,
+        horaNaLinha ? 'absolute bottom-1 ltr:right-2.5 rtl:left-2.5' : '',
+        isEquipe && !horaNaLinha ? 'justify-end mt-0.5' : '',
+        !isEquipe ? [flexOrientationClass, 'mt-2'] : '',
         variant === MESSAGE_VARIANTS.EMAIL ? 'px-3 pb-3' : '',
       ]"
-      class="mt-2 text-n-slate-11"
+      class="text-n-slate-11"
     />
   </div>
 </template>

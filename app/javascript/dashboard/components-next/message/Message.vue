@@ -49,6 +49,8 @@ import RascunhoCarimbo from './RascunhoCarimbo.vue';
 import RascunhoAcoes from './RascunhoAcoes.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
+import { useEquipeStore } from 'dashboard/stores/equipe';
+import { marcaUsuario } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 /**
  * @typedef {Object} Attachment
@@ -134,6 +136,7 @@ const props = defineProps({
   inboxSupportsReplyTo: { type: Object, default: () => ({}) },
   inReplyTo: { type: Object, default: null }, // eslint-disable-line vue/no-unused-properties
   isEmailInbox: { type: Boolean, default: false },
+  primeiroDoAutor: { type: Boolean, default: false },
   private: { type: Boolean, default: false },
   additionalAttributes: { type: Object, default: () => ({}) }, // eslint-disable-line vue/no-unused-properties
   sender: { type: Object, default: null },
@@ -152,6 +155,28 @@ const route = useRoute();
 const inboxGetter = useMapGetter('inboxes/getInbox');
 const inbox = computed(() => inboxGetter.value(props.inboxId) || {});
 const { replaceInstallationName } = useBranding();
+
+// FORK(ramon): caixa Equipe (chat interno) com cara de WhatsApp. Só ramifica aqui.
+const isEquipe = computed(() => !!inbox.value.equipe);
+const conversationGetter = useMapGetter('getConversationById');
+const currentRole = useMapGetter('getCurrentRole');
+const chatEquipe = computed(() =>
+  isEquipe.value ? conversationGetter.value(props.conversationId) : null
+);
+const souAutor = computed(
+  () => (props.senderId ?? props.sender?.id) === props.currentUserId
+);
+// true | false | null (lista ainda não carregou). A 1:1 já traz as duas pessoas.
+const participaEquipe = computed(() => {
+  if (!isEquipe.value) return null;
+  const lista =
+    chatEquipe.value?.equipe_tipo === '1a1'
+      ? chatEquipe.value.equipe_pessoas
+      : useEquipeStore().participantes[props.conversationId];
+  return lista?.length
+    ? lista.some(pessoa => pessoa.id === props.currentUserId)
+    : null;
+});
 
 /**
  * Computes the message variant based on props
@@ -184,6 +209,16 @@ const variant = computed(() => {
 
   if (props.contentAttributes?.externalEcho) {
     return MESSAGE_VARIANTS.AGENT;
+  }
+
+  // FORK(ramon): na Equipe tudo é outgoing; o colega fica no cinza.
+  if (
+    isEquipe.value &&
+    props.messageType === MESSAGE_TYPES.OUTGOING &&
+    // eslint-disable-next-line no-use-before-define
+    !isBotOrAgentMessage.value
+  ) {
+    return MESSAGE_VARIANTS.USER;
   }
 
   const isBot =
@@ -219,6 +254,15 @@ const isBotOrAgentMessage = computed(() => {
   const senderId = props.senderId ?? props.sender?.id;
   const senderType = props.sender?.type ?? props.senderType;
 
+  // FORK(ramon): na Equipe só a minha fica à direita (admin de fora: nenhuma). Sem
+  // autor gravado é usuário apagado (dependent: :nullify), não minha; a falha local
+  // ainda não tem autor. Vem antes do teste nativo, que daria direita a ambas.
+  if (isEquipe.value) {
+    return (
+      props.status === MESSAGE_STATUS.FAILED || senderId === props.currentUserId
+    );
+  }
+
   if (!senderType || !senderId) {
     return true;
   }
@@ -248,6 +292,24 @@ const orientation = computed(() => {
   return ORIENTATION.LEFT;
 });
 
+// FORK(ramon): 1:1 sem nome nem foto, salvo para o admin de fora, que precisa
+// saber quem é quem com os dois lados à esquerda.
+const mostrarAutor = computed(
+  () =>
+    isEquipe.value &&
+    orientation.value === ORIENTATION.LEFT &&
+    (chatEquipe.value?.equipe_tipo !== '1a1' || participaEquipe.value === false)
+);
+
+// FORK(ramon): marcação minha na bolha do colega; @todos não marca admin de fora.
+const marcadoEquipe = computed(
+  () =>
+    isEquipe.value &&
+    orientation.value === ORIENTATION.LEFT &&
+    participaEquipe.value !== false &&
+    marcaUsuario(props.content, props.currentUserId)
+);
+
 const flexOrientationClass = computed(() => {
   const map = {
     [ORIENTATION.LEFT]: 'justify-start',
@@ -259,6 +321,13 @@ const flexOrientationClass = computed(() => {
 });
 
 const gridClass = computed(() => {
+  // FORK(ramon): Equipe sem foto à direita; à esquerda, coluna da foto se há autor
+  if (isEquipe.value) {
+    return mostrarAutor.value
+      ? 'grid grid-cols-[28px_1fr]'
+      : 'grid grid-cols-1fr';
+  }
+
   const map = {
     [ORIENTATION.LEFT]: 'grid grid-cols-1fr',
     [ORIENTATION.RIGHT]: 'grid grid-cols-[1fr_24px]',
@@ -268,6 +337,19 @@ const gridClass = computed(() => {
 });
 
 const gridTemplate = computed(() => {
+  // FORK(ramon): as áreas acompanham as colunas do gridClass da Equipe
+  if (isEquipe.value) {
+    return mostrarAutor.value
+      ? `
+      "avatar bubble"
+      "spacer meta"
+    `
+      : `
+      "bubble"
+      "meta"
+    `;
+  }
+
   const map = {
     [ORIENTATION.LEFT]: `
       "bubble"
@@ -290,6 +372,11 @@ const shouldGroupWithNext = computed(() => {
 
 const shouldShowAvatar = computed(() => {
   if (props.messageType === MESSAGE_TYPES.ACTIVITY) return false;
+  // FORK(ramon): na Equipe a foto vai na primeira do bloco, junto do nome. Sem autor
+  // gravado, sem foto: avatarInfo daria o avatar de bot.
+  if (isEquipe.value) {
+    return mostrarAutor.value && props.primeiroDoAutor && !!props.sender;
+  }
   if (orientation.value === ORIENTATION.LEFT) return false;
 
   return true;
@@ -358,10 +445,6 @@ const componentToRender = computed(() => {
   return TextBubble;
 });
 
-const shouldShowContextMenu = computed(() => {
-  return !props.contentAttributes?.isUnsupported;
-});
-
 const isBubble = computed(() => {
   return props.messageType !== MESSAGE_TYPES.ACTIVITY;
 });
@@ -388,7 +471,7 @@ const contextMenuEnabledOptions = computed(() => {
     props.status === MESSAGE_STATUS.FAILED ||
     props.status === MESSAGE_STATUS.PROGRESS;
 
-  return {
+  const options = {
     copy: hasText,
     delete:
       (hasText || hasAttachments) &&
@@ -409,6 +492,27 @@ const contextMenuEnabledOptions = computed(() => {
       props.inboxSupportsReplyTo.outgoing &&
       !isFailedOrProcessing,
   };
+  if (!isEquipe.value) return options;
+
+  // FORK(ramon): Equipe = copiar, responder e apagar (autor ou admin que participa,
+  // a mesma regra de Ramon::Equipe.pode_apagar?). Fora do chat, só copiar.
+  // equipe: o menu tira os separadores que ficariam soltos só neste caso.
+  const foraDoChat = participaEquipe.value === false;
+  const adminDoChat =
+    currentRole.value === 'administrator' && participaEquipe.value === true;
+  return {
+    equipe: true,
+    copy: options.copy,
+    replyTo: options.replyTo && !foraDoChat,
+    delete: options.delete && !foraDoChat && (souAutor.value || adminDoChat),
+  };
+});
+
+const shouldShowContextMenu = computed(() => {
+  // FORK(ramon): na Equipe pode não sobrar opção (anexo sem texto, admin de fora)
+  const { copy, replyTo, delete: apagar } = contextMenuEnabledOptions.value;
+  if (isEquipe.value && !copy && !replyTo && !apagar) return false;
+  return !props.contentAttributes?.isUnsupported;
 });
 
 const shouldRenderMessage = computed(() => {
@@ -532,6 +636,9 @@ provideMessageContext({
   orientation,
   isBotOrAgentMessage,
   shouldGroupWithNext,
+  isEquipe,
+  mostrarAutor,
+  marcadoEquipe,
 });
 </script>
 
@@ -540,16 +647,18 @@ provideMessageContext({
   <div
     v-if="shouldRenderMessage"
     :id="`message${props.id}`"
-    class="flex w-full mb-2 message-bubble-container"
+    class="flex w-full message-bubble-container"
     :data-message-id="props.id"
     :class="[
       flexOrientationClass,
+      isEquipe && shouldGroupWithNext ? 'mb-0.5' : 'mb-2',
       {
         'group-with-next': shouldGroupWithNext,
         'bg-n-alpha-1': showBackgroundHighlight,
       },
     ]"
   >
+    <!-- FORK(ramon): na Equipe as bolhas de um bloco ficam mais juntas (mb-0.5) -->
     <div v-if="variant === MESSAGE_VARIANTS.ACTIVITY">
       <RamonEventBubble v-if="contentAttributes.ramonEvent" />
       <ActivityBubble v-else :content="content" />
@@ -568,12 +677,17 @@ provideMessageContext({
         gridTemplateAreas: gridTemplate,
       }"
     >
+      <!-- FORK(ramon): na Equipe quem decide a foto é shouldShowAvatar, redonda e com 28px -->
       <div
-        v-if="!shouldGroupWithNext && shouldShowAvatar"
+        v-if="(isEquipe || !shouldGroupWithNext) && shouldShowAvatar"
         v-tooltip.left-end="avatarTooltip"
         class="[grid-area:avatar] flex items-end"
       >
-        <Avatar v-bind="avatarInfo" :size="24" />
+        <Avatar
+          v-bind="avatarInfo"
+          :size="isEquipe ? 28 : 24"
+          :rounded-full="isEquipe"
+        />
       </div>
       <div
         class="[grid-area:bubble] flex min-w-0 relative"

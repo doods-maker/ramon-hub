@@ -18,6 +18,9 @@ import { useInbox } from 'dashboard/composables/useInbox';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { getTypingUsersText } from 'dashboard/helper/commons';
+import { useEquipeStore } from 'dashboard/stores/equipe';
+import { identidadeConversa } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 const props = defineProps({
   chat: {
@@ -91,6 +94,33 @@ const inbox = computed(() => {
   return store.getters['inboxes/getInbox'](inboxId);
 });
 
+// FORK(ramon): caixa Equipe. Topo de WhatsApp: foto, nome e participantes ou quem digita.
+const equipeStore = useEquipeStore();
+const equipe = computed(() => !!inbox.value?.equipe);
+const identidade = computed(() =>
+  equipe.value
+    ? identidadeConversa(props.chat, store.getters.getCurrentUserID)
+    : null
+);
+const nomeTopo = computed(
+  () => identidade.value?.nome ?? currentContact.value.name
+);
+const fotoTopo = computed(() =>
+  identidade.value ? identidade.value.foto : currentContact.value.thumbnail
+);
+const digitandoEquipe = computed(() => {
+  const pessoas =
+    store.getters['conversationTypingStatus/getUserList'](props.chat.id) || [];
+  if (!equipe.value || !pessoas.length) return '';
+  const [chave, params] = getTypingUsersText(pessoas);
+  return t(chave, params);
+});
+const participantesEquipe = computed(() => {
+  const total = equipeStore.participantes[props.chat.id]?.length;
+  if (!equipe.value || props.chat.equipe_tipo !== 'grupo' || !total) return '';
+  return t('RAMON.EQUIPE.PARTICIPANTES', total);
+});
+
 const hasMultipleInboxes = computed(
   () => store.getters['inboxes/getInboxes'].length > 1
 );
@@ -110,7 +140,8 @@ const copyConversationId = async () => {
 <template>
   <div
     ref="conversationHeader"
-    class="flex flex-col gap-3 items-center justify-between flex-1 w-full min-w-0 xl:flex-row px-3 pt-3 pb-2 h-24 xl:h-12"
+    class="flex flex-col gap-3 items-center justify-between flex-1 w-full min-w-0 xl:flex-row px-3 pt-3 pb-2"
+    :class="equipe ? 'h-16' : 'h-24 xl:h-12'"
   >
     <div
       class="flex items-center justify-start w-full xl:w-auto max-w-full min-w-0 xl:flex-1"
@@ -121,9 +152,10 @@ const copyConversationId = async () => {
         class="ltr:mr-2 rtl:ml-2"
       />
       <Avatar
-        :name="currentContact.name"
-        :src="currentContact.thumbnail"
-        :size="32"
+        :name="nomeTopo"
+        :src="fotoTopo"
+        :size="equipe ? 40 : 32"
+        :rounded-full="equipe"
         :status="currentContact.availability_status"
         hide-offline-status
       />
@@ -134,7 +166,7 @@ const copyConversationId = async () => {
           <span
             class="text-sm font-medium truncate leading-tight text-n-slate-12"
           >
-            {{ currentContact.name }}
+            {{ nomeTopo }}
           </span>
           <fluent-icon
             v-if="!isHMACVerified"
@@ -146,6 +178,18 @@ const copyConversationId = async () => {
         </div>
 
         <div
+          v-if="equipe"
+          class="max-w-full text-xs truncate"
+          :class="
+            digitandoEquipe
+              ? 'font-medium text-[rgb(var(--ramon-nao-lida-texto))]'
+              : 'text-n-slate-11'
+          "
+        >
+          {{ digitandoEquipe || participantesEquipe }}
+        </div>
+        <div
+          v-else
           class="flex items-center gap-1 overflow-hidden text-xs conversation--header--actions text-n-slate-11 text-ellipsis whitespace-nowrap"
         >
           <button
@@ -165,6 +209,7 @@ const copyConversationId = async () => {
       </div>
     </div>
     <div
+      v-if="!equipe"
       class="flex flex-row items-center justify-start xl:justify-end flex-shrink-0 gap-2 w-full xl:w-auto header-actions-wrap"
     >
       <SLACardLabel

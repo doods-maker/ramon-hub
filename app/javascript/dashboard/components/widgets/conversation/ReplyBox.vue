@@ -57,6 +57,8 @@ import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import { emitter } from 'shared/helpers/mitt';
 import ChaveManterIa from 'dashboard/routes/dashboard/ramon/components/conversation/ChaveManterIa.vue';
+import { useEquipeStore } from 'dashboard/stores/equipe';
+import { listaMarcacao } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 const EmojiIconPicker = defineAsyncComponent(
   () =>
     import('dashboard/components-next/emoji-icon-picker/EmojiIconPicker.vue')
@@ -108,6 +110,7 @@ export default {
       messageEditor,
       copilot,
       shortcutKey,
+      equipeStore: useEquipeStore(),
     };
   },
   data() {
@@ -210,6 +213,18 @@ export default {
     inbox() {
       return this.$store.getters['inboxes/getInbox'](this.inboxId);
     },
+    // FORK(ramon): chat interno com cara de WhatsApp (ramifica tudo o que muda na caixa).
+    equipe() {
+      return !!this.inbox?.equipe;
+    },
+    itensMarcacao() {
+      if (!this.equipe) return [];
+      return listaMarcacao(
+        this.equipeStore.participantes[this.conversationId],
+        this.currentUser.id,
+        this.currentChat.equipe_tipo
+      );
+    },
     messagePlaceHolder() {
       if (this.isEditorDisabled) {
         if (this.isAWhatsAppChannel) {
@@ -220,6 +235,7 @@ export default {
         }
         return this.$t('CONVERSATION.FOOTER.MESSAGING_RESTRICTED');
       }
+      if (this.equipe) return this.$t('RAMON.EQUIPE.MENSAGEM');
       return this.isPrivate
         ? this.$t('CONVERSATION.FOOTER.PRIVATE_MSG_INPUT')
         : this.$t('CONVERSATION.FOOTER.MSG_INPUT');
@@ -320,6 +336,7 @@ export default {
       return {
         'is-private': this.isPrivate,
         'is-focused': this.isFocused || this.hasAttachments,
+        'reply-box--equipe': this.equipe,
       };
     },
     hasAttachments() {
@@ -332,6 +349,8 @@ export default {
       return this.showAudioRecorder && this.isRecordingAudio;
     },
     isOnPrivateNote() {
+      // FORK(ramon): a Equipe não tem nota privada; ao vir de uma nota em conversa com cliente, volta a mensagem.
+      if (this.equipe) return false;
       return this.replyType === REPLY_EDITOR_MODES.NOTE;
     },
     isOnExpandedLayout() {
@@ -367,6 +386,7 @@ export default {
       return !!this.messageSignature;
     },
     sendWithSignature() {
+      if (this.equipe) return false; // FORK(ramon)
       return this.fetchSignatureFlagFromUISettings(this.channelType);
     },
     conversationId() {
@@ -461,7 +481,9 @@ export default {
         this.copilot.reset();
       }
 
-      if (this.isOnPrivateNote) {
+      // FORK(ramon): olha o modo cru, não isOnPrivateNote (falso na Equipe). Trocar replyType aqui faria
+      // o conversationIdByRoute guardar o rascunho da nota no rascunho de resposta da conversa anterior.
+      if (this.replyType === REPLY_EDITOR_MODES.NOTE) {
         return;
       }
 
@@ -709,7 +731,10 @@ export default {
         !this.showCannedMenu &&
         !this.showVariablesMenu &&
         this.isFocused &&
-        this.isEditorHotKeyEnabled(selectedKey)
+        // FORK(ramon): na Equipe, Enter envia sem tocar na preferência da pessoa.
+        (this.equipe
+          ? selectedKey === 'enter'
+          : this.isEditorHotKeyEnabled(selectedKey))
       );
     },
     onPaste(e) {
@@ -946,6 +971,7 @@ export default {
       this.onFocus();
     },
     executeCopilotAction(action, data) {
+      if (this.equipe) return; // FORK(ramon): sem copiloto no chat interno
       this.copilot.execute(action, data);
     },
     clearMessage() {
@@ -1160,7 +1186,7 @@ export default {
         messagePayload.toEmails = this.toEmails;
       }
       // ramon: intervenção pontual — a resposta sai sem tirar a IA da conversa (ChaveManterIa)
-      if (this.manterIa && !this.isPrivate) {
+      if (this.manterIa && !this.isPrivate && !this.equipe) {
         messagePayload.contentAttributes = {
           ...messagePayload.contentAttributes,
           ramon_manter_ia: true,
@@ -1254,9 +1280,14 @@ export default {
 </script>
 
 <template>
-  <ReplyBoxBanner :message="message" :is-on-private-note="isOnPrivateNote" />
+  <ReplyBoxBanner
+    v-if="!equipe"
+    :message="message"
+    :is-on-private-note="isOnPrivateNote"
+  />
   <div ref="replyEditor" class="reply-box" :class="replyBoxClass">
     <ReplyTopPanel
+      v-if="!equipe"
       :mode="replyType"
       :conversation-id="conversationId"
       :is-reply-restricted="isReplyRestricted"
@@ -1302,6 +1333,7 @@ export default {
           class="emoji-dialog"
           :class="{
             'emoji-dialog--expanded': isOnExpandedLayout,
+            'emoji-dialog--equipe': equipe,
           }"
           @select="addIntoEditor($event.value)"
         />
@@ -1341,6 +1373,9 @@ export default {
           :conversation-id="conversationId"
           :editor-id="editorStateId"
           class="input popover-prosemirror-menu"
+          :class="{ 'editor-equipe': equipe }"
+          :equipe="equipe"
+          :itens-marcacao="itensMarcacao"
           :is-private="isOnPrivateNote"
           :placeholder="messagePlaceHolder"
           :update-selection-with="updateEditorSelectionWith"
@@ -1349,7 +1384,7 @@ export default {
           enable-variables
           :variables="messageVariables"
           :signature="messageSignature"
-          allow-signature
+          :allow-signature="!equipe"
           :channel-type="channelType"
           :medium="inbox.medium"
           @typing-off="onTypingOff"
@@ -1393,7 +1428,7 @@ export default {
       </div>
     </Transition>
 
-    <ChaveManterIa v-if="!isPrivate" v-model="manterIa" />
+    <ChaveManterIa v-if="!isPrivate && !equipe" v-model="manterIa" />
     <Transition
       mode="out-in"
       enter-active-class="transition-all duration-300 ease-out"
@@ -1414,6 +1449,7 @@ export default {
         v-else
         key="reply-bottom-panel"
         :conversation-id="conversationId"
+        :equipe="equipe"
         :enable-multiple-file-upload="enableMultipleFileUpload"
         :enable-whats-app-templates="showWhatsappTemplates"
         :enable-content-templates="showContentTemplates"
@@ -1492,6 +1528,15 @@ export default {
   @apply relative py-0 px-3 -mt-px;
 }
 
+// FORK(ramon): caixa Equipe. Emoji, anexo, áudio, campo e enviar na mesma linha.
+.reply-box--equipe {
+  @apply flex items-end mx-0 mb-0 border-0 border-t border-solid border-n-weak rounded-none bg-n-background py-2.5 px-4 md:px-[8%];
+
+  .reply-box__top {
+    @apply order-2 flex-1 min-w-0 mx-1 mt-0 p-0;
+  }
+}
+
 .emoji-dialog {
   @apply top-[unset] -bottom-10 ltr:-left-80 ltr:right-[unset] rtl:left-[unset] rtl:-right-80;
 
@@ -1508,5 +1553,9 @@ export default {
     transform: rotate(0deg);
     @apply ltr:left-1 rtl:right-1 -bottom-2;
   }
+}
+
+.emoji-dialog--equipe {
+  @apply absolute z-[100] mb-2 ltr:!left-0 ltr:!right-auto rtl:!right-0 rtl:!left-auto !bottom-full;
 }
 </style>

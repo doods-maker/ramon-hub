@@ -126,6 +126,11 @@ export default {
       type: Boolean,
       default: false,
     },
+    // FORK(ramon): caixa Equipe. Só emoji, anexo, áudio e enviar, em linha com o campo.
+    equipe: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: [
     'toggleInsertArticle',
@@ -238,7 +243,7 @@ export default {
       }
     },
     showMessageSignatureButton() {
-      if (this.isEditorDisabled) return false;
+      if (this.isEditorDisabled || this.equipe) return false;
       return !this.isOnPrivateNote;
     },
     sendWithSignature() {
@@ -251,7 +256,10 @@ export default {
         : this.$t('CONVERSATION.FOOTER.ENABLE_SIGN_TOOLTIP');
     },
     enableInsertArticleInReply() {
-      return this.portalSlug;
+      return !this.equipe && this.portalSlug;
+    },
+    iconButtonVariant() {
+      return this.equipe ? 'ghost' : null;
     },
     isFetchingAppIntegrations() {
       return this.uiFlags.isFetching;
@@ -277,12 +285,13 @@ export default {
 </script>
 
 <template>
-  <div class="flex justify-between p-3" :class="wrapClass">
-    <div class="left-wrap">
+  <div :class="[equipe ? 'contents' : 'flex justify-between p-3', wrapClass]">
+    <div class="left-wrap" :class="{ 'order-1 h-10 !gap-0.5': equipe }">
       <NextButton
         v-if="!isEditorDisabled"
         v-tooltip.top-end="$t('CONVERSATION.REPLYBOX.TIP_EMOJI_ICON')"
         icon="i-ph-smiley-sticker"
+        :variant="iconButtonVariant"
         slate
         faded
         sm
@@ -308,6 +317,7 @@ export default {
           v-if="showAttachButton"
           v-tooltip.top-end="$t('CONVERSATION.REPLYBOX.TIP_ATTACH_ICON')"
           icon="i-ph-paperclip"
+          :variant="iconButtonVariant"
           slate
           faded
           sm
@@ -317,6 +327,7 @@ export default {
         v-if="showAudioRecorderButton"
         v-tooltip.top-end="$t('CONVERSATION.REPLYBOX.TIP_AUDIORECORDER_ICON')"
         :icon="!isRecordingAudio ? 'i-ph-microphone' : 'i-ph-microphone-slash'"
+        :variant="iconButtonVariant"
         slate
         faded
         sm
@@ -370,6 +381,7 @@ export default {
       />
       <VideoCallButton
         v-if="
+          !equipe &&
           (isAWebWidgetInbox || isAPIInbox) &&
           !isOnPrivateNote &&
           !isEditorDisabled
@@ -396,10 +408,22 @@ export default {
         sm
         @click="toggleInsertArticle"
       />
-      <BotaoSugerirHorarios v-if="!isNote && !isEditorDisabled" />
+      <BotaoSugerirHorarios v-if="!isNote && !isEditorDisabled && !equipe" />
     </div>
-    <div class="right-wrap">
+    <div class="right-wrap" :class="{ 'order-3': equipe }">
       <NextButton
+        v-if="equipe"
+        v-tooltip.top-end="$t('CONVERSATION.REPLYBOX.SEND')"
+        icon="i-ph-paper-plane-right-fill"
+        type="submit"
+        color="blue"
+        :aria-label="$t('CONVERSATION.REPLYBOX.SEND')"
+        :disabled="isSendDisabled"
+        class="flex-shrink-0 !size-10 !rounded-full"
+        @click="onSend"
+      />
+      <NextButton
+        v-else
         :label="sendButtonText"
         type="submit"
         sm

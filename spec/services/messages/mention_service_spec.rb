@@ -515,6 +515,90 @@ describe Messages::MentionService do
     end
   end
 
+  # rubocop:disable RSpec/MultipleMemoizedHelpers
+  describe 'na caixa Equipe' do
+    let!(:ana) { create(:user, account: account) }
+    let!(:bia) { create(:user, account: account) }
+    let!(:caio) { create(:user, account: account) }
+    let(:setor) { create(:team, account: account, name: 'Setor X') }
+    let(:geral) { Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first }
+    let(:no_setor) { Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: "equipe-time-#{setor.id}").conversations.first }
+
+    before do
+      allow(Rails.configuration.dispatcher).to receive(:dispatch)
+      allow(NotificationBuilder).to receive(:new).and_call_original
+      create(:team_member, team: setor, user: ana)
+      create(:team_member, team: setor, user: bia)
+      Ramon::Equipe.sincronizar(account, criar: true)
+    end
+
+    def escrever(conversa, texto, autor: ana, privada: false)
+      create(:message, conversation: conversa, account: account, inbox: conversa.inbox, sender: autor,
+                       message_type: :outgoing, content: texto, private: privada)
+    end
+
+    def avisar(message)
+      described_class.new(message: message).perform
+      Messages::NewMessageNotificationService.new(message: message).perform
+    end
+
+    def tipos(user) = Notification.where(user: user).pluck(:notification_type)
+
+    it 'mensagem pública marca participante, com 1 notificação só', :aggregate_failures do
+      avisar(escrever(no_setor, "oi [@bia](mention://user/#{bia.id}/bia)"))
+
+      expect(tipos(bia)).to eq(['conversation_mention'])
+      expect(Conversations::UserMentionJob).not_to have_received(:perform_later)
+    end
+
+    it 'id de quem não participa é ignorado e não vira participante', :aggregate_failures do
+      avisar(escrever(no_setor, "oi (mention://user/#{caio.id}/caio)"))
+
+      expect(tipos(caio)).to be_empty
+      expect(no_setor.conversation_participants.pluck(:user_id)).not_to include(caio.id)
+    end
+
+    it 'admin de fora não é marcado', :aggregate_failures do
+      avisar(escrever(no_setor, "oi (mention://user/#{admin_user.id}/adm) (mention://user/#{bia.id}/bia)"))
+
+      expect(tipos(bia)).to eq(['conversation_mention'])
+      expect(tipos(admin_user)).to be_empty
+    end
+
+    it '@todos marca todos menos quem escreveu', :aggregate_failures do
+      avisar(escrever(geral, 'atenção [@todos](mention://todos/0/todos)'))
+
+      expect(tipos(bia)).to eq(['conversation_mention'])
+      expect(tipos(caio)).to eq(['conversation_mention'])
+      expect(tipos(ana)).to be_empty
+    end
+
+    it '"@todos" em texto puro não marca (só aviso comum)' do
+      avisar(escrever(geral, 'atenção @todos'))
+
+      expect(tipos(bia)).to eq(['participating_conversation_new_message'])
+    end
+
+    it '@todos em 1:1 é ignorado' do
+      ana_bia = Ramon::Equipe.conversa_1a1(account, ana, bia)
+
+      avisar(escrever(ana_bia, '[@todos](mention://todos/0/todos)'))
+
+      expect(Notification.where(notification_type: 'conversation_mention')).to be_empty
+    end
+
+    it 'caixa de cliente: mensagem pública com token continua sem efeito' do
+      message = build(:message, conversation: conversation, account: account, private: false,
+                                content: "hi (mention://user/#{first_agent.id}/x) [@todos](mention://todos/0/todos)")
+
+      described_class.new(message: message).perform
+
+      expect(NotificationBuilder).not_to have_received(:new)
+    end
+  end
+
+  # rubocop:enable RSpec/MultipleMemoizedHelpers
+
   describe 'cross-account validation' do
     let!(:other_account) { create(:account) }
     let!(:other_team) { create(:team, account: other_account) }

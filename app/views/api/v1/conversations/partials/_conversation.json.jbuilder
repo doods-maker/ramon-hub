@@ -61,4 +61,9 @@ json.priority conversation.priority
 json.waiting_since conversation.waiting_since.to_i.to_i
 json.sla_policy_id conversation.sla_policy_id
 json.ramon_lead conversation.ramon_lead_slim # FORK(ramon): Etapa · Tese · SDR no card
+if conversation.inbox&.equipe? # FORK(ramon): grupo ou 1:1 (e quem são) para o cabeçalho e a lista
+  json.equipe_marcado Ramon::Equipe.marcado_nao_lido?(conversation, Current.user) # por pessoa: nunca no push_data
+  json.equipe_tipo Ramon::Equipe.tipo(conversation)
+  json.equipe_pessoas Ramon::Equipe.pessoas_1a1(conversation)
+end
 json.partial! 'enterprise/api/v1/conversations/partials/conversation', conversation: conversation if ChatwootApp.enterprise?

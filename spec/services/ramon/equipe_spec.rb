@@ -59,6 +59,45 @@ RSpec.describe Ramon::Equipe do
     end
   end
 
+  describe 'permissões e tipo' do
+    before { described_class.sincronizar(account, criar: true) }
+
+    let(:inbox) { described_class.sincronizar(account, criar: true) }
+    let(:geral) { inbox && conversa('geral') }
+    let(:ana_bia) { described_class.conversa_1a1(account, ana, bia) }
+    let(:de_ana) { create(:message, conversation: ana_bia, account: account, inbox: inbox, sender: ana, message_type: :outgoing) }
+
+    it '.pode_escrever? e .participante?: só quem participa na Equipe; livre fora dela', :aggregate_failures do
+      expect(described_class.participante?(ana_bia, ana)).to be(true)
+      expect(described_class.participante?(ana_bia, admin)).to be(false)
+      expect(described_class.participante?(ana_bia, nil)).to be(false)
+      expect(described_class.pode_escrever?(ana_bia, admin)).to be(false)
+      expect(described_class.pode_escrever?(geral, admin)).to be(true)
+
+      comum = create(:conversation, account: account)
+      expect(described_class.pode_escrever?(comum, nil)).to be(true)
+    end
+
+    it '.pode_apagar?: participante autor ou admin participante; fora da Equipe, livre', :aggregate_failures do
+      expect(described_class.pode_apagar?(de_ana, ana, ana.account_users.first)).to be(true)
+      expect(described_class.pode_apagar?(de_ana, bia, bia.account_users.first)).to be(false)
+      expect(described_class.pode_apagar?(de_ana, admin, admin.account_users.first)).to be(false)
+
+      no_geral = create(:message, conversation: geral, account: account, inbox: inbox, sender: ana, message_type: :outgoing)
+      expect(described_class.pode_apagar?(no_geral, admin, admin.account_users.first)).to be(true)
+
+      comum = create(:message, account: account, message_type: :outgoing)
+      expect(described_class.pode_apagar?(comum, nil, nil)).to be(true)
+    end
+
+    it '.tipo e .pessoas_1a1', :aggregate_failures do
+      expect(described_class.tipo(ana_bia)).to eq('1a1')
+      expect(described_class.pessoas_1a1(ana_bia).pluck(:id)).to eq([ana.id, bia.id].sort)
+      expect(described_class.tipo(geral)).to eq('grupo')
+      expect(described_class.pessoas_1a1(geral)).to eq([])
+    end
+  end
+
   describe '.nao_lidas' do
     let(:geral) { described_class.sincronizar(account, criar: true) && conversa('geral') }
 
@@ -72,6 +111,46 @@ RSpec.describe Ramon::Equipe do
       expect(described_class.nao_lidas(geral, admin)).to eq(2)
       expect(described_class.nao_lidas(geral, ana)).to eq(0)
       expect(described_class.total_nao_lidas(account, bia)).to eq(1)
+    end
+  end
+
+  describe '.marcado_nao_lido?' do
+    before { described_class.sincronizar(account, criar: true) }
+
+    let(:geral) { described_class.sincronizar(account, criar: true) && conversa('geral') }
+
+    def de_ana(texto)
+      create(:message, conversation: geral, account: account, inbox: geral.inbox, sender: ana, message_type: :outgoing, content: texto)
+    end
+
+    it 'vale para marcação não lida, some ao ler e ignora marcação de outro id', :aggregate_failures do
+      de_ana("oi [@x](mention://user/#{bia.id}0/x)") # id 10x maior, prefixo igual
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(false)
+
+      de_ana("oi [@bia](mention://user/#{bia.id}/bia)")
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(true)
+      expect(described_class.marcado_nao_lido?(geral, admin)).to be(false)
+      expect(described_class.marcado_nao_lido?(geral, nil)).to be(false)
+
+      described_class.marcar_lida(geral, bia)
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(false)
+    end
+
+    it '@todos não marca na 1:1, mesmo com o token', :aggregate_failures do
+      par = described_class.conversa_1a1(account, ana, bia)
+      create(:message, conversation: par, account: account, inbox: par.inbox, sender: ana, message_type: :outgoing,
+                       content: '[@todos](mention://todos/0/todos)')
+
+      expect(described_class.marcado_nao_lido?(par, bia)).to be(false)
+    end
+
+    it '@todos marca quem não escreveu; mensagem apagada deixa de marcar', :aggregate_failures do
+      msg = de_ana('[@todos](mention://todos/0/todos)')
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(true)
+      expect(described_class.marcado_nao_lido?(geral, ana)).to be(false)
+
+      msg.update!(content: 'This message was deleted', content_attributes: { deleted: true })
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(false)
     end
   end
 

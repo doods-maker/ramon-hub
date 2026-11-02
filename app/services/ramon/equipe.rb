@@ -2,7 +2,7 @@
 # tem a conversa Geral (todos), uma por time (membros do time) e as 1:1, abertas sob demanda. Quem participa da conversa
 # vê, responde e é avisado; administrador vê tudo. Cada conversa tem um contato sintético (additional_attributes.equipe)
 # achado pelo source_id do contact_inbox: equipe-geral, equipe-time-<id>, equipe-1a1-<menor id>-<maior id>.
-module Ramon::Equipe
+module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
   module_function
 
   # Consultas frescas (sem as associações do account): no commit de um AccountUser/TeamMember o account.users/teams
@@ -42,12 +42,38 @@ module Ramon::Equipe
   # Não-lida por pessoa: mensagem de colega depois da última leitura de quem participa. Quem não participa (admin
   # olhando conversa alheia) não tem não-lida.
   def nao_lidas(conversation, user)
+    mensagens_nao_lidas(conversation, user)&.count || 0
+  end
+
+  # Há mensagem não lida que marca a pessoa (@ nela ou @todos). Apagada vira texto padrão, então deixa de casar.
+  def marcado_nao_lido?(conversation, user)
+    mensagens = mensagens_nao_lidas(conversation, user)
+    return false unless mensagens
+
+    padroes = ["%(mention://user/#{user.id}/%"]
+    padroes << '%(mention://todos/0/todos)%' if tipo(conversation) == 'grupo'
+    mensagens.exists?([(['messages.content LIKE ?'] * padroes.size).join(' OR '), *padroes])
+  end
+
+  # Título do push de @ na Equipe; nil (título nativo) fora dela ou sem remetente usuário.
+  def titulo_marcacao(notification)
+    conversation = notification.primary_actor
+    return unless notification.notification_type == 'conversation_mention' && conversation.inbox&.equipe?
+
+    quem = notification.secondary_actor.try(:sender).try(:available_name)
+    return unless quem
+
+    chave = tipo(conversation) == '1a1' ? 'equipe_mention_1a1' : 'equipe_mention'
+    I18n.t("notifications.notification_title.#{chave}", quem: quem, canal: conversation.contact&.name)
+  end
+
+  # nil quando a pessoa não participa.
+  def mensagens_nao_lidas(conversation, user)
     participante = user && conversation.conversation_participants.find_by(user_id: user.id)
-    return 0 unless participante
+    return unless participante
 
     mensagens = conversation.messages.where(sender_type: 'User').where.not(sender_id: user.id)
-    mensagens = mensagens.where('messages.created_at > ?', participante.last_seen_at) if participante.last_seen_at
-    mensagens.count
+    participante.last_seen_at ? mensagens.where('messages.created_at > ?', participante.last_seen_at) : mensagens
   end
 
   # ponytail: 1 contagem por conversa de que participa (dezenas); vira um SQL só se a equipe crescer muito.
@@ -60,6 +86,34 @@ module Ramon::Equipe
 
   def marcar_lida(conversation, user)
     conversation.conversation_participants.find_by(user_id: user.id)&.update!(last_seen_at: Time.current)
+  end
+
+  def participante?(conversation, user)
+    user.is_a?(User) && conversation.conversation_participants.exists?(user_id: user.id)
+  end
+
+  # Admin de fora só lê. Fora da Equipe nada muda (inclusive AgentBot/usuário nulo).
+  def pode_escrever?(conversation, user)
+    !conversation.inbox.equipe? || participante?(conversation, user)
+  end
+
+  def pode_apagar?(message, user, account_user)
+    conversation = message.conversation
+    return true unless conversation.inbox.equipe?
+
+    participante?(conversation, user) && (account_user&.administrator? || (message.sender_type == 'User' && message.sender_id == user.id))
+  end
+
+  def tipo(conversation)
+    conversation.contact_inbox&.source_id.to_s.start_with?('equipe-1a1-') ? '1a1' : 'grupo'
+  end
+
+  def pessoas_1a1(conversation)
+    return [] unless tipo(conversation) == '1a1'
+
+    User.where(id: conversation.conversation_participants.select(:user_id)).order(:id).map do |u|
+      { id: u.id, name: u.available_name, thumbnail: u.avatar_url }
+    end
   end
 
   # Hub surdo (AsyncDispatcher): o evento é da caixa Equipe?

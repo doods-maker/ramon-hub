@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { format, fromUnixTime } from 'date-fns';
 import { messageTimestamp } from 'shared/helpers/timeHelper';
 
 import MessageStatus from './MessageStatus.vue';
@@ -7,7 +8,7 @@ import Icon from 'next/icon/Icon.vue';
 import { useInbox } from 'dashboard/composables/useInbox';
 import { useMessageContext } from './provider.js';
 
-import { MESSAGE_STATUS, MESSAGE_TYPES } from './constants';
+import { MESSAGE_STATUS, MESSAGE_TYPES, ORIENTATION } from './constants';
 
 const {
   isAFacebookInbox,
@@ -30,14 +31,22 @@ const {
   sourceId,
   messageType,
   contentAttributes,
+  isEquipe,
+  orientation,
 } = useMessageContext();
 
+// FORK(ramon): Equipe = só a hora. Direto no date-fns: messageTimestamp troca o
+// formato em mensagem de outro ano.
 const readableTime = computed(() =>
-  messageTimestamp(createdAt.value, 'LLL d, h:mm a')
+  isEquipe.value
+    ? format(fromUnixTime(createdAt.value), 'HH:mm')
+    : messageTimestamp(createdAt.value, 'LLL d, h:mm a')
 );
 
 const showStatusIndicator = computed(() => {
   if (isPrivate.value) return false;
+  // FORK(ramon): na Equipe tudo é outgoing; status só nas minhas mensagens
+  if (isEquipe.value && orientation.value === ORIENTATION.LEFT) return false;
   // Don't show status for failed messages, we already show error message
   if (status.value === MESSAGE_STATUS.FAILED) return false;
   // Don't show status for deleted messages
@@ -132,7 +141,11 @@ const statusToShow = computed(() => {
 </script>
 
 <template>
-  <div class="text-xs flex items-center gap-1.5">
+  <div
+    class="flex items-center gap-1.5"
+    :class="isEquipe ? 'text-[10px] font-mono' : 'text-xs'"
+  >
+    <!-- FORK(ramon): na Equipe, hora pequena e mono (.rodape do mockup) -->
     <div class="inline">
       <time class="inline">{{ readableTime }}</time>
     </div>

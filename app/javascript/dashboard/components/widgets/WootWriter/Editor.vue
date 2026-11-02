@@ -94,6 +94,9 @@ const props = defineProps({
   conversationId: { type: Number, default: null },
   medium: { type: String, default: '' },
   focusOnMount: { type: Boolean, default: true },
+  // FORK(ramon): caixa Equipe. @ em mensagem pública, Enter envia, sem / nem {{.
+  equipe: { type: Boolean, default: false },
+  itensMarcacao: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits([
@@ -131,10 +134,13 @@ const effectiveChannelType = computed(() =>
   getEffectiveChannelType(props.channelType, props.medium)
 );
 
+// FORK(ramon): a mensagem pública da Equipe carrega marcação, como a nota privada.
+const usaFormatoNota = computed(() => props.isPrivate || props.equipe);
+
 const editorSchema = computed(() => {
   if (!props.channelType) return messageSchema;
 
-  const formatType = props.isPrivate
+  const formatType = usaFormatoNota.value
     ? PRIVATE_NOTE_FORMATTING
     : effectiveChannelType.value;
   const formatting = getFormattingForEditor(
@@ -145,12 +151,12 @@ const editorSchema = computed(() => {
 });
 
 const editorMenuOptions = computed(() => {
-  const formatType = props.isPrivate
+  const formatType = usaFormatoNota.value
     ? PRIVATE_NOTE_FORMATTING
     : effectiveChannelType.value || DEFAULT_FORMATTING;
   const formatting = getFormattingForEditor(
     formatType,
-    captainTasksEnabled.value
+    captainTasksEnabled.value && !props.equipe
   );
 
   return formatting.menu;
@@ -292,19 +298,20 @@ const plugins = computed(() => {
       trigger: '@',
       showMenu: showUserMentions,
       searchTerm: mentionSearchKey,
-      isAllowed: () => props.isPrivate || !props.enableCaptainTools,
+      isAllowed: () =>
+        props.equipe || props.isPrivate || !props.enableCaptainTools,
     }),
     createSuggestionPlugin({
       trigger: '/',
       showMenu: showCannedMenu,
       searchTerm: cannedSearchTerm,
-      isAllowed: () => !props.isPrivate,
+      isAllowed: () => !props.isPrivate && !props.equipe,
     }),
     createSuggestionPlugin({
       trigger: '{{',
       showMenu: showVariables,
       searchTerm: variableSearchTerm,
-      isAllowed: () => !props.isPrivate,
+      isAllowed: () => !props.isPrivate && !props.equipe,
     }),
     createSuggestionPlugin({
       trigger: ':',
@@ -331,7 +338,7 @@ const sendWithSignature = computed(() => {
 });
 
 watch(showUserMentions, updatedValue => {
-  emit('toggleUserMention', props.isPrivate && updatedValue);
+  emit('toggleUserMention', usaFormatoNota.value && updatedValue);
 });
 watch(showCannedMenu, updatedValue => {
   emit('toggleCannedMenu', !props.isPrivate && updatedValue);
@@ -532,12 +539,13 @@ function toggleSignatureInEditor(signatureEnabled) {
   emitOnChange();
 }
 
+// FORK(ramon): na Equipe, Enter envia sem tocar na preferência da pessoa.
 function isEnterToSendEnabled() {
-  return isEditorHotKeyEnabled('enter');
+  return props.equipe || isEditorHotKeyEnabled('enter');
 }
 
 function isCmdPlusEnterToSendEnabled() {
-  return isEditorHotKeyEnabled('cmd_enter');
+  return !props.equipe && isEditorHotKeyEnabled('cmd_enter');
 }
 
 function onImageInsertInEditor(fileUrl) {
@@ -706,6 +714,15 @@ function insertSpecialContent(type, content) {
   useTrack(event_map[type]);
 }
 
+function onSelectMention(content) {
+  // FORK(ramon): o serializer do schema perde o id 0 (`userId || ''`); sem String,
+  // o @todos sairia mention://todos//todos e o servidor não o reconheceria.
+  insertSpecialContent(
+    'mention',
+    props.equipe ? { ...content, id: String(content.id) } : content
+  );
+}
+
 function handleLineBreakWhenCmdAndEnterToSendEnabled(event) {
   if (
     hasPressedCommandAndEnter(event) &&
@@ -795,16 +812,17 @@ watch(
     showEmojiMenu.value = false;
     showVariables.value = false;
     cannedSearchTerm.value = '';
+    // FORK(ramon): reloadState não dispara o onExit. Sem isto a lista do @ sobrevive à troca:
+    // o ReplyBox para de enviar no cliente, e na Equipe a lista abre sem @ digitado.
+    showUserMentions.value = false;
+    mentionSearchKey.value = '';
     reloadState(props.modelValue);
   }
 );
 
-watch(
-  computed(() => props.isPrivate),
-  () => {
-    reloadState(props.modelValue);
-  }
-);
+watch(usaFormatoNota, () => {
+  reloadState(props.modelValue);
+});
 
 watch(
   computed(() => props.disabled),
@@ -873,9 +891,10 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
     }"
   >
     <TagAgents
-      v-if="showUserMentions && isPrivate"
+      v-if="showUserMentions && usaFormatoNota"
       :search-key="mentionSearchKey"
-      @select-agent="content => insertSpecialContent('mention', content)"
+      :itens="equipe ? itensMarcacao : undefined"
+      @select-agent="onSelectMention"
     />
     <CannedResponse
       v-if="shouldShowCannedResponses"
@@ -1134,6 +1153,29 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
         @apply bg-n-slate-3;
       }
     }
+  }
+}
+
+// FORK(ramon): caixa Equipe. Campo em pílula, em linha com emoji, anexo e enviar.
+.editor-equipe {
+  @apply rounded-[1.25rem] border border-solid border-n-strong bg-n-slate-3 px-4 py-[7px] focus-within:border-n-blue-11;
+
+  .ProseMirror-woot-style {
+    min-height: 1.5rem !important;
+    max-height: 7.5rem !important;
+  }
+
+  // Sem a margem de cima do parágrafo, o campo vazio fica com 40 px, como o botão enviar.
+  .ProseMirror p:first-child {
+    margin-top: 0 !important;
+  }
+
+  .ProseMirror p:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .prosemirror-mention-node {
+    @apply font-semibold text-n-blue-11;
   }
 }
 </style>

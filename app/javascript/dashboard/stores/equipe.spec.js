@@ -3,7 +3,7 @@ import { useEquipeStore } from './equipe';
 import EquipeAPI from 'dashboard/api/ramonEquipe';
 
 vi.mock('dashboard/api/ramonEquipe', () => ({
-  default: { get: vi.fn(), conversa: vi.fn() },
+  default: { get: vi.fn(), conversa: vi.fn(), participantes: vi.fn() },
 }));
 
 const notificacao = (over = {}) => ({
@@ -40,9 +40,88 @@ describe('useEquipeStore', () => {
     expect(useEquipeStore()).toMatchObject({ inboxId: 9, naoLidas: 3 });
   });
 
+  it('carrega participantes em camelCase e atualiza só a pessoa certa', async () => {
+    EquipeAPI.participantes.mockResolvedValue({
+      data: [
+        { id: 1, name: 'Eu', thumbnail: 'a', last_seen_at: 10 },
+        { id: 2, name: 'Ana', thumbnail: 'b', last_seen_at: null },
+      ],
+    });
+    const store = useEquipeStore();
+    await store.carregarParticipantes(7);
+    expect(store.participantes[7][1]).toEqual({
+      id: 2,
+      name: 'Ana',
+      thumbnail: 'b',
+      lastSeenAt: null,
+    });
+
+    store.atualizarLeitura({ conversationId: 7, userId: 2, lastSeenAt: 99 });
+    store.atualizarLeitura({ conversationId: 8, userId: 2, lastSeenAt: 5 });
+    expect(store.participantes[7].map(p => p.lastSeenAt)).toEqual([10, 99]);
+    expect(store.participantes[8]).toBeUndefined();
+  });
+
   it('avisa (som) mensagem de colega numa conversa da Equipe', async () => {
     expect(await useEquipeStore().avisar(notificacao())).toBe(true);
     expect(play).toHaveBeenCalled();
+  });
+
+  describe('notificação do sistema', () => {
+    let Notificacao;
+    const marcacao = '[@Eduardo](mention://user/1/Eduardo) bom dia';
+    const chat1a1 = {
+      id: 7,
+      inbox_id: 9,
+      equipe_tipo: '1a1',
+      meta: { sender: { name: 'Ana e Bia' } },
+    };
+
+    beforeEach(() => {
+      Notificacao = vi.fn();
+      Notificacao.permission = 'granted';
+      vi.stubGlobal('Notification', Notificacao);
+    });
+
+    it('marcação: "Ana te marcou · Geral", corpo sem mention://', async () => {
+      await useEquipeStore().avisar(
+        notificacao({
+          notification_type: 'conversation_mention',
+          secondary_actor: { content: marcacao, sender: { name: 'Ana' } },
+        })
+      );
+      expect(Notificacao).toHaveBeenCalledWith('Ana te marcou · Geral', {
+        body: '@Eduardo bom dia',
+        tag: 'equipe-7',
+      });
+    });
+
+    it('aviso comum: "Ana · Geral", corpo sem mention://', async () => {
+      await useEquipeStore().avisar(
+        notificacao({
+          secondary_actor: { content: marcacao, sender: { name: 'Ana' } },
+        })
+      );
+      expect(Notificacao).toHaveBeenCalledWith('Ana · Geral', {
+        body: '@Eduardo bom dia',
+        tag: 'equipe-7',
+      });
+    });
+
+    it('1:1: só "Ana te marcou", sem o nome do contato sintético', async () => {
+      await useEquipeStore().avisar(
+        notificacao({
+          notification_type: 'conversation_mention',
+          primary_actor: chat1a1,
+        })
+      );
+      expect(Notificacao.mock.calls[0][0]).toBe('Ana te marcou');
+    });
+
+    it('1:1: aviso comum mostra só o nome da pessoa', async () => {
+      await useEquipeStore().avisar(notificacao({ primary_actor: chat1a1 }));
+      expect(Notificacao.mock.calls[0][0]).toBe('Ana');
+    });
   });
 
   it('não avisa notificação de outra caixa nem de outro tipo', async () => {

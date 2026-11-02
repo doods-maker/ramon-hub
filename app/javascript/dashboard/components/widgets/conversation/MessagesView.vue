@@ -4,6 +4,7 @@ import { useElementSize } from '@vueuse/core';
 // composable
 import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
+import { useEquipeStore } from 'dashboard/stores/equipe';
 
 // components
 import ReplyBox from './ReplyBox.vue';
@@ -73,6 +74,7 @@ export default {
       topBannerRef,
       containerHeight,
       topBannerHeight,
+      equipeStore: useEquipeStore(),
     };
   },
   data() {
@@ -110,6 +112,20 @@ export default {
     },
     inbox() {
       return this.$store.getters['inboxes/getInbox'](this.inboxId);
+    },
+    // FORK(ramon): caixa Equipe (chat interno).
+    equipe() {
+      return !!this.inbox?.equipe;
+    },
+    equipeConversaId() {
+      return this.equipe ? this.currentChat.id : null;
+    },
+    // Sem a lista carregada, mostra a caixa de escrever: a faixa não pisca para quem participa.
+    equipeSoLeitura() {
+      const lista = this.equipeStore.participantes[this.currentChat.id];
+      return (
+        this.equipe && !!lista && !lista.some(p => p.id === this.currentUserId)
+      );
     },
     typingUsersList() {
       const userList = this.$store.getters[
@@ -247,6 +263,14 @@ export default {
   },
 
   watch: {
+    // FORK(ramon): carrega também para o admin de fora (Message.vue usa participaEquipe).
+    equipeConversaId: {
+      immediate: true,
+      handler(conversationId) {
+        if (!conversationId) return;
+        this.equipeStore.carregarParticipantes(conversationId).catch(() => {});
+      },
+    },
     currentChat(newChat, oldChat) {
       if (newChat.id === oldChat.id) {
         return;
@@ -282,6 +306,9 @@ export default {
     async fetchSuggestions() {
       // start empty, this ensures that the label suggestions are not shown
       this.labelSuggestions = [];
+
+      // FORK(ramon): nada na caixa Equipe pode acionar IA (hub surdo).
+      if (this.equipe) return;
 
       if (this.isLabelSuggestionDismissed()) {
         return;
@@ -512,7 +539,7 @@ export default {
     </MessageList>
     <div class="flex relative flex-col bg-n-surface-1">
       <div
-        v-if="isAnyoneTyping"
+        v-if="isAnyoneTyping && !equipe"
         class="absolute flex items-center w-full h-0 -top-7"
       >
         <div
@@ -526,8 +553,16 @@ export default {
           />
         </div>
       </div>
+      <div
+        v-if="equipeSoLeitura"
+        class="px-4 py-3 text-sm text-center border-t border-solid border-n-weak text-n-slate-11"
+      >
+        {{ $t('RAMON.EQUIPE.SO_LEITURA') }}
+      </div>
       <ResizableEditorWrapper
+        v-else
         ref="resizableEditorWrapperRef"
+        :class="{ '[&>.group]:hidden': equipe }"
         :container-height="Math.max(0, containerHeight - topBannerHeight)"
       >
         <ReplyBox @toggle-editor-size="toggleReplyEditorSize" />
