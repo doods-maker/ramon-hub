@@ -740,6 +740,7 @@ provideMessageContext({
         <PilotoCarimbo v-if="contentAttributes.ramonPiloto" />
         <RascunhoCarimbo v-if="contentAttributes.ramonRascunhoIa" />
         <RascunhoAcoes v-if="ehRascunho" />
+        <!-- FORK(ramon): reações da Equipe (WhatsApp) -->
         <EquipeReacoes
           v-if="mostrarReacoes"
           :conversation-id="conversationId"
