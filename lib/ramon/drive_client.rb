@@ -66,6 +66,24 @@ class Ramon::DriveClient
       listar("'#{parent_id}' in parents and #{FILTRO_TIPOS}", 200)
     end
 
+    # Tudo que está na pasta (sem filtro de tipos), pastas incluídas com pasta: true.
+    def conteudo_da_pasta(pasta_id)
+      listar("'#{pasta_id}' in parents", 200)
+    end
+
+    # Nomes das pastas ancestrais (mais próxima primeiro), até `limite`.
+    def nomes_acima(pasta_id, limite: 4)
+      nomes = []
+      atual = pasta_id
+      limite.times do
+        atual = parent_of(atual)
+        break if atual.blank?
+
+        nomes << service.get_file(atual, fields: 'name', supports_all_drives: true).name
+      end
+      nomes
+    end
+
     def search(texto)
       texto = texto.to_s.strip
       return [] if texto.length < 3
