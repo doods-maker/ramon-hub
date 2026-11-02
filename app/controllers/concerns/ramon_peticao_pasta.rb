@@ -26,10 +26,13 @@ module RamonPeticaoPasta
     render json: { error: 'pasta_ja_usada', peticao_id: existente&.id }, status: :unprocessable_entity
   end
 
+  # O item da lista de pastas prontas sai na hora (o job também limparia).
   def criar_da_pasta(pasta_id)
     Current.account.peticoes.create!(status: 'conferencia', pela_pasta: true, drive_pasta_id: pasta_id,
                                      criado_por: Current.user, responsavel: Current.user,
-                                     leitura: { 'estado' => 'lendo', 'lendo_desde' => Time.current.iso8601 })
+                                     leitura: { 'estado' => 'lendo', 'lendo_desde' => Time.current.iso8601 }).tap do
+      Current.account.pastas_prontas.where(drive_pasta_id: pasta_id).find_each(&:destroy)
+    end
   end
 
   # Sob trava: :protocolada, :em_leitura ou :ok; no :ok grava `lendo` (mantém os campos anteriores) e volta a conferência.

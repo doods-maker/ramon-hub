@@ -254,6 +254,13 @@ RSpec.describe 'Ramon Petições API', type: :request do
       expect(account.peticoes.count).to eq(0)
     end
 
+    it 'apontar a pasta tira o item da lista de pastas prontas' do
+      account.pastas_prontas.create!(drive_pasta_id: 'p1', titulo: 'A', responsavel: ana)
+      post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json
+      expect(response).to have_http_status(:success)
+      expect(account.pastas_prontas).to be_empty
+    end
+
     it 'apontar a mesma pasta de novo devolve 422 com a petição existente' do
       existente = da_pasta
       expect { post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json }
@@ -428,7 +435,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
       account.pastas_prontas.create!(drive_pasta_id: "pasta-#{titulo}", titulo: titulo, responsavel: dono)
     end
 
-    def ids_de(user)
+    def titulos_de(user)
       get "#{url}/pastas_prontas", headers: user.create_new_auth_token, as: :json
       response.parsed_body['pastas'].pluck('titulo')
     end
@@ -440,10 +447,10 @@ RSpec.describe 'Ramon Petições API', type: :request do
     end
 
     it 'responsável vê as dele; agente do time não vê a de outro; admin vê todas, inclusive sem dono' do
-      expect(ids_de(ana)).to eq(['da Ana'])
+      expect(titulos_de(ana)).to eq(['da Ana'])
       expect(response.parsed_body['pastas'].first).to include('drive_pasta_id' => 'pasta-da Ana', 'responsavel' => include('id' => ana.id))
-      expect(ids_de(bia)).to eq(['da Bia'])
-      expect(ids_de(admin)).to contain_exactly('da Ana', 'da Bia', 'sem dono')
+      expect(titulos_de(bia)).to eq(['da Bia'])
+      expect(titulos_de(admin)).to contain_exactly('da Ana', 'da Bia', 'sem dono')
       expect(response.parsed_body['pastas'].find { |x| x['titulo'] == 'sem dono' }['responsavel']).to be_nil
     end
 

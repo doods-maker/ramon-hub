@@ -110,6 +110,28 @@ describe('SinoNotificacoes.vue', () => {
     });
   });
 
+  it('aviso de pasta pronta abre Protocolos na conferência', async () => {
+    listaRef.value = [
+      {
+        id: 5,
+        notification_type: 'ramon_pasta_pronta',
+        primary_actor_type: 'PastaPronta',
+        primary_actor_id: 9,
+        primary_actor: { id: 9, titulo: 'Réplica' },
+        push_message_title: 'Pasta pronta para revisar: Réplica',
+        read_at: null,
+        created_at: 1760900000,
+      },
+    ];
+    const wrapper = montar();
+    await wrapper.find('[data-testid="sino"]').trigger('click');
+    await wrapper.find('[data-testid="sino-item"]').trigger('click');
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_protocolos',
+      query: { status: 'conferencia' },
+    });
+  });
+
   it('lead com conversa e notificação de conversa abrem a conversa', async () => {
     listaRef.value = [
       { ...avisoDoHub, primary_actor: { id: 40, conversation_id: 77 } },

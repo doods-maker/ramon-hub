@@ -72,10 +72,38 @@ class Ramon::DriveClient
       listar("'#{pasta_id}' in parents", 200)
     end
 
-    # Marcadores que a esteira deixa na pasta pronta: [{id:, parents:}]; a pasta é o pai do marcador.
-    # ponytail: uma página de 200; com mais marcadores abertos que isso, paginar.
+    # Marcadores que a esteira deixa na pasta pronta: [{id:, parents:, size:}]; a pasta é o pai do marcador.
+    # Segue as páginas até o fim (qualquer erro sobe: lista parcial nunca vale como completa).
     def marcadores_de_pasta_pronta
-      listar("name = '#{MARCADOR_PASTA_PRONTA}'", 200).map { |h| h.slice(:id, :parents) }
+      arquivos = []
+      token = nil
+      loop do
+        pagina = service.list_files(
+          q: "name = '#{MARCADOR_PASTA_PRONTA}' and trashed = false", fields: 'nextPageToken,files(id,parents,size)', page_size: 200,
+          page_token: token, supports_all_drives: true, include_items_from_all_drives: true
+        )
+        arquivos.concat(pagina.files.to_a)
+        token = pagina.next_page_token
+        break if token.blank?
+      end
+      arquivos.map { |f| { id: f.id, parents: f.parents, size: f.size&.to_i } }
+    end
+
+    # Marcador já usado: sai da lista (a esteira ignora arquivos _*).
+    def para_lixeira(file_id)
+      service.update_file(file_id, { trashed: true }, fields: 'id', supports_all_drives: true)
+    end
+
+    # A pasta está dentro da raiz do escritório (sobe até `niveis` pais)?
+    def dentro_da_raiz?(pasta_id, niveis: 8)
+      atual = pasta_id
+      niveis.times do
+        return true if atual == root_id
+
+        atual = parent_of(atual)
+        return false if atual.blank?
+      end
+      atual == root_id
     end
 
     # Nomes das pastas ancestrais (mais próxima primeiro), até `limite`.

@@ -59,6 +59,7 @@ export default {
         this.$router.push({
           name: 'ramon_protocolos',
           params: { accountId: this.accountId },
+          query: { status: 'conferencia' },
         });
         return;
       }

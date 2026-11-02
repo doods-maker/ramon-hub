@@ -8,15 +8,17 @@ RSpec.describe Ramon::PastasProntasJob do
   let(:jsons) { {} }
 
   before do
+    time = create(:team, account: account, name: Ramon::Papeis::JURIDICO)
+    create(:team_member, team: time, user: brenda)
     allow(ENV).to receive(:fetch).and_call_original
     allow(ENV).to receive(:fetch).with('RAMON_PETICOES_ACCOUNT_ID', 2).and_return(account.id)
-    allow(Ramon::DriveClient).to receive_messages(configured?: true)
+    allow(Ramon::DriveClient).to receive_messages(configured?: true, dentro_da_raiz?: true, para_lixeira: nil)
     allow(Ramon::DriveClient).to receive(:marcadores_de_pasta_pronta) { marcadores }
     allow(Ramon::DriveClient).to receive(:download) { |id| [jsons.fetch(id), 'application/json', '_pasta-pronta.json'] }
   end
 
-  def stub_marcador(id, pasta:, json:)
-    marcadores << { id: id, parents: [pasta] }
+  def stub_marcador(id, pasta:, json:, size: 20)
+    marcadores << { id: id, parents: [pasta], size: size }
     jsons[id] = json.is_a?(String) ? json : json.to_json
   end
 
@@ -62,15 +64,71 @@ RSpec.describe Ramon::PastasProntasJob do
     expect(Notification.where(notification_type: 'ramon_pasta_pronta').count).to eq(0)
   end
 
-  it 'petição passa a existir: o item sai com o sino; marcador sumiu: o item sai' do
+  it 'petição passa a existir: o item sai com o sino e o marcador vai para a lixeira; marcador sumiu: o item sai' do
     stub_marcador('m1', pasta: 'p1', json: { responsavel_email: brenda.email })
     stub_marcador('m2', pasta: 'p2', json: { responsavel_email: brenda.email })
+    stub_marcador('m3', pasta: 'p3', json: { responsavel_email: brenda.email })
     described_class.perform_now
     account.peticoes.create!(criado_por: brenda, responsavel: brenda, status: 'conferencia', pela_pasta: true, drive_pasta_id: 'p1')
-    marcadores.pop
+    marcadores.delete_at(1)
     described_class.perform_now
-    expect(account.pastas_prontas).to be_empty
-    expect(brenda.notifications.count).to eq(0)
+    expect(account.pastas_prontas.pluck(:drive_pasta_id)).to eq(['p3'])
+    expect(brenda.notifications.count).to eq(1)
+    expect(Ramon::DriveClient).to have_received(:para_lixeira).once.with('m1')
+  end
+
+  it 'lista vazia não apaga os itens, mas petição existente ainda tira o dela' do
+    stub_marcador('m1', pasta: 'p1', json: { titulo: 'A' })
+    stub_marcador('m2', pasta: 'p2', json: { titulo: 'B' })
+    described_class.perform_now
+    account.peticoes.create!(criado_por: brenda, responsavel: brenda, status: 'conferencia', pela_pasta: true, drive_pasta_id: 'p1')
+    marcadores.clear
+    described_class.perform_now
+    expect(account.pastas_prontas.pluck(:drive_pasta_id)).to eq(['p2'])
+  end
+
+  it 'falha ao mandar o marcador para a lixeira só registra log e o lote segue' do
+    account.peticoes.create!(criado_por: brenda, responsavel: brenda, status: 'conferencia', pela_pasta: true, drive_pasta_id: 'p1')
+    stub_marcador('m1', pasta: 'p1', json: { titulo: 'A' })
+    stub_marcador('m2', pasta: 'p2', json: { titulo: 'B' })
+    allow(Ramon::DriveClient).to receive(:para_lixeira).and_raise(Google::Apis::ServerError.new('fora'))
+    allow(Rails.logger).to receive(:warn)
+    expect { described_class.perform_now }.not_to raise_error
+    expect(account.pastas_prontas.pluck(:drive_pasta_id)).to eq(['p2'])
+    expect(Rails.logger).to have_received(:warn).with(/lixeira falhou.*marcador=m1/)
+  end
+
+  it 'marcador acima de 64 KB é ignorado com log, sem baixar' do
+    stub_marcador('m1', pasta: 'p1', json: { titulo: 'A' }, size: 64.kilobytes + 1)
+    allow(Rails.logger).to receive(:warn)
+    expect { described_class.perform_now }.not_to change(PastaPronta, :count)
+    expect(Ramon::DriveClient).not_to have_received(:download)
+    expect(Rails.logger).to have_received(:warn).with(/grande demais\) marcador=m1/)
+  end
+
+  it 'título enorme é cortado em 200 caracteres' do
+    stub_marcador('m1', pasta: 'p1', json: { titulo: 'x' * 500 })
+    described_class.perform_now
+    expect(account.pastas_prontas.sole.titulo.length).to eq(200)
+  end
+
+  it 'pasta fora da raiz do escritório é ignorada com log' do
+    allow(Ramon::DriveClient).to receive(:dentro_da_raiz?).with('p1').and_return(false)
+    stub_marcador('m1', pasta: 'p1', json: { titulo: 'A' })
+    stub_marcador('m2', pasta: 'p2', json: { titulo: 'B' })
+    allow(Rails.logger).to receive(:warn)
+    described_class.perform_now
+    expect(account.pastas_prontas.pluck(:drive_pasta_id)).to eq(['p2'])
+    expect(Rails.logger).to have_received(:warn).with(/fora da raiz\) marcador=m1/)
+  end
+
+  it 'responsável que não é admin nem do time advogados conta como sem dono' do
+    fora = create(:user, account: account, role: :agent)
+    stub_marcador('m1', pasta: 'p1', json: { responsavel_email: fora.email, titulo: 'A' })
+    described_class.perform_now
+    expect(account.pastas_prontas.sole.responsavel_id).to be_nil
+    expect(sino(admin).count).to eq(1)
+    expect(sino(fora).count).to eq(0)
   end
 
   it 'JSON quebrado no marcador é ignorado com log, sem derrubar os demais nem apagar o item existente' do

@@ -44,7 +44,12 @@ const TOM_STATUS = {
   rascunho: TOM.amber,
   protocolada: TOM.teal,
 };
-const status = ref('rascunho');
+// O sino leva direto à conferência (só admin enquanto a conferência é restrita).
+const status = ref(
+  route.query.status === 'conferencia' && isAdmin.value
+    ? 'conferencia'
+    : 'rascunho'
+);
 const lista = ref([]);
 const tribunais = ref([]);
 const tipos = ref([]);

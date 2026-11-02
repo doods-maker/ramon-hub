@@ -54,6 +54,9 @@ const destino = n => {
   if (n.primary_actor_type === 'Conversation') {
     return { name: 'inbox_conversation', params: { conversation_id: ator.id } };
   }
+  if (n.primary_actor_type === 'PastaPronta') {
+    return { name: 'ramon_protocolos', query: { status: 'conferencia' } };
+  }
   if (n.primary_actor_type !== 'Lead') return null;
   return ator.conversation_id
     ? {
