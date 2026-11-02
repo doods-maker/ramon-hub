@@ -101,7 +101,7 @@ const salvo = data => {
   else peticao.value = data;
 };
 
-// Só rascunho (o backend recusa a protocolada); volta para a lista.
+// Rascunho ou conferência (o backend recusa a protocolada); volta para a lista.
 const excluir = async () => {
   try {
     await RamonPeticoesAPI.delete(peticao.value.id);
@@ -266,8 +266,9 @@ const segmento = ativo => [
                 </span>
               </span>
             </div>
-            <div v-if="rascunho" class="flex gap-2">
+            <div v-if="rascunho || conferencia" class="flex gap-2">
               <Button
+                v-if="rascunho"
                 xs
                 faded
                 slate

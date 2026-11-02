@@ -2448,6 +2448,7 @@
         "PACOTE_VAZIO": "A pasta não tem arquivos para o pacote. Corrija a pasta e clique em Reler a pasta.",
         "RECUSAS_TITULO": "Não dá para seguir com a pasta assim",
         "ALERTAS_TITULO": "Confira antes de confirmar",
+        "CONFERI_RESPONSAVEL": "Conferi quem assina e protocola.",
         "CONFERI": "Conferi e está certo.",
         "DADOS": "Dados lidos da pasta",
         "INCERTOS_AJUDA": "Os campos em amarelo são os que a leitura não teve certeza. Confira e corrija se precisar.",

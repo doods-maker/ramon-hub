@@ -165,6 +165,7 @@ onMounted(() => {
           {{ a.name }}
         </option>
       </select>
+      <slot name="responsavel" />
     </label>
 
     <label :class="ROTULO">

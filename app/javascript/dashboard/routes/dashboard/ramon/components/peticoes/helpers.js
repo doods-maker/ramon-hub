@@ -73,13 +73,19 @@ export const mensagemRecusa = (codigo, t) => codigoPasta('RECUSA', codigo, t);
 export const mensagemAviso = (codigo, t) => codigoPasta('AVISO', codigo, t);
 export const mensagemAlerta = (codigo, t) => codigoPasta('ALERTA', codigo, t);
 
-// Confirmar só com leitura pronta, sem recusa, alertas conferidos e pacote
-// sem problema (o backend confere de novo).
-export const podeConfirmar = (peticao, alertasConferidos) =>
+// Responsável que a leitura não soube dizer: o advogado confere quem assina.
+export const responsavelIncerto = peticao =>
+  !!peticao.leitura?.incertos?.includes('responsavel') ||
+  !!peticao.avisos?.includes('responsavel_sem_usuario');
+
+// Confirmar só com leitura pronta, sem recusa, alertas (e responsável incerto,
+// chave 'responsavel') conferidos e pacote sem problema (o backend confere de novo).
+export const podeConfirmar = (peticao, conferidos) =>
   peticao.leitura?.estado === 'lida' &&
   !peticao.leitura.recusas?.length &&
   !peticao.problemas?.length &&
-  (peticao.alertas || []).every(a => alertasConferidos.includes(a));
+  (peticao.alertas || []).every(a => conferidos.includes(a)) &&
+  (!responsavelIncerto(peticao) || conferidos.includes('responsavel'));
 
 // Estado inicial do formulário de dados (nova = peticao null).
 export const formDaPeticao = (p, meuId) => ({

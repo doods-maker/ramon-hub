@@ -97,4 +97,68 @@ describe('ConferenciaPasta.vue', () => {
     expect(w.find('[data-testid="conferencia-erro"]').exists()).toBe(true);
     expect(confirmar(w).exists()).toBe(false);
   });
+
+  it('falha ao salvar não chama confirmar', async () => {
+    RamonPeticoesAPI.update.mockRejectedValue({
+      response: { data: { errors: ['Número inválido'] } },
+    });
+    const w = montar(peticao());
+    await confirmar(w).trigger('click');
+    await flushPromises();
+    expect(RamonPeticoesAPI.confirmar).not.toHaveBeenCalled();
+    expect(w.find('[data-testid="conferencia-erro-acao"]').text()).toContain(
+      'Número inválido'
+    );
+  });
+
+  it('responsável incerto: checkbox obrigatório para confirmar', async () => {
+    const w = montar(peticao({}, { incertos: ['responsavel'] }));
+    expect(confirmar(w).attributes('disabled')).toBeDefined();
+    await w.find('[data-testid="conferencia-responsavel"]').setValue(true);
+    expect(confirmar(w).attributes('disabled')).toBeUndefined();
+  });
+
+  it('mostra os problemas do pacote', () => {
+    const w = montar(peticao({ problemas: ['sem_principal'] }));
+    expect(w.find('[data-testid="conferencia-problemas"]').text()).toContain(
+      'RAMON.PETICOES.PROBLEMAS.SEM_PRINCIPAL'
+    );
+  });
+
+  it('pacote novo (mesmo id e estado) não apaga o que foi digitado', async () => {
+    const w = montar(peticao());
+    const campo = w.find('[data-testid="peticao-form-numero"]');
+    await campo.setValue('0001234-56.2026.8.24.0001');
+    await w.setProps({ peticao: peticao({ arquivos: [{ id: 1 }] }) });
+    expect(w.find('[data-testid="peticao-form-numero"]').element.value).toBe(
+      '0001234-56.2026.8.24.0001'
+    );
+  });
+
+  it('reler com sucesso limpa as marcações de conferido', async () => {
+    RamonPeticoesAPI.relerPasta.mockResolvedValue({
+      data: peticao({ alertas: ['cpf_diferente'] }),
+    });
+    const w = montar(peticao({ alertas: ['cpf_diferente'] }));
+    await w
+      .find('[data-testid="conferencia-alerta-cpf_diferente"]')
+      .setValue(true);
+    expect(confirmar(w).attributes('disabled')).toBeUndefined();
+    await w.find('[data-testid="conferencia-reler"]').trigger('click');
+    await flushPromises();
+    await w.setProps({ peticao: w.emitted('atualizado')[0][0] });
+    expect(confirmar(w).attributes('disabled')).toBeDefined();
+  });
+
+  it('volta a lendo: marcações são limpas', async () => {
+    const w = montar(peticao({ alertas: ['cpf_diferente'] }));
+    await w
+      .find('[data-testid="conferencia-alerta-cpf_diferente"]')
+      .setValue(true);
+    await w.setProps({
+      peticao: peticao({ alertas: ['cpf_diferente'] }, { estado: 'lendo' }),
+    });
+    await w.setProps({ peticao: peticao({ alertas: ['cpf_diferente'] }) });
+    expect(confirmar(w).attributes('disabled')).toBeDefined();
+  });
 });

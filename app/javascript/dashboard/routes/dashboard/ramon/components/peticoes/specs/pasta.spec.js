@@ -71,6 +71,18 @@ describe('peticoes/helpers · pela pasta', () => {
         ).toBe(false)
       );
     });
+    it('responsável incerto exige a conferência dele', () => {
+      const incerta = {
+        ...boa,
+        leitura: { estado: 'lida', recusas: [], incertos: ['responsavel'] },
+      };
+      expect(podeConfirmar(incerta, ['cpf_diferente'])).toBe(false);
+      expect(podeConfirmar(incerta, ['cpf_diferente', 'responsavel'])).toBe(
+        true
+      );
+      const semUsuario = { ...boa, avisos: ['responsavel_sem_usuario'] };
+      expect(podeConfirmar(semUsuario, ['cpf_diferente'])).toBe(false);
+    });
     it('trava com problema do pacote', () =>
       expect(
         podeConfirmar({ ...boa, problemas: ['sem_principal'] }, [

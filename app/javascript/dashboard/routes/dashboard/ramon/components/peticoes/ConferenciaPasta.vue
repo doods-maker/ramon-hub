@@ -15,8 +15,10 @@ import {
   formDaPeticao,
   mensagemAlerta,
   mensagemAviso,
+  mensagemProblema,
   mensagemRecusa,
   podeConfirmar,
+  responsavelIncerto,
 } from './helpers';
 import { AVISO, CARTAO, TITULO, TOM } from '../../helpers/ui';
 
@@ -53,13 +55,29 @@ const distribuicao = computed(
   () => (props.peticao.inicial && leitura.value.campos?.inicial) || null
 );
 const principal = computed(() => props.peticao.arquivos.find(a => a.principal));
+const exigeResponsavel = computed(() => responsavelIncerto(props.peticao));
+const problemas = computed(() => {
+  const tribunal = props.tribunais.find(
+    tr => tr.chave === props.peticao.tribunal
+  );
+  return (props.peticao.problemas || []).map(p =>
+    mensagemProblema(p, props.peticao.arquivos, tribunal, t)
+  );
+});
 const liberado = computed(() => podeConfirmar(props.peticao, conferidos.value));
 
+const reiniciar = p => {
+  contato.value = p.contato;
+  form.value = formDaPeticao(p, meuId.value);
+};
+// O form só recomeça com outra petição ou outro estado de leitura (ou após
+// salvar/reler): um pacote novo vindo do PacoteEditor não apaga o que se digitou.
 watch(
-  () => props.peticao,
-  p => {
-    contato.value = p.contato;
-    form.value = formDaPeticao(p, meuId.value);
+  [() => props.peticao.id, estado],
+  ([id, novo], [idAntigo]) => {
+    reiniciar(props.peticao);
+    // Releitura: as marcações de "conferi" não valem para a leitura nova.
+    if (novo === 'lendo' || id !== idAntigo) conferidos.value = [];
   },
   { immediate: true }
 );
@@ -106,7 +124,10 @@ const salvar = () =>
   executar(
     'salvar',
     async () => (await salvarDados()).data,
-    data => emit('atualizado', data)
+    data => {
+      reiniciar(data);
+      emit('atualizado', data);
+    }
   );
 
 const confirmar = () =>
@@ -127,14 +148,26 @@ const reler = () =>
   executar(
     'reler',
     async () => (await RamonPeticoesAPI.relerPasta(props.peticao.id)).data,
-    data => emit('atualizado', data)
+    data => {
+      conferidos.value = [];
+      reiniciar(data);
+      emit('atualizado', data);
+    }
   );
 
+// Abre a aba antes do download (senão o bloqueador de pop-up barra).
 const abrirPeca = async () => {
+  const aba = window.open('', '_blank');
   try {
     const blob = await RamonPeticoesAPI.baixarArquivo(principal.value.url);
-    window.open(URL.createObjectURL(blob), '_blank', 'noopener');
+    const href = URL.createObjectURL(blob);
+    if (aba) {
+      aba.opener = null;
+      aba.location.href = href;
+    }
+    setTimeout(() => URL.revokeObjectURL(href), 60000);
   } catch (e) {
+    aba?.close();
     erro.value = erroPeticao(e, t);
   }
 };
@@ -241,7 +274,19 @@ const marcar = alerta => {
           :tribunais="tribunais"
           :incertos="incertos"
           :obrigatorios="false"
-        />
+        >
+          <template v-if="exigeResponsavel" #responsavel>
+            <label class="flex items-center gap-2 text-xs text-n-slate-12">
+              <input
+                type="checkbox"
+                :checked="conferidos.includes('responsavel')"
+                data-testid="conferencia-responsavel"
+                @change="marcar('responsavel')"
+              />
+              {{ t('RAMON.PETICOES.PASTA.CONFERI_RESPONSAVEL') }}
+            </label>
+          </template>
+        </CamposPeticao>
       </section>
 
       <section
@@ -267,6 +312,19 @@ const marcar = alerta => {
         </dl>
       </section>
     </template>
+
+    <div
+      v-if="problemas.length && estado === 'lida'"
+      :class="[AVISO, TOM.ruby]"
+      data-testid="conferencia-problemas"
+    >
+      <p class="m-0 mb-1" :class="TITULO">
+        {{ t('RAMON.PETICOES.PROBLEMAS_TITULO') }}
+      </p>
+      <ul class="m-0 list-disc ps-4">
+        <li v-for="p in problemas" :key="p">{{ p }}</li>
+      </ul>
+    </div>
 
     <p
       v-if="erro"

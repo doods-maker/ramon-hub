@@ -2448,6 +2448,7 @@
         "PACOTE_VAZIO": "The folder has no files for the package. Fix the folder and click Read folder again.",
         "RECUSAS_TITULO": "The folder cannot be used as it is",
         "ALERTAS_TITULO": "Check before confirming",
+        "CONFERI_RESPONSAVEL": "I checked who signs and files this.",
         "CONFERI": "I checked and it is correct.",
         "DADOS": "Data read from the folder",
         "INCERTOS_AJUDA": "Yellow fields are the ones the reading was not sure about. Check them and fix if needed.",
