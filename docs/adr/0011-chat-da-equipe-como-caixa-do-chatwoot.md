@@ -1,5 +1,7 @@
 # Chat da equipe como caixa do Chatwoot (sai o módulo próprio)
 
+Atualizado em 02/11/2026 (Equipe com cara de WhatsApp: PRs #307, #309 e pacote 3+4; revisão final: só participantes + admin e lista permitida).
+
 Substitui a decisão de 02/10 ("chat em módulo próprio, isolado das conversas do
 Chatwoot"), entregue no PR #303.
 
@@ -18,11 +20,21 @@ Como fica:
   (`additional_attributes.equipe = true`, sem telefone/e-mail — fora da lista de
   contatos), achado pelo `source_id` (`equipe-geral`, `equipe-time-<id>`,
   `equipe-1a1-<a>-<b>`).
-- **Quem vê:** quem participa (`conversation_participants`) — Geral, os times
+- **Quem vê:** só quem participa (`conversation_participants`) — Geral, os times
   dele, as 1:1 dele — e administradores (tudo, inclusive 1:1; avisado na tela).
-  Mesmo desenho do ADR 0004: o agente fica fora da caixa, então caminho
-  esquecido falha para o lado seguro. Os participantes são ressincronizados no
-  commit de `TeamMember` e `AccountUser` (`Ramon::Equipe.sincronizar`).
+  **Atribuição, time e membro de caixa não dão acesso** (decisão de 02/11): nem na
+  lista, nem no `GET` da conversa, nem no tempo real, nem na busca, nem no aviso de
+  mensagem nova. Os participantes são ressincronizados no commit de `TeamMember` e
+  `AccountUser` (`Ramon::Equipe.sincronizar`).
+- **O que o HTTP aceita numa conversa da Equipe:** uma lista permitida, em um lugar só
+  (`Ramon::Equipe::HTTP_PERMITIDO`), checada em `Conversations::BaseController` e
+  `ConversationsController`: abrir, ler, marcar lida, digitar, enviar, apagar a própria,
+  anexos, participantes (só leitura) e etiquetas (só leitura, a tela busca ao abrir).
+  Todo o resto é 403, inclusive para admin: atribuir, etiquetar, status, prioridade, mudar
+  participante, tradução, status de mensagem, copiloto e `transcript` (mandaria uma 1:1 a
+  qualquer e-mail). Macro e ação em massa que incluem conversa da Equipe também são
+  recusadas, e não se cria conversa na caixa pela API. O guard é só do HTTP:
+  `Ramon::Equipe.sincronizar` continua usando `conversation.open!`.
 - **Hub surdo:** um guard só, no `AsyncDispatcher`: evento de conversa,
   mensagem, contato ou caixa da Equipe vai apenas ao `NotificationListener`
   (aviso nativo a quem participa). Lead, fluxos, agente `@claude`, Captain,
@@ -49,11 +61,19 @@ da Equipe nunca cria lead.
 
 Limites conhecidos:
 
-- **Nunca adicionar colaboradores (membros) na caixa Equipe** nas configurações:
-  membro da caixa vê todas as conversas dela, inclusive 1:1 alheias.
-- Menção (@) de agente não funciona na Equipe (o Chatwoot só aceita membro da
-  caixa ou admin) — de propósito: menção adicionaria a pessoa à conversa.
-- Toda mensagem vira notificação no sino de quem participa (o toast de 6 s é o
+- **Não adicionar colaboradores (membros) na caixa Equipe** nas configurações. Agora é
+  seguro por padrão: ser membro não dá acesso a conversa de que a pessoa não participa.
+  Mas não serve para nada e confunde quem olha a tela de caixas.
+- Menção (@): na Equipe só marca participantes da conversa e **nunca adiciona
+  ninguém** (ramo próprio no `MentionService`); `@todos` só em grupo. Vale
+  também em mensagem pública, só nesta caixa. O aviso "te marcou" chega a
+  quem ligou e-mail/push de menção no perfil; os demais veem o sino e o selo.
+- **Admin de fora é só leitura:** vê tudo, mas não escreve, não digita e não
+  vê ✓ (substitui "quem vê também responde" para esse caso). Apagar: só o
+  autor, ou admin que participa.
+- ✓✓ por `conversation_participants.last_seen_at`; reações em
+  `content_attributes` da mensagem (👍 ❤️ 😂 😮 😢 🙏), sem som e sem notificação.
+- Cada mensagem vira notificação no sino de quem participa (o toast de 6 s é o
   aviso discreto); e-mail/push só se a pessoa ligar "conversa de que participo".
 - O evento de contato novo vai a toda a conta: o nome "Ana e Bia" revela que a
   1:1 existe (não o conteúdo). A busca de contato acha esses nomes.
@@ -61,4 +81,13 @@ Limites conhecidos:
   da Equipe como abertas; o BI (Metabase) não.
 - Time apagado só some do canal na próxima sincronização (qualquer mudança de
   time ou o comando do deploy); nomes de time/pessoa renomeados não mudam o
-  nome da conversa. "Marcar como não lida" não age na Equipe.
+  nome da conversa. "Marcar como não lida" é recusado na Equipe.
+- **IA não lê conversa da Equipe.** Copiloto da conversa e tarefas de IA dão 403. O painel
+  global segue respondendo com uma conversa da Equipe aberta, mas sem o contexto dela
+  (`CopilotMessage#enqueue_response_job` tira o `conversation_id`). As ferramentas também
+  recusam, inclusive para admin: `get_conversation` responde "não encontrada",
+  `search_conversation` tira a caixa, e `historico_do_contato` e `linha_da_vida` recusam o
+  contato sintético. `get_contact` e `search_contacts` ainda devolvem o nome do contato
+  sintético, como a busca de contato: revela que a 1:1 existe, não o conteúdo.
+- Integrações e fluxos: Dyte e Linear dão 403 em conversa da Equipe (gravariam mensagem ou
+  atividade nela), e `ramon_fluxos#rodar`/`ensaio` não a alcançam (404).

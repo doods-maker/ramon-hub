@@ -62,6 +62,19 @@ describe('useConversationHotKeys', () => {
     expect(conversationHotKeys.value).toBeDefined();
   });
 
+  // FORK(ramon): a Equipe não tem atendimento nem IA
+  it('não oferece nada numa conversa da caixa Equipe', () => {
+    store.getters['inboxes/getInbox'] = () => ({ equipe: true });
+    const { conversationHotKeys } = useConversationHotKeys();
+    expect(conversationHotKeys.value).toEqual([]);
+  });
+
+  it('segue oferecendo tudo em caixa comum', () => {
+    store.getters['inboxes/getInbox'] = () => ({ equipe: false });
+    const { conversationHotKeys } = useConversationHotKeys();
+    expect(conversationHotKeys.value.length).toBeGreaterThan(0);
+  });
+
   it('should generate conversation hot keys', () => {
     const { conversationHotKeys } = useConversationHotKeys();
     expect(conversationHotKeys.value.length).toBeGreaterThan(0);

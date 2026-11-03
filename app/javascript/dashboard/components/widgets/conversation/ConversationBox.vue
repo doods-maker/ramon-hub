@@ -37,8 +37,15 @@ export default {
   computed: {
     ...mapGetters({
       currentChat: 'getSelectedChat',
-      dashboardApps: 'dashboardApps/getRecords',
+      appsDaConta: 'dashboardApps/getRecords',
+      getInbox: 'inboxes/getInbox',
     }),
+    // FORK(ramon): o frame recebe o contexto da conversa; não abre no chat interno (ADR 0011)
+    dashboardApps() {
+      return this.getInbox(this.currentChat.inbox_id)?.equipe
+        ? []
+        : this.appsDaConta;
+    },
     dashboardAppTabs() {
       return [
         {

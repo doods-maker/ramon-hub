@@ -6,12 +6,15 @@ import { MESSAGE_STATUS } from './constants';
 
 import Icon from 'next/icon/Icon.vue';
 
-const { status } = defineProps({
+const { status, equipe, titulo } = defineProps({
   status: {
     type: String,
     required: true,
     validator: value => Object.values(MESSAGE_STATUS).includes(value),
   },
+  // FORK(ramon): na Equipe a cor e o título vêm dos vistos por pessoa.
+  equipe: { type: Boolean, default: false },
+  titulo: { type: String, default: '' },
 });
 
 const { t } = useI18n();
@@ -55,6 +58,12 @@ const statusIcon = computed(() => {
 });
 
 const statusColor = computed(() => {
+  // FORK(ramon): na bolha verde, #7EB6FF no claro e slate-10 no escuro somem (1,9:1).
+  if (equipe) {
+    return status === MESSAGE_STATUS.READ
+      ? 'text-n-blue-11'
+      : 'text-n-slate-11';
+  }
   const statusIconMap = {
     [MESSAGE_STATUS.SENT]: 'text-n-slate-10',
     [MESSAGE_STATUS.DELIVERED]: 'text-n-slate-10',
@@ -65,6 +74,8 @@ const statusColor = computed(() => {
 });
 
 const tooltipText = computed(() => {
+  // FORK(ramon): na Equipe o título vem dos vistos; vazio não abre tooltip.
+  if (equipe && status !== MESSAGE_STATUS.PROGRESS) return titulo;
   const statusTextMap = {
     [MESSAGE_STATUS.SENT]: t('CHAT_LIST.SENT'),
     [MESSAGE_STATUS.DELIVERED]: t('CHAT_LIST.DELIVERED'),
@@ -74,18 +85,25 @@ const tooltipText = computed(() => {
 
   return statusTextMap[status];
 });
+
+// FORK(ramon): o tooltip padrão é preto e some no tema escuro, também preto.
+const tooltip = computed(() =>
+  equipe
+    ? { content: tooltipText.value, popperClass: 'ramon-tooltip-equipe' }
+    : tooltipText.value
+);
 </script>
 
 <template>
   <Icon
     v-if="status === MESSAGE_STATUS.PROGRESS"
-    v-tooltip.top-start="tooltipText"
+    v-tooltip.top-start="tooltip"
     :icon="progessIcon"
     class="text-n-slate-10"
   />
   <Icon
     v-else
-    v-tooltip.top-start="tooltipText"
+    v-tooltip.top-start="tooltip"
     :icon="statusIcon"
     :class="statusColor"
     class="size-[14px]"

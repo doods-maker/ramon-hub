@@ -13,6 +13,7 @@ class Messages::NewMessageNotificationService
   delegate :conversation, :sender, :account, to: :message
 
   def notify_conversation_assignee
+    return if conversation.inbox.equipe? # ramon: atribuição não dá acesso na Equipe, e o aviso leva o texto (ADR 0011)
     return if conversation.assignee.blank?
     return if already_notified?(conversation.assignee)
     return if conversation.assignee == sender

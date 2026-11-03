@@ -85,7 +85,7 @@ class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseControll
     return Current.account if params[:conta].present? # B5: o ensaio do Horário da conta roda na conta toda
     return Current.account.leads.find(params[:lead_id]) if params[:lead_id].present?
 
-    Current.account.conversations.find_by!(display_id: params[:conversation_id])
+    Ramon::Equipe.fora_da_caixa(Current.account.conversations).find_by!(display_id: params[:conversation_id]) # ramon: ADR 0011
   end
 
   def fluxo_params

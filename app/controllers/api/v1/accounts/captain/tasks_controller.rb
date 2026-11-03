@@ -1,5 +1,6 @@
 class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseController
   before_action :check_authorization
+  before_action :recusar_equipe # ramon: nada na caixa Equipe aciona IA (ADR 0011)
 
   def rewrite
     result = Captain::RewriteService.new(
@@ -70,6 +71,10 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
      Ramon::AdvboxClient::UnavailableError,
      Ramon::LlmClient::MissingApiKeyError,
      Ramon::LlmClient::TransientError]
+  end
+
+  def recusar_equipe
+    head :forbidden if conversa&.inbox&.equipe?
   end
 
   def conversa

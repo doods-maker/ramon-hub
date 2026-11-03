@@ -303,12 +303,21 @@ describe('ConversationItem', () => {
         showExpanded: true,
       },
       global: {
-        provide: { isConversationSelected: () => false },
+        provide: {
+          isConversationSelected: () => false,
+          toggleContextMenu: () => {},
+        },
         stubs: {
           ConversationCard: { name: 'CardCondensado', template: '<i />' },
           ConversationCardExpanded: {
             name: 'CardExpandido',
             template: '<i />',
+          },
+          ContextMenu: { template: '<div><slot /></div>' },
+          ConversationContextMenu: {
+            name: 'MenuDoCard',
+            props: ['allowedOptions'],
+            template: '<b />',
           },
         },
       },
@@ -326,5 +335,21 @@ describe('ConversationItem', () => {
     const w = montarItem(false);
     expect(usa(w, 'CardExpandido')).toBe(true);
     expect(usa(w, 'CardCondensado')).toBe(false);
+  });
+
+  const opcoesDoMenu = async w => {
+    await w.find('i').trigger('contextmenu');
+    return w.findComponent({ name: 'MenuDoCard' }).props('allowedOptions');
+  };
+
+  it('botão direito na Equipe: só abrir em nova aba e copiar link', async () => {
+    expect(await opcoesDoMenu(montarItem(true))).toEqual([
+      'open-new-tab',
+      'copy-link',
+    ]);
+  });
+
+  it('botão direito fora da Equipe: lista vazia mantém o menu nativo', async () => {
+    expect(await opcoesDoMenu(montarItem(false))).toEqual([]);
   });
 });

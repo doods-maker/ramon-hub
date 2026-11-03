@@ -62,5 +62,40 @@ RSpec.describe Conversations::PermissionFilterService do
         expect(result).not_to include(other)
       end
     end
+
+    # ramon: na caixa Equipe só participantes + administradores (ADR 0011)
+    context 'when the conversation is in the Equipe inbox' do
+      let(:ana) { create(:user, account: account, role: :agent) }
+      let(:bia) { create(:user, account: account, role: :agent) }
+      let(:team) { create(:team, account: account) }
+      let!(:par) do
+        Ramon::Equipe.sincronizar(account, criar: true)
+        Ramon::Equipe.conversa_1a1(account, ana, bia)
+      end
+
+      def visiveis(user) = described_class.new(account.conversations, user, account).perform
+
+      it 'keeps out the assignee, the team member and the inbox member', :aggregate_failures do
+        create(:team_member, team: team, user: agent)
+        par.update!(team: team, assignee: agent)
+        create(:inbox_member, inbox: par.inbox, user: agent)
+
+        expect(visiveis(agent)).not_to include(par)
+        expect(visiveis(agent)).to include(conversation, another_conversation)
+      end
+
+      it 'shows it to participants and administrators', :aggregate_failures do
+        expect(visiveis(ana)).to include(par)
+        expect(visiveis(admin)).to include(par)
+      end
+
+      it 'keeps assignment and team access in the other inboxes', :aggregate_failures do
+        comum = create(:conversation, account: account, inbox: create(:inbox, account: account), assignee: ana)
+        do_time = create(:conversation, account: account, inbox: comum.inbox, team: team)
+        create(:team_member, team: team, user: ana)
+
+        expect(visiveis(ana)).to include(comum, do_time)
+      end
+    end
   end
 end

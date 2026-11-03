@@ -216,6 +216,7 @@ const onDeleteConversation = () => {
   />
 
   <!-- Shared context menu for both layouts -->
+  <!-- FORK(ramon): na Equipe só abrir e copiar; lista vazia mantém o nativo -->
   <ContextMenu
     v-if="showContextMenu"
     :x="contextMenu.x"
@@ -230,6 +231,7 @@ const onDeleteConversation = () => {
       :has-unread-messages="source.unread_count > 0"
       :conversation-labels="source.labels"
       :conversation-url="conversationPath"
+      :allowed-options="inbox.equipe ? ['open-new-tab', 'copy-link'] : []"
       @update-conversation="onUpdateConversation"
       @assign-agent="onAssignAgent"
       @assign-label="onAssignLabel"

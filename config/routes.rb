@@ -314,6 +314,7 @@ Rails.application.routes.draw do
           resource :ramon_equipe, only: [:show], controller: 'ramon_equipe' do
             post :conversa
             get :participantes
+            post :reacao
           end
           resources :ramon_chegadas, only: [:index, :create], controller: 'ramon_chegadas' do
             member { post :responder }

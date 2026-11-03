@@ -48,6 +48,8 @@ class Api::V1::Accounts::MacrosController < Api::V1::Accounts::BaseController
   end
 
   def execute
+    return head :forbidden if Ramon::Equipe.inclui_conversa?(Current.account, params[:conversation_ids]) # ramon: ADR 0011
+
     ::MacrosExecutionJob.perform_later(@macro, conversation_ids: params[:conversation_ids], user: Current.user)
 
     head :ok

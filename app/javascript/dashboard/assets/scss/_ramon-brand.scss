@@ -164,3 +164,10 @@
   color: color-mix(in srgb, var(--stage) 55%, white);
   background-color: color-mix(in srgb, var(--stage) 22%, transparent);
 }
+
+// Equipe: tooltip dos vistos com fundo sólido do tema (o padrão é preto, igual ao fundo do tema escuro).
+.ramon-tooltip-equipe.v-popper--theme-tooltip .v-popper__inner {
+  background: rgb(var(--solid-3)) !important;
+  border: 1px solid rgb(var(--border-strong));
+  color: rgb(var(--slate-12));
+}

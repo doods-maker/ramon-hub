@@ -186,7 +186,11 @@
       "NESTE_CHAT": "In this chat",
       "AVISA_TODOS": "Notifies {n} person in this chat | Notifies the {n} in this chat",
       "VOCE": "You",
-      "SELO_MARCACAO": "{'@'}"
+      "SELO_MARCACAO": "{'@'}",
+      "VISTO": "Seen",
+      "VISTO_TODOS": "Seen by everyone",
+      "VISTO_POR": "Seen by {leram} of {total}. Missing: {faltam}.",
+      "RESPONDER": "Reply"
     },
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",

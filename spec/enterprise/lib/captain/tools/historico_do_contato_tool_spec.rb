@@ -24,6 +24,14 @@ RSpec.describe Captain::Tools::HistoricoDoContatoTool, type: :model do
                                conversation.inbox.name, 'Oi, tenho direito ao BPC?', 'Ligou pedindo retorno')
     end
 
+    # ramon: contato sintético da Equipe não é pessoa (ADR 0011)
+    it 'recusa o contato sintético da caixa Equipe' do
+      Ramon::Equipe.sincronizar(account, criar: true)
+      geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+
+      expect(tool.perform(tool_context, contact_id: geral.contact_id.to_s)).to include('Nao encontrei a pessoa')
+    end
+
     it 'chega na pessoa pelo lead_id' do
       lead = create(:lead, account: account, contact: contact)
 

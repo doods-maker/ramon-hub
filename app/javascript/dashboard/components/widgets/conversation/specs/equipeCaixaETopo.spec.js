@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
+import ConversationBox from '../ConversationBox.vue';
 import ConversationHeader from '../ConversationHeader.vue';
 import MessagesView from '../MessagesView.vue';
 import ReplyBox from '../ReplyBox.vue';
@@ -8,6 +9,8 @@ import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/cons
 import inboxMixin from 'shared/mixins/inboxMixin';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const estado = {
   equipe: true,
@@ -151,6 +154,23 @@ describe('ConversationHeader', () => {
   });
 });
 
+describe('ConversationBox: Dashboard Apps', () => {
+  const appsDaTela = equipe =>
+    ConversationBox.computed.dashboardApps.call({
+      appsDaConta: [{ id: 9 }],
+      currentChat: { inbox_id: 7 },
+      getInbox: id => ({ id, equipe }),
+    });
+
+  it('não abrem na Equipe: o frame receberia o contexto da conversa', () => {
+    expect(appsDaTela(true)).toEqual([]);
+  });
+
+  it('seguem iguais em caixa comum', () => {
+    expect(appsDaTela(false)).toEqual([{ id: 9 }]);
+  });
+});
+
 describe('MessagesView: faixa de só leitura', () => {
   const soLeitura = over =>
     MessagesView.computed.equipeSoLeitura.call({
@@ -178,6 +198,100 @@ describe('MessagesView: faixa de só leitura', () => {
   it('não aparece fora da Equipe', () => {
     const equipeStore = { participantes: { 43: [{ id: 2 }] } };
     expect(soLeitura({ equipe: false, equipeStore })).toBe(false);
+  });
+});
+
+describe('MessagesView: marcar lida ao voltar para a aba', () => {
+  const estadoDaAba = valor =>
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(valor);
+  const voltar = over => {
+    const makeMessagesRead = vi.fn();
+    MessagesView.methods.onVisibilityChange.call({
+      equipe: true,
+      makeMessagesRead,
+      ...over,
+    });
+    return makeMessagesRead;
+  };
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('na Equipe, marca quando a aba fica visível', () => {
+    estadoDaAba('visible');
+    expect(voltar()).toHaveBeenCalledTimes(1);
+  });
+
+  it('na Equipe, não marca quando a aba some', () => {
+    estadoDaAba('hidden');
+    expect(voltar()).not.toHaveBeenCalled();
+  });
+
+  it('fora da Equipe, a volta para a aba não marca nada', () => {
+    estadoDaAba('visible');
+    expect(voltar({ equipe: false })).not.toHaveBeenCalled();
+  });
+
+  it('o listener entra no mounted e sai em removeBusListeners', () => {
+    const adiciona = vi.spyOn(document, 'addEventListener');
+    const remove = vi.spyOn(document, 'removeEventListener');
+    const onVisibilityChange = vi.fn();
+    const ctx = {
+      addScrollListener: vi.fn(),
+      fetchAllAttachmentsFromCurrentChat: vi.fn(),
+      fetchSuggestions: vi.fn(),
+      onVisibilityChange,
+    };
+    MessagesView.mounted.call(ctx);
+    expect(adiciona).toHaveBeenCalledWith(
+      'visibilitychange',
+      onVisibilityChange
+    );
+    MessagesView.methods.removeBusListeners.call(ctx);
+    expect(remove).toHaveBeenCalledWith('visibilitychange', onVisibilityChange);
+  });
+});
+
+describe('MessagesView: participantes na reconexão', () => {
+  const reconectar = equipeConversaId => {
+    const carregarParticipantes = vi.fn(() => Promise.resolve());
+    MessagesView.methods.onWebsocketReconnect.call({
+      equipeConversaId,
+      equipeStore: { carregarParticipantes },
+    });
+    return carregarParticipantes;
+  };
+
+  it('na Equipe, recarrega os participantes da conversa aberta', () => {
+    expect(reconectar(43)).toHaveBeenCalledWith(43);
+  });
+
+  it('fora da Equipe, não busca nada', () => {
+    expect(reconectar(null)).not.toHaveBeenCalled();
+  });
+
+  it('falha na busca não vira erro solto', async () => {
+    const carregarParticipantes = vi.fn(() => Promise.reject(new Error('x')));
+    await expect(
+      MessagesView.methods.onWebsocketReconnect.call({
+        equipeConversaId: 43,
+        equipeStore: { carregarParticipantes },
+      })
+    ).resolves.toBeUndefined();
+  });
+
+  it('assina no created e sai em removeBusListeners', () => {
+    const onWebsocketReconnect = vi.fn();
+    const ctx = { onScrollToMessage: vi.fn(), onWebsocketReconnect };
+    MessagesView.created.call(ctx);
+    emitter.emit(BUS_EVENTS.WEBSOCKET_RECONNECT);
+    expect(onWebsocketReconnect).toHaveBeenCalledTimes(1);
+
+    MessagesView.methods.removeBusListeners.call({
+      ...ctx,
+      onVisibilityChange: vi.fn(),
+    });
+    emitter.emit(BUS_EVENTS.WEBSOCKET_RECONNECT);
+    expect(onWebsocketReconnect).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -47,6 +47,7 @@ import MessageError from './MessageError.vue';
 import PilotoCarimbo from './PilotoCarimbo.vue';
 import RascunhoCarimbo from './RascunhoCarimbo.vue';
 import RascunhoAcoes from './RascunhoAcoes.vue';
+import EquipeReacoes from 'dashboard/routes/dashboard/ramon/components/equipe/EquipeReacoes.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
 import { useEquipeStore } from 'dashboard/stores/equipe';
@@ -166,13 +167,16 @@ const chatEquipe = computed(() =>
 const souAutor = computed(
   () => (props.senderId ?? props.sender?.id) === props.currentUserId
 );
-// true | false | null (lista ainda não carregou). A 1:1 já traz as duas pessoas.
-const participaEquipe = computed(() => {
+// A 1:1 já traz as duas pessoas.
+const pessoasEquipe = computed(() => {
   if (!isEquipe.value) return null;
-  const lista =
-    chatEquipe.value?.equipe_tipo === '1a1'
-      ? chatEquipe.value.equipe_pessoas
-      : useEquipeStore().participantes[props.conversationId];
+  return chatEquipe.value?.equipe_tipo === '1a1'
+    ? chatEquipe.value.equipe_pessoas
+    : useEquipeStore().participantes[props.conversationId];
+});
+// true | false | null (lista ainda não carregou).
+const participaEquipe = computed(() => {
+  const lista = pessoasEquipe.value;
   return lista?.length
     ? lista.some(pessoa => pessoa.id === props.currentUserId)
     : null;
@@ -453,6 +457,14 @@ const isMessageDeleted = computed(() => {
   return props.contentAttributes?.deleted;
 });
 
+// FORK(ramon): reação só em mensagem já gravada e não apagada.
+const mostrarReacoes = computed(
+  () =>
+    isEquipe.value &&
+    !isMessageDeleted.value &&
+    ![MESSAGE_STATUS.FAILED, MESSAGE_STATUS.PROGRESS].includes(props.status)
+);
+
 const payloadForContextMenu = computed(() => {
   return {
     id: props.id,
@@ -516,6 +528,11 @@ const shouldShowContextMenu = computed(() => {
 });
 
 const shouldRenderMessage = computed(() => {
+  // FORK(ramon): o chat interno não mostra "conversa reaberta" e afins
+  if (isEquipe.value && props.messageType === MESSAGE_TYPES.ACTIVITY) {
+    return false;
+  }
+
   const hasAttachments = !!(props.attachments && props.attachments.length > 0);
   const isEmailContentType = props.contentType === CONTENT_TYPES.INCOMING_EMAIL;
   const isUnsupported = props.contentAttributes?.isUnsupported;
@@ -637,6 +654,8 @@ provideMessageContext({
   isBotOrAgentMessage,
   shouldGroupWithNext,
   isEquipe,
+  equipeTipo: computed(() => chatEquipe.value?.equipe_tipo),
+  participaEquipe,
   mostrarAutor,
   marcadoEquipe,
 });
@@ -670,9 +689,12 @@ provideMessageContext({
         {
           'gap-y-2': contentAttributes.externalError,
           'w-full': variant === MESSAGE_VARIANTS.EMAIL,
+          // FORK(ramon): âncora da barra de reações; o tabindex abre a barra no toque
+          'relative outline-none group/equipe': isEquipe,
         },
       ]"
       class="gap-x-2"
+      :tabindex="isEquipe ? -1 : undefined"
       :style="{
         gridTemplateAreas: gridTemplate,
       }"
@@ -709,7 +731,8 @@ provideMessageContext({
           contentAttributes.externalError ||
           contentAttributes.ramonPiloto ||
           contentAttributes.ramonRascunhoIa ||
-          ehRascunho
+          ehRascunho ||
+          mostrarReacoes
         "
         class="[grid-area:meta] flex flex-col gap-0.5"
         :class="{ 'items-end': orientation === ORIENTATION.RIGHT }"
@@ -722,6 +745,19 @@ provideMessageContext({
         <PilotoCarimbo v-if="contentAttributes.ramonPiloto" />
         <RascunhoCarimbo v-if="contentAttributes.ramonRascunhoIa" />
         <RascunhoAcoes v-if="ehRascunho" />
+        <!-- FORK(ramon): reações da Equipe (WhatsApp) -->
+        <EquipeReacoes
+          v-if="mostrarReacoes"
+          :conversation-id="conversationId"
+          :message-id="id"
+          :reacoes="contentAttributes.ramonReacoes"
+          :participantes="pessoasEquipe || []"
+          :meu-id="currentUserId"
+          :pode-reagir="participaEquipe === true"
+          :direita="orientation === ORIENTATION.RIGHT"
+          :com-autor="mostrarAutor"
+          @responder="handleReplyTo"
+        />
       </div>
     </div>
     <div v-if="shouldShowContextMenu" class="context-menu-wrap">

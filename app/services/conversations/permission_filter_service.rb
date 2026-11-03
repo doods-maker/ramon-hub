@@ -18,10 +18,20 @@ class Conversations::PermissionFilterService
   # ramon: além das caixas de que é membro, o agente vê o que foi atribuído a ele e a fila
   # dos times dele — é assim que a caixa do escritório separa o atendimento (ADR 0004)
   def accessible_conversations
-    conversations.where(inbox: user.inboxes.where(account_id: account.id))
-                 .or(conversations.where(assignee_id: user.id))
-                 .or(conversations.where(team_id: user.teams.where(account_id: account.id).select(:id)))
-                 .or(conversations.where(id: equipe_participations)) # ramon: caixa Equipe (ADR 0011)
+    # ramon: na caixa Equipe só quem participa; membro de caixa, atribuição e time não dão acesso (ADR 0011)
+    comuns = conversations.where.not(inbox_id: caixa_equipe)
+    comuns.where(inbox: user.inboxes.where(account_id: account.id))
+          .or(comuns.where(assignee_id: user.id))
+          .or(comuns.where(team_id: times_da_pessoa))
+          .or(conversations.where(id: equipe_participations))
+  end
+
+  def times_da_pessoa
+    user.teams.where(account_id: account.id).select(:id)
+  end
+
+  def caixa_equipe
+    Inbox.where(account_id: account.id, equipe: true).select(:id)
   end
 
   def equipe_participations

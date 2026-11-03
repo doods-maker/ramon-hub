@@ -1,4 +1,4 @@
-class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseController
+class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseController # rubocop:disable Metrics/ClassLength
   include Events::Types
   include DateRangeHelper
   include HmacConcern
@@ -37,6 +37,8 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   def show; end
 
   def create
+    return head :forbidden if @contact_inbox.inbox.equipe? # ramon: conversa da Equipe só nasce por Ramon::Equipe (ADR 0011)
+
     ActiveRecord::Base.transaction do
       @conversation = ConversationBuilder.new(params: params, contact_inbox: @contact_inbox).perform
       Messages::MessageBuilder.new(Current.user, @conversation, params[:message]).perform if params[:message].present?
@@ -192,6 +194,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   def conversation
     @conversation ||= Current.account.conversations.find_by!(display_id: params[:id])
     authorize @conversation, :show?
+    head :forbidden unless Ramon::Equipe.http_permitido?(@conversation, controller_path, action_name) # ramon: ADR 0011
   end
 
   def inbox

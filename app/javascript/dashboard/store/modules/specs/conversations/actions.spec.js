@@ -333,6 +333,50 @@ describe('#actions', () => {
         ],
       ]);
     });
+    describe('aba escondida', () => {
+      const marcar = equipe =>
+        actions.markMessagesRead(
+          {
+            commit,
+            rootGetters: {
+              getConversationById: id => ({ id, inbox_id: 7 }),
+              'inboxes/getInbox': () => ({ equipe }),
+            },
+          },
+          { id: 1 }
+        );
+
+      beforeEach(() => {
+        setActivePinia(createPinia());
+        axios.post.mockClear();
+        axios.post.mockResolvedValue({
+          data: { id: 1, agent_last_seen_at: 5, inbox_id: 7 },
+        });
+      });
+      afterEach(() => {
+        vi.runAllTimers();
+        commit.mockClear();
+        vi.restoreAllMocks();
+      });
+
+      it('Equipe: não marca lida sem a aba à vista', async () => {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+        await marcar(true);
+        expect(axios.post).not.toHaveBeenCalled();
+      });
+
+      it('Equipe: marca com a aba à vista', async () => {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+        await marcar(true);
+        expect(axios.post).toHaveBeenCalledTimes(1);
+      });
+
+      it('fora da Equipe: marca igual, com a aba escondida', async () => {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+        await marcar(false);
+        expect(axios.post).toHaveBeenCalledTimes(1);
+      });
+    });
     it('fora da Equipe não mexe no selo', async () => {
       axios.post.mockResolvedValue({
         data: { id: 1, agent_last_seen_at: 5, inbox_id: 7 },
@@ -421,6 +465,62 @@ describe('#actions', () => {
       const msg = mensagem(MIM);
       actions.addMessage(contexto({}, false), msg);
       expect(msg.conversation).toBeUndefined();
+    });
+  });
+
+  describe('updateMessage na Equipe', () => {
+    const atualizar = (messages, equipe = true, extra = {}) => {
+      const local = vi.fn();
+      const msg = {
+        id: 10,
+        message_type: 1,
+        conversation_id: 1,
+        created_at: 123,
+        ...extra,
+      };
+      actions.updateMessage(
+        {
+          commit: local,
+          state: {
+            allConversations: [{ id: 1, inbox_id: 7, messages, timestamp: 9 }],
+          },
+          rootGetters: {
+            'inboxes/getInbox': () => ({ equipe }),
+            getCurrentUserID: 1,
+          },
+        },
+        msg
+      );
+      return { local, msg };
+    };
+
+    it('ignora mensagem que não está carregada', () => {
+      const { local } = atualizar([{ id: 11 }]);
+      expect(local).not.toHaveBeenCalled();
+    });
+
+    it('mensagem apagada não carregada segue a mesma regra', () => {
+      const { local } = atualizar([{ id: 11 }], true, {
+        content_attributes: { deleted: true },
+      });
+      expect(local).not.toHaveBeenCalled();
+    });
+
+    it('atualiza a mensagem carregada', () => {
+      const { local, msg } = atualizar([{ id: 10 }]);
+      expect(local).toHaveBeenCalledWith(types.ADD_MESSAGE, msg);
+    });
+
+    it('mensagem pendente (echo_id) conta como carregada', () => {
+      const { local, msg } = atualizar([{ id: 'tmp' }], true, {
+        echo_id: 'tmp',
+      });
+      expect(local).toHaveBeenCalledWith(types.ADD_MESSAGE, msg);
+    });
+
+    it('fora da Equipe segue igual, carregada ou não', () => {
+      const { local, msg } = atualizar([{ id: 11 }], false);
+      expect(local).toHaveBeenCalledWith(types.ADD_MESSAGE, msg);
     });
   });
 

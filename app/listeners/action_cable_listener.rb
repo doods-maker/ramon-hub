@@ -218,11 +218,11 @@ class ActionCableListener < BaseListener # rubocop:disable Metrics/ClassLength
 
   # ramon: quem tem acesso por atribuição ou por time (fora da caixa) também recebe o tempo real
   def conversation_agents(conversation)
-    agents = User.where(id: conversation.inbox.members.select(:id))
-                 .or(User.where(id: [conversation.assignee_id, *conversation.team&.members&.ids].compact))
-    # ramon: na caixa Equipe quem participa da conversa recebe o tempo real (ADR 0011)
-    agents = agents.or(User.where(id: conversation.conversation_participants.select(:user_id))) if conversation.inbox.equipe?
-    agents
+    # ramon: na caixa Equipe só quem participa recebe o tempo real; os admins entram em user_tokens (ADR 0011)
+    return User.where(id: conversation.conversation_participants.select(:user_id)) if conversation.inbox.equipe?
+
+    User.where(id: conversation.inbox.members.select(:id))
+        .or(User.where(id: [conversation.assignee_id, *conversation.team&.members&.ids].compact))
   end
 
   def user_tokens(account, agents)

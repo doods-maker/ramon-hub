@@ -70,6 +70,44 @@ RSpec.describe ConversationPolicy, type: :policy do
       end
     end
 
+    # ramon: na caixa Equipe só participantes + administradores (ADR 0011)
+    context 'when the conversation is in the Equipe inbox' do
+      let(:colega) { create(:user, account: account, role: :agent) }
+      let(:outro) { create(:user, account: account, role: :agent) }
+      let(:team) { create(:team, account: account) }
+      let(:conversation) do
+        Ramon::Equipe.sincronizar(account, criar: true)
+        Ramon::Equipe.conversa_1a1(account, colega, outro)
+      end
+
+      it 'allows a participant' do
+        expect(subject).to permit({ user: colega, account: account, account_user: colega.account_users.find_by(account: account) }, conversation)
+      end
+
+      it 'allows an administrator from outside' do
+        expect(subject).to permit(administrator_context, conversation)
+      end
+
+      it 'denies an assignee from outside' do
+        conversation.update!(assignee: agent)
+
+        expect(subject).not_to permit(agent_context, conversation)
+      end
+
+      it 'denies a member of the conversation team from outside' do
+        create(:team_member, team: team, user: agent)
+        conversation.update!(team: team)
+
+        expect(subject).not_to permit(agent_context, conversation)
+      end
+
+      it 'denies a member of the inbox' do
+        create(:inbox_member, inbox: conversation.inbox, user: agent)
+
+        expect(subject).not_to permit(agent_context, conversation)
+      end
+    end
+
     context 'when agent lacks inbox and team access' do
       let(:conversation) { create(:conversation, account: account) }
 

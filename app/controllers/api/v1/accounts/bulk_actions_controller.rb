@@ -2,6 +2,8 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
   def create
     case normalized_type
     when 'Conversation'
+      return head :forbidden if Ramon::Equipe.inclui_conversa?(@current_account, params[:ids]) # ramon: ADR 0011
+
       enqueue_conversation_job
       head :ok
     when 'Contact'

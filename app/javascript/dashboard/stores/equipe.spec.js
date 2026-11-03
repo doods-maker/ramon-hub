@@ -62,6 +62,17 @@ describe('useEquipeStore', () => {
     expect(store.participantes[8]).toBeUndefined();
   });
 
+  it('atualizarLeitura: evento fora de ordem não volta a leitura para trás', () => {
+    const store = useEquipeStore();
+    store.participantes[7] = [{ id: 2, lastSeenAt: null }];
+
+    store.atualizarLeitura({ conversationId: 7, userId: 2, lastSeenAt: 100 });
+    expect(store.participantes[7][0].lastSeenAt).toBe(100);
+
+    store.atualizarLeitura({ conversationId: 7, userId: 2, lastSeenAt: 50 });
+    expect(store.participantes[7][0].lastSeenAt).toBe(100);
+  });
+
   it('avisa (som) mensagem de colega numa conversa da Equipe', async () => {
     expect(await useEquipeStore().avisar(notificacao())).toBe(true);
     expect(play).toHaveBeenCalled();

@@ -27,6 +27,23 @@ RSpec.describe 'Dyte Integration API', type: :request do
       end
     end
 
+    # ramon: não escreve na conversa da Equipe, nem com admin (ADR 0011)
+    context 'when the conversation is in the Equipe inbox' do
+      it 'refuses, for a participant and for an administrator', :aggregate_failures do
+        participante = create(:user, account: account, role: :agent)
+        admin = create(:user, account: account, role: :administrator)
+        Ramon::Equipe.sincronizar(account, criar: true)
+        geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+
+        [participante, admin].each do |user|
+          post create_a_meeting_api_v1_account_integrations_dyte_url(account),
+               params: { conversation_id: geral.display_id }, headers: user.create_new_auth_token, as: :json
+          expect(response).to have_http_status(:forbidden)
+        end
+        expect(geral.messages.where(content_type: :integrations)).to be_empty
+      end
+    end
+
     context 'when the agent does not have access to the inbox' do
       it 'returns unauthorized' do
         post create_a_meeting_api_v1_account_integrations_dyte_url(account),

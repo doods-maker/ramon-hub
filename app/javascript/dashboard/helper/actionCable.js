@@ -60,6 +60,7 @@ class ActionCableConnector extends BaseActionCableConnector {
       'lead.updated': this.onLeadUpsert,
       'ramon.chegada.created': this.onChegadaUpsert,
       'ramon.chegada.updated': this.onChegadaUpsert,
+      'ramon.equipe.lida': this.onEquipeLida,
     };
   }
 
@@ -75,6 +76,15 @@ class ActionCableConnector extends BaseActionCableConnector {
   // eslint-disable-next-line class-methods-use-this
   onChegadaUpsert = data => {
     useChegadasStore().upsert(data);
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  onEquipeLida = data => {
+    useEquipeStore().atualizarLeitura({
+      conversationId: data.conversation_id,
+      userId: data.user_id,
+      lastSeenAt: data.last_seen_at,
+    });
   };
 
   // eslint-disable-next-line class-methods-use-this

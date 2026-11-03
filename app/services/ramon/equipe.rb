@@ -3,6 +3,18 @@
 # vê, responde e é avisado; administrador vê tudo. Cada conversa tem um contato sintético (additional_attributes.equipe)
 # achado pelo source_id do contact_inbox: equipe-geral, equipe-time-<id>, equipe-1a1-<menor id>-<maior id>.
 module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
+  EMOJIS_REACAO = %w[👍 ❤️ 😂 😮 😢 🙏].freeze
+
+  # O que o HTTP aceita numa conversa da Equipe, por controller; o resto dá 403, inclusive para admin (ADR 0011).
+  # Quem vê e quem escreve seguem na ConversationPolicy e em pode_escrever?/pode_apagar?. Sincronizar não passa por aqui.
+  # labels#index: a tela busca ao abrir a conversa (ConversationBox). A reação e a lista de vistos ficam em RamonEquipeController.
+  HTTP_PERMITIDO = {
+    'api/v1/accounts/conversations' => %w[show update_last_seen toggle_typing_status attachments],
+    'api/v1/accounts/conversations/messages' => %w[index create destroy retry],
+    'api/v1/accounts/conversations/participants' => %w[show],
+    'api/v1/accounts/conversations/labels' => %w[index]
+  }.freeze
+
   module_function
 
   # Consultas frescas (sem as associações do account): no commit de um AccountUser/TeamMember o account.users/teams
@@ -84,8 +96,24 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
     inbox.conversations.where(id: user.conversation_participants.select(:conversation_id)).sum { |c| nao_lidas(c, user) }
   end
 
+  # Quem não participa não grava nem transmite. Só acende os ✓✓ quando havia mensagem de colega por ler: nao_lidas
+  # antes de gravar, senão daria sempre zero.
   def marcar_lida(conversation, user)
-    conversation.conversation_participants.find_by(user_id: user.id)&.update!(last_seen_at: Time.current)
+    participante = conversation.conversation_participants.find_by(user_id: user.id)
+    return unless participante
+
+    havia_nova = nao_lidas(conversation, user).positive?
+    participante.update!(last_seen_at: Time.current)
+    transmitir_leitura(conversation, participante) if havia_nova
+  end
+
+  # Participantes + admins, os mesmos que veem a conversa ao vivo (ActionCableListener#user_tokens).
+  def transmitir_leitura(conversation, participante)
+    pessoas = User.where(id: conversation.conversation_participants.select(:user_id)).pluck(:pubsub_token)
+    tokens = (pessoas + conversation.account.administrators.pluck(:pubsub_token)).uniq
+    payload = { conversation_id: conversation.display_id, user_id: participante.user_id,
+                last_seen_at: participante.last_seen_at.to_i, account_id: conversation.account_id }
+    ActionCableBroadcastJob.perform_later(tokens, 'ramon.equipe.lida', payload)
   end
 
   def participante?(conversation, user)
@@ -97,11 +125,44 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
     !conversation.inbox.equipe? || participante?(conversation, user)
   end
 
+  def http_permitido?(conversation, controller_path, action)
+    !conversation.inbox.equipe? || HTTP_PERMITIDO.fetch(controller_path, []).include?(action)
+  end
+
+  # Caminho que pega conversa por id sem política (ferramenta de IA, fluxo na mão): nunca alcança a Equipe.
+  def fora_da_caixa(conversations) = conversations.where.not(inbox_id: Inbox.where(equipe: true).select(:id))
+
+  def contato?(contact) = contact&.additional_attributes.to_h['equipe'].present?
+
+  # Ação em lote (macro, ação em massa) que inclui conversa da Equipe. Os ids são display_id.
+  def inclui_conversa?(account, display_ids)
+    account.conversations.joins(:inbox).exists?(display_id: display_ids, inboxes: { equipe: true })
+  end
+
   def pode_apagar?(message, user, account_user)
     conversation = message.conversation
     return true unless conversation.inbox.equipe?
 
     participante?(conversation, user) && (account_user&.administrator? || (message.sender_type == 'User' && message.sender_id == user.id))
+  end
+
+  def reacao_valida?(message, emoji)
+    EMOJIS_REACAO.include?(emoji) && !message.content_attributes['deleted']
+  end
+
+  # Uma reação por pessoa: emoji novo soma, outro troca, o mesmo tira. O nome fica gravado para sobreviver à saída da
+  # pessoa. Só muda content_attributes: sem mexer em content nem em last_activity_at, e o message.updated é surdo na Equipe.
+  def reagir(message, user, emoji)
+    message.with_lock do
+      next if message.content_attributes['deleted'] # apagada enquanto esperava a trava
+
+      reacoes = message.content_attributes['ramon_reacoes'].to_a
+      repetida = reacoes.any? { |r| r['user_id'] == user.id && r['emoji'] == emoji }
+      reacoes = reacoes.reject { |r| r['user_id'] == user.id }
+      reacoes += [{ 'user_id' => user.id, 'user_name' => user.available_name, 'emoji' => emoji }] unless repetida
+      message.update!(content_attributes: message.content_attributes.merge('ramon_reacoes' => reacoes))
+    end
+    message
   end
 
   def tipo(conversation)
@@ -118,7 +179,7 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
 
   # Hub surdo (AsyncDispatcher): o evento é da caixa Equipe?
   def evento?(data)
-    return data[:contact].additional_attributes.to_h['equipe'].present? if data[:contact].is_a?(Contact)
+    return contato?(data[:contact]) if data[:contact].is_a?(Contact)
 
     inbox = data[:inbox] || (data[:conversation] || data[:message]&.conversation)&.inbox
     inbox.is_a?(Inbox) && inbox.equipe?
