@@ -17,6 +17,40 @@ RSpec.describe 'Aprovações dos agentes', type: :request do
                                                   'entrada' => { 'descricao' => 'dado do cliente' })
   end
 
+  context 'with tarefa do ADVBOX' do
+    before do
+      Rails.cache.delete(Ramon::NomesAdvbox::CHAVE)
+      RamonAprovacaoAgente.abrir!(caso: '125', ferramenta: 'mcp__advbox__advbox_criar_tarefa',
+                                  entrada: { 'responsavel_id' => 5, 'tipo_tarefa_id' => 9 })
+    end
+
+    after { Rails.cache.delete(Ramon::NomesAdvbox::CHAVE) }
+
+    it 'traz o nome de quem recebe e do tipo, a partir dos IDs' do
+      allow(Ramon::AdvboxClient).to receive(:settings).and_return({ 'users' => [{ 'id' => 5, 'name' => 'Eduardo' }],
+                                                                    'tasks' => [{ 'id' => 9, 'task' => 'Solicitar documentos' }] })
+      get url, headers: eduardo.create_new_auth_token, as: :json
+      expect(response.parsed_body.last['nomes']).to eq('responsavel' => 'Eduardo', 'tipo' => 'Solicitar documentos')
+    end
+
+    it 'com o ADVBOX fora, a lista continua sem os nomes' do
+      allow(Ramon::AdvboxClient).to receive(:settings).and_raise(Ramon::AdvboxClient::UnavailableError)
+      get url, headers: eduardo.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.last['nomes']).to eq({})
+    end
+  end
+
+  it 'negar com motivo guarda a orientação; aprovar ignora o motivo' do
+    patch "#{url}/#{pedido.id}", params: { decisao: 'negada', motivo: '  Use a tarefa que já existe ' },
+                                 headers: eduardo.create_new_auth_token, as: :json
+    expect(pedido.reload).to have_attributes(status: 'negada', motivo: 'Use a tarefa que já existe')
+
+    outro = RamonAprovacaoAgente.abrir!(caso: '126', ferramenta: 'WebFetch', entrada: {})
+    patch "#{url}/#{outro.id}", params: { decisao: 'aprovada', motivo: 'x' }, headers: eduardo.create_new_auth_token, as: :json
+    expect(outro.reload.motivo).to be_nil
+  end
+
   it 'barra administrador fora da lista, para ver e para decidir' do
     get url, headers: ramon.create_new_auth_token, as: :json
     expect(response).to have_http_status(:forbidden)

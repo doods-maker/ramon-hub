@@ -2505,10 +2505,30 @@
       "SUBTITLE": "What the petition pipeline is doing right now.",
       "SEM_ACESSO": "This panel is restricted.",
       "APROVACOES": {
-        "PEDIDO": "{caso} · {ferramenta} asks for permission",
+        "ESPERANDO": "Waiting for your answer",
+        "CASO": "case #{numero}",
+        "ACOES": {
+          "TAREFA": "Create a task in ADVBOX",
+          "MOVIMENTACAO": "Record a progress note on the lawsuit",
+          "SITE": "Open a site outside the list",
+          "BUSCA": "Search the web",
+          "COMANDO": "Run a command on the server",
+          "ARQUIVO": "Save a file",
+          "OUTRA": "Use the tool {ferramenta}"
+        },
+        "CAMPOS": {
+          "PARA": "To",
+          "TIPO": "Type",
+          "PROCESSO": "Lawsuit",
+          "PRAZO": "Deadline"
+        },
         "APROVAR": "Approve",
         "NEGAR": "Deny",
-        "DETALHES": "See what will be done",
+        "MOTIVO": "Want to guide the agent? (optional)",
+        "MOTIVO_EXEMPLO": "E.g.: do not create the task, there is one for this case already.",
+        "VOLTAR": "Back",
+        "CONFIRMAR_NEGATIVA": "Confirm denial",
+        "DETALHES": "Technical details",
         "ERRO": "Could not save the answer. Try again."
       }
     },
