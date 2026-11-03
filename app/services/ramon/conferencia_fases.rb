@@ -3,13 +3,21 @@
 # (/last_movements, ~12) e só busca andamentos e tarefas dos processos que andaram desde a última vez — até
 # LIMITE_BUSCAS por noite, então a carga inicial se completa em poucas noites. Os demais são recalculados com o
 # que já está guardado (a etapa do ADVBOX pode ter mudado). A fase do painel é a mesma regra do Painel do Cliente
-# (Ramon::PortalTexto.etapa_real). `aplicar!` grava no ADVBOX a etapa sugerida das linhas marcadas.
+# (Ramon::PortalTexto.etapa_real). `aplicar!` grava no ADVBOX a etapa das linhas marcadas.
 class Ramon::ConferenciaFases
   LIMITE_BUSCAS = 400 # processos buscados por noite (2 chamadas cada; ADVBOX = 500/dia/rota)
   LIMITE_APLICAR = 400 # PUT /lawsuits por vez
   PAGINA = 100
   PAUSA = 1 # s entre chamadas: rajada sem pausa leva HTTP 429 do ADVBOX
+  ETAPAS_CACHE = 'ramon/conferencia_etapas'.freeze
   T = Ramon::PortalTexto
+
+  # Etapas do ADVBOX para o seletor da linha.
+  def self.etapas
+    Rails.cache.fetch(ETAPAS_CACHE, expires_in: 1.hour) do
+      Array(Ramon::AdvboxClient.settings['stages']).map { |s| { 'etapa_id' => s['id'], 'etapa' => s['stage'], 'step' => s['step'] } }
+    end
+  end
 
   def initialize(account, pausa: PAUSA)
     @account = account
@@ -27,13 +35,15 @@ class Ramon::ConferenciaFases
     existentes.each_value(&:destroy!) # saiu da carteira judicial ativa (arquivado no ADVBOX)
   end
 
-  # Grava no ADVBOX a etapa sugerida das linhas marcadas "atualizar" (o clique do administrador é o "aprovado").
+  # Grava no ADVBOX a etapa das linhas marcadas (a escolhida ou a sugerida; o clique do administrador é o "aprovado").
   def aplicar!(user)
     @account.ramon_conferencias_fase.para_aplicar.limit(LIMITE_APLICAR).each do |linha|
       pausar
-      Ramon::AdvboxClient.update_lawsuit(linha.lawsuit_id, stages_id: linha.sugestao['etapa_id'])
-      linha.update!(aplicado_em: Time.current, aplicado_por: user, erro_aplicacao: nil, etapa_advbox: linha.sugestao['etapa'],
-                    etapa_advbox_id: linha.sugestao['etapa_id'], fase_advbox: linha.fase_painel, grupo: 'igual')
+      alvo = linha.alvo
+      Ramon::AdvboxClient.update_lawsuit(linha.lawsuit_id, stages_id: alvo['etapa_id'])
+      fase = T.fase_de(alvo['etapa'], alvo['step'])
+      linha.update!(aplicado_em: Time.current, aplicado_por: user, erro_aplicacao: nil, etapa_advbox: alvo['etapa'],
+                    etapa_advbox_id: alvo['etapa_id'], fase_advbox: fase, grupo: grupo(nil, fase, linha.fase_painel))
     rescue Ramon::AdvboxClient::RequestError, Ramon::AdvboxClient::UnavailableError => e
       linha.update!(erro_aplicacao: e.message.first(250))
     end
@@ -76,11 +86,19 @@ class Ramon::ConferenciaFases
     do_tribunal ? 'atrasada' : 'diferente'
   end
 
-  # Sugestão nova invalida a marcação antiga (a equipe marcou outra etapa).
   def salvar!(linha, lawsuit)
     atributos = classificar(linha, lawsuit)
-    atributos.merge!(atualizar: false, aplicado_em: nil, erro_aplicacao: nil) if linha.persisted? && linha.sugestao != atributos[:sugestao]
+    if linha.persisted? && marcacao_vencida?(linha, atributos)
+      atributos.merge!(atualizar: false, etapa_escolhida: nil, aplicado_em: nil, erro_aplicacao: nil)
+    end
     linha.update!(atributos)
+  end
+
+  # Etapa escolhida na linha só vence depois de aplicada; marcação da sugerida vence quando a sugestão muda.
+  def marcacao_vencida?(linha, atributos)
+    return linha.aplicado_em.present? if linha.etapa_escolhida.present?
+
+    linha.sugestao != atributos[:sugestao]
   end
 
   def precisa_buscar?(linha, ultima)

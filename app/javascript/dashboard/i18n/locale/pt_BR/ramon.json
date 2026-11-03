@@ -2149,8 +2149,11 @@
         "certo": "Certo",
         "errado": "Errado"
       },
-      "ATUALIZAR": "Atualizar etapa no ADVBOX para {etapa}",
-      "AVISO_BAIXA": "Arquivar: confira honorários e pendências antes.",
+      "ATUALIZAR": "Atualizar etapa no ADVBOX para",
+      "NAO_ALTERAR": "Não alterar",
+      "SUGERIDA": "Sugerida: {etapa}",
+      "ETAPAS_INDISPONIVEIS": "Não foi possível buscar as etapas do ADVBOX agora. Recarregue em alguns minutos para escolher a etapa.",
+      "AVISO_BAIXA": "Arquivar: confira honorários e pendências antes. Em ARQUIVADO/ENCERRADO, o cliente com conta no painel recebe e-mail de processo concluído.",
       "OBS": "Observação",
       "CONFERIDO_POR": "Conferido por {quem} em {data} {hora}",
       "APLICADO_POR": "Aplicado no ADVBOX por {quem} em {data} {hora}",

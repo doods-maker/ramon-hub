@@ -27,8 +27,9 @@ const LINHA = {
   agenda: [],
   ultimo_andamento: '2026-10-02',
   sugestao: { etapa: 'Recurso', etapa_id: 12 },
+  etapa_advbox_id: 5,
+  etapa_id: null,
   painel_marca: null,
-  atualizar: false,
   obs: null,
   marcado_em: null,
   marcado_por: null,
@@ -36,6 +37,12 @@ const LINHA = {
   aplicado_por: null,
   erro_aplicacao: null,
 };
+
+const ETAPAS = [
+  { etapa_id: 5, etapa: 'Aguardando perícia', step: 'JUDICIAL' },
+  { etapa_id: 12, etapa: 'Recurso', step: 'RECURSAL' },
+  { etapa_id: 30, etapa: 'ARQUIVADO/ENCERRADO', step: 'ARQUIVAMENTO' },
+];
 
 const mountPage = async ({ aplicar = false, ...data } = {}) => {
   RamonConferenciaFasesAPI.get.mockResolvedValue({
@@ -53,6 +60,7 @@ const mountPage = async ({ aplicar = false, ...data } = {}) => {
       },
       atualizado_em: '2026-10-09T05:10:00Z',
       permissoes: { aplicar },
+      etapas: ETAPAS,
       ...data,
     },
   });
@@ -104,6 +112,70 @@ describe('ConferenciaFases.vue', () => {
     expect(wrapper.text()).toContain(
       'RAMON.CONFERENCIA.CONFERIDO_POR Ana Gestora'
     );
+  });
+
+  it('o seletor traz a sugerida no topo e as demais por grupo, com a atual travada', async () => {
+    const wrapper = await mountPage();
+    const opcoes = wrapper.findAll('[data-testid="conferencia-etapa"] option');
+    expect(opcoes.map(o => o.attributes('value'))).toEqual([
+      '',
+      '12',
+      '5',
+      '30',
+    ]);
+    expect(opcoes[1].text()).toContain('RAMON.CONFERENCIA.SUGERIDA Recurso');
+    expect(opcoes[2].attributes('disabled')).toBeDefined();
+    expect(
+      wrapper
+        .findAll('[data-testid="conferencia-etapa"] optgroup')
+        .map(g => g.attributes('label'))
+    ).toEqual(['JUDICIAL', 'ARQUIVAMENTO']);
+  });
+
+  it('escolher etapa grava etapa_id, soma em "para aplicar" e avisa ao arquivar', async () => {
+    const wrapper = await mountPage({ aplicar: true });
+    RamonConferenciaFasesAPI.update.mockResolvedValue({
+      data: { ...LINHA, etapa_id: 30 },
+    });
+    await wrapper.find('[data-testid="conferencia-etapa"]').setValue('30');
+    await flushPromises();
+
+    expect(RamonConferenciaFasesAPI.update).toHaveBeenCalledWith(7, {
+      etapa_id: 30,
+    });
+    expect(
+      wrapper.find('[data-testid="conferencia-aplicar"]').text()
+    ).toContain('4');
+    expect(
+      wrapper.find('[data-testid="conferencia-aviso-arquivo"]').exists()
+    ).toBe(true);
+  });
+
+  it('"Não alterar" manda etapa_id nulo e erro volta o seletor', async () => {
+    RamonConferenciaFasesAPI.update.mockRejectedValue(new Error('x'));
+    const wrapper = await mountPage();
+    const seletor = wrapper.find('[data-testid="conferencia-etapa"]');
+    await seletor.setValue('12');
+    await flushPromises();
+    expect(seletor.element.value).toBe('');
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.CONFERENCIA.ERRO_SALVAR');
+
+    RamonConferenciaFasesAPI.update.mockResolvedValue({ data: LINHA });
+    await seletor.setValue('');
+    await flushPromises();
+    expect(RamonConferenciaFasesAPI.update).toHaveBeenLastCalledWith(7, {
+      etapa_id: null,
+    });
+  });
+
+  it('sem a lista de etapas o seletor fica desligado e a tela avisa', async () => {
+    const wrapper = await mountPage({ etapas: [] });
+    expect(
+      wrapper.find('[data-testid="conferencia-etapa"]').attributes('disabled')
+    ).toBeDefined();
+    expect(
+      wrapper.find('[data-testid="conferencia-sem-etapas"]').exists()
+    ).toBe(true);
   });
 
   it('agente não vê o botão de aplicar', async () => {

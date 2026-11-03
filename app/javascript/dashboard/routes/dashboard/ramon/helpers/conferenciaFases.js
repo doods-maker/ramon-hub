@@ -29,5 +29,13 @@ export const diaMesHora = iso => {
 export const contaNoResumo = l => ({
   conferidos: l.painel_marca ? 1 : 0,
   errados: l.painel_marca === 'errado' ? 1 : 0,
-  para_aplicar: l.atualizar && !l.aplicado_em && l.sugestao ? 1 : 0,
+  para_aplicar: l.etapa_id && !l.aplicado_em ? 1 : 0,
 });
+
+// { "JUDICIAL": [etapas] } na ordem do ADVBOX, sem a etapa sugerida (ela já
+// aparece no topo do seletor).
+export const etapasPorGrupo = (etapas, sugeridaId) =>
+  etapas.reduce((grupos, e) => {
+    if (e.etapa_id !== sugeridaId) (grupos[e.step] ||= []).push(e);
+    return grupos;
+  }, {});

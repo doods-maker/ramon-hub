@@ -2149,8 +2149,11 @@
         "certo": "Right",
         "errado": "Wrong"
       },
-      "ATUALIZAR": "Update ADVBOX stage to {etapa}",
-      "AVISO_BAIXA": "Archive: check fees and pending items first.",
+      "ATUALIZAR": "Update ADVBOX stage to",
+      "NAO_ALTERAR": "Do not change",
+      "SUGERIDA": "Suggested: {etapa}",
+      "ETAPAS_INDISPONIVEIS": "Could not fetch the ADVBOX stages right now. Reload in a few minutes to choose a stage.",
+      "AVISO_BAIXA": "Archive: check fees and pending items first. In ARQUIVADO/ENCERRADO, clients with a panel account get a case-closed email.",
       "OBS": "Note",
       "CONFERIDO_POR": "Reviewed by {quem} on {data} {hora}",
       "APLICADO_POR": "Applied in ADVBOX by {quem} on {data} {hora}",

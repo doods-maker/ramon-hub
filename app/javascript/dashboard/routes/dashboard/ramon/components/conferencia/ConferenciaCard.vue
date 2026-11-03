@@ -10,6 +10,7 @@ import {
   CARTAO,
   CHIP,
   ROTULO,
+  SELECT,
   TITULO,
   TOM,
 } from '../../helpers/ui';
@@ -17,10 +18,12 @@ import {
   TOM_DO_GRUPO,
   dataBr,
   diaMesHora,
+  etapasPorGrupo,
 } from '../../helpers/conferenciaFases';
 
 const props = defineProps({
   linha: { type: Object, required: true },
+  etapas: { type: Array, default: () => [] },
 });
 const emit = defineEmits(['salvar']);
 
@@ -59,6 +62,17 @@ const decidiu = computed(() => {
     ? `${texto} · ${t('RAMON.CONFERENCIA.ULTIMO_ANDAMENTO', { data: dataBr(ultimo) })}`
     : texto;
 });
+
+const grupos = computed(() =>
+  etapasPorGrupo(props.etapas, props.linha.sugestao?.etapa_id)
+);
+
+const arquivando = computed(
+  () =>
+    props.linha.grupo === 'baixa' ||
+    props.etapas.find(e => e.etapa_id === props.linha.etapa_id)?.step ===
+      'ARQUIVAMENTO'
+);
 
 const salvar = body => emit('salvar', body);
 
@@ -148,21 +162,43 @@ const salvarObs = e => {
         </div>
       </div>
 
-      <div v-if="linha.sugestao" class="flex flex-col gap-1">
-        <label class="flex items-center gap-2 text-sm text-n-slate-12">
-          <input
-            type="checkbox"
-            class="m-0 accent-n-brand"
-            data-testid="conferencia-atualizar"
-            :checked="linha.atualizar"
-            @change="salvar({ atualizar: $event.target.checked })"
-          />
-          {{
-            t('RAMON.CONFERENCIA.ATUALIZAR', { etapa: linha.sugestao.etapa })
-          }}
+      <div class="flex min-w-[16rem] flex-col gap-1">
+        <label :class="ROTULO">
+          {{ t('RAMON.CONFERENCIA.ATUALIZAR') }}
+          <select
+            data-testid="conferencia-etapa"
+            :class="SELECT"
+            :value="linha.etapa_id ?? ''"
+            :disabled="!etapas.length"
+            @change="salvar({ etapa_id: Number($event.target.value) || null })"
+          >
+            <option value="">{{ t('RAMON.CONFERENCIA.NAO_ALTERAR') }}</option>
+            <option v-if="linha.sugestao" :value="linha.sugestao.etapa_id">
+              {{
+                t('RAMON.CONFERENCIA.SUGERIDA', {
+                  etapa: linha.sugestao.etapa,
+                })
+              }}
+            </option>
+            <optgroup
+              v-for="(lista, grupo) in grupos"
+              :key="grupo"
+              :label="grupo"
+            >
+              <option
+                v-for="e in lista"
+                :key="e.etapa_id"
+                :value="e.etapa_id"
+                :disabled="e.etapa_id === linha.etapa_advbox_id"
+              >
+                {{ e.etapa }}
+              </option>
+            </optgroup>
+          </select>
         </label>
         <p
-          v-if="linha.grupo === 'baixa'"
+          v-if="arquivando"
+          data-testid="conferencia-aviso-arquivo"
           :class="[AVISO, TOM.amber]"
           class="m-0 !py-1"
         >

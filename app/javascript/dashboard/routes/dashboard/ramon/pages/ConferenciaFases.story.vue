@@ -11,8 +11,9 @@ const base = {
   agenda: [],
   tribunal: null,
   sugestao: null,
+  etapa_advbox_id: null,
+  etapa_id: null,
   painel_marca: null,
-  atualizar: false,
   obs: null,
   marcado_em: null,
   marcado_por: null,
@@ -42,7 +43,7 @@ const LINHAS = [
     ultimo_andamento: '2026-10-01',
     sugestao: { etapa: 'Recurso', etapa_id: 12 },
     painel_marca: 'certo',
-    atualizar: true,
+    etapa_id: 12,
     marcado_em: '2026-10-08T17:42:00Z',
     marcado_por: 'Bruna Teste',
   },
@@ -105,7 +106,7 @@ const LINHAS = [
     },
     ultimo_andamento: '2026-09-03',
     sugestao: { etapa: 'Pagamento', etapa_id: 25 },
-    atualizar: true,
+    etapa_id: 25,
     aplicado_em: '2026-10-08T23:10:00Z',
     aplicado_por: 'Gestor Fictício',
   },
@@ -122,7 +123,7 @@ const LINHAS = [
     fase_painel: 'justica',
     grupo: 'igual',
     sugestao: { etapa: 'Recurso', etapa_id: 12 },
-    atualizar: true,
+    etapa_id: 12,
     erro_aplicacao: 'ADVBOX respondeu 422 (etapa inexistente)',
   },
 ];
@@ -141,6 +142,11 @@ const RESPOSTA = {
   },
   atualizado_em: '2026-10-09T05:10:00Z',
   permissoes: { aplicar: false },
+  etapas: [
+    { etapa_id: 12, etapa: 'Recurso', step: 'RECURSAL' },
+    { etapa_id: 25, etapa: 'Pagamento', step: 'EXECUÇÃO/COBRANÇA' },
+    { etapa_id: 30, etapa: 'Arquivado', step: 'ARQUIVAMENTO' },
+  ],
 };
 
 let modo = 'agente';

@@ -17,5 +17,13 @@ class RamonConferenciaFase < ApplicationRecord
   validates :grupo, inclusion: { in: GRUPOS }
   validates :painel_marca, inclusion: { in: MARCAS }, allow_nil: true
 
-  scope :para_aplicar, -> { where(atualizar: true, aplicado_em: nil).where.not(sugestao: nil) }
+  scope :para_aplicar, -> { where(atualizar: true, aplicado_em: nil).where('sugestao IS NOT NULL OR etapa_escolhida IS NOT NULL') }
+
+  # A etapa que vai para o ADVBOX: a escolhida na linha ou, sem escolha, a sugerida.
+  def alvo = etapa_escolhida.presence || sugestao
+
+  # Escolher de novo depois de aplicar reabre a linha; nil desfaz.
+  def escolher_etapa(etapa)
+    assign_attributes(etapa_escolhida: etapa, atualizar: etapa.present?, aplicado_em: nil, erro_aplicacao: nil)
+  end
 end

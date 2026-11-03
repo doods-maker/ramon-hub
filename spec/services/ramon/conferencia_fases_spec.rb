@@ -70,4 +70,34 @@ RSpec.describe Ramon::ConferenciaFases do
     expect(linha(1).aplicado_em).to be_present
     expect(linha(2)).to have_attributes(aplicado_em: nil, erro_aplicacao: 'AdvBox respondeu HTTP 422')
   end
+
+  context 'with etapa escolhida na linha' do
+    let(:escolhida) { { 'etapa_id' => 3_736_288, 'etapa' => 'PAGAMENTO RECEBIDO / PAGAR CLIENTE', 'step' => 'EXECUÇÃO/COBRANÇA' } }
+    let(:arquivo) { { 'etapa_id' => 3_736_298, 'etapa' => 'ARQUIVADO/ENCERRADO', 'step' => 'ARQUIVAMENTO' } }
+
+    it 'aplicar grava a escolhida, não a sugerida, e recalcula o grupo pela fase dela' do
+      conferencia.atualizar!
+      linha(1).update!(atualizar: true, etapa_escolhida: arquivo)
+      allow(Ramon::AdvboxClient).to receive(:update_lawsuit).and_return({})
+      conferencia.aplicar!(create(:user, account: account))
+      expect(Ramon::AdvboxClient).to have_received(:update_lawsuit).once.with(1, stages_id: 3_736_298)
+      expect(linha(1)).to have_attributes(etapa_advbox: 'ARQUIVADO/ENCERRADO', etapa_advbox_id: 3_736_298,
+                                          fase_advbox: 'concluido', grupo: 'diferente')
+    end
+
+    it 'sugestão nova à noite não desfaz a escolha pendente' do
+      conferencia.atualizar!
+      linha(1).update!(atualizar: true, etapa_escolhida: escolhida)
+      andamentos[1] = [{ 'date' => '2026-10-01', 'title' => 'Baixa Definitiva' }] + andamentos[1]
+      described_class.new(account, pausa: 0).atualizar!
+      expect(linha(1)).to have_attributes(grupo: 'baixa', atualizar: true, etapa_escolhida: escolhida)
+    end
+
+    it 'depois de aplicada, a noite limpa a escolha e a etapa do ADVBOX passa a valer' do
+      conferencia.atualizar!
+      linha(1).update!(atualizar: true, etapa_escolhida: escolhida, aplicado_em: Time.current)
+      described_class.new(account, pausa: 0).atualizar!
+      expect(linha(1)).to have_attributes(atualizar: false, etapa_escolhida: nil, aplicado_em: nil)
+    end
+  end
 end
