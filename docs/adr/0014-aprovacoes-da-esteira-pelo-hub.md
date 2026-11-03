@@ -9,10 +9,12 @@ painel, com Aprovar e Negar.
 
 - **Quem decide é só a tela:** responder exige sessão do hub e estar em `RAMON_PAINEL_AGENTES_EMAILS`. O token do hook
   (`RAMON_ESTEIRA_APROVACOES_TOKEN`) só cria pedido e lê status, então vazar esse token não aprova nada.
-- **O terminal continua sendo a saída:** se o hub não responder, o hook sai sem decidir e o pedido segue o fluxo normal
-  do Claude Code. Comportamento a confirmar no primeiro teste, porque a documentação não o define para este evento.
+- **O terminal continua sendo a saída:** se o hub não abrir o pedido, o hook sai sem decidir e o pedido segue o fluxo
+  normal do Claude Code. Depois de aberto, queda do hub não desiste, porque pode ser só um deploy; o hook insiste até o limite.
+  Comportamento interativo a confirmar no primeiro teste, porque a documentação não o define para este evento.
 - **Negar não para a sessão:** o hook devolve a negação com mensagem e `interrupt: false`, para o chefe seguir o caso.
-- **Entrada apagada ao decidir:** a entrada traz dado de cliente. Ela some ao decidir, e fica só quem decidiu, o quê e quando.
+- **Dado de cliente apagado ao decidir:** a entrada e o nome no caso somem ao decidir. Fica o número do caso, a ferramenta,
+  quem decidiu, o quê e quando.
 - **Regra `deny` continua valendo:** a aprovação do hub não sobrepõe uma regra `deny` da esteira.
 
 ## Consequências

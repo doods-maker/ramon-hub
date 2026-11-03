@@ -4,7 +4,7 @@
 import { useI18n } from 'vue-i18n';
 import AprovacoesAgentes from '../components/AprovacoesAgentes.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
-import { usePainelAgentes } from '../helpers/painelAgentes';
+import { usePainelAgentes } from '../composables/usePainelAgentes';
 
 defineOptions({ name: 'RamonPainelAgentes' });
 

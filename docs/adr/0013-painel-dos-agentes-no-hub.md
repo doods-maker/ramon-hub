@@ -14,6 +14,8 @@ O foreman-vision continua igual e fora do hub. A tela `Agentes` abre o painel em
   portão sem emitir bilhete nem criar registro de DNS.
 - **Socket Unix até o painel:** o foreman-vision não tem login e lê transcripts com dado de cliente. Só o container do
   Caddy monta o socket; os outros containers da rede não alcançam o painel.
+- **Política de conteúdo restrita:** o cookie do hub não é HttpOnly e vale nesta porta, e o painel mostra saída de
+  ferramenta. A CSP impede script injetado de rodar ou de mandar a sessão para fora. O cookie também não é repassado ao painel.
 - **Sem tela refeita:** nada é reimplementado em Vue, e o painel pode ser atualizado sem mexer no hub.
 
 ## Consequências

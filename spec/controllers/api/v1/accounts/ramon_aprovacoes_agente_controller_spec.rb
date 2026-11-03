@@ -5,13 +5,15 @@ RSpec.describe 'Aprovações dos agentes', type: :request do
   let(:eduardo) { create(:user, account: account, role: :administrator, email: 'eduardo@example.com') }
   let(:ramon) { create(:user, account: account, role: :administrator, email: 'ramon@example.com') }
   let(:url) { "/api/v1/accounts/#{account.id}/ramon_aprovacoes_agente" }
-  let!(:pedido) { RamonAprovacaoAgente.abrir!(caso: '123', ferramenta: 'advbox_criar_tarefa', entrada: { 'descricao' => 'dado do cliente' }) }
+  let!(:pedido) do
+    RamonAprovacaoAgente.abrir!(caso: 'Fulano de Tal #123', ferramenta: 'advbox_criar_tarefa', entrada: { 'descricao' => 'dado do cliente' })
+  end
 
   around { |exemplo| with_modified_env(RAMON_PAINEL_AGENTES_EMAILS: 'eduardo@example.com') { exemplo.run } }
 
   it 'lista os pendentes para quem está na lista' do
     get url, headers: eduardo.create_new_auth_token, as: :json
-    expect(response.parsed_body.first).to include('id' => pedido.id, 'caso' => '123', 'ferramenta' => 'advbox_criar_tarefa',
+    expect(response.parsed_body.first).to include('id' => pedido.id, 'caso' => 'Fulano de Tal #123', 'ferramenta' => 'advbox_criar_tarefa',
                                                   'entrada' => { 'descricao' => 'dado do cliente' })
   end
 
@@ -24,10 +26,10 @@ RSpec.describe 'Aprovações dos agentes', type: :request do
     expect(pedido.reload.status).to eq('pendente')
   end
 
-  it 'aprova, registra quem decidiu e apaga a entrada' do
+  it 'aprova, registra quem decidiu e apaga o dado de cliente' do
     patch "#{url}/#{pedido.id}", params: { decisao: 'aprovada' }, headers: eduardo.create_new_auth_token, as: :json
     expect(response).to have_http_status(:no_content)
-    expect(pedido.reload).to have_attributes(status: 'aprovada', decidida_por: eduardo, entrada: {})
+    expect(pedido.reload).to have_attributes(status: 'aprovada', decidida_por: eduardo, entrada: {}, caso: '123')
   end
 
   it 'não aceita segunda resposta nem decisão desconhecida' do

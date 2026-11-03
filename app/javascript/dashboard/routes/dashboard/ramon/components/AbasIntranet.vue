@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { grupoDaRota } from '../helpers/navIntranet';
-import { usePainelAgentes } from '../helpers/painelAgentes';
+import { usePainelAgentes } from '../composables/usePainelAgentes';
 import { ABA, ABA_ATIVA, ABA_INATIVA } from '../helpers/ui';
 
 const { t } = useI18n();

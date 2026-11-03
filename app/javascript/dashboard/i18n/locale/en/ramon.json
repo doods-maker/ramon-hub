@@ -2513,7 +2513,7 @@
       }
     },
     "NAV": {
-      "AGENTES": "Agents",
+      "PAINEL_AGENTES": "Agents panel",
       "TITLE": "Intranet",
       "OPERACAO": "Operations",
       "GESTAO": "Management",

@@ -817,12 +817,13 @@ Rails.application.routes.draw do
         post 'agente/arquivo',   to: 'agente#arquivo'
         post 'agente/execucoes', to: 'agente#execucoes'
         # Ramon — conteúdo do Instagram (rotina cloud + worker de montagem). Token no header X-Conteudo-Token.
-        post 'esteira/aprovacoes', to: 'esteira_aprovacoes#create'
-        get 'esteira/aprovacoes/:id', to: 'esteira_aprovacoes#show'
         post 'conteudo/pecas', to: 'conteudo#criar'
         post  'conteudo/pecas/proxima',     to: 'conteudo#proxima'
         patch 'conteudo/pecas/:id/montada', to: 'conteudo#montada'
         patch 'conteudo/pecas/:id/falha',   to: 'conteudo#falha'
+        # Hook da esteira: pedidos de permissão (ADR 0014).
+        post 'esteira/aprovacoes', to: 'esteira_aprovacoes#create'
+        get 'esteira/aprovacoes/:id', to: 'esteira_aprovacoes#show'
       end
     end
   end
@@ -832,7 +833,7 @@ Rails.application.routes.draw do
   # Retorno do OAuth do Google Agenda (público; segurança no state)
   get 'ramon/google_agenda/callback', to: 'ramon/google_agenda_callbacks#show'
   # Portão do painel dos agentes: forward_auth do Caddy (ADR 0013).
-  get 'ramon_painel_agentes/portao', to: 'ramon_painel_agentes_portao#show'
+  get 'ramon_painel_agentes/portao', to: 'ramon/painel_agentes_portao#show'
   get 'portal/:token', to: 'public/portal#show', as: :ramon_portal
   post 'portal/:token/upload', to: 'public/portal#upload', as: :ramon_portal_upload
 

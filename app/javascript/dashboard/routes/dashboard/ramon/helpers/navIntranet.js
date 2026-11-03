@@ -83,9 +83,14 @@ const SECOES = [
       },
       {
         key: 'agentes',
-        label: 'RAMON.NAV.AGENTES',
+        label: 'RAMON.NAV.PAINEL_AGENTES',
         icon: 'i-lucide-bot',
-        abas: [aba('ramon_agentes', 'AGENTES', { soPainel: true })],
+        abas: [
+          aba('ramon_agentes', 'PAINEL_AGENTES', {
+            adminOnly: true,
+            soPainel: true,
+          }),
+        ],
       },
       {
         key: 'configuracoes',

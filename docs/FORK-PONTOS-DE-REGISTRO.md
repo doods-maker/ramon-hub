@@ -25,6 +25,7 @@
 | `app/javascript/dashboard/store/index.js` | `import leads/leadConfig` após `labels`; `leads, leadConfig,` no objeto `modules` | registra módulos Vuex do funil de leads | 2A |
 | `app/javascript/dashboard/store/mutation-types.js` | bloco `// Ramon — Leads` (SET_LEAD_UI_FLAG, SET_LEADS, ADD_LEAD, EDIT_LEAD, DELETE_LEAD, SET_LEAD_CONFIG) após bloco Labels | mutation types dos módulos leads/leadConfig | 2A |
 | `app/javascript/dashboard/routes/dashboard/dashboard.routes.js` | import `ramonRoutes` + `...ramonRoutes` no array children | seção Intranet | 1A |
+| `config/routes.rb` | `resource :ramon_painel_agentes` e `resources :ramon_aprovacoes_agente` em `accounts`; `get 'ramon_painel_agentes/portao'` na raiz; `esteira/aprovacoes` em `public/api/v1` | painel dos agentes e aprovações (ADR 0013 e 0014) | agentes |
 | `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | item Ramon do `menuItems` **revertido** na 1B (trilho substitui o item) | o WorldRail faz a troca de mundo agora | 1B |
 | `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar (inofensivo, mantido) | 1A |
 | `app/javascript/dashboard/i18n/locale/pt_BR/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar (inofensivo, mantido) | 1A |

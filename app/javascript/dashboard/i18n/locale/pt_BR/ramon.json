@@ -2513,7 +2513,7 @@
       }
     },
     "NAV": {
-      "AGENTES": "Agentes",
+      "PAINEL_AGENTES": "Painel dos agentes",
       "TITLE": "Intranet",
       "OPERACAO": "Operação",
       "GESTAO": "Gestão",
