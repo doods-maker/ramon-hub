@@ -77,8 +77,7 @@ RSpec.describe Ramon::ConferenciaFases do
 
     it 'aplicar grava a escolhida, não a sugerida, e recalcula o grupo pela fase dela' do
       conferencia.atualizar!
-      linha(1).escolher_etapa(arquivo)
-      linha(1).save!
+      linha(1).update!(atualizar: true, etapa_escolhida: arquivo)
       allow(Ramon::AdvboxClient).to receive(:update_lawsuit).and_return({})
       conferencia.aplicar!(create(:user, account: account))
       expect(Ramon::AdvboxClient).to have_received(:update_lawsuit).once.with(1, stages_id: 3_736_298)
@@ -88,8 +87,7 @@ RSpec.describe Ramon::ConferenciaFases do
 
     it 'sugestão nova à noite não desfaz a escolha pendente' do
       conferencia.atualizar!
-      linha(1).escolher_etapa(escolhida)
-      linha(1).save!
+      linha(1).update!(atualizar: true, etapa_escolhida: escolhida)
       andamentos[1] = [{ 'date' => '2026-10-01', 'title' => 'Baixa Definitiva' }] + andamentos[1]
       described_class.new(account, pausa: 0).atualizar!
       expect(linha(1)).to have_attributes(grupo: 'baixa', atualizar: true, etapa_escolhida: escolhida)
