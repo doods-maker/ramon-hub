@@ -70,7 +70,7 @@ class Ramon::ColheitaExtractionService
   end
 
   def model
-    ENV.fetch('RAMON_COLHEITA_MODEL', 'claude-haiku-5-5')
+    ENV.fetch('RAMON_COLHEITA_MODEL', Ramon::LlmEscolha::MODELO_INTERNO)
   end
 
   # Com provider autorizado p/ dado sensível (lista configurável no LlmClient)

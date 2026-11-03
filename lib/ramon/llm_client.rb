@@ -48,6 +48,9 @@ class Ramon::LlmClient
   # teto, um provider travado segura a thread indefinidamente e esvazia o pool.
   # 90s cobre a colheita de 200 msgs (roda em job) sem prender o request interativo.
   REQUEST_TIMEOUT = 90
+  # assume_model_exists deixa o teto da Anthropic em 4096, e o thinking do Haiku 5.5 consome esse teto:
+  # colheita ou ata longa viria cortada, sem erro.
+  MAX_TOKENS_ANTHROPIC = 16_000
 
   def self.ask(provider:, model:, system:, user:, anexo: nil)
     context = RubyLLM.context do |config|
@@ -57,6 +60,7 @@ class Ramon::LlmClient
       config.request_timeout = REQUEST_TIMEOUT
     end
     chat = context.chat(model: model, provider: provider.to_sym, assume_model_exists: true)
+    chat.with_params(max_tokens: MAX_TOKENS_ANTHROPIC) if provider == 'anthropic'
     chat.with_instructions(system).ask(user, with: anexo)
   rescue StandardError => e
     raise TransientError, e.message if transient?(e)

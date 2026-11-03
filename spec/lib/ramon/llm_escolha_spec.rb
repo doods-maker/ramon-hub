@@ -12,6 +12,12 @@ RSpec.describe Ramon::LlmEscolha do
       end
     end
 
+    it 'env vazia do copiloto não vira modelo sem provedor' do
+      with_modified_env RAMON_COPILOT_MODEL: '' do
+        expect(described_class.para(account, 'copiloto')).to eq(provider: 'anthropic', model: 'claude-haiku-5-5')
+      end
+    end
+
     it 'sem conta (job sem contexto) também cai na reserva' do
       with_modified_env RAMON_COPILOT_MODEL: nil do
         expect(described_class.para(nil, 'copiloto')).to eq(provider: 'anthropic', model: 'claude-haiku-5-5')

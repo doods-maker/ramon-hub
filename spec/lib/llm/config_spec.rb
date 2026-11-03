@@ -6,6 +6,11 @@ RSpec.describe Llm::Config do
 
     after { described_class.reset! }
 
+    it 'só pede response_format fora do Claude' do
+      expect(described_class.json_params('claude-haiku-4-5')).to eq({})
+      expect(described_class.json_params('gpt-4.1-mini')).to eq(response_format: { type: 'json_object' })
+    end
+
     it 'configura a credencial do deepseek a partir da env' do
       with_modified_env DEEPSEEK_API_KEY: 'chave-de-teste' do
         described_class.initialize!

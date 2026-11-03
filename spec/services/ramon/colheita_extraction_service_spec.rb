@@ -91,7 +91,8 @@ RSpec.describe Ramon::ColheitaExtractionService do
   end
 
   it 'deepseek autorizado via env manda transcript íntegro (decisão 20/07)' do
-    with_modified_env RAMON_COLHEITA_PROVIDER: 'deepseek', RAMON_LLM_SENSITIVE_OK_PROVIDERS: 'anthropic,openai,deepseek' do
+    with_modified_env RAMON_COLHEITA_PROVIDER: 'deepseek', RAMON_COLHEITA_MODEL: 'deepseek-chat',
+                      RAMON_LLM_SENSITIVE_OK_PROVIDERS: 'anthropic,openai,deepseek' do
       expect(Ramon::LlmClient).to receive(:complete) do |provider:, user:, sensitive:, **|
         expect(provider).to eq('deepseek')
         expect(user).to include('123.456.789-00')

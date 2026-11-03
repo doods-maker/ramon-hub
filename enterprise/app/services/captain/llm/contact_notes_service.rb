@@ -24,7 +24,7 @@ class Captain::Llm::ContactNotesService < Llm::BaseAiService
   def generate_notes
     @content = Ramon::MemoriaContato.texto(@conversation, @lead)
     response = instrument_llm_call(instrumentation_params) do
-      chat.with_params(response_format: { type: 'json_object' }).with_instructions(Ramon::MemoriaContato::PROMPT).ask(@content)
+      chat.with_params(**Llm::Config.json_params(@model)).with_instructions(Ramon::MemoriaContato::PROMPT).ask(@content)
     end
     Ramon::MemoriaContato.itens(response.content)
   rescue RubyLLM::Error => e

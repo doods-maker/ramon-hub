@@ -81,7 +81,7 @@ class Ramon::ReuniaoAtaService
   def gerar_ata(transcricao)
     Ramon::LlmClient.complete(
       provider: ENV.fetch('RAMON_REUNIAO_PROVIDER', 'anthropic'),
-      model: ENV.fetch('RAMON_REUNIAO_MODEL', 'claude-haiku-5-5'),
+      model: ENV.fetch('RAMON_REUNIAO_MODEL', Ramon::LlmEscolha::MODELO_INTERNO),
       system: SYSTEM_PROMPT, user: transcricao, sensitive: true,
       funcao: 'ata', account_id: @reuniao.account_id, lead_id: @reuniao.lead_id
     ).content

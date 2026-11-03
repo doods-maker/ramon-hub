@@ -88,8 +88,8 @@ module Ramon::Fluxos::Passos::Ia
 
   def perguntar(sistema, pedido, ctx)
     texto = [pedido, dados_do_caso(ctx), transcricao(ctx)].compact_blank.join("\n\n")
-    modelo = Ramon::LlmEscolha.para(ctx.execucao.account, 'copiloto')
-    Ramon::LlmClient.complete(**modelo, system: sistema, user: Ramon::Pseudonymizer.mask(texto, names: nomes(ctx))).content.to_s
+    escolha = Ramon::LlmEscolha.para(ctx.execucao.account, 'copiloto')
+    Ramon::LlmClient.complete(**escolha, system: sistema, user: Ramon::Pseudonymizer.mask(texto, names: nomes(ctx))).content.to_s
   end
 
   def dados_do_caso(ctx)

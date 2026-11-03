@@ -14,7 +14,7 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
   end
 
   # Fork: resumo e sugestão de resposta saem pelo copiloto da banca
-  # (Ramon::ConversationCopilotService — DeepSeek + pseudonimização LGPD),
+  # (Ramon::ConversationCopilotService — modelo do copiloto + pseudonimização LGPD),
   # não pelos serviços do Captain: a config "OpenAI" desta instalação aponta
   # pro Whisper local (só transcrição de áudio), então o caminho upstream
   # sempre devolvia "API server error".
@@ -36,7 +36,7 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
   end
 
   # Fork: "Perguntar ao AdvBox" — processos, andamentos e publicações do
-  # cliente vindos da API do AdvBox + DeepSeek. O contexto volta no
+  # cliente vindos da API do AdvBox + modelo do copiloto. O contexto volta no
   # follow_up_context para as perguntas seguintes (follow_up abaixo).
   def advbox
     render_advbox(pergunta: params[:message])
