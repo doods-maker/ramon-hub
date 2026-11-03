@@ -14,6 +14,7 @@ RSpec.describe Ramon::LlmClient do
         chat = instance_double(RubyLLM::Chat)
         allow(RubyLLM).to receive(:context).and_return(instance_double(RubyLLM::Context, chat: chat))
         allow(chat).to receive(:with_instructions).and_return(chat)
+        allow(chat).to receive(:with_params).and_return(chat)
         message = instance_double(RubyLLM::Message, content: 'ok', input_tokens: 10, output_tokens: 5)
         allow(chat).to receive(:ask).and_return(message)
         result = described_class.complete(provider: 'anthropic', model: 'claude-haiku-4-5-20251001',
