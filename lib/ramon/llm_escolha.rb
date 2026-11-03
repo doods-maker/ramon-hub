@@ -15,6 +15,9 @@ module Ramon::LlmEscolha
   # chave de cada provedor = a mesma env que o Ramon::LlmClient usa
   CHAVES = { 'deepseek' => 'DEEPSEEK_API_KEY', 'openai' => 'OPENAI_API_KEY', 'anthropic' => 'ANTHROPIC_API_KEY',
              ASSINATURA => 'RAMON_AGENTE_TOKEN' }.freeze
+  # DeepSeek desabilitada desde 03/11 (App Review da Meta): aparece na tela, mas não dá para escolher e
+  # uma escolha salva cai na reserva. A chave segue no servidor; para religar, tirar daqui.
+  DESABILITADOS = %w[deepseek].freeze
 
   module_function
 
@@ -30,7 +33,7 @@ module Ramon::LlmEscolha
 
   def assinatura?(modelo) = provedor_de(modelo) == ASSINATURA
 
-  def chave?(provider) = ENV.fetch(CHAVES.fetch(provider.to_s, ''), nil).present?
+  def chave?(provider) = DESABILITADOS.exclude?(provider.to_s) && ENV.fetch(CHAVES.fetch(provider.to_s, ''), nil).present?
 
   def chaves = CHAVES.keys.index_with { |provider| chave?(provider) }
 
