@@ -3,11 +3,13 @@ class Api::V1::Accounts::RamonAprovacoesAgenteController < Api::V1::Accounts::Ba
   before_action { head :forbidden unless Ramon::PainelAgentes.liberado?(Current.user) }
 
   def index
-    render json: RamonAprovacaoAgente.pendentes.as_json(only: %i[id caso ferramenta entrada created_at])
+    render json: RamonAprovacaoAgente.pendentes.map { |pedido|
+      pedido.as_json(only: %i[id caso ferramenta entrada created_at]).merge(nomes: Ramon::NomesAdvbox.da_entrada(pedido.entrada))
+    }
   end
 
   def update
-    RamonAprovacaoAgente.find(params[:id]).decidir!(params.require(:decisao), Current.user)
+    RamonAprovacaoAgente.find(params[:id]).decidir!(params.require(:decisao), Current.user, motivo: params[:motivo])
     head :no_content
   rescue ArgumentError
     head :unprocessable_entity

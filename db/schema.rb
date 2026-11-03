@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_03_010000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_03_020000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1492,6 +1492,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_03_010000) do
     t.datetime "decidida_em"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "motivo"
     t.index ["status"], name: "index_ramon_aprovacoes_agente_on_status"
   end
 

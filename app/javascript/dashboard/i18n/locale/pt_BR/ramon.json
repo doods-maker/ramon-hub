@@ -2505,10 +2505,30 @@
       "SUBTITLE": "O que a esteira de petições está fazendo agora.",
       "SEM_ACESSO": "Este painel é restrito.",
       "APROVACOES": {
-        "PEDIDO": "{caso} · {ferramenta} pede permissão",
+        "ESPERANDO": "Esperando sua resposta",
+        "CASO": "caso #{numero}",
+        "ACOES": {
+          "TAREFA": "Criar uma tarefa no ADVBOX",
+          "MOVIMENTACAO": "Registrar um andamento no processo",
+          "SITE": "Abrir um site fora da lista",
+          "BUSCA": "Fazer uma busca na internet",
+          "COMANDO": "Rodar um comando no servidor",
+          "ARQUIVO": "Gravar um arquivo",
+          "OUTRA": "Usar a ferramenta {ferramenta}"
+        },
+        "CAMPOS": {
+          "PARA": "Para",
+          "TIPO": "Tipo",
+          "PROCESSO": "Processo",
+          "PRAZO": "Prazo"
+        },
         "APROVAR": "Aprovar",
         "NEGAR": "Negar",
-        "DETALHES": "Ver o que será feito",
+        "MOTIVO": "Quer orientar o agente? (opcional)",
+        "MOTIVO_EXEMPLO": "Ex.: não crie a tarefa, já existe uma para este caso.",
+        "VOLTAR": "Voltar",
+        "CONFIRMAR_NEGATIVA": "Confirmar negativa",
+        "DETALHES": "Detalhes técnicos",
         "ERRO": "Não consegui registrar a resposta. Tente de novo."
       }
     },

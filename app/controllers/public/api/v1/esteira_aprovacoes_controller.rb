@@ -4,7 +4,8 @@ class Public::Api::V1::EsteiraAprovacoesController < PublicController
   before_action :verify_token
 
   def show
-    render json: { status: RamonAprovacaoAgente.find(params[:id]).status }
+    aprovacao = RamonAprovacaoAgente.find(params[:id])
+    render json: { status: aprovacao.status, motivo: aprovacao.entregar_motivo! }
   end
 
   def create

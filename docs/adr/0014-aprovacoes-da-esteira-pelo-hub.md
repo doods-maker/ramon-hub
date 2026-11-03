@@ -13,6 +13,7 @@ painel, com Aprovar e Negar.
   normal do Claude Code. Depois de aberto, queda do hub não desiste, porque pode ser só um deploy; o hook insiste até o limite.
   Comportamento interativo a confirmar no primeiro teste, porque a documentação não o define para este evento.
 - **Negar não para a sessão:** o hook devolve a negação com mensagem e `interrupt: false`, para o chefe seguir o caso.
+  Quem nega pode escrever uma orientação ao agente; ela é entregue uma vez ao hook e apagada.
 - **Dado de cliente apagado ao decidir:** a entrada e o nome no caso somem ao decidir. Fica o número do caso, a ferramenta,
   quem decidiu, o quê e quando.
 - **Regra `deny` continua valendo:** a aprovação do hub não sobrepõe uma regra `deny` da esteira.

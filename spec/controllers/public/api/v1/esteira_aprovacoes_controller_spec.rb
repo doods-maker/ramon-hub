@@ -20,6 +20,16 @@ RSpec.describe 'Hook da esteira: aprovações', type: :request do
     expect(response.parsed_body['status']).to eq('aprovada')
   end
 
+  it 'entrega o motivo da negativa uma vez e apaga' do
+    pedido = RamonAprovacaoAgente.abrir!(caso: '123', ferramenta: 'WebFetch', entrada: {})
+    pedido.decidir!('negada', nil, motivo: 'Use a tarefa que já existe')
+
+    get "#{url}/#{pedido.id}", headers: headers
+    expect(response.parsed_body).to eq('status' => 'negada', 'motivo' => 'Use a tarefa que já existe')
+    get "#{url}/#{pedido.id}", headers: headers
+    expect(response.parsed_body).to eq('status' => 'negada', 'motivo' => nil)
+  end
+
   it 'avisa pelo push sem caso, ferramenta nem dado de cliente' do
     expect do
       post url, params: { caso: '123', ferramenta: 'advbox_criar_tarefa', entrada: { descricao: 'Fulano' } }, headers: headers, as: :json
