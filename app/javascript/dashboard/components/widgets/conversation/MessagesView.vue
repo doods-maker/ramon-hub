@@ -371,12 +371,14 @@ export default {
       }
     },
     onScrollToMessage({ messageId = '' } = {}) {
-      this.$nextTick(() => {
+      this.$nextTick(async () => {
         const messageElement = document.getElementById('message' + messageId);
         if (messageElement) {
+          // FORK(ramon): na Equipe carrega antes de rolar. Ao terminar, fetchPreviousMessages devolve o scrollTop e cancelaria a rolagem suave.
+          if (this.equipe) await this.fetchPreviousMessages();
           this.isProgrammaticScroll = true;
           messageElement.scrollIntoView({ behavior: 'smooth' });
-          this.fetchPreviousMessages();
+          if (!this.equipe) this.fetchPreviousMessages();
         } else {
           this.scrollToBottom();
         }
