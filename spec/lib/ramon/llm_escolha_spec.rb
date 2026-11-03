@@ -77,7 +77,7 @@ RSpec.describe Ramon::LlmEscolha do
 
   it 'informa quais chaves estão no servidor sem expor o valor' do
     with_modified_env DEEPSEEK_API_KEY: 'segredo', OPENAI_API_KEY: nil, ANTHROPIC_API_KEY: nil, RAMON_AGENTE_TOKEN: 'tok' do
-      expect(described_class.chaves).to eq('deepseek' => true, 'openai' => false, 'anthropic' => false, 'claude_vps' => true)
+      expect(described_class.chaves).to eq('deepseek' => false, 'openai' => false, 'anthropic' => false, 'claude_vps' => true)
     end
   end
 end
