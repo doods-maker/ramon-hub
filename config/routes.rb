@@ -375,6 +375,7 @@ Rails.application.routes.draw do
           resource :ramon_pos_venda, only: [:show], controller: 'ramon_pos_venda'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
           resource :ramon_painel_agentes, only: [:show], controller: 'ramon_painel_agentes'
+          resources :ramon_aprovacoes_agente, only: [:index, :update], controller: 'ramon_aprovacoes_agente'
           resource :ramon_inteligencia, only: [:show], controller: 'ramon_inteligencia'
           resources :ramon_fluxos, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_fluxos' do
             member do
@@ -816,6 +817,8 @@ Rails.application.routes.draw do
         post 'agente/arquivo',   to: 'agente#arquivo'
         post 'agente/execucoes', to: 'agente#execucoes'
         # Ramon — conteúdo do Instagram (rotina cloud + worker de montagem). Token no header X-Conteudo-Token.
+        post 'esteira/aprovacoes', to: 'esteira_aprovacoes#create'
+        get 'esteira/aprovacoes/:id', to: 'esteira_aprovacoes#show'
         post 'conteudo/pecas', to: 'conteudo#criar'
         post  'conteudo/pecas/proxima',     to: 'conteudo#proxima'
         patch 'conteudo/pecas/:id/montada', to: 'conteudo#montada'

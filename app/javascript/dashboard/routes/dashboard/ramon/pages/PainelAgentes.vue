@@ -2,6 +2,7 @@
 // Painel dos agentes: o foreman-vision da esteira em tela cheia (ADR 0013).
 // Quem barra de verdade é o portão no Caddy; aqui só se decide o que mostrar.
 import { useI18n } from 'vue-i18n';
+import AprovacoesAgentes from '../components/AprovacoesAgentes.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { usePainelAgentes } from '../helpers/painelAgentes';
 
@@ -18,6 +19,7 @@ const { url, carregado } = usePainelAgentes();
       :title="t('RAMON.AGENTES.TITLE')"
       :subtitle="t('RAMON.AGENTES.SUBTITLE')"
     />
+    <AprovacoesAgentes v-if="url" />
     <iframe
       v-if="url"
       :src="url"

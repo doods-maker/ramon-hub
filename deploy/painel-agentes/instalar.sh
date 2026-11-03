@@ -19,7 +19,7 @@ if [ "${1:-}" = "--desfazer" ]; then
   # cat > mantém o inode: o Caddyfile é montado como arquivo no container.
   cat "$B/Caddyfile" > Caddyfile
   cp "$B/docker-compose.override.yml" docker-compose.override.yml
-  sed -i '/^RAMON_PAINEL_AGENTES_/d' chatwoot.env
+  sed -i '/^RAMON_PAINEL_AGENTES_/d;/^RAMON_ESTEIRA_APROVACOES_TOKEN=/d' chatwoot.env
   docker compose up -d caddy
   web_sobe
   systemctl disable --now esteira-vision-proxy.socket esteira-vision-proxy.service
@@ -42,6 +42,8 @@ systemctl enable --now esteira-vision-proxy.socket
 # 3. Quem entra e onde está. Sem isso, o portão recusa todo mundo.
 sed -i '/^RAMON_PAINEL_AGENTES_/d' chatwoot.env
 printf 'RAMON_PAINEL_AGENTES_EMAILS=%s\nRAMON_PAINEL_AGENTES_URL=%s\n' "$EMAIL" "$URL" >> chatwoot.env
+# Token do hook de aprovações (ADR 0014): a esteira pega daqui pelo preparar-env.sh.
+grep -q '^RAMON_ESTEIRA_APROVACOES_TOKEN=' chatwoot.env || printf 'RAMON_ESTEIRA_APROVACOES_TOKEN=%s\n' "$(openssl rand -hex 32)" >> chatwoot.env
 
 # 4. Caddy e compose, validados antes de valer.
 grep -qF "$SITE" Caddyfile || cat "$AQUI/Caddyfile.trecho" >> Caddyfile

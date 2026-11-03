@@ -62,3 +62,7 @@ esteira (`CONTROLE INTERNO`, `Notas ao advogado`…). O hub recusa a pasta que a
 A tela do hub que mostra ao vivo o que as sessões da esteira de petições estão fazendo. É o foreman-vision em um iframe,
 restrito por lista de e-mails (ADR 0013).
 _Avoid_: Esteira (no hub, é outra tela: a fila de tarefas do dia), vision (é o nome da ferramenta)
+
+**Aprovação**:
+Um pedido de permissão de uma sessão da esteira, respondido na tela Agentes (ADR 0014).
+_Avoid_: aprovado (é o OK do Eduardo a algo que sai para o mundo), permissão (é a regra do Claude Code)

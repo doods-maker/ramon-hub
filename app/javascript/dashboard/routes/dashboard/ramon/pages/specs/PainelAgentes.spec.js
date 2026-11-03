@@ -12,7 +12,7 @@ const montar = async url => {
   API.get.mockResolvedValue({ data: { url } });
   const { default: PainelAgentes } = await import('../PainelAgentes.vue');
   const tela = mount(PainelAgentes, {
-    global: { stubs: { RamonPageHeader: true } },
+    global: { stubs: { RamonPageHeader: true, AprovacoesAgentes: true } },
   });
   await flushPromises();
   return tela;

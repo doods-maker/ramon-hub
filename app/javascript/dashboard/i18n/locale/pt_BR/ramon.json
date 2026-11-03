@@ -2503,7 +2503,14 @@
     "AGENTES": {
       "TITLE": "Painel dos agentes",
       "SUBTITLE": "O que a esteira de petições está fazendo agora.",
-      "SEM_ACESSO": "Este painel é restrito."
+      "SEM_ACESSO": "Este painel é restrito.",
+      "APROVACOES": {
+        "PEDIDO": "{caso} · {ferramenta} pede permissão",
+        "APROVAR": "Aprovar",
+        "NEGAR": "Negar",
+        "DETALHES": "Ver o que será feito",
+        "ERRO": "Não consegui registrar a resposta. Tente de novo."
+      }
     },
     "NAV": {
       "AGENTES": "Agentes",
