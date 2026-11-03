@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { secoesIntranet } from '../helpers/navIntranet';
+import { usePainelAgentes } from '../composables/usePainelAgentes';
 
 defineProps({
   isMobileSidebarOpen: {
@@ -22,7 +23,10 @@ const { isAdmin } = useAdmin();
 
 // Grupos e abas: helpers/navIntranet.js. O item leva à 1ª aba visível e
 // acende em qualquer rota das suas abas.
-const sections = computed(() => secoesIntranet(isAdmin.value));
+const { url: painelAgentes } = usePainelAgentes();
+const sections = computed(() =>
+  secoesIntranet(isAdmin.value, !!painelAgentes.value)
+);
 
 const isActive = grupo => grupo.abas.some(a => a.names.includes(route.name));
 </script>

@@ -1,0 +1,20 @@
+# >>> painel-agentes (ADR 0013): foreman-vision dentro do hub. Porta própria no mesmo domínio,
+# para o cookie de sessão do hub chegar ao portão sem mexer no DNS.
+chat.ramonantonio.adv.br:8443 {
+	forward_auth chatwoot-web:3000 {
+		uri /ramon_painel_agentes/portao
+	}
+	# O painel mostra saída de ferramenta, e o cookie do hub vale nesta porta: a política impede
+	# que um script injetado por transcript rode ou mande a sessão para fora.
+	header {
+		Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; frame-ancestors https://chat.ramonantonio.adv.br"
+		Referrer-Policy no-referrer
+		X-Content-Type-Options nosniff
+	}
+	reverse_proxy unix//run/esteira-vision-proxy/vision.sock {
+		# O painel recusa qualquer outro Host (proteção contra DNS rebinding).
+		header_up Host 127.0.0.1:4780
+		header_up -Cookie
+	}
+}
+# <<< painel-agentes

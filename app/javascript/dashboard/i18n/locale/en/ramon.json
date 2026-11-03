@@ -2500,7 +2500,20 @@
         }
       }
     },
+    "AGENTES": {
+      "TITLE": "Agents panel",
+      "SUBTITLE": "What the petition pipeline is doing right now.",
+      "SEM_ACESSO": "This panel is restricted.",
+      "APROVACOES": {
+        "PEDIDO": "{caso} · {ferramenta} asks for permission",
+        "APROVAR": "Approve",
+        "NEGAR": "Deny",
+        "DETALHES": "See what will be done",
+        "ERRO": "Could not save the answer. Try again."
+      }
+    },
     "NAV": {
+      "PAINEL_AGENTES": "Agents panel",
       "TITLE": "Intranet",
       "OPERACAO": "Operations",
       "GESTAO": "Management",
