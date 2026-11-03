@@ -1,0 +1,10 @@
+[Unit]
+Description=Painel dos agentes: socket que o Caddy usa para chegar ao foreman-vision
+
+[Socket]
+# Socket Unix, não porta: só o container que monta esta pasta alcança o painel, que não tem login.
+ListenStream=/run/esteira-vision-proxy/vision.sock
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target

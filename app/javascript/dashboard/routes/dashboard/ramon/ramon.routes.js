@@ -52,6 +52,13 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    // Painel dos agentes: só quem está na lista do backend (ADR 0013).
+    path: frontendURL('accounts/:accountId/ramon/agentes'),
+    name: 'ramon_agentes',
+    component: () => import('./pages/PainelAgentes.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
+  {
     // Sem contactId a mesma página vira a busca de pessoa (entrada do menu).
     path: frontendURL('accounts/:accountId/ramon/pessoa'),
     name: 'ramon_pessoas',

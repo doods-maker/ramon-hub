@@ -1,0 +1,12 @@
+[Unit]
+Description=Painel dos agentes: ponte do socket para o foreman-vision em 127.0.0.1:4780
+Requires=esteira-vision-proxy.socket
+After=esteira-vision-proxy.socket esteira-vision.service
+
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd 127.0.0.1:4780
+DynamicUser=yes
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true

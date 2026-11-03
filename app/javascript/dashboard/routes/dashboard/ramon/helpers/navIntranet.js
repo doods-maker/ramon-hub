@@ -1,12 +1,14 @@
 // Menu da Intranet agrupado (decisão Eduardo 06/10): telas irmãs viram um item
 // só, com abas no topo da página. Rotas e telas não mudam.
 // Aba: `name` = rota de destino; `names` = rotas que acendem (deep-links
-// contextuais acendem a aba-mãe). `adminOnly` espelha o guard da rota.
+// contextuais acendem a aba-mãe). `adminOnly` espelha o guard da rota; `soPainel`
+// só aparece para quem o backend liberou no painel dos agentes.
 const aba = (name, label, extra = {}) => ({
   name,
   label: `RAMON.NAV.${label}`,
   names: [name, ...(extra.acende || [])],
   adminOnly: !!extra.adminOnly,
+  soPainel: !!extra.soPainel,
 });
 
 const SECOES = [
@@ -80,6 +82,12 @@ const SECOES = [
         ],
       },
       {
+        key: 'agentes',
+        label: 'RAMON.NAV.AGENTES',
+        icon: 'i-lucide-bot',
+        abas: [aba('ramon_agentes', 'AGENTES', { soPainel: true })],
+      },
+      {
         key: 'configuracoes',
         label: 'RAMON.NAV.CONFIGURACOES',
         icon: 'i-lucide-sliders-horizontal',
@@ -94,19 +102,21 @@ const SECOES = [
 ];
 
 // Seções visíveis para o papel: tira aba adminOnly e grupo/seção que esvaziar.
-export const secoesIntranet = isAdmin =>
+export const secoesIntranet = (isAdmin, painel = false) =>
   SECOES.map(secao => ({
     ...secao,
     grupos: secao.grupos
       .map(grupo => ({
         ...grupo,
-        abas: grupo.abas.filter(a => isAdmin || !a.adminOnly),
+        abas: grupo.abas.filter(
+          a => (isAdmin || !a.adminOnly) && (painel || !a.soPainel)
+        ),
       }))
       .filter(grupo => grupo.abas.length),
   })).filter(secao => secao.grupos.length);
 
 // Grupo (já filtrado pelo papel) que contém a rota atual; undefined se nenhum.
-export const grupoDaRota = (routeName, isAdmin) =>
-  secoesIntranet(isAdmin)
+export const grupoDaRota = (routeName, isAdmin, painel = false) =>
+  secoesIntranet(isAdmin, painel)
     .flatMap(secao => secao.grupos)
     .find(grupo => grupo.abas.some(a => a.names.includes(routeName)));

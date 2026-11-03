@@ -61,6 +61,18 @@ describe('secoesIntranet', () => {
   });
 });
 
+describe('painel dos agentes', () => {
+  const grupos = painel =>
+    secoesIntranet(true, painel)[1].grupos.map(grupo => grupo.key);
+
+  it('só aparece para quem o backend liberou, mesmo sendo admin', () => {
+    expect(grupos(false)).not.toContain('agentes');
+    expect(grupos(true)).toContain('agentes');
+    expect(grupoDaRota('ramon_agentes', true)).toBeUndefined();
+    expect(grupoDaRota('ramon_agentes', true, true).key).toBe('agentes');
+  });
+});
+
 describe('grupoDaRota', () => {
   it.each([
     ['ramon_esteira', 'hoje'],

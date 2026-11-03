@@ -2500,7 +2500,13 @@
         }
       }
     },
+    "AGENTES": {
+      "TITLE": "Agents panel",
+      "SUBTITLE": "What the petition pipeline is doing right now.",
+      "SEM_ACESSO": "This panel is restricted."
+    },
     "NAV": {
+      "AGENTES": "Agents",
       "TITLE": "Intranet",
       "OPERACAO": "Operations",
       "GESTAO": "Management",

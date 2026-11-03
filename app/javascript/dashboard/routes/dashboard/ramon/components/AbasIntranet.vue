@@ -5,16 +5,19 @@ import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { grupoDaRota } from '../helpers/navIntranet';
+import { usePainelAgentes } from '../helpers/painelAgentes';
 import { ABA, ABA_ATIVA, ABA_INATIVA } from '../helpers/ui';
 
 const { t } = useI18n();
 const route = useRoute();
 const { accountScopedRoute } = useAccount();
 const { isAdmin } = useAdmin();
+const { url: painelAgentes } = usePainelAgentes();
 
 // Faixa de abas do item do menu: só quando o grupo tem 2+ abas visíveis.
 const abas = computed(() => {
-  const lista = grupoDaRota(route.name, isAdmin.value)?.abas || [];
+  const lista =
+    grupoDaRota(route.name, isAdmin.value, !!painelAgentes.value)?.abas || [];
   return lista.length > 1 ? lista : [];
 });
 </script>

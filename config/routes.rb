@@ -374,6 +374,7 @@ Rails.application.routes.draw do
           end
           resource :ramon_pos_venda, only: [:show], controller: 'ramon_pos_venda'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
+          resource :ramon_painel_agentes, only: [:show], controller: 'ramon_painel_agentes'
           resource :ramon_inteligencia, only: [:show], controller: 'ramon_inteligencia'
           resources :ramon_fluxos, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_fluxos' do
             member do
@@ -827,6 +828,8 @@ Rails.application.routes.draw do
   # (fora do namespace :public, que força format json; a página é server-rendered ERB)
   # Retorno do OAuth do Google Agenda (público; segurança no state)
   get 'ramon/google_agenda/callback', to: 'ramon/google_agenda_callbacks#show'
+  # Portão do painel dos agentes: forward_auth do Caddy (ADR 0013).
+  get 'ramon_painel_agentes/portao', to: 'ramon_painel_agentes_portao#show'
   get 'portal/:token', to: 'public/portal#show', as: :ramon_portal
   post 'portal/:token/upload', to: 'public/portal#upload', as: :ramon_portal_upload
 

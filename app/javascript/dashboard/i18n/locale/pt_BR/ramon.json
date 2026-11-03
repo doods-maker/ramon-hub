@@ -2500,7 +2500,13 @@
         }
       }
     },
+    "AGENTES": {
+      "TITLE": "Painel dos agentes",
+      "SUBTITLE": "O que a esteira de petições está fazendo agora.",
+      "SEM_ACESSO": "Este painel é restrito."
+    },
     "NAV": {
+      "AGENTES": "Agentes",
       "TITLE": "Intranet",
       "OPERACAO": "Operação",
       "GESTAO": "Gestão",
