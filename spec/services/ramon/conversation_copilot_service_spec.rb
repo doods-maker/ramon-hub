@@ -45,16 +45,16 @@ RSpec.describe Ramon::ConversationCopilotService do
       expect(sent).not_to include('123.456.789-01')
     end
 
-    it 'usa o prompt de resumo no modo summary, via deepseek' do
+    it 'usa o prompt de resumo no modo summary, via Claude' do
       expect(Ramon::LlmClient).to receive(:complete)
-        .with(hash_including(provider: 'deepseek', system: described_class::SUMMARY_SYSTEM_PROMPT))
+        .with(hash_including(provider: 'anthropic', system: described_class::SUMMARY_SYSTEM_PROMPT))
         .and_return(llm_result('resumo'))
       described_class.new(conversation, 'summary').perform
     end
 
-    it 'usa o prompt de rascunho no modo draft, via deepseek' do
+    it 'usa o prompt de rascunho no modo draft, via Claude' do
       expect(Ramon::LlmClient).to receive(:complete)
-        .with(hash_including(provider: 'deepseek', system: described_class::DRAFT_SYSTEM_PROMPT))
+        .with(hash_including(provider: 'anthropic', system: described_class::DRAFT_SYSTEM_PROMPT))
         .and_return(llm_result('rascunho'))
       described_class.new(conversation, 'draft').perform
     end

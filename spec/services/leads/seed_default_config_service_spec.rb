@@ -106,9 +106,9 @@ RSpec.describe Leads::SeedDefaultConfigService do
     expect { described_class.new(account).perform }.not_to(change { ThesisItem.where(thesis: account.theses).count })
   end
 
-  it 'semeia 1 agente de triagem deepseek e é idempotente' do
+  it 'semeia 1 agente de triagem Claude e é idempotente' do
     expect(account.triage_agents.count).to eq(1)
-    expect(account.triage_agents.first.provider).to eq('deepseek')
+    expect(account.triage_agents.first.provider).to eq('anthropic')
     expect { described_class.new(account).perform }.not_to(change { account.triage_agents.count })
   end
 end

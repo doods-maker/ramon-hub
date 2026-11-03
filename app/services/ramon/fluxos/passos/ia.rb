@@ -4,7 +4,6 @@
 # Lock: o Executor reivindica a execução numa transação curta e anda FORA de transação —
 # IA lenta (até 90 s, Ramon::LlmClient::REQUEST_TIMEOUT) não segura lock; a trilha é gravada a cada passo.
 module Ramon::Fluxos::Passos::Ia
-  PROVIDER = 'deepseek'.freeze
   LIMITE_CONVERSA = 8_000 # caracteres do fim da conversa
   # chamadas de IA de fluxo por conta por dia (env RAMON_FLUXO_IA_DIA; a tela Como a IA atende pode trocar) — valor é decisão do Eduardo
   TETO_PADRAO = 200
@@ -89,8 +88,8 @@ module Ramon::Fluxos::Passos::Ia
 
   def perguntar(sistema, pedido, ctx)
     texto = [pedido, dados_do_caso(ctx), transcricao(ctx)].compact_blank.join("\n\n")
-    Ramon::LlmClient.complete(provider: PROVIDER, model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'), system: sistema,
-                              user: Ramon::Pseudonymizer.mask(texto, names: nomes(ctx))).content.to_s
+    modelo = Ramon::LlmEscolha.para(ctx.execucao.account, 'copiloto')
+    Ramon::LlmClient.complete(**modelo, system: sistema, user: Ramon::Pseudonymizer.mask(texto, names: nomes(ctx))).content.to_s
   end
 
   def dados_do_caso(ctx)

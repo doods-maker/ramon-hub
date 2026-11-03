@@ -14,7 +14,7 @@ RSpec.describe Ramon::LlmEscolha do
 
     it 'sem conta (job sem contexto) também cai na reserva' do
       with_modified_env RAMON_COPILOT_MODEL: nil do
-        expect(described_class.para(nil, 'copiloto')).to eq(provider: 'deepseek', model: 'deepseek-chat')
+        expect(described_class.para(nil, 'copiloto')).to eq(provider: 'anthropic', model: 'claude-haiku-5-5')
       end
     end
 
@@ -32,7 +32,7 @@ RSpec.describe Ramon::LlmEscolha do
       account.update!(captain_models: { 'copilot' => 'claude-haiku-4-5' })
 
       with_modified_env ANTHROPIC_API_KEY: nil, RAMON_COPILOT_MODEL: nil do
-        expect(described_class.para(account, 'copiloto')).to eq(provider: 'deepseek', model: 'deepseek-chat')
+        expect(described_class.para(account, 'copiloto')).to eq(provider: 'anthropic', model: 'claude-haiku-5-5')
       end
     end
 
@@ -55,7 +55,7 @@ RSpec.describe Ramon::LlmEscolha do
       stub_const('Llm::Models::CONFIG', Llm::Models::CONFIG.deep_merge('features' => { 'copilot' => { 'models' => ['claude-vps'] } }))
 
       with_modified_env RAMON_AGENTE_TOKEN: 'tok', RAMON_COPILOT_MODEL: nil do
-        expect(described_class.para(account.reload, 'copiloto')).to eq(provider: 'deepseek', model: 'deepseek-chat')
+        expect(described_class.para(account.reload, 'copiloto')).to eq(provider: 'anthropic', model: 'claude-haiku-5-5')
       end
     end
   end

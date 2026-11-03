@@ -15,10 +15,10 @@ RSpec.describe TriageAgent do
     expect(agent.errors.attribute_names).to include(:provider)
   end
 
-  it 'aceita um agente deepseek válido com defaults' do
+  it 'aceita um agente válido com defaults (Claude Haiku 5.5)' do
     agent = account.triage_agents.create!(name: 'X', system_prompt: 'p')
-    expect(agent.provider).to eq('deepseek')
-    expect(agent.model).to eq('deepseek-chat')
+    expect(agent.provider).to eq('anthropic')
+    expect(agent.model).to eq('claude-haiku-5-5')
     expect(agent.sensitive).to be(false)
     expect(agent.active).to be(true)
   end

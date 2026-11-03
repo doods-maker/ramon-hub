@@ -58,7 +58,7 @@ module Ramon::LlmEscolha
     when 'atendimento' then captain(ENV.fetch('RAMON_CAPTAIN_MODEL', nil).presence || modelo_captain || LlmConstants::DEFAULT_MODEL)
     when 'documentos' then captain(modelo_captain || Llm::Config::DEFAULT_MODEL)
     when 'agente' then { provider: ASSINATURA, model: 'claude-vps' }
-    else { provider: 'deepseek', model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat') }
+    else captain(ENV.fetch('RAMON_COPILOT_MODEL', 'claude-haiku-5-5'))
     end
   end
 
