@@ -30,6 +30,7 @@ const porPagina = ref(50);
 const resumo = ref({ grupos: {}, responsaveis: [] });
 const atualizadoEm = ref(null);
 const podeAplicar = ref(false);
+const etapas = ref([]);
 const loading = ref(true);
 const error = ref(false);
 const confirmando = ref(false);
@@ -52,6 +53,7 @@ const carregar = async () => {
     resumo.value = data.resumo;
     atualizadoEm.value = data.atualizado_em;
     podeAplicar.value = data.permissoes.aplicar;
+    etapas.value = data.etapas;
   } catch {
     error.value = true;
   } finally {
@@ -252,10 +254,19 @@ onMounted(carregar);
         }}
       </p>
       <template v-else>
+        <p
+          v-if="!etapas.length"
+          data-testid="conferencia-sem-etapas"
+          :class="[AVISO, TOM.amber]"
+          class="m-0"
+        >
+          {{ t('RAMON.CONFERENCIA.ETAPAS_INDISPONIVEIS') }}
+        </p>
         <ConferenciaCard
           v-for="l in linhas"
           :key="l.id"
           :linha="l"
+          :etapas="etapas"
           @salvar="body => salvar(l, body)"
         />
         <footer class="flex items-center justify-between gap-3">
