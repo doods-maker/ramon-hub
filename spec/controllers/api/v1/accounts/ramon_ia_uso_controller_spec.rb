@@ -48,7 +48,7 @@ RSpec.describe 'Ramon IA Uso API', type: :request do
     expect(escolhas['agente']).to include('provider' => 'claude_vps', 'modelos' => [])
     modelos = escolhas.values_at('atendimento', 'copiloto', 'documentos').flat_map { |escolha| escolha['modelos'] }
     expect(modelos.pluck('provider').uniq).not_to include('claude_vps')
-    expect(response.parsed_body['chaves']).to include('deepseek' => true, 'openai' => false)
+    expect(response.parsed_body['chaves']).to include('deepseek' => false, 'openai' => false)
   end
 
   it 'admin define e limpa o teto diário (e recusa valor inválido)', :aggregate_failures do

@@ -42,6 +42,15 @@ RSpec.describe Ramon::LlmEscolha do
       end
     end
 
+    it 'DeepSeek desabilitada: nem com a chave no servidor a escolha salva vale', :aggregate_failures do
+      account.update!(captain_models: { 'copilot' => 'deepseek-chat' })
+
+      with_modified_env DEEPSEEK_API_KEY: 'k', RAMON_COPILOT_MODEL: nil do
+        expect(described_class.chave?('deepseek')).to be(false)
+        expect(described_class.para(account, 'copiloto')).to eq(provider: 'anthropic', model: 'claude-haiku-5-5')
+      end
+    end
+
     it 'o agente @claude é sempre a assinatura da VPS' do
       expect(described_class.para(account, 'agente')).to eq(provider: 'claude_vps', model: 'claude-vps')
     end
@@ -68,7 +77,7 @@ RSpec.describe Ramon::LlmEscolha do
 
   it 'informa quais chaves estão no servidor sem expor o valor' do
     with_modified_env DEEPSEEK_API_KEY: 'segredo', OPENAI_API_KEY: nil, ANTHROPIC_API_KEY: nil, RAMON_AGENTE_TOKEN: 'tok' do
-      expect(described_class.chaves).to eq('deepseek' => true, 'openai' => false, 'anthropic' => false, 'claude_vps' => true)
+      expect(described_class.chaves).to eq('deepseek' => false, 'openai' => false, 'anthropic' => false, 'claude_vps' => true)
     end
   end
 end

@@ -204,11 +204,11 @@ RSpec.describe Concerns::Agentable do
 
     # ramon: provedor e modelo por função (tela Uso e custo) — a escolha da conta vence o env.
     it 'usa o modelo escolhido para Atendimento na conta' do
-      account = create(:account, captain_models: { 'assistant' => 'deepseek-v4-flash' })
+      account = create(:account, captain_models: { 'assistant' => 'claude-haiku-4-5' })
       dummy_instance.define_singleton_method(:account) { account }
 
-      with_modified_env RAMON_CAPTAIN_MODEL: 'deepseek-v4-pro', DEEPSEEK_API_KEY: 'k' do
-        expect(dummy_instance.send(:agent_model)).to eq('deepseek-v4-flash')
+      with_modified_env RAMON_CAPTAIN_MODEL: 'deepseek-v4-pro', ANTHROPIC_API_KEY: 'k' do
+        expect(dummy_instance.send(:agent_model)).to eq('claude-haiku-4-5')
       end
     end
   end
