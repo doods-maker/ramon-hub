@@ -1,6 +1,6 @@
 # "Perguntar ao AdvBox": responde perguntas do atendente sobre os processos do
 # cliente da conversa, com dados vivos do AdvBox (processos, andamentos e
-# publicações) + DeepSeek. O contexto do AdvBox vai e volta no
+# publicações) + modelo do copiloto. O contexto do AdvBox vai e volta no
 # follow_up_context (stateless) para a conversa continuar sem rebuscar.
 # LGPD: o texto sai pseudonimizado (mesmo padrão do ConversationCopilotService).
 class Ramon::AdvboxPerguntaService

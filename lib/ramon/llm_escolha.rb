@@ -10,6 +10,8 @@ module Ramon::LlmEscolha
   FEATURES = { 'atendimento' => 'assistant', 'copiloto' => 'copilot', 'documentos' => 'documentos' }.freeze
   ASSINATURA = 'claude_vps'.freeze
   FUNCOES_INTERNAS = %w[agente].freeze
+  # funções internas (copiloto, colheita, ata, triagem): saíram da DeepSeek em 03/11, antes do App Review da Meta
+  MODELO_INTERNO = 'claude-haiku-5-5'.freeze
   # chave de cada provedor = a mesma env que o Ramon::LlmClient usa
   CHAVES = { 'deepseek' => 'DEEPSEEK_API_KEY', 'openai' => 'OPENAI_API_KEY', 'anthropic' => 'ANTHROPIC_API_KEY',
              ASSINATURA => 'RAMON_AGENTE_TOKEN' }.freeze
@@ -38,7 +40,7 @@ module Ramon::LlmEscolha
     modelo = modelo_salvo(account, funcao)
     return if modelo.nil? || vetado?(modelo, funcao)
 
-    { provider: provedor_de(modelo), model: modelo }
+    par_de(modelo)
   end
 
   def modelo_salvo(account, funcao)
@@ -52,17 +54,19 @@ module Ramon::LlmEscolha
     (provider == ASSINATURA && FUNCOES_INTERNAS.exclude?(funcao)) || !chave?(provider)
   end
 
-  # O env de antes de existir a tela (cada caminho como era).
+  # Sem escolha válida na tela: o env de cada caminho e, no copiloto, o modelo interno.
   def reserva(funcao)
     case funcao
-    when 'atendimento' then captain(ENV.fetch('RAMON_CAPTAIN_MODEL', nil).presence || modelo_captain || LlmConstants::DEFAULT_MODEL)
-    when 'documentos' then captain(modelo_captain || Llm::Config::DEFAULT_MODEL)
+    when 'atendimento' then par_de(ENV.fetch('RAMON_CAPTAIN_MODEL', nil).presence || modelo_captain || LlmConstants::DEFAULT_MODEL)
+    when 'documentos' then par_de(modelo_captain || Llm::Config::DEFAULT_MODEL)
     when 'agente' then { provider: ASSINATURA, model: 'claude-vps' }
-    else { provider: 'deepseek', model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat') }
+    else par_de(modelo_copiloto)
     end
   end
 
-  def captain(modelo) = { provider: provedor_de(modelo), model: modelo }
+  def par_de(modelo) = { provider: provedor_de(modelo), model: modelo }
+
+  def modelo_copiloto = ENV.fetch('RAMON_COPILOT_MODEL', nil).presence || MODELO_INTERNO
 
   def modelo_captain = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value.presence
 end

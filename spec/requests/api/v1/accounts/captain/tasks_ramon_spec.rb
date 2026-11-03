@@ -29,14 +29,14 @@ RSpec.describe 'Captain Tasks (fork: copiloto da banca)', type: :request do
     expect(Ramon::LlmClient).not_to have_received(:complete)
   end
 
-  it 'summarize delega ao copiloto da banca (DeepSeek + LGPD)' do
+  it 'summarize delega ao copiloto da banca (Claude + LGPD)' do
     allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('resumo estruturado'))
     post "/api/v1/accounts/#{account.id}/captain/tasks/summarize",
          params: { conversation_display_id: conversation.display_id },
          headers: admin.create_new_auth_token, as: :json
     expect(response).to have_http_status(:success)
     expect(response.parsed_body['message']).to eq('resumo estruturado')
-    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(provider: 'deepseek'))
+    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(provider: 'anthropic'))
   end
 
   it 'reply_suggestion delega ao copiloto da banca (modo rascunho)' do
@@ -96,7 +96,7 @@ RSpec.describe 'Captain Tasks (fork: copiloto da banca)', type: :request do
       expect(response.parsed_body['message']).to eq('processo protocolado, aguardando')
       expect(response.parsed_body['follow_up_context']['advbox']).to be(true)
       expect(response.parsed_body['follow_up_context']['contexto']).to include('0000518-86.2012.5.12.0041')
-      expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(provider: 'deepseek'))
+      expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(provider: 'anthropic'))
     end
 
     it 'follow_up com contexto advbox continua a conversa sem rebuscar na API' do

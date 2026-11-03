@@ -77,12 +77,11 @@ class Ramon::ReuniaoAtaService
     ENV.fetch('RAMON_WHISPER_MODEL', nil).presence || WHISPER_MODEL
   end
 
-  # Conteúdo de reunião é sensível por definição; o deepseek está autorizado
-  # na VPS via RAMON_LLM_SENSITIVE_OK_PROVIDERS (decisão do Eduardo 20/07).
+  # Conteúdo de reunião é sensível por definição: só provider de RAMON_LLM_SENSITIVE_OK_PROVIDERS.
   def gerar_ata(transcricao)
     Ramon::LlmClient.complete(
-      provider: ENV.fetch('RAMON_REUNIAO_PROVIDER', 'deepseek'),
-      model: ENV.fetch('RAMON_REUNIAO_MODEL', 'deepseek-chat'),
+      provider: ENV.fetch('RAMON_REUNIAO_PROVIDER', 'anthropic'),
+      model: ENV.fetch('RAMON_REUNIAO_MODEL', Ramon::LlmEscolha::MODELO_INTERNO),
       system: SYSTEM_PROMPT, user: transcricao, sensitive: true,
       funcao: 'ata', account_id: @reuniao.account_id, lead_id: @reuniao.lead_id
     ).content

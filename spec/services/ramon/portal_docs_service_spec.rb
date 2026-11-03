@@ -13,7 +13,7 @@ RSpec.describe Ramon::PortalDocsService do
 
   it 'manda as observações mascaradas ao LLM e devolve só os nomes dos documentos' do
     allow(Ramon::LlmClient).to receive(:complete)
-      .with(hash_including(provider: 'deepseek', user: notes))
+      .with(hash_including(provider: 'anthropic', user: notes))
       .and_return(resposta('{"documentos": ["Comprovante de residência atual em seu nome", ' \
                            '" Certidão de casamento (se o comprovante estiver no nome da esposa) "]}'))
     expect(described_class.itens(notes, nome: 'Felix Ribeiro'))

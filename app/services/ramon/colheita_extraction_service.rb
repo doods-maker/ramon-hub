@@ -66,11 +66,11 @@ class Ramon::ColheitaExtractionService
   private
 
   def provider
-    ENV.fetch('RAMON_COLHEITA_PROVIDER', 'deepseek')
+    ENV.fetch('RAMON_COLHEITA_PROVIDER', 'anthropic')
   end
 
   def model
-    ENV.fetch('RAMON_COLHEITA_MODEL', 'deepseek-chat')
+    ENV.fetch('RAMON_COLHEITA_MODEL', Ramon::LlmEscolha::MODELO_INTERNO)
   end
 
   # Com provider autorizado p/ dado sensível (lista configurável no LlmClient)

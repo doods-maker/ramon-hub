@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_03_020000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_03_030000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -2019,8 +2019,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_03_020000) do
     t.text "description"
     t.string "area", default: "previdenciario", null: false
     t.text "system_prompt", null: false
-    t.string "provider", default: "deepseek", null: false
-    t.string "model", default: "deepseek-chat", null: false
+    t.string "provider", default: "anthropic", null: false
+    t.string "model", default: "claude-haiku-5-5", null: false
     t.boolean "sensitive", default: false, null: false
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false

@@ -49,7 +49,7 @@ RSpec.describe Captain::IaAvaliadorService do
                                                output_tokens: 1))
 
     expect(avaliar('rubrica' => 'Não promete prazo.')).to eq(passou: false, motivos: ['Juiz: prometeu prazo'])
-    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(provider: 'deepseek', sensitive: true))
+    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(provider: 'anthropic', sensitive: true))
   end
 
   it 'juiz aprovando passa; juiz fora do ar reprova com motivo', :aggregate_failures do

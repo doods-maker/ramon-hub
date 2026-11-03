@@ -37,7 +37,7 @@ RSpec.describe Ramon::ColheitaExtractionService do
     expect(colheita['dados']['acidente']['tipo']).to eq('trabalho')
     expect(colheita['lacunas']).to eq([{ 'campo' => 'beneficios[0].nb', 'como_obter' => 'carta de concessão — Meu INSS' }])
     expect(colheita['confirmar']).to eq(['acidente.data'])
-    expect(colheita['mascarada']).to be(true)
+    expect(colheita['mascarada']).to be(false)
   end
 
   it 'preenche dcb_em com a DCB do auxílio-doença cessado quando estava vazio' do
@@ -53,12 +53,25 @@ RSpec.describe Ramon::ColheitaExtractionService do
     expect(lead.reload.dcb_em).to eq(Date.new(2023, 1, 1))
   end
 
-  it 'pseudonimiza o transcript por padrão (deepseek) e não liga a flag sensível' do
-    expect(Ramon::LlmClient).to receive(:complete) do |provider:, user:, sensitive:, **|
-      expect(provider).to eq('deepseek')
-      expect(user).to include('[cpf]')
-      expect(user).not_to include('123.456.789-00')
-      expect(sensitive).to be(false)
+  it 'pseudonimiza o transcript quando o provider não está autorizado e não liga a flag sensível' do
+    with_modified_env RAMON_COLHEITA_PROVIDER: 'deepseek', RAMON_COLHEITA_MODEL: 'deepseek-chat' do
+      expect(Ramon::LlmClient).to receive(:complete) do |provider:, user:, sensitive:, **|
+        expect(provider).to eq('deepseek')
+        expect(user).to include('[cpf]')
+        expect(user).not_to include('123.456.789-00')
+        expect(sensitive).to be(false)
+        llm_result(colheita_json)
+      end
+      described_class.new(lead).perform
+    end
+  end
+
+  it 'por padrão usa o Claude Haiku 5.5 com o transcript íntegro' do
+    expect(Ramon::LlmClient).to receive(:complete) do |provider:, model:, user:, sensitive:, **|
+      expect(provider).to eq('anthropic')
+      expect(model).to eq('claude-haiku-5-5')
+      expect(user).to include('123.456.789-00')
+      expect(sensitive).to be(true)
       llm_result(colheita_json)
     end
     described_class.new(lead).perform
@@ -78,7 +91,8 @@ RSpec.describe Ramon::ColheitaExtractionService do
   end
 
   it 'deepseek autorizado via env manda transcript íntegro (decisão 20/07)' do
-    with_modified_env RAMON_LLM_SENSITIVE_OK_PROVIDERS: 'anthropic,openai,deepseek' do
+    with_modified_env RAMON_COLHEITA_PROVIDER: 'deepseek', RAMON_COLHEITA_MODEL: 'deepseek-chat',
+                      RAMON_LLM_SENSITIVE_OK_PROVIDERS: 'anthropic,openai,deepseek' do
       expect(Ramon::LlmClient).to receive(:complete) do |provider:, user:, sensitive:, **|
         expect(provider).to eq('deepseek')
         expect(user).to include('123.456.789-00')

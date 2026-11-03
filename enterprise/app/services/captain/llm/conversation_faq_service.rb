@@ -96,7 +96,7 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
   def generate
     response = instrument_llm_call(instrumentation_params) do
       chat
-        .with_params(response_format: { type: 'json_object' })
+        .with_params(**Llm::Config.json_params(@model))
         .with_instructions(system_prompt)
         .ask(@content)
     end

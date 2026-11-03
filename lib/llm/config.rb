@@ -19,6 +19,11 @@ module Llm::Config
       @initialized = false
     end
 
+    # FORK-PONTO (ramon): a Anthropic recusa response_format; para o Claude o JSON vem do prompt.
+    def json_params(model)
+      model.to_s.start_with?('claude-') ? {} : { response_format: { type: 'json_object' } }
+    end
+
     def with_api_key(api_key, api_base: nil)
       initialize!
       context = RubyLLM.context do |config|

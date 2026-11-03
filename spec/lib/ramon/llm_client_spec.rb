@@ -14,6 +14,7 @@ RSpec.describe Ramon::LlmClient do
         chat = instance_double(RubyLLM::Chat)
         allow(RubyLLM).to receive(:context).and_return(instance_double(RubyLLM::Context, chat: chat))
         allow(chat).to receive(:with_instructions).and_return(chat)
+        allow(chat).to receive(:with_params).and_return(chat)
         message = instance_double(RubyLLM::Message, content: 'ok', input_tokens: 10, output_tokens: 5)
         allow(chat).to receive(:ask).and_return(message)
         result = described_class.complete(provider: 'anthropic', model: 'claude-haiku-4-5-20251001',
@@ -51,6 +52,21 @@ RSpec.describe Ramon::LlmClient do
         allow(RubyLLM).to receive(:context).and_return(instance_double(RubyLLM::Context, chat: chat))
         allow(chat).to receive(:with_instructions).and_return(chat)
         yield chat
+      end
+    end
+
+    it 'na Anthropic sobe o teto de tokens; nos outros provedores não mexe' do
+      with_modified_env ANTHROPIC_API_KEY: 'k', DEEPSEEK_API_KEY: 'k' do
+        chat = instance_double(RubyLLM::Chat)
+        allow(RubyLLM).to receive(:context).and_return(instance_double(RubyLLM::Context, chat: chat))
+        allow(chat).to receive_messages(with_instructions: chat, with_params: chat,
+                                        ask: instance_double(RubyLLM::Message, content: 'x', input_tokens: 1, output_tokens: 1))
+
+        described_class.complete(provider: 'deepseek', model: 'deepseek-chat', system: 's', user: 'u')
+        expect(chat).not_to have_received(:with_params)
+
+        described_class.complete(provider: 'anthropic', model: 'claude-haiku-5-5', system: 's', user: 'u')
+        expect(chat).to have_received(:with_params).with(max_tokens: described_class::MAX_TOKENS_ANTHROPIC)
       end
     end
 

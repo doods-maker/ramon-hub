@@ -2,8 +2,8 @@ agents:
   - name: "Triagem Previdenciária — Auxílio-Acidente"
     description: "Analisa viabilidade de auxílio-acidente (B36) a partir da conversa do lead."
     area: previdenciario
-    provider: deepseek
-    model: deepseek-chat
+    provider: anthropic
+    model: claude-haiku-5-5
     sensitive: false
     active: true
     system_prompt: |

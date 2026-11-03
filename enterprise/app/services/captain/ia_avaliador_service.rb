@@ -4,7 +4,6 @@
 #
 # saida = { resposta:, ferramentas: [{ nome:, resultado: }], handoff: }
 class Captain::IaAvaliadorService
-  PROVIDER = 'deepseek'.freeze
   JUIZ = <<~PROMPT.freeze
     Você é o avaliador dos casos de teste da IA de atendimento de um escritório de advocacia previdenciária.
     Recebe a conversa, a resposta da IA, as ferramentas que ela pediu (em teste nada é executado: "[TESTE] faria X")
@@ -72,7 +71,7 @@ class Captain::IaAvaliadorService
   end
 
   def juiz
-    resultado = Ramon::LlmClient.complete(provider: PROVIDER, model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
+    resultado = Ramon::LlmClient.complete(**Ramon::LlmEscolha.para(@caso.account, 'copiloto'),
                                           system: JUIZ, user: pergunta_ao_juiz, sensitive: true)
     veredito = JSON.parse(resultado.content.to_s[/\{.*\}/m].to_s)
     veredito['passou'] == true ? nil : "Juiz: #{veredito['motivo'].presence || 'reprovou'}"

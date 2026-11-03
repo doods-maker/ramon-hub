@@ -38,7 +38,7 @@ RSpec.describe Leads::KitService do
 
   it 'monta o prompt do usuário com viabilidade e análise e repassa a trava LGPD' do
     expect(Ramon::LlmClient).to receive(:complete) do |**opcoes|
-      expect(opcoes).to include(provider: 'deepseek', model: 'deepseek-chat', sensitive: false)
+      expect(opcoes).to include(provider: 'anthropic', model: 'claude-haiku-5-5', sensitive: false)
       expect(opcoes[:system]).to include('Kit do Closer')
       expect(opcoes[:user]).to include('Viabilidade apurada: alta')
       expect(opcoes[:user]).to include('Súmula 47')
