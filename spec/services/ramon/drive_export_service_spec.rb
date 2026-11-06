@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Ramon::DriveExportService do
   let(:account) { create(:account) }
   let(:contact) { create(:contact, account: account, name: 'Maria das Dores', cpf: '529.982.247-25') }
-  let(:thesis) { create(:thesis, account: account, name: 'Auxílio-acidente (B36)') }
+  let(:thesis) { create(:thesis, account: account, name: 'Tese de teste (B99)') }
   let!(:item_a) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG') }
   let!(:item_b) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS') }
   # A etapa precisa ser is_won: o before_save do Lead (apply_stage_timestamps)
@@ -105,7 +105,7 @@ RSpec.describe Ramon::DriveExportService do
 
       described_class.new(lead).perform
 
-      tese = "Auxílio-acidente (B36) – #{lead.won_at.in_time_zone.strftime('%m.%y')}"
+      tese = "Tese de teste (B99) – #{lead.won_at.in_time_zone.strftime('%m.%y')}"
       expect(Ramon::DriveClient).to have_received(:ensure_folder).with(tese, 'folder-cliente')
       expect(Ramon::DriveClient).to have_received(:rename).with("folder-#{tese}", "#{tese} — COMPLETO")
       expect(Ramon::DriveClient).not_to have_received(:rename).with('folder-cliente', anything)
@@ -153,7 +153,7 @@ RSpec.describe Ramon::DriveExportService do
                         'doc_status' => { laudo.id.to_s => 'recebido' },
                         'doc_anexos' => { laudo.id.to_s => attachment.id }
                       })
-      tese = "Auxílio-acidente (B36) – #{lead.won_at.in_time_zone.strftime('%m.%y')}"
+      tese = "Tese de teste (B99) – #{lead.won_at.in_time_zone.strftime('%m.%y')}"
 
       described_class.new(lead).perform
 
@@ -170,11 +170,11 @@ RSpec.describe Ramon::DriveExportService do
     end
 
     it 'nome da tese sem caractere proibido nem espaço duplo' do
-      thesis.update!(name: 'Auxílio por incapacidade temporária (auxílio-doença / B31)')
+      thesis.update!(name: 'Tese / com barra (B98)')
       lead = won_lead(custom_attributes: { 'drive' => { 'pasta_id' => 'folder-cliente' } })
 
       expect(described_class.new(lead).pasta_tese_id)
-        .to eq("folder-Auxílio por incapacidade temporária (auxílio-doença B31) – #{lead.won_at.in_time_zone.strftime('%m.%y')}")
+        .to eq("folder-Tese com barra (B98) – #{lead.won_at.in_time_zone.strftime('%m.%y')}")
     end
 
     it 'lead sem ganho fica na pasta do cliente' do
