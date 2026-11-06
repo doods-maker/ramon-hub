@@ -3,6 +3,10 @@ require 'prawn'
 # Export incremental do checklist pro Drive (ADR-0002). Idempotente: o que já
 # está em custom_attributes['drive']['itens'] nunca re-sobe; job pode re-rodar.
 class Ramon::DriveExportService
+  # Documento que serve a qualquer caso do cliente vai para `00 Pessoais` (grupos 03–05 da skill organizar-documentos-cliente).
+  PESSOAL = /\b(RG|CPF|CNH|identidade|resid[eê]ncia|CNIS|CTPS)\b/i
+  PASTA_PESSOAIS = '00 Pessoais'.freeze
+
   def initialize(lead)
     @lead = lead
   end
@@ -22,6 +26,18 @@ class Ramon::DriveExportService
       cpf = @lead.contact&.cpf
       id = Ramon::DriveClient.ensure_folder([nome_cliente, cpf.presence].compact.join(' — '), clientes)
       merge_drive('pasta_id' => id)
+      id
+    end
+  end
+
+  # Pasta do caso: `<tese> – MM.AA` (mês do ganho) dentro do cliente; lead sem tese ou não ganho → pasta do cliente.
+  # ponytail: trocar a tese depois do ganho não move a pasta (o id fica salvo); mover à mão se acontecer.
+  def pasta_tese_id
+    return pasta_cliente_id if @lead.thesis.blank? || @lead.won_at.blank?
+
+    @pasta_tese_id ||= drive_state['tese_pasta_id'].presence || begin
+      id = Ramon::DriveClient.ensure_folder(nome_tese, pasta_cliente_id)
+      merge_drive('tese_pasta_id' => id)
       id
     end
   end
@@ -56,7 +72,7 @@ class Ramon::DriveExportService
     nome_item = item.title.presence || item.content.truncate(60)
     pdf_io, content_type, ext = to_pdf(attachment)
     file_id = Ramon::DriveClient.upload(name: "#{nome_item} — #{nome_cliente}#{ext}", io: pdf_io,
-                                        content_type: content_type, parent_id: pasta_cliente_id)
+                                        content_type: content_type, parent_id: pasta_destino(nome_item))
     Ramon::DriveClient.shortcut(target_id: file_id, name: "#{nome_cliente} — #{nome_item}#{ext}",
                                 parent_id: pasta_do_dia_id)
     merge_drive('itens' => (drive_state['itens'] || {}).merge(item.id.to_s => file_id))
@@ -80,6 +96,12 @@ class Ramon::DriveExportService
     end
   end
 
+  def pasta_destino(nome_item)
+    nome_item.match?(PESSOAL) ? Ramon::DriveClient.ensure_folder(PASTA_PESSOAIS, pasta_cliente_id) : pasta_tese_id
+  end
+
+  def nome_tese = "#{@lead.thesis.name.delete('/\:*?"<>|').strip} – #{@lead.won_at.in_time_zone.strftime('%m.%y')}"
+
   def nome_cliente
     @nome_cliente ||= (@lead.contact&.name.presence || @lead.name).to_s.strip
   end
@@ -97,14 +119,10 @@ class Ramon::DriveExportService
   end
 
   def concluir
-    Ramon::DriveClient.rename(pasta_cliente_id, "#{pasta_nome_atual} — COMPLETO")
+    # Marca a pasta do caso, não a do cliente: o nome do cliente fica estável para quem a acha pelo nome (portal).
+    Ramon::DriveClient.rename(pasta_tese_id, "#{nome_tese} — COMPLETO")
     Ramon::AdvboxDocsTaskService.new(@lead).perform
     merge_drive('concluido_em' => Time.zone.now.iso8601)
-  end
-
-  def pasta_nome_atual
-    cpf = @lead.contact&.cpf
-    [nome_cliente, cpf.presence].compact.join(' — ')
   end
 
   def merge_drive(patch)

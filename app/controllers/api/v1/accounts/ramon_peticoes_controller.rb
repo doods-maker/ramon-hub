@@ -204,7 +204,9 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     return if contact_id.blank?
 
     lead = Current.account.leads.where(contact_id: contact_id).where.not(won_at: nil).order(won_at: :desc).first
-    lead&.custom_attributes&.dig('drive', 'pasta_id')
+    # Pasta do caso (protocolos ficam nela); lead de antes da pasta por tese → pasta do cliente.
+    drive = lead&.custom_attributes&.dig('drive') || {}
+    drive['tese_pasta_id'].presence || drive['pasta_id']
   end
 
   def renumerar(ids)

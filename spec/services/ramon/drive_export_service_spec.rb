@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Ramon::DriveExportService do
   let(:account) { create(:account) }
   let(:contact) { create(:contact, account: account, name: 'Maria das Dores', cpf: '529.982.247-25') }
-  let(:thesis) { create(:thesis, account: account) }
+  let(:thesis) { create(:thesis, account: account, name: 'Auxílio-acidente (B36)') }
   let!(:item_a) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG') }
   let!(:item_b) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS') }
   # A etapa precisa ser is_won: o before_save do Lead (apply_stage_timestamps)
@@ -105,7 +105,10 @@ RSpec.describe Ramon::DriveExportService do
 
       described_class.new(lead).perform
 
-      expect(Ramon::DriveClient).to have_received(:rename).with('folder-cliente', 'Maria das Dores — 52998224725 — COMPLETO')
+      tese = "Auxílio-acidente (B36) – #{lead.won_at.in_time_zone.strftime('%m.%y')}"
+      expect(Ramon::DriveClient).to have_received(:ensure_folder).with(tese, 'folder-cliente')
+      expect(Ramon::DriveClient).to have_received(:rename).with("folder-#{tese}", "#{tese} — COMPLETO")
+      expect(Ramon::DriveClient).not_to have_received(:rename).with('folder-cliente', anything)
       lead.reload
       expect(lead.custom_attributes.dig('drive', 'concluido_em')).to be_present
     end
@@ -135,11 +138,42 @@ RSpec.describe Ramon::DriveExportService do
         expect(name).to end_with('.pdf')
         expect(content_type).to eq('application/pdf')
         expect(io.read[0, 4]).to eq('%PDF')
-        expect(parent_id).to eq('folder-Maria das Dores — 52998224725')
+        expect(parent_id).to eq('folder-00 Pessoais') # RG serve a qualquer caso
         'file-id'
       end
 
       described_class.new(lead).perform
+      expect(Ramon::DriveClient).to have_received(:ensure_folder).with('00 Pessoais', 'folder-Maria das Dores — 52998224725')
+    end
+
+    it 'sobe documento do caso na pasta da tese e guarda o id dela no lead' do
+      laudo = create(:thesis_item, thesis: thesis, section: 'documento', title: 'Laudo médico')
+      attachment = attachment_for('sample.pdf', 'application/pdf')
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { laudo.id.to_s => 'recebido' },
+                        'doc_anexos' => { laudo.id.to_s => attachment.id }
+                      })
+      tese = "Auxílio-acidente (B36) – #{lead.won_at.in_time_zone.strftime('%m.%y')}"
+
+      described_class.new(lead).perform
+
+      expect(Ramon::DriveClient).to have_received(:ensure_folder).with(tese, 'folder-Maria das Dores — 52998224725')
+      expect(Ramon::DriveClient).to have_received(:upload).with(hash_including(parent_id: "folder-#{tese}"))
+      expect(lead.reload.custom_attributes.dig('drive', 'tese_pasta_id')).to eq("folder-#{tese}")
+    end
+
+    it 'tese_pasta_id já gravado: não procura a pasta da tese de novo' do
+      lead = won_lead(custom_attributes: { 'drive' => { 'pasta_id' => 'folder-cliente', 'tese_pasta_id' => 'tese-salva' } })
+
+      expect(described_class.new(lead).pasta_tese_id).to eq('tese-salva')
+      expect(Ramon::DriveClient).not_to have_received(:ensure_folder)
+    end
+
+    it 'lead sem ganho fica na pasta do cliente' do
+      lead = create(:lead, account: account, contact: contact, thesis: thesis,
+                           custom_attributes: { 'drive' => { 'pasta_id' => 'folder-cliente' } })
+
+      expect(described_class.new(lead).pasta_tese_id).to eq('folder-cliente')
     end
 
     # (f) pasta conclui com envs do ADVBOX setadas -> cria tarefa pra controller

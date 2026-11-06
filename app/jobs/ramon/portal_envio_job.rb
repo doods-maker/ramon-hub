@@ -33,8 +33,8 @@ class Ramon::PortalEnvioJob < ApplicationJob
 
   def subir_drive
     clientes = Ramon::DriveClient.ensure_folder('Clientes', Ramon::DriveClient.root_id)
-    # ponytail: DriveExportService renomeia a pasta pra "… — COMPLETO" ao fechar o checklist;
-    # ensure_folder cria uma nova se o nome mudou — aceitável (fica ao lado da antiga).
+    # Cai na raiz do cliente (o portal não sabe o caso); a organização move para a tese depois.
+    # ponytail: pasta de cliente renomeada à mão faz o ensure_folder criar outra ao lado.
     pasta = Ramon::DriveClient.ensure_folder([@cliente.nome, @cliente.cpf.presence].compact.join(' — '), clientes)
     nome = "#{@envio.item} — #{Time.zone.today.iso8601}#{File.extname(@envio.arquivo.filename.to_s)}"
     id = @envio.arquivo.blob.open do |io|
