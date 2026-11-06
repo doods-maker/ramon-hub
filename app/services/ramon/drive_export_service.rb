@@ -100,7 +100,7 @@ class Ramon::DriveExportService
     nome_item.match?(PESSOAL) ? Ramon::DriveClient.ensure_folder(PASTA_PESSOAIS, pasta_cliente_id) : pasta_tese_id
   end
 
-  def nome_tese = "#{@lead.thesis.name.delete('/\:*?"<>|').strip} – #{@lead.won_at.in_time_zone.strftime('%m.%y')}"
+  def nome_tese = "#{@lead.thesis.name.delete('/\:*?"<>|').squish} – #{@lead.won_at.in_time_zone.strftime('%m.%y')}"
 
   def nome_cliente
     @nome_cliente ||= (@lead.contact&.name.presence || @lead.name).to_s.strip

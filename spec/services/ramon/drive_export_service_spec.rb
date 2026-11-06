@@ -169,6 +169,14 @@ RSpec.describe Ramon::DriveExportService do
       expect(Ramon::DriveClient).not_to have_received(:ensure_folder)
     end
 
+    it 'nome da tese sem caractere proibido nem espaço duplo' do
+      thesis.update!(name: 'Auxílio por incapacidade temporária (auxílio-doença / B31)')
+      lead = won_lead(custom_attributes: { 'drive' => { 'pasta_id' => 'folder-cliente' } })
+
+      expect(described_class.new(lead).pasta_tese_id)
+        .to eq("folder-Auxílio por incapacidade temporária (auxílio-doença B31) – #{lead.won_at.in_time_zone.strftime('%m.%y')}")
+    end
+
     it 'lead sem ganho fica na pasta do cliente' do
       lead = create(:lead, account: account, contact: contact, thesis: thesis,
                            custom_attributes: { 'drive' => { 'pasta_id' => 'folder-cliente' } })
