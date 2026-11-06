@@ -177,6 +177,19 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body).to include('drive_pasta_base_id' => 'pasta-cliente', 'drive_ligado' => false)
   end
 
+  it 'lead com pasta da tese: a pasta-base é a da tese (os protocolos ficam no caso)' do
+    contato = create(:contact, account: account)
+    create(:lead, account: account, contact: contato,
+                  custom_attributes: { 'drive' => { 'pasta_id' => 'pasta-cliente', 'tese_pasta_id' => 'pasta-tese' } })
+      .update_column(:won_at, Time.current) # rubocop:disable Rails/SkipsModelValidations
+    criar
+    peticao = account.peticoes.sole
+    allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+
+    patch "#{url}/#{peticao.id}", params: { contact_id: contato.id }, headers: ana.create_new_auth_token, as: :json
+    expect(response.parsed_body).to include('drive_pasta_base_id' => 'pasta-tese')
+  end
+
   it 'contact_id vazio limpa o cliente no fluxo manual; sem a chave, não mexe' do
     contato = create(:contact, account: account)
     peticao = peticao_com_principal.tap { |p| p.update!(contact: contato) }

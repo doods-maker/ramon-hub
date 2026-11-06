@@ -23,7 +23,7 @@ class Public::Api::V1::AgenteController < PublicController
     lead = @account.leads.find(params[:lead_id])
     return render json: { error: 'Drive não configurado' }, status: :service_unavailable unless Ramon::DriveClient.configured?
 
-    pasta = Ramon::DriveExportService.new(lead).pasta_cliente_id
+    pasta = Ramon::DriveExportService.new(lead).pasta_tese_id
     file_id = Ramon::DriveClient.upload(name: params[:nome].to_s, io: StringIO.new(params[:conteudo].to_s),
                                         content_type: params[:content_type].presence || 'text/markdown', parent_id: pasta)
     render json: { file_id: file_id, url: "https://drive.google.com/file/d/#{file_id}/view" }, status: :created
