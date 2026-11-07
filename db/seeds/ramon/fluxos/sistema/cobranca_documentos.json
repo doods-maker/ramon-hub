@@ -6,7 +6,7 @@
   "descricao": "No código: Ramon::Documentos::CobrancaJob (a cada 15 min), com o relógio Ramon::Documentos::Relogio e o envio Ramon::Documentos::Envio — só com a chave RAMON_ETAPA_DOCUMENTOS ligada.\n\nO desenho não consegue mostrar:\n• manda mensagem DIRETO ao cliente (apresentação e 2 lembretes), sem revisão de uma pessoa — os fluxos só fazem rascunho;\n• decide o canal a cada envio: dentro da janela de 24 h do WhatsApp, o texto aprovado; fora, só o modelo aprovado pela Meta (documentos_pendentes); sem o modelo, nada sai e a conversa vai para o SDR;\n• conta horas úteis no horário comercial (seg–sex 8h–18h, o mesmo dos fluxos), sem feriados;\n• cada envio vira uma linha de custo em Uso e custo (WhatsApp).",
   "resumo": "Lead em Documentos: apresenta, lembra 2 vezes e chama o SDR quando o cliente some ou trava.",
   "ficha": {
-    "o_que_faz": "Para o lead na etapa Documentos com a conversa na IA: manda a apresentação com o que falta assim que ele entra, o lembrete 1 com 3 horas úteis sem resposta e o lembrete 2 na manhã do dia útil seguinte. Sem resposta 4 horas úteis depois do lembrete 2, passa a conversa para o SDR (silêncio). Se o cliente responde mas não manda documento novo, avisa o SDR no sino com 1 dia útil (a IA segue) e passa a conversa para ele com 2 dias úteis (travado).",
+    "o_que_faz": "Para o lead na etapa Documentos com a conversa na IA: manda a apresentação com o que falta assim que ele entra, o lembrete 1 com 3 horas úteis sem resposta e o lembrete 2 na manhã do dia útil seguinte. Sem resposta 4 horas úteis depois do lembrete 2, passa a conversa para o SDR (silêncio). Se o cliente responde mas não manda documento novo, avisa o SDR no sino com 1 dia útil (a IA segue) e passa a conversa para ele 1 dia útil depois desse aviso, se seguir sem documento (travado).",
     "quando": "A cada 15 minutos, só em horário comercial (seg–sex 8h–18h) e só com a chave RAMON_ETAPA_DOCUMENTOS ligada no servidor.",
     "o_que_mexe": [
       "Mensagem DIRETO ao cliente no WhatsApp (textos aprovados pelo Eduardo em 07/11), uma por passo.",
@@ -18,6 +18,9 @@
     "travas": [
       "Só a etapa Documentos (Fechado e Jurídico nunca) e só conversa com a IA; com uma pessoa na conversa, nada sai.",
       "No máximo 2 lembretes até alguém agir; resposta do cliente zera o silêncio; documento novo recomeça a contagem.",
+      "Uma pessoa devolveu a conversa à IA: o ciclo recomeça da devolução (a apresentação não se repete).",
+      "Documento marcado por uma pessoa conta como documento novo, mas não como resposta do cliente.",
+      "Texto vazio no arquivo de configuração desliga aquele passo.",
       "Checklist completo: para (o encerramento é do completo → Jurídico).",
       "Sem o modelo aprovado (antes do número oficial), fora da janela de 24 h nada sai: vira silêncio direto.",
       "Feriado conta como dia útil: o horário dos fluxos não tem calendário.",

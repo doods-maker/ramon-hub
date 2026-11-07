@@ -57,7 +57,7 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
 
   # A última mensagem do cliente vem da conversa (upload do portal incluído: é o cliente agindo).
   def estado(lead, conversa)
-    lead.custom_attributes[CHAVE].merge('ultima_resposta_em' => conversa.messages.incoming.maximum(:created_at)&.iso8601)
+    lead.custom_attributes[CHAVE].to_h.merge('ultima_resposta_em' => conversa.messages.incoming.maximum(:created_at)&.iso8601)
   end
 
   def marcar(lead, passo) = Ramon::Documentos::Cobranca.marcar(lead, { "#{passo}_em" => Time.current.iso8601 })
