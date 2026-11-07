@@ -2606,6 +2606,14 @@
         "PAUSED": "Pausado",
         "DISABLED": "Desativado"
       }
+    },
+    "VARIACAO": {
+      "PONTOS": "{n} p.p.",
+      "PORCENTO": "{n}%",
+      "IGUAL": "= igual",
+      "VS_DIAS": "vs {de}–{ate}",
+      "VS_DIA": "vs {dia}",
+      "VS_ATE": "vs {dia} até {hora}h"
     }
   },
   "CAPTAIN_RAMON": {

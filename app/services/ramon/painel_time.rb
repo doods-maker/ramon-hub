@@ -6,6 +6,10 @@
 class Ramon::PainelTime
   TIME_ZONE = Ramon::ExtratoVariavel::TIME_ZONE
   PERIODOS = %w[hoje semana mes mes_passado].freeze
+  # Período anterior = um passo atrás, cortado no mesmo ponto do atual.
+  PASSO = { 'hoje' => 1.day, 'semana' => 1.week }.freeze
+  # Contados agora, sem período: não têm anterior.
+  AO_VIVO = %i[sem_resposta].freeze
   KPIS = { Ramon::Papeis::SDR => Ramon::PainelTimeSdr, Ramon::Papeis::CLOSER => Ramon::PainelTimeCloser }.freeze
 
   # Metas do plano (doc 04 §4). sentido: min = quanto maior melhor (≥ alvo);
@@ -35,6 +39,7 @@ class Ramon::PainelTime
   def perform
     {
       papel: papel, periodo: periodo, inicio: intervalo.begin.iso8601, fim: intervalo.end.iso8601,
+      anterior: { inicio: intervalo_anterior.begin.iso8601, fim: intervalo_anterior.end.iso8601 },
       metas: METAS.fetch(papel),
       time: user ? nil : linha(nil, pessoas),
       pessoas: pessoas.map { |pessoa| linha(pessoa[:user], [pessoa]) }
@@ -50,8 +55,17 @@ class Ramon::PainelTime
   end
 
   def linha(dono, grupo)
-    kpis = KPIS.fetch(papel).new(account: account, ids: grupo.map { |pessoa| pessoa[:user][:id] }, periodo: intervalo)
-    { user: dono, meta_mes: meta_mes(grupo).merge(kpis.meta_extra(intervalo_do_mes)), kpis: kpis.kpis, volume: kpis.volume }
+    ids = grupo.map { |pessoa| pessoa[:user][:id] }
+    kpis = KPIS.fetch(papel).new(account: account, ids: ids, periodo: intervalo)
+    {
+      user: dono, meta_mes: meta_mes(grupo).merge(kpis.meta_extra(intervalo_do_mes)), kpis: kpis.kpis, volume: kpis.volume,
+      anterior: anterior(ids)
+    }
+  end
+
+  def anterior(ids)
+    kpis = KPIS.fetch(papel).new(account: account, ids: ids, periodo: intervalo_anterior)
+    { kpis: kpis.kpis.except(*AO_VIVO), volume_total: kpis.volume[:total] }
   end
 
   # Meta somada de quem tem meta lançada; realizado = contagem do extrato
@@ -84,6 +98,14 @@ class Ramon::PainelTime
                    when 'semana' then agora.beginning_of_week...(agora.beginning_of_week + 1.week)
                    else intervalo_do_mes
                    end
+  end
+
+  # 1–18/nov 14h → 1–18/out 14h; mês passado (fechado) → o mês antes dele inteiro.
+  def intervalo_anterior
+    @intervalo_anterior ||= begin
+      passo = PASSO.fetch(periodo, 1.month)
+      (intervalo.begin - passo)...([intervalo.end, agora].min - passo)
+    end
   end
 
   # Dias úteis (seg–sex, sem feriados) de hoje ao fim do mês corrente; mês passado = 0.
