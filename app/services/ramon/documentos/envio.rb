@@ -9,8 +9,11 @@ module Ramon::Documentos::Envio
   module_function
 
   # passo: :abertura, :lembrete_1 ou :lembrete_2. O checklist do lead tem de ter algo pendente (o CobrancaJob confere).
-  # @return [Symbol] :texto, :modelo ou :sem_permissao (nada enviado)
+  # Texto do passo vazio ou nil no yml = passo desligado: nada sai, nem o modelo.
+  # @return [Symbol] :texto, :modelo, :sem_permissao ou :desligado (nos dois últimos, nada enviado)
   def mandar(lead, passo)
+    return :desligado if CONFIG.dig('mensagens', passo.to_s).blank?
+
     conversa = lead.conversation
     return :sem_permissao unless conversa
 

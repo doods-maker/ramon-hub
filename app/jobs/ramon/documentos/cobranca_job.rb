@@ -76,6 +76,7 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
   def enviar(lead, passo)
     canal = Ramon::Documentos::Envio.mandar(lead, passo)
     return sem_permissao(lead, passo) if canal == :sem_permissao
+    return historico(lead, "Cobrança: #{NOMES.fetch(passo)} está desligado na configuração (texto vazio): não saiu") if canal == :desligado
 
     historico(lead, "Cobrança: enviou #{NOMES.fetch(passo)} (#{CANAIS.fetch(canal)})")
     Ramon::LlmUso.registrar_whatsapp(lead, model: canal == :modelo ? "modelo #{CONFIG.dig('modelo', 'nome')}" : 'texto livre',

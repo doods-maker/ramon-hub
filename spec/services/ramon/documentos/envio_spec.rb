@@ -56,6 +56,16 @@ RSpec.describe Ramon::Documentos::Envio do
     end
   end
 
+  it 'texto vazio ou nil no yml desliga o passo: nada sai, nem modelo', :aggregate_failures do
+    config = described_class::CONFIG
+    stub_const("#{described_class}::CONFIG", config.merge('mensagens' => config['mensagens'].merge('lembrete_1' => nil, 'lembrete_2' => '')))
+    cliente_escreveu(30.hours)
+
+    expect(described_class.mandar(lead, :lembrete_1)).to eq(:desligado)
+    expect(described_class.mandar(lead, :lembrete_2)).to eq(:desligado)
+    expect(enviadas).to be_empty
+  end
+
   context 'when a janela de 24 h fechou' do
     before { cliente_escreveu(30.hours) }
 

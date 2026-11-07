@@ -17,6 +17,7 @@ ritmo:
   travado_dias: 2 # respondeu, sem documento novo → travado: o SDR assume
 
 # {nome} = primeiro nome do lead; {lista} = o que falta, um por linha; {primeiro_item} = o primeiro que falta.
+# Texto vazio (ou a chave sem valor) desliga aquele passo: nada sai, nem o modelo; o relógio segue para o próximo.
 mensagens:
   abertura: |-
     Oi, {nome}! Aqui é da equipe do escritório Ramon Antonio, que bom ter você com a gente. Agora vamos juntar os documentos do seu caso, e eu te ajudo em cada passo. Falta isto:
