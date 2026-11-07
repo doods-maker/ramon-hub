@@ -335,6 +335,43 @@ describe('KanbanBoard.vue', () => {
     );
   });
 
+  it('Ctrl K com lead fora dos filtros (não carregado): pede o motivo de pular Documentos pelo lead do pedido', async () => {
+    LeadsAPI.createNote.mockClear();
+    const wrapper = mountBoard({
+      etapaDocumentos: true,
+      leads: [],
+      stages: [
+        ...STAGES,
+        { id: 7, name: 'Fechado', label: 'fase-fechado', is_won: true },
+        { id: 8, name: 'Documentos', label: 'fase-documentos', is_won: true },
+      ],
+      wonRequest: {
+        id: 30,
+        leadStageId: 7,
+        lead: {
+          id: 30,
+          lead_stage_id: 1,
+          value: 900,
+          thesis_passa_documentos: true,
+          docs_total: 2,
+        },
+      },
+    });
+    await wrapper.vm.$nextTick();
+    const modal = wrapper.findComponent(WonValueModal);
+    expect(modal.props()).toMatchObject({
+      pedeMotivo: true,
+      initialValue: 900,
+    });
+
+    modal.vm.$emit('confirmValue', { value: null, motivo: 'Pasta pronta' });
+    await flushPromises();
+    expect(LeadsAPI.createNote).toHaveBeenCalledWith(
+      30,
+      'RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS'
+    );
+  });
+
   it('agente não vê + Etapa nem o menu da etapa e não reordena colunas', () => {
     const wrapper = mountBoard({ role: 'agent' });
     expect(wrapper.find('[data-testid="add-stage"]').exists()).toBe(false);

@@ -219,8 +219,15 @@ const cancelLost = () => {
 };
 
 // Ganho que pula Documentos: o modal de valor pede o motivo (vira nota do lead).
+// Lead do ganho pendente: o da lista; o do Ctrl K pode estar fora dos filtros
+// (não carregado) e vem no próprio pedido.
+const pendingLead = computed(
+  () =>
+    pendingMove.value &&
+    (findLead(pendingMove.value.id) || pendingMove.value.lead)
+);
 const wonPedeMotivo = computed(() => {
-  const lead = pendingMove.value && findLead(pendingMove.value.id);
+  const lead = pendingLead.value;
   return pulaDocumentos(
     findStage(pendingMove.value?.leadStageId),
     findStage(lead?.lead_stage_id),
@@ -792,7 +799,7 @@ const exportCsv = () => {
     >
       <WonValueModal
         v-if="wonModalOpen"
-        :initial-value="findLead(pendingMove?.id)?.value ?? null"
+        :initial-value="pendingLead?.value ?? null"
         :pede-motivo="wonPedeMotivo"
         @confirm-value="confirmWon"
         @cancel-value="cancelWon"
