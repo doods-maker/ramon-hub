@@ -17,7 +17,7 @@ module Ramon::Documentos::Entrada
   # Relógio da cobrança (Ramon::Documentos::CobrancaJob) do zero a cada entrada: a abertura sai na próxima rodada. Sem IA, não
   # liga (quem conduz é a pessoa avisada). update_columns: sem os callbacks de cadência (lição do B4.3).
   def ligar_cobranca(lead)
-    relogio = { Ramon::Documentos::Relogio::CHAVE => { 'entrou_em' => Time.current.iso8601 } }
+    relogio = { Ramon::Documentos::Cobranca::CHAVE => { 'entrou_em' => Time.current.iso8601 } }
     lead.with_lock { lead.update_columns(custom_attributes: lead.custom_attributes.merge(relogio)) } # rubocop:disable Rails/SkipsModelValidations
   end
 

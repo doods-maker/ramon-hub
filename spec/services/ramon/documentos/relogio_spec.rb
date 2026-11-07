@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe Ramon::Documentos::Relogio do
   def sp(texto) = Time.find_zone!('America/Sao_Paulo').parse(texto)
 
-  def passo(agora, horario: described_class::CONFIG['horario'], **estado)
+  def passo(agora, horario: Ramon::Documentos::Cobranca::CONFIG['horario'], **estado)
     described_class.proximo_passo(estado: estado.transform_keys(&:to_s).transform_values { |v| sp(v).iso8601 }, agora: sp(agora),
                                   horario: horario)
   end

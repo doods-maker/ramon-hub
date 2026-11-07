@@ -9,8 +9,7 @@
 # Números e horário em config/ramon/documentos_cobranca.yml.
 # ponytail: sem feriados — Ramon::Fluxos::Horario não tem calendário, feriado conta como dia útil; o calendário entra lá, para todos.
 module Ramon::Documentos::Relogio
-  CHAVE = 'documentos_cobranca'.freeze
-  CONFIG = YAML.safe_load_file(Rails.root.join('config/ramon/documentos_cobranca.yml')).freeze
+  CONFIG = Ramon::Documentos::Cobranca::CONFIG
   RITMO = CONFIG.fetch('ritmo').freeze
   # As marcas do silêncio e a do documento: a contagem do "sem documento novo" parte da mais recente.
   REFERENCIAS = %w[abertura_em lembrete_1_em lembrete_2_em silencio_em ultimo_documento_em].freeze

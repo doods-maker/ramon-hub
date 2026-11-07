@@ -94,7 +94,7 @@ RSpec.describe Ramon::Documentos::CobrancaJob do
     expect(conversa.reload).to be_open
     expect(notas_de_handoff.map(&:content)).to contain_exactly(a_string_including('silêncio'))
     expect(historico).to eq(['Cobrança: o lembrete 1 não saiu: janela de 24 h fechada e a caixa sem o modelo aprovado',
-                             'Cobrança: silêncio: a conversa foi para a equipe'])
+                             a_string_starting_with('Cobrança: silêncio —').and(a_string_ending_with('A conversa foi para a equipe.'))])
     expect(LlmChamada.where(lead_id: lead.id)).to be_empty
   end
 

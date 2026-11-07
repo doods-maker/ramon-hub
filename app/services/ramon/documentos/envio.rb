@@ -4,7 +4,7 @@
 # na mensagem → Whatsapp::SendOnWhatsappService); a caixa sem esse modelo APROVADO (antes do número oficial) não manda nada.
 # Textos e nome do modelo: config/ramon/documentos_cobranca.yml. Quem envia é o assistente da conversa (o da etapa Documentos).
 module Ramon::Documentos::Envio
-  CONFIG = Ramon::Documentos::Relogio::CONFIG
+  CONFIG = Ramon::Documentos::Cobranca::CONFIG
 
   module_function
 

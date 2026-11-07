@@ -49,7 +49,7 @@ module LeadDocs
 
   # Só lead que entrou pela cobrança (Ramon::Documentos::Entrada grava a chave): algum item passou a recebido neste save.
   def marcar_documento_novo
-    chave = Ramon::Documentos::Relogio::CHAVE
+    chave = Ramon::Documentos::Cobranca::CHAVE
     cobranca = custom_attributes&.dig(chave)
     return unless cobranca.is_a?(Hash) && recebeu_documento?
 
