@@ -44,7 +44,7 @@ RSpec.describe Ramon::PerfilIa::Historico do
       expect(padrao['marcador']).to include(de: '_inicio', para: '_fim', nome_alvo: nil)
       expect(padrao['gatilho']).to include(acao_ou_etapa: account.lead_stages.find_by(label: 'fase-novo').name,
                                            para: ['Pediu para falar com uma pessoa'])
-      expect(padrao['gatilho'][:de].size).to eq(Ramon::PerfilIa::GATILHOS.size)
+      expect(padrao['gatilho'][:de].size).to eq(Ramon::PerfilIa::GATILHOS.size - Ramon::PerfilIa::Gatilhos::DOCUMENTOS.size)
     end
 
     it 'Marcador numa Etapa vai pelo nome; limites e teto no alvo limites' do

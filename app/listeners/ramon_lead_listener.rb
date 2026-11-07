@@ -69,6 +69,11 @@ class RamonLeadListener < BaseListener
     message.conversation.bot_handoff! if message.conversation.pending?
   end
 
+  # Etapa Documentos: a IA passou a conversa → vai para quem conduz (Ramon::Documentos::Handoff decide se é com ele).
+  def conversation_bot_handoff(event)
+    Ramon::Documentos::Handoff.call(event.data[:conversation])
+  end
+
   def lead_created(event)
     Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
     Ramon::TeseLabelSync.apply_to_conversation(event.data[:lead])

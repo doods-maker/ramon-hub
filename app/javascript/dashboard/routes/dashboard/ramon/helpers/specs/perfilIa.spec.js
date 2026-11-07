@@ -31,6 +31,20 @@ describe('perfilIa (espelho do Ramon::PerfilIa)', () => {
     expect(efetivo({}, PRONTOS, ETAPAS).base).toBe('cautelosa');
   });
 
+  it('etapa conduzida (Documentos) sem lista gravada: os gatilhos_padrao dela, não os da base', () => {
+    const documentos = {
+      chave: 'fase-documentos',
+      gatilhos_padrao: ['sem_documento', 'pediu_pessoa'],
+    };
+    const etapas = [...ETAPAS, documentos];
+    const atual = efetivo({ base: 'equilibrada' }, PRONTOS, etapas);
+    expect(atual.gatilhos['fase-documentos']).toEqual([
+      'sem_documento',
+      'pediu_pessoa',
+    ]);
+    expect(ajustes({ base: 'equilibrada' }, PRONTOS, etapas)).toBe(0);
+  });
+
   it('marcador fora da Trilha (etapa apagada) = _inicio', () => {
     expect(marcadorDe({ marcador: 'fase-x' }, PRONTOS, ETAPAS)).toBe('_inicio');
     expect(marcadorDe({ base: 'acelerada' }, PRONTOS, ETAPAS)).toBe('_fim');

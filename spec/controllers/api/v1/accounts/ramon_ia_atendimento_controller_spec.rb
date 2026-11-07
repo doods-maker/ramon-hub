@@ -51,7 +51,10 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
 
     with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { get url, headers: admin.create_new_auth_token, as: :json }
     body = response.parsed_body
-    expect(body['conduzidas']).to eq([{ 'chave' => 'fase-documentos', 'nome' => 'Documentos' }])
+    expect(body['conduzidas']).to eq([{ 'chave' => 'fase-documentos', 'nome' => 'Documentos',
+                                        'gatilhos_padrao' => Ramon::PerfilIa::Gatilhos::PADRAO_DOCUMENTOS }])
+    expect(body['gatilhos'].select { |g| g['so_documentos'] }.pluck('chave'))
+      .to eq(%w[govbr_senha_recebida govbr_codigo govbr_sem_acesso sem_documento])
     expect(body['etapas'].pluck('chave')).not_to include('fase-documentos')
     expect(body['acoes'].find { |a| a['chave'] == 'pedir_documentos' }['etapas']).to include('fase-documentos')
   end

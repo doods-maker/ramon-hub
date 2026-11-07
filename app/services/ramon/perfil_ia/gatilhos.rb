@@ -42,7 +42,32 @@ module Ramon::PerfilIa::Gatilhos
     'clausula' => {
       'nome' => 'Quer mudar cláusula',
       'texto' => nil
+    },
+    # Etapa Documentos (spec §6; textos aprovados pelo Eduardo em 07/11): só nas etapas conduzidas (DOCUMENTOS abaixo).
+    'govbr_senha_recebida' => {
+      'nome' => 'Senha do gov.br recebida',
+      'texto' => 'Quando o cliente mandar a senha do gov.br, agradeça sem repetir e passe para uma pessoa da equipe entrar no Meu INSS.'
+    },
+    'govbr_codigo' => {
+      'nome' => 'Código de verificação do gov.br',
+      'texto' => 'Se o acesso pedir o código de verificação do gov.br, ou o cliente precisar mandar um código, passe para uma pessoa da equipe.'
+    },
+    'govbr_sem_acesso' => {
+      'nome' => 'Sem acesso ao gov.br',
+      'texto' => 'Se o cliente não conseguir criar a conta, entrar ou recuperar a senha do gov.br depois do passo a passo, passe para uma pessoa da equipe.'
+    },
+    'sem_documento' => {
+      'nome' => 'Cliente não tem o documento',
+      'texto' => 'Se o cliente disser que não tem o documento, ou que só a empresa ou o médico tem, passe para uma pessoa da equipe.'
     }
   }.freeze
+
+  # Só existem nas etapas conduzidas (Documentos): fora dos perfis prontos das abertas e escondidos delas na tela.
+  DOCUMENTOS = %w[govbr_senha_recebida govbr_codigo govbr_sem_acesso sem_documento].freeze
+  # Ligados em Documentos enquanto o alvo não gravou a lista da etapa (vale para qualquer base).
+  PADRAO_DOCUMENTOS = (DOCUMENTOS + %w[pediu_pessoa irritado juridica]).freeze
+
+  # Os ligados numa Etapa sem lista gravada no alvo (Ramon::PerfilIa#gatilhos).
+  def self.padrao(etapa, pronto) = Ramon::EtapaDeGanho.conduzida?(etapa) ? PADRAO_DOCUMENTOS : pronto['gatilhos']
 end
 # rubocop:enable Layout/LineLength

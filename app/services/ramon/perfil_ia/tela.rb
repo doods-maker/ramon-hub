@@ -35,16 +35,24 @@ class Ramon::PerfilIa::Tela
     end
   end
 
+  # so_documentos: a tela só mostra o gatilho nas etapas conduzidas.
   def gatilhos
-    Ramon::PerfilIa::GATILHOS.map { |chave, g| { chave: chave, nome: g['nome'], pendente: g['texto'].nil? } }
+    Ramon::PerfilIa::GATILHOS.map do |chave, g|
+      { chave: chave, nome: g['nome'], pendente: g['texto'].nil?, so_documentos: Ramon::PerfilIa::Gatilhos::DOCUMENTOS.include?(chave) }
+    end
   end
 
   def etapas
     @account.lead_stages.where(is_won: false, is_lost: false).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
   end
 
-  # Depois das abertas, fora da Trilha: a IA envia sozinha (Ramon::EtapaDeGanho::CONDUZIDAS).
-  def conduzidas = Ramon::EtapaDeGanho.conduzidas(@account).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
+  # Depois das abertas, fora da Trilha: a IA envia sozinha (Ramon::EtapaDeGanho::CONDUZIDAS). gatilhos_padrao = os ligados
+  # enquanto o alvo não grava a lista da etapa (Ramon::PerfilIa#gatilhos), no lugar dos do perfil pronto.
+  def conduzidas
+    Ramon::EtapaDeGanho.conduzidas(@account).map do |e|
+      { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name, gatilhos_padrao: Ramon::PerfilIa::Gatilhos::PADRAO_DOCUMENTOS }
+    end
+  end
 
   # "Testar este perfil" da tese: o assistente da caixa dela (ramon_thesis_id) ou, sem caixa com IA, o global.
   def teses
