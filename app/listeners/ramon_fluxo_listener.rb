@@ -36,11 +36,14 @@ class RamonFluxoListener < BaseListener
     etapa = LeadStage.find_by(id: para) # a etapa do evento, não a de agora (o lead pode ter andado de novo)
     dados = { 'de_etapa_id' => de, 'para_etapa_id' => para }
     disparar('lead_mudou_etapa', lead, event, dados)
-    disparar('lead_ganho', lead, event, dados) if etapa&.is_won
+    disparar('lead_ganho', lead, event, dados) if entrou_no_ganho?(de, etapa)
     disparar('lead_perdido', lead, event, dados) if etapa&.is_lost
   end
 
   private
+
+  # ganho → ganho (Fechado → Documentos → Jurídico) não é um ganho novo: o won_at fica (ADR 0015)
+  def entrou_no_ganho?(de_id, etapa) = etapa&.is_won && !LeadStage.find_by(id: de_id)&.is_won
 
   def disparar(tipo, alvo, event, dados = {})
     return if alvo.nil?

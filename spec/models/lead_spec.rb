@@ -199,6 +199,25 @@ RSpec.describe Lead do
     end
   end
 
+  describe 'andar entre etapas de ganho (ADR 0015)' do
+    it 'não é um ganho novo: won_at fica, sem cascata do ganho, sem Drive e sem Purchase', :aggregate_failures do
+      fechado = account.lead_stages.find_by!(is_won: true)
+      outra = account.lead_stages.create!(name: 'Ganho seguinte', is_won: true, position: fechado.position + 1)
+      lead = create(:lead, account: account, lead_stage: fechado,
+                           custom_attributes: { 'meta_referral' => { 'ctwa_clid' => 'clid-1' } })
+      won_at = lead.reload.won_at
+      allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
+      expect(Ramon::Fluxos::LeadGanho).not_to receive(:ganhou)
+
+      with_modified_env(RAMON_META_CAPI: 'on') do
+        expect { lead.update!(lead_stage: outra) }.not_to have_enqueued_job(Ramon::DriveExportJob)
+      end
+
+      expect(lead.reload.won_at).to eq(won_at)
+      expect(MetaEvento.where(lead_id: lead.id, evento: 'Purchase')).to be_empty
+    end
+  end
+
   describe 'ponte Drive (ADR-0002)' do
     let(:drive_env) { { RAMON_DRIVE_CREDENTIALS: 'path/to/creds.json', RAMON_DRIVE_ROOT_ID: 'root-id' } }
 

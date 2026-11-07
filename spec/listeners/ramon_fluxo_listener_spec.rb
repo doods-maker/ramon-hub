@@ -40,6 +40,15 @@ RSpec.describe RamonFluxoListener do
                                                  performed_by: autora))
   end
 
+  it 'de uma etapa de ganho para outra só dispara a troca de etapa, não um ganho novo' do
+    ganho_a = create(:lead_stage, account: account, is_won: true, position: 9)
+    ganho_b = create(:lead_stage, account: account, is_won: true, position: 10)
+    dados = { 'de_etapa_id' => ganho_a.id, 'para_etapa_id' => ganho_b.id }
+    expect(Ramon::Fluxos::Disparo).to receive(:call).with('lead_mudou_etapa', lead, dados, origem: nil)
+    expect(Ramon::Fluxos::Disparo).not_to receive(:call).with('lead_ganho', any_args)
+    listener.lead_updated(evento('lead.updated', lead: lead, changed_attributes: { 'lead_stage_id' => [ganho_a.id, ganho_b.id] }))
+  end
+
   it 'atribuição: ignora o evento duplicado do auto-assignment (sem changed_attributes)' do
     expect(Ramon::Fluxos::Disparo).not_to receive(:call)
     listener.assignee_changed(evento('assignee.changed', conversation: conversa, user: create(:user, account: account)))
