@@ -23,8 +23,8 @@ a medida de "o que falta".
 - O gatilho de fluxo `lead_ganho` só dispara quando a etapa de origem não era de ganho (`RamonFluxoListener`).
 - A janela de 90 dias do Kanban não esconde Documentos: é trabalho em andamento, não fechado (`Ramon::LeadRadar`).
 - Telas: arrastar, trocar no painel, mover em lote ou pelo Ctrl K de ganho para ganho não pede valor
-  (`entraNoGanho` em `helpers/stage.js`). Marcar uma etapa como ganho não pede confirmação nem desmarca as outras;
-  marcar perda continua pedindo e substituindo.
+  (`entraNoGanho` em `helpers/stage.js`). Marcar uma etapa como ganho continua avisando os efeitos, mas não desmarca
+  as outras; marcar perda continua pedindo e substituindo.
 - Métricas de ganho somam as etapas: o "Funil · conversão" do Centro mostra uma linha de ganhos com a soma; o resto
   (BI, dashboard, cockpit, radar de prescrição) já tratava "ganho" como qualquer `is_won`.
 - Conta nova não ganha Documentos e Jurídico pelo seed (o fork tem uma conta só); levar ao seed se surgir outra.
