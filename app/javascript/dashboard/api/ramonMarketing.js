@@ -19,8 +19,24 @@ class RamonMarketingAPI extends ApiClient {
     return axios.post(`${this.url}/importar_gasto`, { texto });
   }
 
-  importarMetas(texto) {
-    return axios.post(`${this.url}/importar_metas`, { texto });
+  // confirmar: sobe por cima de meta editada à mão (sem ele, 409).
+  importarMetas(texto, confirmar = false) {
+    return axios.post(`${this.url}/importar_metas`, {
+      texto,
+      ...(confirmar ? { confirmar: true } : {}),
+    });
+  }
+
+  metasAtivas(ativas) {
+    return axios.put(`${this.url}/metas_ativas`, { ativas });
+  }
+
+  editarMeta(id, valor) {
+    return axios.patch(`${this.url}/metas/${id}`, { valor });
+  }
+
+  apagarMetas() {
+    return axios.delete(`${this.url}/metas`);
   }
 }
 

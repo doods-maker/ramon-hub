@@ -2727,10 +2727,21 @@
       },
       "METAS": {
         "TITLE": "Model targets",
-        "COMO": "Run exportar-painel.mjs from the sales model and upload mensal.json. Replaces all targets.",
-        "PERIODO": "Targets from {de} to {ate}.",
+        "COMO": "Source: mensal.json from modelo.mjs, uploaded only once confirmed. Fine-tune month by month in the table; manual edits are highlighted.",
         "VAZIO": "No targets loaded.",
-        "OK": "Targets for {meses} months loaded."
+        "OK": "Targets for {meses} months loaded.",
+        "USAR": "Use targets",
+        "DESLIGADAS": "Targets off: they do not show in the Metabase actual × target cards.",
+        "APAGAR": "Delete targets",
+        "CONFIRMAR_APAGAR": "Delete all targets from the hub?",
+        "EDITADAS": "{n} target(s) edited by hand, highlighted.",
+        "EDITADA": "Edited by hand",
+        "MES": "Month",
+        "SALVA": "Target saved.",
+        "VALOR_INVALIDO": "Invalid value.",
+        "SOBRESCREVER_TITULO": "Upload the file over the edits?",
+        "SOBRESCREVER_MSG": "This undoes {n} hand-edited target(s) and resets everything to the model.",
+        "SOBRESCREVER": "Upload anyway"
       },
       "CUSTO": {
         "TITLE": "Logged costs",
@@ -2754,6 +2765,14 @@
         "AGENCIA": "Agency",
         "EQUIPE": "Team",
         "OUTRO": "Other"
+      },
+      "METRICAS": {
+        "CONTRATOS": "Contracts",
+        "REUNIOES_AGENDADAS": "Meetings booked",
+        "REUNIOES_REALIZADAS": "Meetings held",
+        "GASTO_ANUNCIO": "Ads (R$)",
+        "CUSTO_AREA": "Area cost (R$)",
+        "CAC": "CAC (R$)"
       }
     }
   },
