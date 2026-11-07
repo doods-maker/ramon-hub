@@ -437,19 +437,20 @@ describe('LeadPanelBody', () => {
       }
     );
 
-    it('Contrato só aparece de Reunião realizada em diante (perda não conta)', () => {
-      expect(temContrato({ lead_stage_id: 1 })).toBe(false);
-      expect(temContrato({ lead_stage_id: 4 })).toBe(false);
+    // Eduardo 07/11: o contrato pode ir antes da reunião — toda etapa aberta mostra a aba.
+    it('Contrato aparece em toda etapa aberta e no ganho (perda não conta)', () => {
+      expect(temContrato({ lead_stage_id: 1 })).toBe(true);
+      expect(temContrato({ lead_stage_id: 4 })).toBe(true);
       expect(temContrato({ lead_stage_id: 5 })).toBe(true);
       expect(temContrato({ lead_stage_id: 6 })).toBe(true);
       expect(temContrato({ lead_stage_id: 2 })).toBe(true);
       expect(temContrato({ lead_stage_id: 3 })).toBe(false);
     });
 
-    it('Contrato aparece em qualquer etapa quando o ZapSign já foi gerado', () => {
+    it('Contrato aparece até no perdido quando o ZapSign já foi gerado', () => {
       expect(
         temContrato({
-          lead_stage_id: 1,
+          lead_stage_id: 3,
           custom_attributes: { zapsign: { sign_url: 'https://x' } },
         })
       ).toBe(true);
@@ -468,9 +469,11 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('Contrato persistido cai no Resumo quando o item sumiu', () => {
+    it('Contrato persistido cai no Resumo quando o item sumiu (lead perdido)', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'contrato');
-      const wrapper = mountBody();
+      const wrapper = mountBody({
+        props: { lead: { ...lead, lead_stage_id: 3 } },
+      });
       expect(wrapper.findComponent({ name: 'LeadZapsignCard' }).exists()).toBe(
         false
       );
@@ -494,6 +497,21 @@ describe('LeadPanelBody', () => {
       expect(temDocs({ props: { lead: { ...lead, thesis_id: 3 } } })).toBe(
         true
       );
+    });
+
+    // Eduardo 07/11: a colheita volta a ter tela (saiu no #189 junto com o Kit).
+    it('Docs: colheita da tese aparece com tese e some sem tese', () => {
+      localStorage.setItem('ramon_lead_panel_tab', 'documentos');
+      expect(
+        mountBody().findComponent({ name: 'ColheitaChecklist' }).exists()
+      ).toBe(false);
+      const comTese = mountBody({
+        props: { lead: { ...lead, thesis_id: 3 } },
+      });
+      expect(
+        comTese.findComponent({ name: 'ColheitaChecklist' }).props('lead')
+          .thesis_id
+      ).toBe(3);
     });
 
     it('Docs: checklist da tese em cima e arquivos da conversa embaixo', async () => {

@@ -1350,6 +1350,69 @@
       "COPIED": "Link do portal copiado",
       "ERROR": "Não foi possível gerar o link do portal — tente de novo"
     },
+    "COLHEITA": {
+      "TITLE": "O que falta perguntar",
+      "COUNT": "{done}/{total} colhidos",
+      "EXTRACT": "Extrair da conversa",
+      "EXTRACT_REQUESTED": "Extração pedida — a colheita atualiza em alguns segundos",
+      "EXTRACT_FAILED": "Não foi possível pedir a extração — tente de novo",
+      "DADOS_TITLE": "O que a IA colheu",
+      "CONFIRMAR": "confirmar",
+      "CONFIRMAR_TIP": "A IA ouviu isso de forma incerta — confirme com o cliente",
+      "CAMPO": {
+        "cliente": {
+          "nome_completo": "Nome",
+          "cpf": "CPF",
+          "rg": "RG",
+          "nascimento": "Nascimento",
+          "estado_civil": "Estado civil",
+          "profissao": "Profissão",
+          "endereco": "Endereço",
+          "whatsapp": "WhatsApp",
+          "renda_aproximada": "Renda aproximada"
+        },
+        "qualificacao": {
+          "aposentado": "Aposentado",
+          "qualidade_segurado_epoca": "Segurado na época",
+          "qualidade_segurado_como": "Segurado como",
+          "recebeu_auxilio_doenca": "Recebeu auxílio-doença"
+        },
+        "acidente": {
+          "data": "Data do acidente",
+          "tipo": "Tipo de acidente",
+          "descricao": "Como foi",
+          "cat_emitida": "CAT emitida",
+          "empregador_na_epoca": "Empregador na época"
+        },
+        "sequela": {
+          "descricao": "Sequela",
+          "cid": "CID",
+          "consolidada": "Consolidada",
+          "limitacao_concreta": "Limitação no trabalho",
+          "tratamentos": "Tratamentos"
+        },
+        "beneficios": "Benefício",
+        "fechamento": {
+          "honorario_apresentado": "Honorário apresentado",
+          "simulacao_mostrada": "Simulação mostrada",
+          "contrato_assinado": "Contrato assinado",
+          "motivo_nao_assinatura": "Por que não assinou",
+          "objecoes": "Objeções",
+          "sensibilidades": "Sensibilidades"
+        }
+      },
+      "LACUNAS_TITLE": "O que falta (IA)",
+      "EXTRACTED_AT": "Extraído da conversa em {date}",
+      "AI_BADGE": "✨ IA",
+      "AI_BADGE_TIP": "Marcado pela IA a partir da conversa — clique para desfazer",
+      "CHARGE": "Pedir documentos das lacunas",
+      "COPIED": "Rascunho copiado — revise e cole no WhatsApp",
+      "DRAFT": {
+        "GREETING": "Olá {name}, tudo bem? Da nossa conversa, ficaram só alguns documentos pra completar o seu caso:",
+        "ITEM": "• {item}",
+        "CLOSING": "Assim que conseguir, me manda por aqui mesmo que a gente já dá andamento. Qualquer dúvida, me chama!"
+      }
+    },
     "FUNIL_AUTO": {
       "FILA_DO_DIA": "Fila do dia",
       "TEMPERATURA": {

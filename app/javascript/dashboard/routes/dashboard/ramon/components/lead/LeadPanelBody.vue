@@ -15,6 +15,7 @@ import LeadNotes from './LeadNotes.vue';
 import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
+import ColheitaChecklist from './ColheitaChecklist.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import FormatoReuniao from './FormatoReuniao.vue';
@@ -527,15 +528,12 @@ const conversaId = computed(
 const temDocs = computed(() =>
   Boolean(props.lead?.thesis_id || conversaId.value)
 );
-// Contrato só com contrato em jogo: Reunião realizada ou depois na posição do
-// funil (perda não conta), ganho, ou ZapSign já gerado.
+// Contrato em toda etapa aberta e no ganho (Eduardo 07/11: o contrato pode ir
+// antes da reunião); perda não conta, salvo ZapSign já gerado.
 const showContrato = computed(() => {
   if (props.lead?.custom_attributes?.zapsign) return true;
   const stage = leadStage.value;
-  if (!stage || stage.is_lost) return false;
-  if (stage.is_won) return true;
-  const realizada = stages.value.find(s => s.label === STAGE_REUNIAO_REALIZADA);
-  return Boolean(realizada) && stage.position >= realizada.position;
+  return Boolean(stage) && !stage.is_lost;
 });
 // Qualificação no topo do Resumo enquanto o lead está nas 2 primeiras etapas
 // abertas do funil (Novo/Qualificação, pela posição); depois desce.
@@ -1529,6 +1527,7 @@ const discard = async () => {
 
       <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-5">
         <DocChecklist v-if="lead.thesis_id" :lead="lead" :context="context" />
+        <ColheitaChecklist v-if="lead.thesis_id" :lead="lead" />
         <ArquivosRecebidos v-if="conversaId" :conversation-id="conversaId" />
       </div>
 

@@ -1350,6 +1350,69 @@
       "COPIED": "Portal link copied",
       "ERROR": "Could not generate the portal link — try again"
     },
+    "COLHEITA": {
+      "TITLE": "Still to ask",
+      "COUNT": "{done}/{total} collected",
+      "EXTRACT": "Extract from conversation",
+      "EXTRACT_REQUESTED": "Extraction requested — the harvest updates in a few seconds",
+      "EXTRACT_FAILED": "Could not request the extraction — try again",
+      "DADOS_TITLE": "What the AI harvested",
+      "CONFIRMAR": "confirm",
+      "CONFIRMAR_TIP": "The AI heard this uncertainly — confirm with the client",
+      "CAMPO": {
+        "cliente": {
+          "nome_completo": "Name",
+          "cpf": "CPF",
+          "rg": "ID",
+          "nascimento": "Birth date",
+          "estado_civil": "Marital status",
+          "profissao": "Occupation",
+          "endereco": "Address",
+          "whatsapp": "WhatsApp",
+          "renda_aproximada": "Approximate income"
+        },
+        "qualificacao": {
+          "aposentado": "Retired",
+          "qualidade_segurado_epoca": "Insured at the time",
+          "qualidade_segurado_como": "Insured as",
+          "recebeu_auxilio_doenca": "Received sickness benefit"
+        },
+        "acidente": {
+          "data": "Accident date",
+          "tipo": "Accident type",
+          "descricao": "What happened",
+          "cat_emitida": "CAT issued",
+          "empregador_na_epoca": "Employer at the time"
+        },
+        "sequela": {
+          "descricao": "Sequela",
+          "cid": "ICD",
+          "consolidada": "Consolidated",
+          "limitacao_concreta": "Work limitation",
+          "tratamentos": "Treatments"
+        },
+        "beneficios": "Benefit",
+        "fechamento": {
+          "honorario_apresentado": "Fee presented",
+          "simulacao_mostrada": "Simulation shown",
+          "contrato_assinado": "Contract signed",
+          "motivo_nao_assinatura": "Why not signed",
+          "objecoes": "Objections",
+          "sensibilidades": "Sensitivities"
+        }
+      },
+      "LACUNAS_TITLE": "Still missing (AI)",
+      "EXTRACTED_AT": "Extracted from the conversation at {date}",
+      "AI_BADGE": "✨ AI",
+      "AI_BADGE_TIP": "Checked by the AI from the conversation — click to undo",
+      "CHARGE": "Request gap documents",
+      "COPIED": "Draft copied — review and paste into WhatsApp",
+      "DRAFT": {
+        "GREETING": "Hi {name}, how are you? From our conversation, just a few documents are missing to complete your case:",
+        "ITEM": "• {item}",
+        "CLOSING": "Send them here whenever you can and we'll move forward. Any questions, just message me!"
+      }
+    },
     "FUNIL_AUTO": {
       "FILA_DO_DIA": "Today's queue",
       "TEMPERATURA": {
