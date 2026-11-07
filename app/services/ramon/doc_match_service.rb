@@ -142,13 +142,13 @@ class Ramon::DocMatchService
     avisar_conferencia(lead, item) if lead.won_at.present? # só a etapa Documentos marca lead ganho (marcar_direto?)
   end
 
-  # Em Documentos, quem conduz confere o que a IA marcou (spec §5); desfazer = desmarcar na aba Documentos.
+  # Em Documentos, quem conduz confere o que a IA marcou (spec §5): o SDR do lead; sem SDR, o closer; sem nenhum, os
+  # admins (AvisoDaIa). Por existência, não por online. Desfazer = desmarcar na aba Documentos.
   # O push vai pelo ntfy público: só a tese, nunca o nome (Ramon::NtfyPushJob.rotulo).
   def avisar_conferencia(lead, item)
-    responsavel = Ramon::Documentos::Responsavel.de(lead)
     Ramon::AvisoDaIa.avisar(lead, "IA marcou #{item.title.presence || item.content} de #{lead.name}: verificar",
                             "IA marcou documento (#{Ramon::NtfyPushJob.rotulo(lead)})", 'Confira na aba Documentos do lead',
-                            user_ids: [responsavel&.id].compact)
+                            user_ids: [lead.sdr_id || lead.closer_id].compact)
   end
 
   # CNIS resumido não serve (spec §3): nada marcado; o alerta faz o agente pedir o completo (DocumentacaoFaltanteTool).

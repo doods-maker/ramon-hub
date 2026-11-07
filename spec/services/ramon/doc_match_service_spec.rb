@@ -151,8 +151,10 @@ RSpec.describe Ramon::DocMatchService do
       expect(attrs['doc_sugestao']).to be_nil
     end
 
-    it 'avisa o SDR para verificar; o push leva só a tese, nunca o nome', :aggregate_failures do
-      sdr = create(:user, account: account, role: :agent, auto_offline: false)
+    it 'avisa o SDR (mesmo offline: o aviso é por existência) para verificar; o push leva só a tese', :aggregate_failures do
+      sdr = create(:user, account: account, role: :agent) # auto_offline sem presença = offline
+      closer = create(:user, account: account, role: :agent, auto_offline: false) # online, mas o SDR existe
+      lead.update_columns(closer_id: closer.id) # rubocop:disable Rails/SkipsModelValidations
       lead.update_columns(sdr_id: sdr.id, name: 'Fulano de Tal') # rubocop:disable Rails/SkipsModelValidations
       allow(Ramon::NtfyPushJob).to receive(:perform_later)
 

@@ -1,7 +1,8 @@
 # A IA passou a conversa para uma pessoa (qualquer bot_handoff!: tool de handoff, gatilho, freio, cota, envio que falhou)
 # com o lead na etapa Documentos (spec Etapa Documentos §6; só com a chave ligada, via Ramon::EtapaDeGanho.conduzida?):
 # a conversa vai para quem conduz (Ramon::Documentos::Responsavel), com nota privada do motivo e do que falta, e aviso no
-# sino + push (só a tese: o ntfy é público). Fora de Documentos, o handoff segue o de sempre. Devolver = "Devolver à IA".
+# sino + push (só a tese: o ntfy é público). Ninguém online (ou ninguém no lead): os admins também são avisados.
+# Fora de Documentos, o handoff segue o de sempre. Devolver = "Devolver à IA".
 module Ramon::Documentos::Handoff
   # A tool de handoff grava o motivo como nota privada do assistente logo antes do bot_handoff!.
   JANELA_DO_MOTIVO = 2.minutes
@@ -17,7 +18,8 @@ module Ramon::Documentos::Handoff
     Messages::MessageBuilder.new(nil, conversa, { content: nota(conversa, lead, responsavel), private: true }).perform
     Ramon::AvisoDaIa.avisar(lead, "IA passou #{lead.name} (Documentos) para a equipe: veja a nota na conversa",
                             "Documentos: IA passou para a equipe (#{Ramon::NtfyPushJob.rotulo(lead)})", 'Veja a nota na conversa',
-                            user_ids: [responsavel&.id].compact)
+                            user_ids: [responsavel&.id].compact,
+                            admins: !(responsavel && Ramon::Documentos::Responsavel.online?(lead.account, responsavel)))
   end
 
   def nota(conversa, lead, responsavel)

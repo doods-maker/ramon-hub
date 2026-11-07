@@ -3,6 +3,7 @@ require 'rails_helper'
 # A IA passou a conversa para uma pessoa com o lead em Documentos (spec §6): quem assume é o SDR (online), senão o closer.
 RSpec.describe Ramon::Documentos::Handoff do
   let(:account) { create(:account) }
+  let(:admin) { create(:user, account: account, role: :administrator) }
   let(:sdr) { create(:user, account: account, role: :agent, auto_offline: false) }
   let(:closer) { create(:user, account: account, role: :agent, auto_offline: false) }
   let(:documentos) { Ramon::EtapasPosVenda.criar!(account).first }
@@ -36,10 +37,23 @@ RSpec.describe Ramon::Documentos::Handoff do
                      body: satisfy { |b| b.exclude?('Fulano') })
   end
 
-  it 'SDR offline: vai para o closer online' do
-    account.account_users.find_by(user: sdr).update!(availability: :offline)
+  def offline!(user) = account.account_users.find_by(user: user).update!(availability: :offline)
+
+  it 'SDR offline: vai para o closer online, sem incomodar os admins', :aggregate_failures do
+    admin
+    offline!(sdr)
     handoff
     expect(conversa.reload.assignee).to eq(closer)
+    expect(avisados).to eq([closer.id])
+  end
+
+  it 'os dois offline: fica com o SDR (alguém precisa ser dono) e avisa também os admins (Review Focus 3)', :aggregate_failures do
+    admin
+    offline!(sdr)
+    offline!(closer)
+    handoff
+    expect(conversa.reload.assignee).to eq(sdr)
+    expect(avisados).to contain_exactly(sdr.id, admin.id)
   end
 
   it 'a nota leva o motivo que a IA deixou ao passar a conversa' do
