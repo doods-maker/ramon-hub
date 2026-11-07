@@ -282,7 +282,7 @@ const onSchedule = async ({ dueAt, title }) => {
 <template>
   <div
     ref="cardEl"
-    class="group mb-1.5 cursor-pointer transition duration-150 hover:border-n-blue-8 active:scale-[0.97]"
+    class="group mb-1.5 cursor-pointer transition duration-150 hover:border-n-blue-8 active:scale-[0.97] !p-3"
     :class="[CARTAO, riskClass, { 'ring-2 ring-n-blue-9': focused }]"
     @click="emit('openLead', lead)"
   >

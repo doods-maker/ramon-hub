@@ -128,7 +128,7 @@ onBeforeRouteLeave(() => {
 </script>
 
 <template>
-  <div :class="CARTAO" class="flex flex-col gap-3 !p-4">
+  <div :class="CARTAO" class="flex flex-col gap-3">
     <input
       v-model="titulo"
       type="text"

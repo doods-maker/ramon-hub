@@ -466,7 +466,7 @@ const abrirNoFunil = () => {
             </ul>
           </section>
 
-          <section :class="CARTAO" class="!p-4" data-testid="dossie-timeline">
+          <section :class="CARTAO" data-testid="dossie-timeline">
             <h2
               class="flex items-center gap-1.5 text-sm font-semibold text-n-slate-12"
             >
@@ -500,7 +500,7 @@ const abrirNoFunil = () => {
 
         <!-- Coluna lateral: o dossiê de leitura -->
         <div class="flex flex-col gap-5 min-w-0">
-          <section :class="CARTAO" class="!p-4">
+          <section :class="CARTAO">
             <div data-testid="dossie-pessoa">
               <h2 class="mb-2" :class="TITULO">
                 {{ $t('RAMON.DOSSIE.WHO') }}
@@ -591,7 +591,7 @@ const abrirNoFunil = () => {
             </div>
           </section>
 
-          <section :class="CARTAO" class="!p-4" data-testid="dossie-calculos">
+          <section :class="CARTAO" data-testid="dossie-calculos">
             <h2 class="mb-2" :class="TITULO">
               {{ $t('RAMON.FICHA.CALCULOS_TITLE') }}
             </h2>
@@ -641,7 +641,7 @@ const abrirNoFunil = () => {
             </ul>
           </section>
 
-          <section :class="CARTAO" class="!p-4" data-testid="dossie-reunioes">
+          <section :class="CARTAO" data-testid="dossie-reunioes">
             <h2 class="mb-2" :class="TITULO">
               {{ $t('RAMON.FICHA.REUNIOES_TITLE') }}
             </h2>
@@ -716,7 +716,7 @@ const abrirNoFunil = () => {
             </router-link>
           </section>
 
-          <section :class="CARTAO" class="!p-4" data-testid="dossie-tese">
+          <section :class="CARTAO" data-testid="dossie-tese">
             <h2 class="mb-2" :class="TITULO">
               {{ $t('RAMON.DOSSIE.THESIS') }}
             </h2>

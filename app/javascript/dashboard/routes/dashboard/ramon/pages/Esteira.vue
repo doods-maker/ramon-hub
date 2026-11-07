@@ -564,7 +564,7 @@ useKeyboardEvents({
         </div>
 
         <!-- Simulador · última simulação -->
-        <div data-testid="esteira-last-simulation" :class="CARTAO" class="!p-4">
+        <div data-testid="esteira-last-simulation" :class="CARTAO">
           <p :class="TITULO" class="mb-1.5">
             {{ t('RAMON.ESTEIRA.LAST_SIMULATION') }}
           </p>

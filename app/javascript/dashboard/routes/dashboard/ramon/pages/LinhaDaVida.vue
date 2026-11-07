@@ -324,7 +324,7 @@ const conversationUrl = lead =>
       </header>
 
       <!-- FUTURO -->
-      <section :class="CARTAO" class="!p-4" data-testid="lifeline-future">
+      <section :class="CARTAO" data-testid="lifeline-future">
         <h2 class="mb-1" :class="TITULO">
           {{ $t('RAMON.LINHA_DA_VIDA.FUTURE') }}
         </h2>
@@ -381,7 +381,7 @@ const conversationUrl = lead =>
       </section>
 
       <!-- PRESENTE -->
-      <section :class="CARTAO" class="!p-4" data-testid="lifeline-present">
+      <section :class="CARTAO" data-testid="lifeline-present">
         <h2 class="mb-1" :class="TITULO">
           {{ $t('RAMON.LINHA_DA_VIDA.PRESENT') }}
         </h2>
@@ -459,7 +459,7 @@ const conversationUrl = lead =>
       </section>
 
       <!-- PASSADO -->
-      <section :class="CARTAO" class="!p-4" data-testid="lifeline-past">
+      <section :class="CARTAO" data-testid="lifeline-past">
         <h2 class="mb-1" :class="TITULO">
           {{ $t('RAMON.LINHA_DA_VIDA.PAST') }}
         </h2>
