@@ -64,8 +64,14 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
     false
   end
 
-  # ramon (Etapa Documentos): o assistente é por conversa (o da etapa do lead, senão o da caixa).
-  def assistente(conversation) = Captain::AssistenteDaConversa.para(conversation)
+  # ramon (Etapa Documentos): o assistente é por conversa (o da etapa do lead, senão o da caixa), escolhido uma vez
+  # por conversa neste job (executed_by, remetente e textos de resolução/handoff usam o mesmo).
+  def assistente(conversation)
+    @assistentes ||= {}
+    return @assistentes[conversation.id] if @assistentes.key?(conversation.id)
+
+    @assistentes[conversation.id] = Captain::AssistenteDaConversa.para(conversation)
+  end
 
   def auto_resolve_cutoff_time
     Time.now.utc - 1.hour
