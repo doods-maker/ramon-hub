@@ -12,8 +12,8 @@ class Api::V1::Accounts::RamonMarketingController < Api::V1::Accounts::BaseContr
   end
 
   def criar_custo
-    custo = MarketingCusto.create!(params.permit(:data, :valor, :categoria, :thesis_id, :observacao)
-                                         .merge(account: Current.account, user: current_user))
+    custo = MarketingCusto.create!(params.permit(:data, :valor, :categoria, :observacao)
+                                         .merge(account: Current.account, user: current_user, thesis: tese))
     render json: custo_json(custo), status: :created
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -43,6 +43,11 @@ class Api::V1::Accounts::RamonMarketingController < Api::V1::Accounts::BaseContr
     authorize(:ramon_relatorio, :show?)
   end
 
+  # Só tese da própria conta (404 se vier id de outra).
+  def tese
+    Current.account.theses.find(params[:thesis_id]) if params[:thesis_id].present?
+  end
+
   def custos
     MarketingCusto.where(account: Current.account).includes(:thesis).order(data: :desc, id: :desc).limit(LIMITE_CUSTOS)
   end
@@ -52,7 +57,7 @@ class Api::V1::Accounts::RamonMarketingController < Api::V1::Accounts::BaseContr
   end
 
   def status_meta
-    ultimo = MetaGasto.where(account: Current.account).order(:updated_at).last
+    ultimo = MetaGasto.where(account: Current.account).order(:data, :updated_at).last
     { gasto: ligado?('RAMON_META_GASTO'), capi: ligado?('RAMON_META_CAPI'), insights_ig: ligado?('RAMON_IG_INSIGHTS'),
       conta_anuncios: ENV['RAMON_META_AD_ACCOUNT_ID'].present?, painel_trafego: ENV['RAMON_METABASE_MARKETING_ID'].to_i.positive?,
       ultimo_gasto: ultimo && { data: ultimo.data, origem: ultimo.origem, gravado_em: ultimo.updated_at },

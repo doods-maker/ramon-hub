@@ -2697,7 +2697,9 @@
       "TRAFEGO": {
         "TITLE": "Traffic",
         "SUBTITLE": "Spend × hub funnel: Meta × hub, cost per stage, return and targets",
-        "NOT_CONFIGURED": "The traffic dashboard is not configured yet. Set RAMON_METABASE_MARKETING_ID to the Metabase dashboard number."
+        "NOT_CONFIGURED": "The traffic dashboard is not configured yet. Set RAMON_METABASE_MARKETING_ID to the Metabase dashboard number.",
+        "LOAD_ERROR": "Could not load the dashboard.",
+        "RETRY": "Retry"
       },
       "CUSTOS": {
         "TITLE": "Costs and targets",

@@ -74,13 +74,8 @@ onUnmounted(() => clearTimeout(renovacao));
       :class="[AVISO, TOM.ruby]"
       class="flex items-center gap-3 self-start"
     >
-      {{ t('RAMON.RELATORIOS.LOAD_ERROR') }}
-      <Button
-        link
-        xs
-        :label="t('RAMON.RELATORIOS.RETRY')"
-        @click="fetchEmbed()"
-      />
+      {{ t(`${textos}.LOAD_ERROR`) }}
+      <Button link xs :label="t(`${textos}.RETRY`)" @click="fetchEmbed()" />
     </div>
     <p v-else-if="!configured" :class="[AVISO, TOM.slate]" class="self-start">
       {{ t(`${textos}.NOT_CONFIGURED`) }}

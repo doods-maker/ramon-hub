@@ -8,6 +8,7 @@ import { useAlert } from 'dashboard/composables';
 import RamonMarketingAPI from 'dashboard/api/ramonMarketing';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import { formatBrl, parseBrlInput } from '../helpers/currency';
 import {
   ARQUIVO,
@@ -108,9 +109,11 @@ const lancar = async () => {
   }
 };
 
-const remover = async custo => {
-  // eslint-disable-next-line no-alert
-  if (!window.confirm(t('RAMON.MARKETING.CUSTO.CONFIRMAR_REMOVER'))) return;
+// Remover pede confirmação no modal da casa (regras de design: nada de window.confirm).
+const removendo = ref(null);
+const remover = async () => {
+  const custo = removendo.value;
+  removendo.value = null;
   try {
     await RamonMarketingAPI.removerCusto(custo.id);
     await carregar();
@@ -328,7 +331,7 @@ onMounted(carregar);
                     ruby
                     icon="i-lucide-trash-2"
                     :aria-label="t('RAMON.MARKETING.CUSTO.REMOVER')"
-                    @click="remover(custo)"
+                    @click="removendo = custo"
                   />
                 </td>
               </tr>
@@ -337,5 +340,12 @@ onMounted(carregar);
         </div>
       </section>
     </div>
+    <ConfirmModal
+      v-if="removendo"
+      :title="t('RAMON.MARKETING.CUSTO.CONFIRMAR_REMOVER')"
+      :confirm-label="t('RAMON.MARKETING.CUSTO.REMOVER')"
+      @confirm="remover"
+      @cancel="removendo = null"
+    />
   </div>
 </template>

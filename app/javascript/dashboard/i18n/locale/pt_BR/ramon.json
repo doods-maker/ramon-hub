@@ -2697,7 +2697,9 @@
       "TRAFEGO": {
         "TITLE": "Tráfego",
         "SUBTITLE": "Gasto × funil do hub: Meta × hub, custo por etapa, retorno e metas",
-        "NOT_CONFIGURED": "O painel de tráfego ainda não está configurado. Defina RAMON_METABASE_MARKETING_ID com o número do dashboard no Metabase."
+        "NOT_CONFIGURED": "O painel de tráfego ainda não está configurado. Defina RAMON_METABASE_MARKETING_ID com o número do dashboard no Metabase.",
+        "LOAD_ERROR": "Não foi possível carregar o painel.",
+        "RETRY": "Tentar de novo"
       },
       "CUSTOS": {
         "TITLE": "Custos e metas",

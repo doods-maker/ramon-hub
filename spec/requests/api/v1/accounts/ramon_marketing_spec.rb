@@ -34,6 +34,13 @@ RSpec.describe 'Ramon Marketing API', type: :request do
     expect(MarketingCusto.count).to eq(0)
   end
 
+  it 'tese de outra conta não entra' do
+    de_fora = create(:thesis, account: create(:account), name: 'Tese de fora')
+    post "#{url}/custos", params: { data: '2026-11-05', valor: '10', categoria: 'outro', thesis_id: de_fora.id }, headers: auth, as: :json
+    expect(response).to have_http_status(:not_found)
+    expect(MarketingCusto.count).to eq(0)
+  end
+
   it 'custo inválido volta 422 com a mensagem' do
     post "#{url}/custos", params: { data: '2026-11-05', valor: '0', categoria: 'xyz' }, headers: auth, as: :json
     expect(response).to have_http_status(:unprocessable_entity)
