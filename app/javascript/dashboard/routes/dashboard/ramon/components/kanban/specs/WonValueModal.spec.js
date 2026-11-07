@@ -7,9 +7,9 @@ const montar = props =>
 describe('WonValueModal.vue', () => {
   it('sem pedir motivo, não mostra o campo e confirma como hoje', async () => {
     const wrapper = montar({});
-    expect(wrapper.find('[data-testid="won-motivo-input"]').exists()).toBe(
-      false
-    );
+    expect(
+      wrapper.find('[data-testid="motivo-pula-documentos"]').exists()
+    ).toBe(false);
     await wrapper.find('[data-testid="won-value-skip"]').trigger('click');
     expect(wrapper.emitted('confirmValue')[0]).toEqual([{ value: null }]);
   });
@@ -21,11 +21,11 @@ describe('WonValueModal.vue', () => {
     expect(salvar().attributes('disabled')).toBeDefined();
     expect(pular().attributes('disabled')).toBeDefined();
 
-    await wrapper.find('[data-testid="won-motivo-input"]').setValue('  ');
+    await wrapper.find('[data-testid="motivo-pula-documentos"]').setValue('  ');
     expect(salvar().attributes('disabled')).toBeDefined();
 
     await wrapper
-      .find('[data-testid="won-motivo-input"]')
+      .find('[data-testid="motivo-pula-documentos"]')
       .setValue(' Cliente já trouxe tudo ');
     await pular().trigger('click');
     expect(wrapper.emitted('confirmValue')[0]).toEqual([

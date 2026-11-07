@@ -173,7 +173,7 @@ describe('BulkActionsBar', () => {
     const modal = wrapper.findComponent(ConfirmModal);
     expect(modal.props('confirmDisabled')).toBe(true);
     await wrapper
-      .find('[data-testid="bulk-won-motivo"]')
+      .find('[data-testid="motivo-pula-documentos"]')
       .setValue('Pasta completa');
     expect(modal.props('confirmDisabled')).toBe(false);
     modal.vm.$emit('confirm');

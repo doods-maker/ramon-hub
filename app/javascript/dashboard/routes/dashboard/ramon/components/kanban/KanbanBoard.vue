@@ -13,7 +13,8 @@ import { useAdmin } from 'dashboard/composables/useAdmin';
 import { CAMPO } from '../../helpers/ui';
 import { leadsToCsv } from '../../helpers/leadsCsv';
 import { mensagemErro } from '../../helpers/erro';
-import { entraNoGanho, pulaDocumentos } from '../../helpers/stage';
+import { entraNoGanho } from '../../helpers/stage';
+import { usePulaDocumentos } from '../../composables/usePulaDocumentos';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import FilterChips from './FilterChips.vue';
@@ -226,24 +227,14 @@ const pendingLead = computed(
     pendingMove.value &&
     (findLead(pendingMove.value.id) || pendingMove.value.lead)
 );
-const wonPedeMotivo = computed(() => {
-  const lead = pendingLead.value;
-  return pulaDocumentos(
+const { pedeMotivo, anotar } = usePulaDocumentos();
+const wonPedeMotivo = computed(() =>
+  pedeMotivo(
     findStage(pendingMove.value?.leadStageId),
-    findStage(lead?.lead_stage_id),
-    lead,
-    stages.value,
-    store.getters['leadConfig/getEtapaDocumentos']
-  );
-});
-const notaPulaDocumentos = (id, leadStageId, motivo) =>
-  LeadsAPI.createNote(
-    id,
-    t('RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS', {
-      etapa: findStage(leadStageId)?.name,
-      motivo,
-    })
-  ).catch(() => useAlert(t('RAMON.FUNIL.WON.NOTA_ERRO')));
+    findStage(pendingLead.value?.lead_stage_id),
+    pendingLead.value
+  )
+);
 
 const confirmWon = async ({ value, motivo }) => {
   if (!pendingMove.value) return;
@@ -261,7 +252,7 @@ const confirmWon = async ({ value, motivo }) => {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     return;
   }
-  if (motivo) notaPulaDocumentos(id, leadStageId, motivo);
+  if (motivo) anotar(id, findStage(leadStageId), motivo);
   pendingMove.value = null;
   wonModalOpen.value = false;
 };

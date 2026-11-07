@@ -3,9 +3,9 @@ import { ref, computed, onMounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import Button from 'dashboard/components-next/button/Button.vue';
+import MotivoPulaDocumentos from '../MotivoPulaDocumentos.vue';
 import {
   CAMPO,
-  TEXTAREA,
   ROTULO,
   FUNDO_JANELA,
   JANELA,
@@ -78,15 +78,7 @@ onKeyStroke('Escape', cancel);
       >
         {{ $t('RAMON.FUNIL.WON.INVALID') }}
       </p>
-      <label v-if="pedeMotivo" :class="ROTULO" class="mt-3">
-        {{ $t('RAMON.FUNIL.WON.MOTIVO_PULA_DOCUMENTOS') }}
-        <textarea
-          v-model="motivo"
-          data-testid="won-motivo-input"
-          rows="3"
-          :class="TEXTAREA"
-        />
-      </label>
+      <MotivoPulaDocumentos v-if="pedeMotivo" v-model="motivo" class="mt-3" />
       <div :class="RODAPE_JANELA">
         <Button
           data-testid="won-value-skip"

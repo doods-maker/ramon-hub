@@ -10,11 +10,9 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
 import MiniEsteira from './MiniEsteira.vue';
-import {
-  DEFAULT_STAGE_COLOR,
-  entraNoGanho,
-  pulaDocumentos,
-} from '../../helpers/stage';
+import { DEFAULT_STAGE_COLOR, entraNoGanho } from '../../helpers/stage';
+import { usePulaDocumentos } from '../../composables/usePulaDocumentos';
+import MotivoPulaDocumentos from '../MotivoPulaDocumentos.vue';
 import LeadNotes from './LeadNotes.vue';
 import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
@@ -57,8 +55,6 @@ import {
   MENU,
   CAMPO_GRANDE,
   SELECT_GRANDE,
-  TEXTAREA,
-  ROTULO,
 } from '../../helpers/ui';
 
 const props = defineProps({
@@ -201,6 +197,7 @@ const wonMotivo = ref('');
 const faltaMotivo = computed(
   () => wonPedeMotivo.value && !wonMotivo.value.trim()
 );
+const { pedeMotivo, anotar } = usePulaDocumentos();
 
 watch(
   () => props.lead,
@@ -362,13 +359,7 @@ const onStageChange = targetId => {
   const origem = stages.value.find(s => s.id === props.lead?.lead_stage_id);
   if (entraNoGanho(target, origem)) {
     wonValue.value = formatBrl(props.lead?.value);
-    wonPedeMotivo.value = pulaDocumentos(
-      target,
-      origem,
-      props.lead,
-      stages.value,
-      store.getters['leadConfig/getEtapaDocumentos']
-    );
+    wonPedeMotivo.value = pedeMotivo(target, origem, props.lead);
     wonMotivo.value = '';
     wonPrompt.value = true;
     return;
@@ -389,18 +380,8 @@ const commitWon = async extra => {
   const target = stageId.value;
   const ok = await commitStage(target, extra);
   if (!ok || !motivo) return;
-  try {
-    await LeadsAPI.createNote(
-      props.lead.id,
-      t('RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS', {
-        etapa: stages.value.find(s => s.id === target)?.name,
-        motivo,
-      })
-    );
-    notesTick.value += 1;
-  } catch (e) {
-    useAlert(t('RAMON.FUNIL.WON.NOTA_ERRO'));
-  }
+  const etapa = stages.value.find(s => s.id === target);
+  if (await anotar(props.lead.id, etapa, motivo)) notesTick.value += 1;
 };
 const confirmWonStage = () => {
   const parsed = parseBrlInput(wonValue.value);
@@ -1135,15 +1116,7 @@ const discard = async () => {
                 :class="CAMPO"
                 @keyup.enter="confirmWonStage"
               />
-              <label v-if="wonPedeMotivo" :class="ROTULO">
-                {{ $t('RAMON.FUNIL.WON.MOTIVO_PULA_DOCUMENTOS') }}
-                <textarea
-                  v-model="wonMotivo"
-                  data-testid="stage-won-motivo"
-                  rows="3"
-                  :class="TEXTAREA"
-                />
-              </label>
+              <MotivoPulaDocumentos v-if="wonPedeMotivo" v-model="wonMotivo" />
               <div class="flex justify-end gap-2">
                 <Button
                   data-testid="stage-won-skip"

@@ -10,6 +10,7 @@ import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
+import MotivoPulaDocumentos from '../../MotivoPulaDocumentos.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -781,14 +782,9 @@ describe('LeadPanelBody', () => {
       await wrapper.find('[data-testid="panel-stage"]').setValue(2);
       const salvar = () => wrapper.find('[data-testid="stage-won-save"]');
       expect(salvar().attributes('disabled')).toBeDefined();
-      // a label envolve o campo (clicar no rótulo foca o texto)
-      expect(
-        wrapper.find('label textarea[data-testid="stage-won-motivo"]').exists()
-      ).toBe(true);
-
       await wrapper
-        .find('[data-testid="stage-won-motivo"]')
-        .setValue('Já trouxe tudo');
+        .findComponent(MotivoPulaDocumentos)
+        .vm.$emit('update:modelValue', 'Já trouxe tudo');
       await salvar().trigger('click');
       await flushPromises();
       expect(update).toHaveBeenCalledWith(expect.anything(), {
@@ -805,9 +801,7 @@ describe('LeadPanelBody', () => {
     it('tese sem a chave: sem campo de motivo', async () => {
       const wrapper = mountBody();
       await wrapper.find('[data-testid="panel-stage"]').setValue(2);
-      expect(wrapper.find('[data-testid="stage-won-motivo"]').exists()).toBe(
-        false
-      );
+      expect(wrapper.findComponent(MotivoPulaDocumentos).exists()).toBe(false);
     });
   });
 

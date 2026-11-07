@@ -11,13 +11,10 @@ import { vOnClickOutside } from '@vueuse/components';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
-import LeadsAPI from 'dashboard/api/leads';
-import {
-  DEFAULT_STAGE_COLOR,
-  entraNoGanho,
-  pulaDocumentos,
-} from '../../helpers/stage';
-import { CARTAO, CAMPO, LINHA, MENU, ROTULO, TEXTAREA } from '../../helpers/ui';
+import { DEFAULT_STAGE_COLOR, entraNoGanho } from '../../helpers/stage';
+import { usePulaDocumentos } from '../../composables/usePulaDocumentos';
+import { CARTAO, CAMPO, LINHA, MENU } from '../../helpers/ui';
+import MotivoPulaDocumentos from '../MotivoPulaDocumentos.vue';
 import LostReasonModal from './LostReasonModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 
@@ -78,6 +75,7 @@ const stageOfLead = id => {
   const lead = getters['leads/getLeads']?.value?.find(l => l.id === id);
   return stages.value.find(s => s.id === lead?.lead_stage_id);
 };
+const { pedeMotivo, anotar } = usePulaDocumentos();
 const leadDe = id => getters['leads/getLeads']?.value?.find(l => l.id === id);
 
 const pickStage = stage => {
@@ -89,13 +87,7 @@ const pickStage = stage => {
   if (selectedIds.value.some(id => entraNoGanho(stage, stageOfLead(id)))) {
     closeMenus();
     pulandoIds.value = selectedIds.value.filter(id =>
-      pulaDocumentos(
-        stage,
-        stageOfLead(id),
-        leadDe(id),
-        stages.value,
-        store.getters['leadConfig/getEtapaDocumentos']
-      )
+      pedeMotivo(stage, stageOfLead(id), leadDe(id))
     );
     wonMotivo.value = '';
     pendingWonStage.value = stage;
@@ -122,15 +114,7 @@ const confirmWon = async () => {
   const stage = pendingWonStage.value;
   const ok = await runBulk({ fields: { lead_stage_id: stage.id } });
   if (!ok) return;
-  const nota = t('RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS', {
-    etapa: stage.name,
-    motivo: wonMotivo.value.trim(),
-  });
-  pulandoIds.value.forEach(id =>
-    LeadsAPI.createNote(id, nota).catch(() =>
-      useAlert(t('RAMON.FUNIL.WON.NOTA_ERRO'))
-    )
-  );
+  pulandoIds.value.forEach(id => anotar(id, stage, wonMotivo.value.trim()));
   pendingWonStage.value = null;
 };
 
@@ -312,15 +296,11 @@ onKeyStroke('Escape', () => {
         @confirm="confirmWon"
         @cancel="pendingWonStage = null"
       >
-        <label v-if="pulandoIds.length" :class="ROTULO" class="mt-3">
-          {{ $t('RAMON.FUNIL.WON.MOTIVO_PULA_DOCUMENTOS') }}
-          <textarea
-            v-model="wonMotivo"
-            data-testid="bulk-won-motivo"
-            rows="3"
-            :class="TEXTAREA"
-          />
-        </label>
+        <MotivoPulaDocumentos
+          v-if="pulandoIds.length"
+          v-model="wonMotivo"
+          class="mt-3"
+        />
       </ConfirmModal>
     </Transition>
   </div>
