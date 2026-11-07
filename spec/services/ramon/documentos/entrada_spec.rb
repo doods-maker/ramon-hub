@@ -29,6 +29,15 @@ RSpec.describe Ramon::Documentos::Entrada do
       expect(historico.size).to eq(1)
       expect(avisados).to be_empty
     end
+
+    it 'liga o relógio da cobrança: entrou_em agora, e as marcas de uma passagem anterior somem (spec §7)' do
+      lead.update_columns(custom_attributes: { 'documentos_cobranca' => { 'abertura_em' => 3.days.ago.iso8601 }, 'outro' => 1 }) # rubocop:disable Rails/SkipsModelValidations
+
+      freeze_time do
+        described_class.call(lead.reload)
+        expect(lead.reload.custom_attributes).to eq('documentos_cobranca' => { 'entrou_em' => Time.current.iso8601 }, 'outro' => 1)
+      end
+    end
   end
 
   context 'without conversa de WhatsApp' do
@@ -62,5 +71,6 @@ RSpec.describe Ramon::Documentos::Entrada do
     expect(conversa.custom_attributes).to include('ia_pausa' => 'pausada')
     expect(avisados).to eq([sdr.id])
     expect(historico.first).to include('sem IA')
+    expect(lead.reload.custom_attributes).not_to have_key('documentos_cobranca') # sem IA, sem cobrança automática
   end
 end

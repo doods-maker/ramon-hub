@@ -9,6 +9,8 @@ module LeadDocs
     before_save -> { self.portal_token = nil }, if: -> { will_save_change_to_lead_stage_id? && lead_stage&.is_lost }
     # Desmarcar "recebido" solta o anexo e o vínculo do Drive daquele item (o arquivo no Drive fica: é do cliente).
     before_save :soltar_docs_desmarcados, if: :custom_attributes_changed?
+    # Documento novo (conversa, Painel do Cliente ou pessoa: todos gravam aqui) alimenta o relógio da cobrança de Documentos.
+    before_save :marcar_documento_novo, if: :custom_attributes_changed?
   end
 
   # Contagem do checklist de documentos.
@@ -43,6 +45,20 @@ module LeadDocs
     itens = attrs.dig('drive', 'itens')
     attrs['drive']['itens'] = recebidos.call(itens) if itens.is_a?(Hash)
     self.custom_attributes = attrs if attrs != custom_attributes.to_h
+  end
+
+  # Só lead que entrou pela cobrança (Ramon::Documentos::Entrada grava a chave): algum item passou a recebido neste save.
+  def marcar_documento_novo
+    chave = Ramon::Documentos::Relogio::CHAVE
+    cobranca = custom_attributes&.dig(chave)
+    return unless cobranca.is_a?(Hash) && recebeu_documento?
+
+    self.custom_attributes = custom_attributes.merge(chave => cobranca.merge('ultimo_documento_em' => Time.current.iso8601))
+  end
+
+  def recebeu_documento?
+    antes = custom_attributes_was.to_h['doc_status'] || {}
+    custom_attributes['doc_status'].to_h.any? { |id, status| status == 'recebido' && antes[id] != 'recebido' }
   end
 
   def doc_items
