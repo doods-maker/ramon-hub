@@ -92,6 +92,11 @@ const DASHBOARD = {
   week: {
     won: 3,
     won_since: diasAtras(0).slice(0, 10),
+    won_prev: 1,
+    won_prev_window: {
+      inicio: '2026-10-26T00:00:00-03:00',
+      fim: '2026-10-31T14:00:00-03:00',
+    },
     nps: { media: 9.2, respostas: 6 },
   },
   funnel: [

@@ -16,6 +16,17 @@ describe('variacao', () => {
     });
   });
 
+  it("contagem pequena ('n'): diferença absoluta, também a partir de zero", () => {
+    expect(variacao(3, 1, { unidade: 'n' })).toEqual({
+      seta: 'sobe',
+      n: 2,
+      pontos: false,
+      absoluto: true,
+      tom: 'teal',
+    });
+    expect(variacao(2, 0, { unidade: 'n' })).toMatchObject({ n: 2 });
+  });
+
   it('sentido max (menor é melhor): subir é ruim', () => {
     expect(variacao(8, 5, { unidade: 'min', sentido: 'max' })).toMatchObject({
       seta: 'sobe',

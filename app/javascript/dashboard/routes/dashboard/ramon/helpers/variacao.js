@@ -2,7 +2,8 @@
 // todo número com período e variação). O backend manda o anterior já cortado
 // no mesmo ponto (1–18/out × 1–18/nov), então a comparação é justa.
 
-// '%' compara em pontos percentuais; o resto em % de mudança.
+// '%' compara em pontos percentuais; 'n' (contagem pequena: 3 ganhos × 1) em
+// diferença absoluta, porque "▲ 200%" engana; o resto em % de mudança.
 // sentido 'max' = menor é melhor (1ª resposta, cancelamento): subir é ruim.
 export const variacao = (
   atual,
@@ -11,17 +12,21 @@ export const variacao = (
 ) => {
   if (atual == null || anterior == null) return null;
   const pontos = unidade === '%';
-  if (!pontos && anterior === 0) return null;
-  const delta = pontos
-    ? atual - anterior
-    : ((atual - anterior) / anterior) * 100;
+  const absoluto = unidade === 'n';
+  if (!pontos && !absoluto && anterior === 0) return null;
+  const delta =
+    pontos || absoluto
+      ? atual - anterior
+      : ((atual - anterior) / anterior) * 100;
   const n = Math.round(Math.abs(delta));
-  if (n === 0) return { seta: 'igual', n: 0, pontos, tom: 'slate' };
+  const extra = absoluto ? { absoluto } : {};
+  if (n === 0) return { seta: 'igual', n: 0, pontos, ...extra, tom: 'slate' };
   const sobe = delta > 0;
   return {
     seta: sobe ? 'sobe' : 'desce',
     n,
     pontos,
+    ...extra,
     tom: sobe === (sentido !== 'max') ? 'teal' : 'ruby',
   };
 };

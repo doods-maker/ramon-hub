@@ -107,7 +107,22 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
       created: leads_funil.where(created_at: 7.days.ago..).count,
       lost_reasons_30d: lost_reasons_30d,
       nps: nps_section
+    }.merge(semana_anterior_section)
+  end
+
+  def semana_anterior_section
+    {
+      won_prev: leads_funil.where(won_at: semana_anterior).count,
+      won_prev_window: { inicio: semana_anterior.begin.iso8601, fim: semana_anterior.end.iso8601 }
     }
+  end
+
+  # Semana passada até o mesmo momento: variação justa do "Ganhos na semana".
+  def semana_anterior
+    @semana_anterior ||= begin
+      inicio = Ramon::LeadRadar.week_start
+      (inicio - 1.week)...(Time.current.in_time_zone(inicio.time_zone) - 1.week)
+    end
   end
 
   def created_by_channel

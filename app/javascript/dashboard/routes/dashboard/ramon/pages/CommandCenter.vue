@@ -19,6 +19,7 @@ import FunnelConversion from '../components/command/FunnelConversion.vue';
 import TeamWeek from '../components/command/TeamWeek.vue';
 import LossesByThesis from '../components/command/LossesByThesis.vue';
 import Sparkline from '../components/command/Sparkline.vue';
+import Variacao from '../components/Variacao.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import {
   CARTAO,
@@ -165,6 +166,12 @@ const kpis = computed(() => [
     label: t('RAMON.COMMAND.KPI.WON_WEEK'),
     class: 'text-n-teal-11',
     filter: { wonSince: week.value.won_since },
+    // Vencidas/hoje/parados/LP/previsão são retrato de agora: sem anterior.
+    variacao: {
+      atual: week.value.won ?? null,
+      anterior: week.value.won_prev ?? null,
+      periodo: week.value.won_prev_window ?? null,
+    },
   },
   {
     key: 'forecast',
@@ -446,6 +453,12 @@ useKeyboardEvents({
               {{ kpi.value }}
             </p>
             <p class="mt-0.5 text-[11px] text-n-slate-10">{{ kpi.label }}</p>
+            <Variacao
+              v-if="kpi.variacao"
+              v-bind="kpi.variacao"
+              unidade="n"
+              class="mt-0.5"
+            />
           </component>
         </div>
         <!-- SLA de 1ª resposta: sub-linha discreta (não cabe no grid de 6) -->

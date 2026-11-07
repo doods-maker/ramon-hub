@@ -143,7 +143,16 @@ const payload = () => ({
       is_lost: false,
     },
   ],
-  week: { won: 5, won_since: '2026-07-20', nps: { media: 9.4, respostas: 3 } },
+  week: {
+    won: 5,
+    won_since: '2026-07-20',
+    won_prev: 2,
+    won_prev_window: {
+      inicio: '2026-07-13T00:00:00-03:00',
+      fim: '2026-07-15T10:00:00-03:00',
+    },
+    nps: { media: 9.4, respostas: 3 },
+  },
   history: [
     { date: '2026-07-22', leads_count: 30, value_sum: 590000 },
     { date: '2026-07-23', leads_count: 32, value_sum: 616000 },
@@ -253,6 +262,18 @@ describe('CommandCenter.vue', () => {
       '6'
     );
     expect(wrapper.find('[data-testid="kpi-won_week"]').text()).toContain('5');
+    // ganhos: diferença absoluta contra a semana passada até o mesmo momento
+    expect(
+      wrapper
+        .find('[data-testid="kpi-won_week"] [data-testid="variacao"]')
+        .text()
+    ).toContain('▲ 3');
+    // retrato de agora: sem variação
+    expect(
+      wrapper
+        .find('[data-testid="kpi-overdue"] [data-testid="variacao"]')
+        .exists()
+    ).toBe(false);
     expect(wrapper.find('[data-testid="kpi-forecast"]').text()).toContain('R$');
     expect(wrapper.find('[data-testid="sla-line"]').text()).toContain(
       'RAMON.COMMAND.SLA.BREACHED'

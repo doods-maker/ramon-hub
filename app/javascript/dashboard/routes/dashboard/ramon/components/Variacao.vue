@@ -32,6 +32,7 @@ const dado = computed(() =>
 const numero = computed(() => {
   const v = dado.value;
   if (v.seta === 'igual') return t('RAMON.VARIACAO.IGUAL');
+  if (v.absoluto) return `${SETA[v.seta]} ${v.n}`;
   return `${SETA[v.seta]} ${t(v.pontos ? 'RAMON.VARIACAO.PONTOS' : 'RAMON.VARIACAO.PORCENTO', { n: v.n })}`;
 });
 const vs = computed(() => {
