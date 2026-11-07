@@ -59,6 +59,15 @@ RSpec.describe Ramon::FunilRegras do
       expect(lead.value).to eq(valor_antes)
     end
 
+    it 'com outra etapa de ganho antes de Fechado, o lead cai em Fechado' do
+      ligar('zapsign_ganho')
+      account.lead_stages.create!(name: 'Ganho extra', is_won: true, position: -1)
+
+      described_class.contrato_assinado(lead)
+
+      expect(lead.reload.lead_stage.label).to eq('fase-fechado')
+    end
+
     it 'lead em Perdido vira Ganho' do
       ligar('zapsign_ganho')
       lead.update!(lead_stage: account.lead_stages.find_by(is_lost: true))

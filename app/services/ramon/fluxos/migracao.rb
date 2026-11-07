@@ -31,11 +31,13 @@ module Ramon::Fluxos::Migracao
       env: 'RAMON_FLUXO_LEAD_GANHO', faz: 'o lead ganho (dossiê, NPS e caso no ADVBOX)',
       fluxos: { 'lead_ganho' => 'lead_ganho' }.freeze
     },
-    # B4.5: os eventos do ADVBOX (Ramon::Fluxos::EventosAdvbox). O mover_etapa vem sem etapa: a de ganho da conta (a do código).
+    # B4.5: os eventos do ADVBOX (Ramon::Fluxos::EventosAdvbox). O mover_etapa vem sem etapa: a de ganho da conta (Ramon::EtapaDeGanho).
     'eventos_advbox' => {
       env: 'RAMON_FLUXO_EVENTOS_ADVBOX', faz: 'os eventos do ADVBOX',
       fluxos: { 'eventos_advbox' => 'evento_advbox' }.freeze,
-      preparar: ->(account, desenho) { Ramon::Fluxos::Migracao.com_etapa(desenho, account.lead_stages.find_by!(is_won: true).id) }
+      preparar: lambda { |account, desenho|
+        Ramon::Fluxos::Migracao.com_etapa(desenho, (Ramon::EtapaDeGanho.principal(account) || raise(ActiveRecord::RecordNotFound)).id)
+      }
     },
     # B5-conta: o Resumo do dia (Ramon::Fluxos::ResumoDoDia), no gatilho Horário da conta. env_antiga: o nome de antes,
     # lido só sem o novo — a imagem nova sobe antes da troca na VPS sem virar a chave.

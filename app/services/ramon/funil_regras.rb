@@ -13,7 +13,7 @@ class Ramon::FunilRegras
   end
 
   def self.marcar_ganho(lead)
-    ganho = lead.account.lead_stages.find_by(is_won: true)
+    ganho = Ramon::EtapaDeGanho.entrada(lead)
     return if ganho.nil?
 
     lead.with_lock do

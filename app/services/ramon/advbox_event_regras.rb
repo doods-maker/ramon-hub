@@ -9,7 +9,7 @@ class Ramon::AdvboxEventRegras
   end
 
   def contrato_fechado(lead, name)
-    won_stage = @account.lead_stages.find_by(is_won: true)
+    won_stage = Ramon::EtapaDeGanho.entrada(lead)
     lead.update!(lead_stage: won_stage) if won_stage && !lead.lead_stage.is_won
     activity(lead, 'advbox_contrato_fechado', "ADVBOX: #{name}")
     notify(lead, 'Contrato fechado no ADVBOX', "#{rotulo(lead)}: lead marcado como ganho no hub")
