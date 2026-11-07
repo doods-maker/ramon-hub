@@ -11,6 +11,16 @@ RSpec.describe Ramon::Documentos::Assistente do
     expect(texto).not_to include('```')
   end
 
+  # A descrição do Captain::Assistant vai até 255 caracteres (a rake caiu nisso em produção, 07/11): ela leva só o
+  # 1º bloco do texto aprovado; os demais blocos viram as regras gerais (response_guidelines), como no assistente de vendas.
+  it 'divide o texto aprovado: 1º bloco na descrição (até 255) e os demais nas regras gerais, sem perder nada', :aggregate_failures do
+    expect(described_class.descricao).to start_with('Você é da equipe do escritório Ramon Antonio Advogados')
+    expect(described_class.descricao.length).to be <= 255
+    expect(described_class.diretrizes.first).to start_with('COMO FALAR')
+    expect(described_class.diretrizes.last).to start_with('SENHA DO GOV.BR')
+    expect([described_class.descricao, *described_class.diretrizes].join("\n\n")).to eq(described_class.instrucoes.strip)
+  end
+
   context 'with o Captain', if: ChatwootApp.enterprise? do
     let(:account) { create(:account) }
     let(:documentos) { Ramon::EtapasPosVenda.criar!(account).first }
@@ -27,7 +37,9 @@ RSpec.describe Ramon::Documentos::Assistente do
     it 'cria o assistente com as instruções, a config técnica da caixa, as tools de Documentos e liga à etapa', :aggregate_failures do
       assistente = described_class.criar_ou_atualizar!(account)
 
-      expect(assistente).to have_attributes(name: 'Documentos', description: described_class.instrucoes)
+      expect(assistente).to have_attributes(name: 'Documentos', description: described_class.descricao,
+                                            response_guidelines: described_class.diretrizes)
+      expect(assistente.config['instructions']).to eq(described_class.instrucoes)
       expect(assistente.config).to include('temperature' => 0.4, 'product_name' => 'Banca', 'handoff_message' => 'Já chamei alguém')
       expect(assistente.scenarios.enabled.flat_map(&:tools)).to match_array(described_class::TOOLS)
       expect(documentos.reload.captain_assistant).to eq(assistente)
