@@ -76,6 +76,7 @@ RSpec.describe Ramon::DocMatchService do
     expect(attrs.dig('doc_anexos', rg.id.to_s)).to eq(message.attachments.first.id)
     expect(attrs['doc_sugestao']).to be_nil
     expect(lead.docs_completos_em).to be_present
+    expect(Notification.where(primary_actor: lead, notification_type: 'ramon_fluxo_aviso')).to be_empty # aviso só em Documentos
   end
 
   it 'em lead ganho, mesmo com visão, só sugere (marcar sobe pro Drive/ADVBOX)' do
@@ -148,6 +149,20 @@ RSpec.describe Ramon::DocMatchService do
       expect(attrs.dig('doc_status', rg.id.to_s)).to eq('recebido')
       expect(attrs.dig('doc_anexos', rg.id.to_s)).to eq(message.attachments.first.id)
       expect(attrs['doc_sugestao']).to be_nil
+    end
+
+    it 'avisa o SDR para verificar; o push leva só a tese, nunca o nome', :aggregate_failures do
+      sdr = create(:user, account: account, role: :agent, auto_offline: false)
+      lead.update_columns(sdr_id: sdr.id, name: 'Fulano de Tal') # rubocop:disable Rails/SkipsModelValidations
+      allow(Ramon::NtfyPushJob).to receive(:perform_later)
+
+      perform_com(%({"item_id": #{rg.id}}))
+
+      avisos = Notification.where(primary_actor: lead, notification_type: 'ramon_fluxo_aviso')
+      expect(avisos.pluck(:user_id)).to eq([sdr.id])
+      expect(avisos.first.meta['label']).to eq('IA marcou RG de Fulano de Tal: verificar')
+      expect(Ramon::NtfyPushJob).to have_received(:perform_later)
+        .with(lead.id, title: "IA marcou documento (#{thesis.name})", body: satisfy { |corpo| corpo.exclude?('Fulano') })
     end
 
     it 'chave desligada: só sugere, como em qualquer lead ganho', :aggregate_failures do
