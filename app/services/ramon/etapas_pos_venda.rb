@@ -19,10 +19,13 @@ module Ramon::EtapasPosVenda
     end
   end
 
+  # Reaproveitada pelo label: vira ganho (is_won/probability), mas nome e cor ficam como a equipe deixou.
   def criar_etapa!(account, attrs)
-    account.lead_stages.find_or_create_by!(label: attrs[:label]) do |stage|
-      stage.assign_attributes(name: attrs[:name], color: attrs[:color], is_won: true, probability: 100)
+    stage = account.lead_stages.find_or_create_by!(label: attrs[:label]) do |nova|
+      nova.assign_attributes(name: attrs[:name], color: attrs[:color])
     end
+    stage.update!(is_won: true, probability: 100)
+    stage
   end
 
   # As novas logo depois de Fechado; as seguintes (Perdido) andam para depois delas.

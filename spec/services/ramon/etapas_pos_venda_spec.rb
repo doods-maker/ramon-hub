@@ -15,6 +15,14 @@ RSpec.describe Ramon::EtapasPosVenda do
     expect(account.lead_stages.find_by!(label: 'fase-perdido')).to be_is_lost
   end
 
+  it 'etapa já existente com o label vira ganho, sem mudar nome nem cor', :aggregate_failures do
+    antiga = account.lead_stages.create!(name: 'Docs antiga', label: 'fase-documentos', color: '#123456', probability: 30)
+
+    described_class.criar!(account)
+
+    expect(antiga.reload).to have_attributes(is_won: true, probability: 100, name: 'Docs antiga', color: '#123456')
+  end
+
   it 'rodar de novo não duplica nem mexe na ordem' do
     described_class.criar!(account)
     antes = funil
