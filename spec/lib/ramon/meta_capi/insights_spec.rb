@@ -28,6 +28,17 @@ RSpec.describe Ramon::MetaCapi::Insights do
       expect(linhas.first).to include(data: Date.new(2026, 10, 14), spend: BigDecimal('10.50'), impressions: 1000, clicks: 12)
     end
 
+    it 'traz conjunto, objetivo e os resultados que a Meta conta (conversas e leads)' do
+      acoes = [{ action_type: 'onsite_conversion.messaging_conversation_started_7d', value: '7' },
+               { action_type: 'lead', value: '2' }, { action_type: 'link_click', value: '30' }]
+      anuncio = item('a1', '2026-10-14').merge(adset_id: 's1', adset_name: 'Conj', objective: 'OUTCOME_ENGAGEMENT', actions: acoes)
+      stub_request(:get, url).with(query: hash_including('fields' => /adset_id.*objective.*actions/)).to_return(json(data: [anuncio]))
+
+      linha = insights.por_anuncio(desde: Date.new(2026, 10, 14), ate: Date.new(2026, 10, 14)).first
+
+      expect(linha).to include(adset_id: 's1', adset_name: 'Conj', objetivo: 'OUTCOME_ENGAGEMENT', conversas: 7, leads_meta: 2)
+    end
+
     it 'transforma 429 em Transitorio e 400 em Recusado com HTTP e code' do
       stub_request(:get, url).with(query: hash_including({})).to_return(json({}, 429)).then
                              .to_return(json({ error: { code: 190 } }, 400))

@@ -203,3 +203,9 @@ ramon_meta_gasto_job:
   cron: '0 9 * * *'
   class: 'Ramon::MetaGastoJob'
   queue: scheduled_jobs
+
+# marketing: desempenho das peças publicadas (6h30 em Brasília; desligado por RAMON_IG_INSIGHTS)
+ramon_peca_metricas_job:
+  cron: '30 9 * * *'
+  class: 'Ramon::PecaMetricasJob'
+  queue: scheduled_jobs
