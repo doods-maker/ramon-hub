@@ -34,6 +34,7 @@ RSpec.describe Ramon::Documentos::CobrancaJob do
 
   def rodar(chave: 'on') = with_modified_env(RAMON_ETAPA_DOCUMENTOS: chave) { described_class.perform_now }
   def marcas = lead.reload.custom_attributes['documentos_cobranca']
+  def historico = lead.lead_activities.where(kind: 'documentos').pluck(:to_value)
   def enviadas = conversa.messages.outgoing.where(private: false)
   def notas_de_handoff = conversa.messages.where(private: true).select { |m| m.content_attributes[Ramon::Documentos::Handoff::MARCA] }
 
@@ -46,6 +47,9 @@ RSpec.describe Ramon::Documentos::CobrancaJob do
     expect(enviadas.count).to eq(1)
     expect(enviadas.last.content).to include('Oi, Maria!', '- CNIS completo')
     expect(marcas['abertura_em']).to be_present
+    expect(historico).to eq(['Cobrança: enviou a apresentação (texto livre, na janela de 24 h)'])
+    expect(LlmChamada.where(lead_id: lead.id).pluck(:funcao, :model, :custo_usd))
+      .to eq([['whatsapp_documentos', 'texto livre', BigDecimal('0.0068')]])
   end
 
   it 'chave desligada: nada acontece', :aggregate_failures do
@@ -89,6 +93,9 @@ RSpec.describe Ramon::Documentos::CobrancaJob do
     expect(marcas).to include('lembrete_1_em', 'silencio_em')
     expect(conversa.reload).to be_open
     expect(notas_de_handoff.map(&:content)).to contain_exactly(a_string_including('silêncio'))
+    expect(historico).to eq(['Cobrança: o lembrete 1 não saiu: janela de 24 h fechada e a caixa sem o modelo aprovado',
+                             'Cobrança: silêncio: a conversa foi para a equipe'])
+    expect(LlmChamada.where(lead_id: lead.id)).to be_empty
   end
 
   it 'acompanhamento: respondeu, 1 dia útil sem documento novo: sino ao SDR e a IA segue', :aggregate_failures do

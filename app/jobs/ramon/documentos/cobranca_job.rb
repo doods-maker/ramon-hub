@@ -11,7 +11,10 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
   queue_as :scheduled_jobs
 
   CHAVE = Ramon::Documentos::Relogio::CHAVE
-  ENVIOS = %i[abertura lembrete_1 lembrete_2].freeze
+  CONFIG = Ramon::Documentos::Relogio::CONFIG
+  NOMES = { abertura: 'a apresentação', lembrete_1: 'o lembrete 1', lembrete_2: 'o lembrete 2' }.freeze
+  ENVIOS = NOMES.keys.freeze
+  CANAIS = { texto: 'texto livre, na janela de 24 h', modelo: 'modelo da Meta, fora da janela de 24 h' }.freeze
   MOTIVOS = {
     silencio: 'Cobrança: silêncio — o cliente não respondeu à apresentação nem aos 2 lembretes (ou a janela do WhatsApp ' \
               'fechou e a caixa não tem o modelo aprovado).',
@@ -69,9 +72,18 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
     end
   end
 
+  # Cada envio: linha no histórico do lead e linha de custo em Uso e custo (texto livre também é cobrado desde 01/10/2026).
   def enviar(lead, passo)
-    return if Ramon::Documentos::Envio.mandar(lead, passo) != :sem_permissao
+    canal = Ramon::Documentos::Envio.mandar(lead, passo)
+    return sem_permissao(lead, passo) if canal == :sem_permissao
 
+    registrar(lead, "enviou #{NOMES.fetch(passo)} (#{CANAIS.fetch(canal)})")
+    Ramon::LlmUso.registrar_whatsapp(lead, model: canal == :modelo ? "modelo #{CONFIG.dig('modelo', 'nome')}" : 'texto livre',
+                                           custo_usd: CONFIG['custo_usd_por_mensagem'])
+  end
+
+  def sem_permissao(lead, passo)
+    registrar(lead, "#{NOMES.fetch(passo)} não saiu: janela de 24 h fechada e a caixa sem o modelo aprovado")
     lead.with_lock { marcar(lead, :silencio) }
     passar(lead, :silencio)
   end
@@ -81,6 +93,7 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
     Ramon::AvisoDaIa.avisar(lead, "#{lead.name} está em Documentos sem avanço hoje: faltam #{falta}",
                             "Documentos: sem avanço (#{Ramon::NtfyPushJob.rotulo(lead)})", 'A IA segue atendendo; confira se está andando',
                             user_ids: [Ramon::Documentos::Responsavel.de(lead)&.id].compact)
+    registrar(lead, 'acompanhamento: equipe avisada no sino, a IA segue atendendo')
   end
 
   # O motivo vai na nota que o handoff de Documentos lê (Ramon::Documentos::Handoff::MARCA); ele atribui, anota o que falta e avisa.
@@ -89,5 +102,9 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
     conversa.messages.create!(message_type: :outgoing, private: true, account_id: conversa.account_id, inbox_id: conversa.inbox_id,
                               content: MOTIVOS.fetch(passo), content_attributes: { Ramon::Documentos::Handoff::MARCA => true })
     conversa.bot_handoff!
+    registrar(lead, "#{passo == :silencio ? 'silêncio' : 'travado'}: a conversa foi para a equipe")
   end
+
+  # O mesmo tipo da entrada em Documentos (Ramon::Documentos::Entrada): o histórico do lead já sabe mostrar.
+  def registrar(lead, texto) = lead.lead_activities.create!(account: lead.account, kind: 'documentos', to_value: "Cobrança: #{texto}")
 end

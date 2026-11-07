@@ -15,7 +15,7 @@ const DESENHOS = Object.entries(ARQUIVOS).map(([caminho, d]) => [
 ]);
 
 describe('fluxos do sistema', () => {
-  it('são as 30 automações do código', () => {
+  it('são as 31 automações do código', () => {
     expect(DESENHOS.map(([chave]) => chave).sort()).toEqual([
       'acervo_pecas',
       'agente_hub',
@@ -25,6 +25,7 @@ describe('fluxos do sistema', () => {
       'cadencia',
       'chegada_cliente',
       'coach_objecao',
+      'cobranca_documentos',
       'contrato_limpo',
       'contrato_limpo_cancelado',
       'contrato_zapsign',
@@ -50,7 +51,7 @@ describe('fluxos do sistema', () => {
     ]);
   });
 
-  it('só Avisos do Painel e Publicar peças saem para fora sem uma pessoa no meio', () => {
+  it('só Avisos do Painel, Cobrança de documentos e Publicar peças saem para fora sem uma pessoa no meio', () => {
     const comSelo = Object.fromEntries(
       DESENHOS.filter(([, d]) => d.alcance).map(([chave, d]) => [
         chave,
@@ -59,6 +60,7 @@ describe('fluxos do sistema', () => {
     );
     expect(comSelo).toEqual({
       avisos_painel: 'fala_com_cliente',
+      cobranca_documentos: 'fala_com_cliente',
       publicar_pecas: 'publica',
     });
   });
@@ -132,7 +134,7 @@ describe('fluxos do sistema', () => {
     titulos.forEach(t => expect(t).not.toMatch(/24h/));
   });
 
-  it('23 regras fixas; as 7 sem o selo são as que rodam no fluxo (decisão do Eduardo 08/10)', () => {
+  it('24 regras fixas; as 7 sem o selo são as que rodam no fluxo (decisão do Eduardo 08/10)', () => {
     expect(
       DESENHOS.filter(([, d]) => !d.fixa)
         .map(([chave]) => chave)
