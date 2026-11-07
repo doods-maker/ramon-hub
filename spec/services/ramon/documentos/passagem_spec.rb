@@ -121,6 +121,18 @@ RSpec.describe Ramon::Documentos::Passagem do
           .with(lead.id, title: 'Jurídico: ANÁLISE DO CASO pendente (Tese Spec Passagem)', body: 'Veja o aviso no sino')
       end
     end
+
+    # Review do PR 6, item 4: sem erro no lead, o ADVBOX do Ganho só não rodou ainda; o retomar cria a tarefa quando rodar.
+    context 'when o caso do Ganho ainda não chegou do ADVBOX (sem lawsuits_id e sem erro)' do
+      let(:advbox) { {} }
+
+      it 'vai ao Jurídico sem tarefa e sem alarme' do
+        described_class.call(lead)
+
+        expect(lead.reload.lead_stage).to eq(juridico)
+        expect(avisos).to be_empty
+      end
+    end
   end
 
   it 'lead em Fechado (legado) com o checklist completo: nada muda (Review Focus 1)', :aggregate_failures do

@@ -10,7 +10,7 @@
 module Ramon::Documentos::Passagem
   CONFIG = Ramon::Documentos::Cobranca::CONFIG
   PROBLEMAS = {
-    sem_caso: 'o caso não existe no ADVBOX (o Ganho não abriu; veja o erro no lead). Ela sai sozinha quando o caso for aberto',
+    sem_caso: 'o Ganho não conseguiu abrir o caso no ADVBOX (veja o erro no lead). Ela sai sozinha quando o caso for aberto',
     recusada: 'o ADVBOX recusou. Criar à mão',
     sem_token: 'o hub está sem o token do ADVBOX. Criar à mão'
   }.freeze
@@ -65,6 +65,8 @@ module Ramon::Documentos::Passagem
     resultado = Ramon::AdvboxDocsTaskService.new(lead).analise_do_caso
     registrar_tarefa(lead, resultado)
     return unless PROBLEMAS.key?(resultado)
+    # Sem caso e sem erro: o ADVBOX do Ganho ainda não rodou (job na fila); o retomar, no fim dele, cria a tarefa.
+    return if resultado == :sem_caso && lead.custom_attributes&.dig('advbox', 'erro').blank?
 
     Ramon::AvisoDaIa.avisar(lead, "ANÁLISE DO CASO de #{lead.name} não foi criada no ADVBOX: #{PROBLEMAS.fetch(resultado)}",
                             "Jurídico: ANÁLISE DO CASO pendente (#{Ramon::NtfyPushJob.rotulo(lead)})", 'Veja o aviso no sino', user_ids: [])
