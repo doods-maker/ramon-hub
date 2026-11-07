@@ -52,6 +52,26 @@ RSpec.describe Ramon::Documentos::CobrancaJob do
       .to eq([['whatsapp_documentos', 'texto livre', BigDecimal('0.0068')]])
   end
 
+  it 'fora do horário comercial sai cedo, sem olhar lead nenhum' do
+    em_documentos(entrou_em: segunda - 1.minute)
+    allow(Ramon::Documentos::Relogio).to receive(:proximo_passo)
+
+    travel_to(segunda.change(hour: 20)) # sem bloco: já estamos dentro do travel_to do around
+    rodar
+
+    expect(Ramon::Documentos::Relogio).not_to have_received(:proximo_passo)
+  end
+
+  it 'conversa com uma pessoa (silêncio ou travado já passados para a equipe) nem entra na conta' do
+    em_documentos(entrou_em: segunda - 1.minute)
+    conversa.update!(status: :open)
+    allow(Ramon::Documentos::Relogio).to receive(:proximo_passo)
+
+    rodar
+
+    expect(Ramon::Documentos::Relogio).not_to have_received(:proximo_passo)
+  end
+
   it 'chave desligada: nada acontece', :aggregate_failures do
     em_documentos(entrou_em: segunda - 1.minute)
     rodar(chave: nil)

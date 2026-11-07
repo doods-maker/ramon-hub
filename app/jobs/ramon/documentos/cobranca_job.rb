@@ -22,7 +22,8 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
   }.freeze
 
   def perform
-    return unless Ramon::EtapaDeGanho.documentos_ligado?
+    # Fora do horário comercial nenhum passo vence (Relogio): nem consulta os leads.
+    return unless Ramon::EtapaDeGanho.documentos_ligado? && Ramon::Fluxos::Horario.comercial?(Time.current, CONFIG['horario'])
 
     candidatos.find_each do |lead|
       passo = reservar(lead)
@@ -34,9 +35,11 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
 
   private
 
+  # Conversa pendente (com a IA): quem está em silêncio ou travado já foi para uma pessoa (aberta) e só volta à conta quando ela
+  # devolver à IA, o que recomeça o ciclo (Ramon::Documentos::Cobranca.devolvida).
   def candidatos
-    Lead.joins(:lead_stage).where(lead_stages: { label: Ramon::EtapaDeGanho::DOCUMENTOS, is_won: true })
-        .where("leads.custom_attributes -> '#{CHAVE}' ->> 'entrou_em' IS NOT NULL")
+    Lead.joins(:lead_stage, :conversation).where(lead_stages: { label: Ramon::EtapaDeGanho::DOCUMENTOS, is_won: true })
+        .where(conversations: { status: :pending }).where("leads.custom_attributes -> '#{CHAVE}' ->> 'entrou_em' IS NOT NULL")
   end
 
   # Sob o lock (relê o lead): ainda em Documentos, algo pendente, conversa com a IA → o passo vencido, já marcado.
