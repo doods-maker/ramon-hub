@@ -12,7 +12,8 @@ RSpec.describe Ramon::AdvboxDocsTaskService do
     create(:lead, account: account, contact: contact, thesis: tese, lead_stage: won_stage, won_at: Time.zone.local(2026, 11, 3, 10),
                   custom_attributes: { 'advbox' => advbox, 'outro' => 'fica' })
   end
-  let(:pasta) { 'Clientes\Maria das Dores — 529.982.247-25\Tese de teste (B99) – 11.26 — COMPLETO\\' }
+  # O contato guarda o CPF só com os dígitos (Contact#prepare_cpf_attribute): é esse o nome da pasta no Drive.
+  let(:pasta) { 'Clientes\Maria das Dores — 52998224725\Tese de teste (B99) – 11.26 — COMPLETO\\' }
 
   around { |example| with_modified_env(ADVBOX_API_TOKEN: 'tok') { example.run } }
 
