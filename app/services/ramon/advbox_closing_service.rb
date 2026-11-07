@@ -7,6 +7,7 @@ class Ramon::AdvboxClosingService
   USERS_ID = 266_778     # Eduardo Schlata
   STAGE_ID = 3_736_299   # CONTRATO FECHADO (Marketing)
   TASK_ID = 8_745_394    # 1º CONTATO COM O LEAD
+  ANALISE_TASK_ID = 8_745_386 # ANÁLISE DO CASO (checklist completo na etapa Documentos: Ramon::AdvboxDocsTaskService)
 
   # Tese do hub → tipo de processo no AdvBox. Fora do mapa cai no default (a
   # tese-foco) com aviso [CONFERIR tipo] nas notas do caso.

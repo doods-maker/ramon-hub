@@ -45,6 +45,8 @@ class Ramon::DriveExportService
   # Onde a pasta do caso fica depois do concluir, para quem a procura pelo caminho (tarefas no ADVBOX, Recepção da esteira).
   def caminho_completo = "Clientes\\#{nome_pasta_cliente}\\#{nome_tese}#{COMPLETO}\\"
 
+  private
+
   def nome_pasta_cliente = [nome_cliente, @lead.contact&.cpf.presence].compact.join(' — ')
 
   def nome_tese = "#{@lead.thesis.name.delete('/\:*?"<>|').squish} – #{@lead.won_at.in_time_zone.strftime('%m.%y')}"
@@ -52,8 +54,6 @@ class Ramon::DriveExportService
   def nome_cliente
     @nome_cliente ||= (@lead.contact&.name.presence || @lead.name).to_s.strip
   end
-
-  private
 
   def drive_state = @lead.custom_attributes&.dig('drive') || {}
 

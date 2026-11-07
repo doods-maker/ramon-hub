@@ -1,11 +1,11 @@
 # Tarefas do hub no ADVBOX quando a pasta de documentos do caso fecha:
 # - perform: tarefa de upload manual para a controller (ADR-0002). Sem as envs, no-op.
 # - analise_do_caso: a ANÁLISE DO CASO (spec Etapa Documentos §8), no processo que o Ganho abriu, para o Eduardo enquanto a
-#   esteira está em teste, com o caminho da pasta da tese nas notas (a Recepção da esteira lê dali). Uma por caso: o id fica em
-#   advbox.analise_posts_id assim que a tarefa nasce (padrão step do AdvboxClosingService); ADVBOX fora do ar sobe o erro para
+#   esteira está em teste, com o caminho da pasta da tese nas notas (a Recepção da esteira lê dali). Uma por caso: conferida e
+#   criada sob o lock do lead, com o id gravado em advbox.analise_posts_id (jsonb_set) assim que a tarefa nasce; o before_save
+#   do lead (preservar) impede que quem regrava o custom_attributes inteiro apague a marca. ADVBOX fora do ar sobe o erro para
 #   o retry do job, que não duplica.
 class Ramon::AdvboxDocsTaskService
-  ANALISE_TASK_ID = 8_745_386 # ANÁLISE DO CASO
   # Só a sub-chave, num UPDATE: o resto do custom_attributes (gravado em paralelo por outros jobs) fica como está.
   GRAVAR_ANALISE = "custom_attributes = jsonb_set(COALESCE(custom_attributes, '{}'::jsonb), '{advbox}', " \
                    "COALESCE(custom_attributes -> 'advbox', '{}'::jsonb) || jsonb_build_object('analise_posts_id', ?::jsonb))".freeze
@@ -82,7 +82,7 @@ class Ramon::AdvboxDocsTaskService
   def payload_analise
     responsavel = Ramon::AdvboxClosingService::USERS_ID
     {
-      from: responsavel.to_s, guests: [responsavel], tasks_id: ANALISE_TASK_ID.to_s, lawsuits_id: lawsuit_id.to_s,
+      from: responsavel.to_s, guests: [responsavel], tasks_id: Ramon::AdvboxClosingService::ANALISE_TASK_ID.to_s, lawsuits_id: lawsuit_id.to_s,
       start_date: Time.zone.today.iso8601,
       comments: "Documentos completos no hub (lead ##{@lead.id}). Pasta da tese no Drive: #{pasta}"
     }
