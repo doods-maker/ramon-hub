@@ -35,7 +35,16 @@ const mesBr = valor =>
     month: 'short',
     year: 'numeric',
   });
-const numeroBr = valor => String(Number(valor)).replace('.', ',');
+// Mostra e lê no formato pt-BR: "1.215" é mil duzentos e quinze (o parseBrlInput
+// trataria como 1,215 — só pontos em grupos de 3 = milhar).
+const numeroBr = valor =>
+  Number(valor).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+const lerNumero = texto => {
+  const limpo = String(texto).trim();
+  if (/^\d{1,3}(\.\d{3})+$/.test(limpo))
+    return Number(limpo.replace(/\./g, ''));
+  return parseBrlInput(limpo);
+};
 
 // { '2026-10-01': { contratos: {id, valor, editada}, ... }, ... } na ordem dos meses.
 const meses = computed(() => {
@@ -62,9 +71,12 @@ const alternar = async ativas => {
 };
 
 const salvar = async (meta, evento) => {
-  const valor = parseBrlInput(evento.target.value);
-  if (valor === null || valor < 0) {
+  const desfazer = () => {
     evento.target.value = numeroBr(meta.valor);
+  };
+  const valor = lerNumero(evento.target.value);
+  if (valor === null || valor < 0) {
+    desfazer();
     useAlert(t('RAMON.MARKETING.METAS.VALOR_INVALIDO'));
     return;
   }
@@ -74,6 +86,7 @@ const salvar = async (meta, evento) => {
     useAlert(t('RAMON.MARKETING.METAS.SALVA'));
     emit('atualizar');
   } catch (e) {
+    desfazer(); // não gravou: a célula volta ao valor salvo
     falhou(e);
   }
 };
@@ -124,7 +137,9 @@ const apagar = async () => {
         v-if="metas.linhas.length"
         class="flex items-center gap-2 text-sm text-n-slate-12"
       >
-        <Switch :model-value="metas.ativas" @change="alternar(!metas.ativas)" />
+        <!-- Controlado pela prop: com o listener, o Switch só emite o valor novo e
+             não vira sozinho — se o PUT falhar, continua mostrando o estado real. -->
+        <Switch :model-value="metas.ativas" @update:model-value="alternar" />
         {{ t('RAMON.MARKETING.METAS.USAR') }}
       </label>
     </div>
@@ -192,7 +207,10 @@ const apagar = async () => {
                 inputmode="decimal"
                 :class="[
                   CAMPO,
-                  linha.celulas[metrica].editada ? TOM.amber : '',
+                  // ! vence o fundo/contorno do CAMPO (mesma propriedade, ordem do CSS decide)
+                  linha.celulas[metrica].editada
+                    ? '!bg-n-amber-9/15 !outline-n-amber-9'
+                    : '',
                 ]"
                 class="min-w-[5.5rem] text-right font-mono"
                 :title="

@@ -92,8 +92,7 @@ class Api::V1::Accounts::RamonMarketingController < Api::V1::Accounts::BaseContr
   def metas = MarketingMeta.where(account: Current.account)
 
   def resumo_metas
-    { de: metas.minimum(:mes), ate: metas.maximum(:mes), atualizado_em: metas.maximum(:updated_at),
-      ativas: metas.exists?(ativa: true), linhas: metas.order(:mes, :metrica).map { |m| meta_json(m) } }
+    { ativas: metas.exists?(ativa: true), linhas: metas.order(:mes, :metrica).map { |m| meta_json(m) } }
   end
 
   def meta_json(meta)

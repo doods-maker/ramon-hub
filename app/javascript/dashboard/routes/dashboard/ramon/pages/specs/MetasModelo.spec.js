@@ -50,7 +50,7 @@ describe('MetasModelo', () => {
     expect(w.text()).toContain('RAMON.MARKETING.METAS.DESLIGADAS');
     expect(w.text()).toContain('RAMON.MARKETING.METAS.EDITADAS {"n":1}');
     const celulas = w.findAll('tbody input');
-    expect(celulas.map(c => c.element.value)).toEqual(['20', '1215']);
+    expect(celulas.map(c => c.element.value)).toEqual(['20', '1.215']);
   });
 
   it('o interruptor liga as metas e pede para recarregar', async () => {
@@ -70,6 +70,17 @@ describe('MetasModelo', () => {
     await celula.trigger('change');
     await flushPromises();
     expect(RamonMarketingAPI.editarMeta).toHaveBeenCalledWith(1, 22.5);
+  });
+
+  it('"1.215" é milhar, e se a gravação falhar a célula volta ao valor salvo', async () => {
+    RamonMarketingAPI.editarMeta.mockRejectedValue(new Error('rede'));
+    const w = montar();
+    const celula = w.findAll('tbody input')[1];
+    await celula.setValue('1.300');
+    await celula.trigger('change');
+    await flushPromises();
+    expect(RamonMarketingAPI.editarMeta).toHaveBeenCalledWith(2, 1300);
+    expect(celula.element.value).toBe('1.215');
   });
 
   it('arquivo por cima de edição: 409 abre a confirmação e reenvia com confirmar', async () => {
