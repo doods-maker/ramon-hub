@@ -61,6 +61,7 @@ const detail = reactive({
   palavrasChave: [],
   zapsignTemplateId: '',
   opcoesBotoes: 'desligado',
+  passaDocumentos: false,
 });
 
 const syncDetail = () => {
@@ -78,6 +79,7 @@ const syncDetail = () => {
   detail.palavrasChave = [...(thesis.palavras_chave || [])];
   detail.zapsignTemplateId = thesis.zapsign_template_id || '';
   detail.opcoesBotoes = thesis.opcoes_botoes || 'desligado';
+  detail.passaDocumentos = !!thesis.passa_documentos;
 };
 
 // Observa só o ID: resposta de PATCH mutando o record no store não pode
@@ -171,6 +173,7 @@ const saveDetail = () => {
       palavras_chave: detail.palavrasChave,
       zapsign_template_id: detail.zapsignTemplateId || null,
       opcoes_botoes: detail.opcoesBotoes,
+      passa_documentos: detail.passaDocumentos,
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
@@ -700,6 +703,19 @@ onMounted(() => {
                     {{ $t(`RAMON.PLAYBOOKS.OPCOES_BOTOES_MODO.${modo}`) }}
                   </option>
                 </select>
+              </label>
+              <label
+                :class="ROTULO"
+                class="flex items-center gap-2"
+                :title="$t('RAMON.PLAYBOOKS.PASSA_DOCUMENTOS_AJUDA')"
+              >
+                <input
+                  v-model="detail.passaDocumentos"
+                  type="checkbox"
+                  data-testid="playbooks-passa-documentos"
+                  @change="saveDetail"
+                />
+                {{ $t('RAMON.PLAYBOOKS.PASSA_DOCUMENTOS') }}
               </label>
             </div>
 

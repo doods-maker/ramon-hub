@@ -112,6 +112,20 @@ RSpec.describe 'Theses API', type: :request do
     end
   end
 
+  describe 'passa pela etapa Documentos' do
+    it 'nasce desligada; admin liga e o show e o index devolvem', :aggregate_failures do
+      thesis = account.theses.create!(name: 'Tese Spec Passa Docs', position: 70)
+      expect(thesis.passa_documentos).to be(false)
+
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}",
+            params: { passa_documentos: true }, headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['passa_documentos']).to be(true)
+
+      get "/api/v1/accounts/#{account.id}/theses", headers: agent.create_new_auth_token
+      expect(response.parsed_body.find { |t| t['id'] == thesis.id }).to include('passa_documentos' => true)
+    end
+  end
+
   describe 'DELETE destroy' do
     it 'remove a tese sem leads (admin)' do
       thesis = account.theses.create!(name: 'Tese Removida', position: 50)

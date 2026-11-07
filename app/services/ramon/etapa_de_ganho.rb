@@ -30,8 +30,17 @@ module Ramon::EtapaDeGanho
     principal(account) || raise(ActiveRecord::RecordNotFound, "conta #{account.id} sem etapa de ganho")
   end
 
-  # Onde um lead que acabou de ganhar deve cair. Neste PR é sempre a principal; o PR 2 desvia para Documentos.
+  # Onde um lead que acabou de ganhar deve cair: Documentos (abaixo) ou a principal. Não depende de o lead ter conversa:
+  # sem WhatsApp, Documentos fica com o SDR (Ramon::Documentos::Entrada).
   def entrada(lead)
-    principal(lead.account)
+    etapa_documentos(lead) || principal(lead.account)
+  end
+
+  # Documentos: chave ligada, tese marcada "passa pela etapa Documentos" e com checklist de documentos, e a etapa existe.
+  def etapa_documentos(lead)
+    tese = lead.thesis
+    return unless documentos_ligado? && tese&.passa_documentos && tese.thesis_items.exists?(section: 'documento')
+
+    lead.account.lead_stages.find_by(label: DOCUMENTOS, is_won: true)
   end
 end

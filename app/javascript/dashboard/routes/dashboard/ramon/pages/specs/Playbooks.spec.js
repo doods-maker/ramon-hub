@@ -150,6 +150,18 @@ describe('Playbooks.vue', () => {
     );
   });
 
+  it('salva "passa pela etapa Documentos" da tese', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
+    await wrapper
+      .find('[data-testid="playbooks-passa-documentos"]')
+      .setValue(true);
+    expect(store.dispatch).toHaveBeenLastCalledWith(
+      'theses/update',
+      expect.objectContaining({ id: 1, passa_documentos: true })
+    );
+  });
+
   it('shows the empty detail state when no thesis is selected', () => {
     const { wrapper } = mountPlaybooks();
     expect(

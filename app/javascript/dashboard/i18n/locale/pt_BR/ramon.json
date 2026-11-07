@@ -1491,6 +1491,8 @@
       },
       "ZAPSIGN_MODELO_AJUDA": "Usado pelo modo \"sozinha até o contrato\" para gerar o contrato na hora. Sem modelo = o contrato não sai automático para esta tese.",
       "ZAPSIGN_SEM_MODELO": "Sem modelo",
+      "PASSA_DOCUMENTOS": "Passa pela etapa Documentos",
+      "PASSA_DOCUMENTOS_AJUDA": "Ao assinar o contrato, o lead desta tese vai para a etapa Documentos (o assistente de documentos junta o que falta) em vez de Fechado. Só vale se a tese tem documentos no checklist.",
       "ZAPSIGN_MODELOS_ERRO": "Não deu para carregar os modelos do ZapSign agora — o modelo salvo é mantido.",
       "DELETE_IN_USE": "1 lead usa esta tese — desative em vez de excluir | {count} leads usam esta tese — desative em vez de excluir",
       "DELETE_IN_USE_HINT": "Desativada, a tese continua nos leads que já a usam e sai da escolha de tese dos leads novos.",
