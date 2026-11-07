@@ -1,6 +1,7 @@
 require 'rails_helper'
 
-# Casca da tool: repassa conversa, tema e as imagens do assistente para Ramon::Documentos::PassoAPasso (a regra é testada lá).
+# Casca da tool: repassa conversa, tema, as imagens do assistente e o estado do turno para Ramon::Documentos::PassoAPasso
+# (a regra é testada lá).
 RSpec.describe Captain::Tools::EnviarPassoAPassoTool, type: :model do
   let(:account) { create(:account) }
   let(:assistant) { create(:captain_assistant, account: account) }
@@ -8,14 +9,14 @@ RSpec.describe Captain::Tools::EnviarPassoAPassoTool, type: :model do
   let(:conversa) { create(:conversation, account: account, status: :pending) }
   let(:tool_context) { Struct.new(:state).new({ conversation: { id: conversa.id } }) }
 
-  it 'manda a imagem do tema guardada no assistente', :aggregate_failures do
+  it 'prepara a imagem do tema guardada no assistente no estado do turno', :aggregate_failures do
     assistant.passos_a_passo.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'govbr_duas_etapas.png',
                                     content_type: 'image/png')
-    allow(Ramon::Documentos::PassoAPasso).to receive(:enviar).and_return('ok')
+    allow(Ramon::Documentos::PassoAPasso).to receive(:preparar).and_return('ok')
 
     expect(tool.perform(tool_context, tema: 'govbr_duas_etapas')).to eq('ok')
-    expect(Ramon::Documentos::PassoAPasso).to have_received(:enviar)
-      .with(conversa, 'govbr_duas_etapas', imagens: [assistant.passos_a_passo.blobs.first], remetente: assistant)
+    expect(Ramon::Documentos::PassoAPasso).to have_received(:preparar)
+      .with(conversa, 'govbr_duas_etapas', imagens: [assistant.passos_a_passo.blobs.first], estado: tool_context.state)
   end
 
   it 'sem conversa: não envia nada' do

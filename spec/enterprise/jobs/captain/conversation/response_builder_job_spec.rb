@@ -212,6 +212,19 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(conversation.messages.last.content).to eq('Hey, welcome to Captain V2')
       end
 
+      # ramon (Etapa Documentos): uma mensagem por resposta — a imagem preparada pela tool vai com o texto, de legenda
+      it 'com imagem do passo a passo no turno, manda uma mensagem só: o texto com a imagem', :aggregate_failures do
+        imagem = ActiveStorage::Blob.create_and_upload!(io: Rails.root.join('spec/assets/avatar.png').open,
+                                                        filename: 'meu_inss_cnis.png', content_type: 'image/png')
+        allow(mock_agent_runner_service).to receive(:generate_response)
+          .and_return({ 'response' => 'Olha o caminho na imagem', 'passo_a_passo' => imagem.id })
+
+        described_class.perform_now(conversation, assistant)
+
+        expect(conversation.messages.outgoing.count).to eq(1)
+        expect(conversation.messages.outgoing.last.attachments.size).to eq(1)
+      end
+
       it 'passes message history to agent runner service' do
         expected_messages = [
           { content: 'Hello', role: 'user' }
