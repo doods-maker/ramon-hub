@@ -14,6 +14,8 @@ module Ramon::LeadRadar
   # includes cobre tudo que o partial _lead deriva do lead (sla_info via
   # conversation→inbox, next_open_task via lead_tasks, latest_triage,
   # docs_counts via thesis→thesis_items) — sem N+1.
+  # Etapa Documentos (is_won) fica de fora de propósito (decisão do PR 5, 07/11): parados e cadência não a olham; quem cuida
+  # dela é a cobrança da etapa (Ramon::Documentos::CobrancaJob: lembretes, acompanhamento, silêncio e travado).
   def active_leads(account)
     account.leads.funil.joins(:lead_stage)
            .includes(:lead_stage, :contact, :lead_tasks, :lead_triages, { conversation: :inbox }, { thesis: :thesis_items })
