@@ -181,6 +181,6 @@ class Ramon::DossieService
 
   # Mesmo checklist do DocChecklist, só o que ainda não chegou.
   def docs_missing
-    @lead.doc_checklist.reject { |doc| doc[:status] == 'recebido' }.map { |doc| doc.slice(:title, :status) }
+    @lead.docs_pendentes.map { |doc| doc.slice(:title, :status) }
   end
 end

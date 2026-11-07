@@ -26,7 +26,7 @@ module Ramon::Documentos::Handoff
   end
 
   def nota(conversa, lead, responsavel)
-    falta = lead.doc_checklist.reject { |doc| doc[:status] == 'recebido' }.pluck(:title)
+    falta = lead.docs_pendentes.pluck(:title)
     [
       "IA passou a conversa (etapa Documentos) para #{responsavel&.name || 'a equipe'}.",
       "Motivo: #{motivo(conversa) || 'passagem automática (sem motivo da IA: freio, cota ou falha de envio).'}",

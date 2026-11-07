@@ -35,7 +35,7 @@ class Ramon::DocMatchService
   def self.alertas(lead)
     return [] if lead.custom_attributes&.dig('doc_alertas', 'cnis_resumido').blank?
 
-    lead.doc_checklist.any? { |doc| doc[:status] != 'recebido' && cnis?(doc[:title]) } ? [ALERTA_CNIS] : []
+    lead.docs_pendentes.any? { |doc| cnis?(doc[:title]) } ? [ALERTA_CNIS] : []
   end
 
   def self.cnis?(titulo) = titulo.to_s.match?(/CNIS/i)
