@@ -129,8 +129,8 @@ RSpec.describe Concerns::CaptainToolsHelpers, type: :concern do
       expect(ids_do_nivel('sugestao')).to match_array(herdeiras)
     end
 
-    it 'rascunho pro cliente = pedir documentos e link do portal' do
-      expect(ids_do_nivel('rascunho')).to match_array(%w[solicitar_documento enviar_link_portal])
+    it 'pro cliente = pedir documentos, link do portal e a imagem do passo a passo' do
+      expect(ids_do_nivel('rascunho')).to match_array(%w[solicitar_documento enviar_link_portal enviar_passo_a_passo])
     end
   end
 

@@ -14,9 +14,13 @@ describe('ferramentas', () => {
     });
   });
 
-  it('rascunho pro cliente = pedir documentos e link do portal', () => {
+  it('pro cliente = pedir documentos, link do portal e imagem do passo a passo', () => {
     const ids = tools.filter(tool => tool.nivel === 'rascunho').map(t => t.id);
-    expect(ids.sort()).toEqual(['enviar_link_portal', 'solicitar_documento']);
+    expect(ids.sort()).toEqual([
+      'enviar_link_portal',
+      'enviar_passo_a_passo',
+      'solicitar_documento',
+    ]);
   });
 
   it('acha nome e cor no catálogo', () => {
