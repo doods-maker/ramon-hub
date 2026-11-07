@@ -58,7 +58,8 @@ const lostReasons = computed(() => getters['leadConfig/getLostReasons'].value);
 const orderedStages = ref([]);
 const stageToRemove = ref(null);
 const newStageModalOpen = ref(false);
-// Perdido é único: marcar outra etapa como perda substitui a atual, confirmar antes.
+// Ganho/Perdido mudam o que acontece com os leads da etapa: confirmar antes.
+// Perdido é único (substitui o atual); ganho pode ter várias (ADR 0015).
 const stageTypeToConfirm = ref(null);
 
 // Estado do primeiro carregamento: skeleton enquanto busca, erro com retry.
@@ -402,11 +403,14 @@ const applyStageType = async ({ id, type }) => {
 };
 const onSetStageType = ({ id, type }) => {
   const stage = stages.value.find(s => s.id === id);
-  if (type !== 'lost' || stage?.is_lost) {
+  const flag = { won: 'is_won', lost: 'is_lost' }[type];
+  if (!flag || stage?.[flag]) {
     applyStageType({ id, type });
     return;
   }
-  const atual = stages.value.find(s => s.is_lost && s.id !== id);
+  // só a perda substitui a etapa atual; ganho não desmarca as outras
+  const atual =
+    type === 'lost' && stages.value.find(s => s.is_lost && s.id !== id);
   stageTypeToConfirm.value = {
     id,
     type,
@@ -414,20 +418,22 @@ const onSetStageType = ({ id, type }) => {
     atual: atual?.name,
   };
 };
+const stageTypeWon = computed(() => stageTypeToConfirm.value?.type === 'won');
 const stageTypeMessage = computed(() => {
   const confirm = stageTypeToConfirm.value;
   if (!confirm) return '';
+  if (stageTypeWon.value) return t('RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT');
   const efeito = t('RAMON.FUNIL.STAGE.CONFIRM_LOST_EFFECT');
   if (!confirm.atual) return efeito;
   return `${efeito} ${t('RAMON.FUNIL.STAGE.CONFIRM_LOST_PREVIOUS', { name: confirm.atual })}`;
 });
-const stageTypeTitle = computed(() =>
-  stageTypeToConfirm.value
-    ? t('RAMON.FUNIL.STAGE.CONFIRM_LOST_TITLE', {
-        name: stageTypeToConfirm.value.name,
-      })
-    : ''
-);
+const stageTypeTitle = computed(() => {
+  const confirm = stageTypeToConfirm.value;
+  if (!confirm) return '';
+  return stageTypeWon.value
+    ? t('RAMON.FUNIL.STAGE.CONFIRM_WON_TITLE', { name: confirm.name })
+    : t('RAMON.FUNIL.STAGE.CONFIRM_LOST_TITLE', { name: confirm.name });
+});
 const confirmStageType = () => {
   const confirm = stageTypeToConfirm.value;
   stageTypeToConfirm.value = null;
@@ -790,8 +796,12 @@ const exportCsv = () => {
       data-testid="stage-type-confirm"
       :title="stageTypeTitle"
       :message="stageTypeMessage"
-      :confirm-label="$t('RAMON.FUNIL.STAGE.TYPE_LOST')"
-      confirm-color="ruby"
+      :confirm-label="
+        stageTypeWon
+          ? $t('RAMON.FUNIL.STAGE.TYPE_WON')
+          : $t('RAMON.FUNIL.STAGE.TYPE_LOST')
+      "
+      :confirm-color="stageTypeWon ? 'blue' : 'ruby'"
       @confirm="confirmStageType"
       @cancel="stageTypeToConfirm = null"
     />

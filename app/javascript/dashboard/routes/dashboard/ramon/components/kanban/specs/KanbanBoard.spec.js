@@ -155,15 +155,25 @@ describe('KanbanBoard.vue', () => {
     });
   });
 
-  it('setStageType ganho com outra etapa de ganho salva direto (não substitui) e recarrega as etapas', async () => {
+  it('setStageType ganho avisa os efeitos (sem substituir a outra etapa de ganho) e recarrega as etapas', async () => {
     dispatch.mockResolvedValue({});
     const wrapper = mountBoard({ stages: COM_GANHOS });
-    dispatch.mockClear();
     wrapper
       .findComponent(KanbanColumn)
       .vm.$emit('setStageType', { id: 1, type: 'won' });
+    await wrapper.vm.$nextTick();
+    expect(dispatch).not.toHaveBeenCalledWith(
+      'leadConfig/updateStage',
+      expect.anything()
+    );
+    const modal = wrapper.findComponent(ConfirmModal);
+    expect(modal.props('title')).toBe('RAMON.FUNIL.STAGE.CONFIRM_WON_TITLE');
+    expect(modal.props('message')).toBe('RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT');
+    expect(modal.props('confirmLabel')).toBe('RAMON.FUNIL.STAGE.TYPE_WON');
+    expect(modal.props('confirmColor')).toBe('blue');
+    dispatch.mockClear();
+    modal.vm.$emit('confirm');
     await flushPromises();
-    expect(wrapper.findComponent(ConfirmModal).exists()).toBe(false);
     expect(dispatch).toHaveBeenCalledWith('leadConfig/updateStage', {
       id: 1,
       is_won: true,
