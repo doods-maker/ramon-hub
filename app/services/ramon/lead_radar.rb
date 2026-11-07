@@ -51,10 +51,12 @@ module Ramon::LeadRadar
 
   # Data do fechamento = won_at/lost_at (o Lead grava ao entrar na etapa
   # ganha/perdida); stage_entered_at cobre etapa que virou ganha/perdida depois.
+  # Documentos é ganho mas é trabalho em andamento: não some pela janela.
   def closed_window(account, leads, params)
     return leads if CLOSED_WINDOW_BYPASS.any? { |key| params[key].present? }
 
-    closed_stage_ids = account.lead_stages.where('is_won OR is_lost').select(:id)
+    closed_stage_ids = account.lead_stages.where('is_won OR is_lost')
+                              .where('label IS DISTINCT FROM ?', Ramon::EtapaDeGanho::DOCUMENTOS).select(:id)
     leads.where.not(lead_stage_id: closed_stage_ids)
          .or(leads.where('COALESCE(leads.won_at, leads.lost_at, leads.stage_entered_at) >= ?', CLOSED_WINDOW.ago))
   end
