@@ -781,6 +781,10 @@ describe('LeadPanelBody', () => {
       await wrapper.find('[data-testid="panel-stage"]').setValue(2);
       const salvar = () => wrapper.find('[data-testid="stage-won-save"]');
       expect(salvar().attributes('disabled')).toBeDefined();
+      // a label envolve o campo (clicar no rótulo foca o texto)
+      expect(
+        wrapper.find('label textarea[data-testid="stage-won-motivo"]').exists()
+      ).toBe(true);
 
       await wrapper
         .find('[data-testid="stage-won-motivo"]')

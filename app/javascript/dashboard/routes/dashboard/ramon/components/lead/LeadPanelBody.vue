@@ -58,6 +58,7 @@ import {
   CAMPO_GRANDE,
   SELECT_GRANDE,
   TEXTAREA,
+  ROTULO,
 } from '../../helpers/ui';
 
 const props = defineProps({
@@ -1134,17 +1135,15 @@ const discard = async () => {
                 :class="CAMPO"
                 @keyup.enter="confirmWonStage"
               />
-              <template v-if="wonPedeMotivo">
-                <label class="text-xs text-n-slate-10">{{
-                  $t('RAMON.FUNIL.WON.MOTIVO_PULA_DOCUMENTOS')
-                }}</label>
+              <label v-if="wonPedeMotivo" :class="ROTULO">
+                {{ $t('RAMON.FUNIL.WON.MOTIVO_PULA_DOCUMENTOS') }}
                 <textarea
                   v-model="wonMotivo"
                   data-testid="stage-won-motivo"
                   rows="3"
                   :class="TEXTAREA"
                 />
-              </template>
+              </label>
               <div class="flex justify-end gap-2">
                 <Button
                   data-testid="stage-won-skip"
