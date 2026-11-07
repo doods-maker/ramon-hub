@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonIaUsoAPI from 'dashboard/api/ramonIaUso';
+import Variacao from 'dashboard/routes/dashboard/ramon/components/Variacao.vue';
 import CaptainPreferencesAPI from 'dashboard/api/captain/preferences';
 import {
   ABA,
@@ -261,6 +262,14 @@ const salvarTeto = async () => {
             <p class="mt-2 text-2xl font-semibold text-n-slate-12" :class="NUM">
               {{ fmtUsd(total.custo_usd ?? 0) }}
             </p>
+            <!-- custo: menor é melhor -->
+            <Variacao
+              :atual="total.custo_usd ?? 0"
+              :anterior="dados.anterior?.custo_usd ?? null"
+              :periodo="dados.anterior"
+              sentido="max"
+              class="mt-1"
+            />
             <p v-if="total.sem_preco" class="mt-1 text-xs text-n-amber-11">
               {{ t('IA_USO.RESUMO.SEM_PRECO', { n: total.sem_preco }) }}
             </p>

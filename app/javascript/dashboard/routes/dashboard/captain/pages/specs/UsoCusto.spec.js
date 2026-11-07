@@ -23,6 +23,12 @@ const MODELOS = [
 
 const DADOS = {
   periodo: '7d',
+  anterior: {
+    inicio: '2026-09-29T00:00:00-03:00',
+    fim: '2026-10-05T14:00:00-03:00',
+    custo_usd: 2.5,
+    chamadas: 150,
+  },
   total: {
     chamadas: 120,
     input_tokens: 900000,
@@ -111,6 +117,12 @@ describe('Uso e custo da IA', () => {
     expect(wrapper.find('[data-testid="uso-custo"]').text()).toContain(
       'US$ 1,75'
     );
+    // custo caiu de 2,50 para 1,75 (−30%): menor é melhor
+    const variacao = wrapper.find(
+      '[data-testid="uso-custo"] [data-testid="variacao"]'
+    );
+    expect(variacao.attributes('data-seta')).toBe('desce');
+    expect(variacao.find('span').classes()).toContain('text-n-teal-11');
     expect(wrapper.find('[data-testid="uso-hoje"] p').classes()).toContain(
       'text-n-ruby-11'
     );
