@@ -386,3 +386,10 @@ portal do cliente deixa de abrir a janela do canal para todo mundo.
 | `app/javascript/dashboard/api/captain/assistant.js` | +`passosAPasso`, `subirPassoAPasso`, `removerPassoAPasso` | tela das imagens | etapa-documentos PR 3 |
 | `app/javascript/dashboard/routes/dashboard/captain/assistants/settings/Settings.vue` | +`PassoAPasso` (só admin; só aparece no assistente da etapa conduzida) | tela das imagens | etapa-documentos PR 3 |
 | `enterprise/lib/captain/tools/documentacao_faltante_tool.rb` | +`alertas` (`Ramon::DocMatchService.alertas`) | o agente pede o CNIS completo quando chegou o resumido | etapa-documentos PR 3 |
+## Área Marketing — tráfego, custos e metas (07/11/2026)
+
+Spec: `docs/superpowers/specs/2026-11-07-marketing-trafego-design.md`.
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `config/schedule.yml` | `ramon_peca_metricas_job` (6h30 BRT, `scheduled_jobs`; desligado por `RAMON_IG_INSIGHTS`) | desempenho das peças publicadas | marketing PR 1 |

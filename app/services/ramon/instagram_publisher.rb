@@ -6,6 +6,9 @@ class Ramon::InstagramPublisher
   PRAZO = 300 # s, relógio de parede, pro contêiner ficar pronto
   ABRIR = 10 # s
   LER = 30 # s
+  # métrica de insights da Meta → coluna de Peca (#metricas)
+  METRICAS = { 'reach' => :alcance, 'saved' => :salvamentos, 'shares' => :compartilhamentos,
+               'likes' => :curtidas, 'comments' => :comentarios }.freeze
 
   # Espelho de motor-marketing packs/marca-ramon-antonio/brand.json → identidades (22/09).
   COLABORADORES = {
@@ -32,6 +35,15 @@ class Ramon::InstagramPublisher
     container = @peca.tipo == 'carrossel' ? carrossel : post('me/media', base.merge(image_url: @peca.imagens.first))['id']
     aguardar(container)
     publicar_container(container)
+  end
+
+  # Desempenho de um post publicado (Ramon::PecaMetricasJob).
+  def metricas(media_id)
+    dados = get("#{media_id}/insights", metric: METRICAS.keys.join(','))['data']
+    Array(dados).each_with_object({}) do |item, acc|
+      coluna = METRICAS[item['name']]
+      acc[coluna] = (item.dig('total_value', 'value') || item.dig('values', 0, 'value')).to_i if coluna
+    end
   end
 
   def permalink(media_id)

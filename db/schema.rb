@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_08_100002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1694,6 +1694,29 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
     t.index ["account_id", "created_at"], name: "index_ramon_llm_chamadas_on_account_id_and_created_at"
   end
 
+  create_table "ramon_marketing_custos", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "thesis_id"
+    t.bigint "user_id"
+    t.date "data", null: false
+    t.decimal "valor", precision: 12, scale: 2, null: false
+    t.string "categoria", null: false
+    t.string "observacao"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "data"], name: "index_ramon_marketing_custos_on_account_id_and_data"
+  end
+
+  create_table "ramon_marketing_metas", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.date "mes", null: false
+    t.string "metrica", null: false
+    t.decimal "valor", precision: 14, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "mes", "metrica"], name: "index_ramon_marketing_metas_on_account_id_and_mes_and_metrica", unique: true
+  end
+
   create_table "ramon_meta_eventos", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "lead_id", null: false
@@ -1721,6 +1744,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
     t.bigint "clicks", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "adset_id"
+    t.string "adset_name"
+    t.string "objetivo"
+    t.bigint "conversas", default: 0
+    t.bigint "leads_meta", default: 0
+    t.string "origem", default: "api", null: false
     t.index ["account_id", "ad_id", "data"], name: "index_ramon_meta_gastos_on_account_id_and_ad_id_and_data", unique: true
   end
 
@@ -1773,6 +1802,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
     t.string "drive_pasta_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "alcance"
+    t.integer "salvamentos"
+    t.integer "compartilhamentos"
+    t.integer "curtidas"
+    t.integer "comentarios"
+    t.datetime "metricas_em"
     t.index ["account_id", "slug"], name: "index_ramon_pecas_on_account_id_and_slug", unique: true
     t.index ["account_id"], name: "index_ramon_pecas_on_account_id"
     t.index ["status", "agendado_para"], name: "index_ramon_pecas_on_status_and_agendado_para"
@@ -2154,6 +2189,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
   add_foreign_key "ramon_funil_acoes", "users", column: "desfeita_por_id", on_delete: :nullify
   add_foreign_key "ramon_google_agendas", "accounts", on_delete: :cascade
   add_foreign_key "ramon_google_agendas", "users", on_delete: :cascade
+  add_foreign_key "ramon_marketing_custos", "accounts", on_delete: :cascade
+  add_foreign_key "ramon_marketing_custos", "theses", on_delete: :nullify
+  add_foreign_key "ramon_marketing_metas", "accounts", on_delete: :cascade
   add_foreign_key "ramon_meta_eventos", "accounts", on_delete: :cascade
   add_foreign_key "ramon_meta_eventos", "leads", on_delete: :cascade
   add_foreign_key "ramon_meta_gastos", "accounts", on_delete: :cascade
@@ -2188,7 +2226,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
       s.is_lost,
       (l.custom_attributes #>> '{utm,utm_campaign}'::text[]) AS utm_campaign,
       (l.custom_attributes #>> '{valor_estimado,origem}'::text[]) AS valor_origem,
-      (l.custom_attributes #>> '{meta_referral,source_id}'::text[]) AS meta_ad_id,
+      COALESCE((l.custom_attributes #>> '{meta_referral,source_id}'::text[]),
+          CASE
+              WHEN (((l.custom_attributes #>> '{utm,utm_source}'::text[]) = 'meta'::text) AND ((l.custom_attributes #>> '{utm,utm_content}'::text[]) ~ '^[0-9]+$'::text)) THEN (l.custom_attributes #>> '{utm,utm_content}'::text[])
+              ELSE NULL::text
+          END) AS meta_ad_id,
       (l.custom_attributes #>> '{meta_referral,source_type}'::text[]) AS meta_source_type,
       ((l.custom_attributes #>> '{meta_referral,ctwa_clid}'::text[]) IS NOT NULL) AS veio_de_anuncio_whatsapp
      FROM ((leads l
@@ -2321,7 +2363,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
       campaign_name,
       spend,
       impressions,
-      clicks
+      clicks,
+      adset_id,
+      adset_name,
+      objetivo,
+      conversas,
+      leads_meta,
+      origem
      FROM ramon_meta_gastos;
   SQL
   create_view "bi_meta_eventos", sql_definition: <<-SQL
@@ -2333,6 +2381,43 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
       ocorrido_em,
       enviado_em
      FROM ramon_meta_eventos;
+  SQL
+  create_view "bi_marketing_custos", sql_definition: <<-SQL
+      SELECT c.id,
+      c.account_id,
+      c.data,
+      c.valor,
+      c.categoria,
+      c.thesis_id,
+      t.name AS thesis_name,
+      c.observacao
+     FROM (ramon_marketing_custos c
+       LEFT JOIN theses t ON ((t.id = c.thesis_id)));
+  SQL
+  create_view "bi_marketing_metas", sql_definition: <<-SQL
+      SELECT account_id,
+      mes,
+      metrica,
+      valor
+     FROM ramon_marketing_metas;
+  SQL
+  create_view "bi_pecas", sql_definition: <<-SQL
+      SELECT id,
+      account_id,
+      tipo,
+      tese,
+      gancho,
+      status,
+      COALESCE(agendado_para, updated_at) AS publicado_em,
+      permalink,
+      alcance,
+      salvamentos,
+      compartilhamentos,
+      curtidas,
+      comentarios,
+      metricas_em
+     FROM ramon_pecas
+    WHERE ((status)::text = 'publicado'::text);
   SQL
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
