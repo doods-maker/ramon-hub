@@ -69,6 +69,13 @@ RSpec.describe Ramon::AdvboxDocsTaskService do
       expect(described_class.new(lead).analise_do_caso).to eq(:ja_criada)
     end
 
+    # Review do PR 6, item 2: quem serializa as chamadas juntas é o lock do lead; o Redis fora do ar não perde a tarefa.
+    it 'não depende do Redis' do
+      allow(Redis::Alfred).to receive(:set).and_raise(Redis::CannotConnectError)
+      allow(Ramon::AdvboxClient).to receive(:create_post).and_return({ 'posts_id' => 777 })
+      expect(described_class.new(lead).analise_do_caso).to eq(:criada)
+    end
+
     it 'ADVBOX recusou (4xx): não grava e diz o motivo' do
       allow(Ramon::AdvboxClient).to receive(:create_post).and_raise(Ramon::AdvboxClient::RequestError.new(422, 'inválido'))
       expect(described_class.new(lead).analise_do_caso).to eq(:recusada)

@@ -9,7 +9,6 @@ class Ramon::AdvboxDocsTaskService
   # Só a sub-chave, num UPDATE: o resto do custom_attributes (gravado em paralelo por outros jobs) fica como está.
   GRAVAR_ANALISE = "custom_attributes = jsonb_set(COALESCE(custom_attributes, '{}'::jsonb), '{advbox}', " \
                    "COALESCE(custom_attributes -> 'advbox', '{}'::jsonb) || jsonb_build_object('analise_posts_id', ?::jsonb))".freeze
-  TRAVA = 120 # s; quem chama junto (passagem ao Jurídico e fim do Ganho no ADVBOX) espera a vez do outro
   SEM_ID = 'criada sem id na resposta'.freeze
   MARCA = "(custom_attributes #> '{advbox,analise_posts_id}')::text".freeze
 
@@ -40,13 +39,15 @@ class Ramon::AdvboxDocsTaskService
     Rails.logger.warn("[Ramon::AdvboxDocsTaskService] lead=#{@lead.id} advbox recusou: #{e.code}")
   end
 
-  # @return [Symbol] :criada, :ja_criada, :sem_caso (o Ganho não abriu o processo), :sem_token, :recusada (4xx) ou :ocupada
+  # @return [Symbol] :criada, :ja_criada, :sem_caso (o Ganho não abriu o processo), :sem_token ou :recusada (4xx)
   def analise_do_caso
     return :sem_token if ENV.fetch('ADVBOX_API_TOKEN', nil).blank?
     return :ja_criada if analise_criada?
     return :sem_caso if lawsuit_id.blank?
 
-    com_trava { analise_criada? ? :ja_criada : criar_analise }
+    # Sob o lock do lead (relê com FOR UPDATE): quem chama junto (passagem ao Jurídico e fim do Ganho no ADVBOX) espera a vez
+    # do outro e vê a marca dele. ponytail: o lock dura a chamada ao ADVBOX (até ~25 s com timeout); saves do lead esperam.
+    @lead.with_lock { analise_criada? ? :ja_criada : criar_analise }
   rescue Ramon::AdvboxClient::RequestError => e
     Rails.logger.warn("[Ramon::AdvboxDocsTaskService] lead=#{@lead.id} ANÁLISE DO CASO recusada: #{e.code}")
     :recusada
@@ -69,18 +70,6 @@ class Ramon::AdvboxDocsTaskService
   end
 
   def analise_criada? = @lead.custom_attributes&.dig('advbox', 'analise_posts_id').present?
-
-  # ponytail: trava no Redis (como o rascunho do AvisoDaIa); some no fim ou em TRAVA s se o processo morrer no meio.
-  def com_trava(&)
-    chave = "RAMON::ANALISE_DO_CASO::#{@lead.id}"
-    return :ocupada unless Redis::Alfred.set(chave, 1, nx: true, ex: TRAVA)
-
-    begin
-      @lead.with_lock(&) # relê com FOR UPDATE: a marca que vale é a do banco
-    ensure
-      Redis::Alfred.delete(chave)
-    end
-  end
 
   # O id real da tarefa; sem ele na resposta (a tarefa nasceu), uma marca: a 2ª não pode nascer.
   def criar_analise
