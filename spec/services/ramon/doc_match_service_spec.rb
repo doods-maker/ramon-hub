@@ -192,6 +192,17 @@ RSpec.describe Ramon::DocMatchService do
     end
   end
 
+  it 'fora da etapa Documentos, mesmo com a chave ligada, o CNIS segue como hoje: sem pergunta do resumido, marca', :aggregate_failures do
+    cnis = create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS completo')
+    resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{cnis.id}, "cnis_resumido": true}), input_tokens: 1, output_tokens: 1)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)
+    with_modified_env(ANTHROPIC_API_KEY: 'sk-test', RAMON_ETAPA_DOCUMENTOS: 'on') { described_class.new(message).perform }
+
+    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(system: described_class::SYSTEM_PROMPT))
+    expect(lead.reload.custom_attributes.dig('doc_status', cnis.id.to_s)).to eq('recebido')
+    expect(lead.custom_attributes['doc_alertas']).to be_nil
+  end
+
   context 'when the item is already marked as received' do
     it 'does not ask the LLM' do
       lead.update!(custom_attributes: { 'doc_status' => { rg.id.to_s => 'recebido' } })

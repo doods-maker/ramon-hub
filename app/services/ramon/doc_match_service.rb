@@ -5,7 +5,7 @@
 # fim da conversa. Assinatura do Claude (VPS) fica fora — termos, ver LlmEscolha.
 # Com visão marca o item como recebido direto; sem visão — ou em lead ganho fora da etapa Documentos — grava
 # só a sugestão em custom_attributes['doc_sugestao'] pra confirmação humana no painel.
-# Chave RAMON_ETAPA_DOCUMENTOS ligada (spec Etapa Documentos §5): CNIS só o completo — o resumido não marca e vira
+# Lead na etapa Documentos (chave RAMON_ETAPA_DOCUMENTOS ligada; spec Etapa Documentos §5): CNIS só o completo — o resumido não marca e vira
 # alerta (doc_alertas.cnis_resumido) que o agente lê para pedir o certo; em Documentos, cada marcação avisa quem confere.
 class Ramon::DocMatchService
   SYSTEM_PROMPT = <<~PROMPT.freeze
@@ -15,7 +15,7 @@ class Ramon::DocMatchService
     um JSON válido (sem markdown): {"item_id": <id do item>} ou {"item_id": null} se
     não der pra afirmar. Na dúvida, responda null — nunca chute.
   PROMPT
-  # Só com a chave ligada (desligada, o prompt é o de antes). Os nomes das opções vêm da pesquisa do Meu INSS (spec §3).
+  # Só na etapa Documentos (fora dela, o prompt é o de antes). Os nomes das opções vêm da pesquisa do Meu INSS (spec §3).
   PROMPT_CNIS = <<~PROMPT.freeze
     Se o item for o CNIS e o arquivo for o CNIS RESUMIDO ("Relações Previdenciárias" sem remunerações, ou "Ano Civil"),
     responda {"item_id": <id do item>, "cnis_resumido": true}. O completo tem "Remunerações" no título.
@@ -44,6 +44,7 @@ class Ramon::DocMatchService
     lead = @message.account.leads.find_by(conversation_id: @message.conversation_id)
     return if lead.blank? || lead.thesis_id.blank? || attachment.blank?
 
+    @documentos = Ramon::EtapaDeGanho.conduzida?(lead.lead_stage) # CNIS resumido só conta aqui (spec §5)
     itens = pendentes(lead)
     item = itens.presence && escolher(lead, itens)
     destino(lead, item) if item.present?
@@ -60,7 +61,7 @@ class Ramon::DocMatchService
 
   # Lead ganho só ganha sugestão (decisão Eduardo 18/10): lá marcar sobe pro Drive e pode ir pro ADVBOX.
   # Exceção: a etapa Documentos (conduzida, só com a chave ligada), onde a IA marca e avisa quem confere (spec §5).
-  def marcar_direto?(lead) = visao? && (lead.won_at.blank? || Ramon::EtapaDeGanho.conduzida?(lead.lead_stage))
+  def marcar_direto?(lead) = visao? && (lead.won_at.blank? || @documentos)
 
   def escolher(lead, itens)
     item_id, @cnis_resumido = ask_llm(lead, itens, attachment)
@@ -96,7 +97,7 @@ class Ramon::DocMatchService
     retry
   end
 
-  def system_prompt = Ramon::EtapaDeGanho.documentos_ligado? ? "#{SYSTEM_PROMPT}#{PROMPT_CNIS}" : SYSTEM_PROMPT
+  def system_prompt = @documentos ? "#{SYSTEM_PROMPT}#{PROMPT_CNIS}" : SYSTEM_PROMPT
 
   def visao?
     return @visao if defined?(@visao)
@@ -116,12 +117,12 @@ class Ramon::DocMatchService
   # DeepSeek roda sem json_schema — nada garante item_id numérico no wire (hábito
   # comum de LLM é devolver "42" string). Integer(..., exception: false) aceita
   # ambos e descarta silenciosamente qualquer outra coisa (null incluso) como nil.
-  # @return [Array(Integer|nil, Boolean)] item_id e o sinal cnis_resumido (só conta com a chave ligada)
+  # @return [Array(Integer|nil, Boolean)] item_id e o sinal cnis_resumido (só conta na etapa Documentos)
   def parse_resposta(content)
     parsed = JSON.parse(content.to_s.sub(/\A```(?:json)?\s*/, '').sub(/```\s*\z/, ''))
     return [nil, false] unless parsed.is_a?(Hash)
 
-    [Integer(parsed['item_id'].to_s, exception: false), parsed['cnis_resumido'] == true && Ramon::EtapaDeGanho.documentos_ligado?]
+    [Integer(parsed['item_id'].to_s, exception: false), parsed['cnis_resumido'] == true && @documentos == true]
   rescue JSON::ParserError
     Rails.logger.warn("[Ramon::DocMatchService] resposta não-JSON do LLM para message=#{@message.id}")
     [nil, false]
