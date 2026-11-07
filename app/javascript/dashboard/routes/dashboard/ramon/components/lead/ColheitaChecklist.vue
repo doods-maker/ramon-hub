@@ -7,6 +7,8 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { SECAO, TITULO, CHIP, TOM, AVISO, LINHA } from '../../helpers/ui';
+import { colheitaCampos } from '../../helpers/colheitaCampos';
+import { docChargeDraft } from '../../helpers/docCobranca';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -71,8 +73,10 @@ const toggle = async item => {
   }
 };
 
-// extração sob demanda (decisão 20/07): o botão dispara o job; o resultado
-// chega pelo broadcast do lead (custom_attributes.colheita) em alguns segundos.
+// Extração sob demanda: o botão enfileira o job; o resultado chega pelo
+// broadcast do lead (custom_attributes.colheita) em alguns segundos. O job lê a
+// conversa do lead — sem conversa não há o que extrair, e o botão some.
+const podeExtrair = computed(() => Boolean(props.lead?.conversation_id));
 const extracting = ref(false);
 const extractColheita = async () => {
   if (extracting.value) return;
@@ -81,15 +85,18 @@ const extractColheita = async () => {
     await LeadsAPI.extractColheita(props.lead.id);
     useAlert(t('RAMON.COLHEITA.EXTRACT_REQUESTED'));
   } catch (e) {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    useAlert(t('RAMON.COLHEITA.EXTRACT_FAILED'));
   } finally {
     extracting.value = false;
   }
 };
 
-// extração da reunião feita pela IA (Ramon::ColheitaExtractionService)
+// Resultado da IA (Ramon::ColheitaExtractionService): dados, lacunas, confirmar.
 const colheitaIA = computed(
   () => props.lead?.custom_attributes?.colheita || null
+);
+const dadosColhidos = computed(() =>
+  colheitaCampos(colheitaIA.value?.dados, colheitaIA.value?.confirmar)
 );
 const lacunas = computed(() => colheitaIA.value?.lacunas || []);
 const extractedAt = computed(() => {
@@ -108,23 +115,18 @@ const extractedAt = computed(() => {
       });
 });
 
-// artefato 3 da colheita: cada lacuna vira pedido de documento RASCUNHO —
-// copia pro clipboard; quem revisa e envia é o humano, nada sai sozinho.
+// Cada lacuna vira pedido de documento em RASCUNHO, copiado para a área de
+// transferência; quem revisa e envia é uma pessoa, nada sai sozinho.
 const chargeLacunas = async () => {
   if (!lacunas.value.length) return;
-  const lines = [
-    t('RAMON.COLHEITA.DRAFT.GREETING', { name: props.lead?.name || '' }),
-    '',
-    ...lacunas.value.map(lacuna =>
-      t('RAMON.COLHEITA.DRAFT.ITEM', {
-        item: lacuna.como_obter || lacuna.campo,
-      })
-    ),
-    '',
-    t('RAMON.COLHEITA.DRAFT.CLOSING'),
-  ];
+  const draft = docChargeDraft(
+    t,
+    props.lead?.name,
+    lacunas.value.map(lacuna => lacuna.como_obter || lacuna.campo),
+    'RAMON.COLHEITA.DRAFT'
+  );
   try {
-    await copyTextToClipboard(lines.join('\n'));
+    await copyTextToClipboard(draft);
   } catch (error) {
     useAlert(t('RAMON.DOCS.COPY_FAILED'));
     return;
@@ -194,6 +196,36 @@ const chargeLacunas = async () => {
     </button>
 
     <div
+      v-if="dadosColhidos.length"
+      class="flex flex-col gap-1.5 pt-1"
+      data-testid="colheita-dados"
+    >
+      <span :class="TITULO">{{ $t('RAMON.COLHEITA.DADOS_TITLE') }}</span>
+      <dl class="flex flex-col gap-1.5 text-sm">
+        <div
+          v-for="(dado, i) in dadosColhidos"
+          :key="i"
+          class="flex items-baseline justify-between gap-3"
+          data-testid="colheita-dado"
+        >
+          <dt class="shrink-0 text-n-slate-10">
+            {{ $t(`RAMON.COLHEITA.CAMPO.${dado.chave}`) }}
+          </dt>
+          <dd class="flex items-baseline gap-1.5 text-right text-n-slate-12">
+            <span>{{ dado.valor }}</span>
+            <span
+              v-if="dado.confirmar"
+              class="shrink-0"
+              :class="[CHIP, TOM.amber]"
+              :title="$t('RAMON.COLHEITA.CONFIRMAR_TIP')"
+              >{{ $t('RAMON.COLHEITA.CONFIRMAR') }}</span
+            >
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div
       v-if="lacunas.length"
       class="flex flex-col gap-1"
       :class="[AVISO, TOM.amber]"
@@ -215,6 +247,7 @@ const chargeLacunas = async () => {
 
     <div class="flex flex-wrap gap-2">
       <Button
+        v-if="podeExtrair"
         data-testid="colheita-extract"
         sm
         faded

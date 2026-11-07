@@ -49,6 +49,7 @@ const baseLead = {
   id: 3,
   name: 'Ana',
   thesis_id: 1,
+  conversation_id: 99,
   custom_attributes: { foo: 'bar', colheita_status: { 7: true } },
 };
 
@@ -182,5 +183,42 @@ describe('ColheitaChecklist.vue', () => {
     await flushPromises();
     expect(extractSpy).toHaveBeenCalledWith(3);
     expect(alertSpy).toHaveBeenCalledWith('RAMON.COLHEITA.EXTRACT_REQUESTED');
+  });
+
+  // A extração lê a conversa do lead: sem conversa o job não faz nada, então
+  // o botão nem aparece (antes dizia "extração pedida" e nada acontecia).
+  it('hides the extract button when the lead has no conversation', () => {
+    const wrapper = mountChecklist({ ...baseLead, conversation_id: null });
+    expect(wrapper.find('[data-testid="colheita-extract"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('shows what the AI harvested, flagging the uncertain fields', () => {
+    const lead = {
+      ...baseLead,
+      custom_attributes: {
+        colheita: {
+          dados: {
+            cliente: { profissao: 'pedreiro', nome_completo: null },
+            acidente: { data: '2025-03-14' },
+          },
+          confirmar: ['acidente.data'],
+          lacunas: [],
+        },
+      },
+    };
+    const linhas = mountChecklist(lead).findAll(
+      '[data-testid="colheita-dado"]'
+    );
+    expect(linhas.map(l => l.text())).toEqual([
+      expect.stringContaining('pedreiro'),
+      expect.stringContaining('14/03/2025'),
+    ]);
+    expect(linhas[0].text()).toContain(
+      'RAMON.COLHEITA.CAMPO.cliente.profissao'
+    );
+    expect(linhas[1].text()).toContain('RAMON.COLHEITA.CONFIRMAR');
+    expect(linhas[0].text()).not.toContain('RAMON.COLHEITA.CONFIRMAR');
   });
 });

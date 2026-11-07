@@ -148,6 +148,24 @@ const LEAD = {
     colheita_status: { 41: 'ia', 43: true },
     colheita: {
       extraida_em: diasAtras(1),
+      dados: {
+        cliente: { profissao: 'pedreiro', estado_civil: null },
+        acidente: {
+          data: '2025-03-14',
+          tipo: 'trabalho',
+          cat_emitida: 'sim',
+        },
+        sequela: { descricao: 'perda de força no punho direito' },
+        beneficios: [
+          {
+            especie: 'B91',
+            dib: '2025-03-15',
+            dcb: '2025-07-20',
+            situacao: 'cessado',
+          },
+        ],
+      },
+      confirmar: ['acidente.data'],
       lacunas: [
         { campo: 'Data do acidente', como_obter: 'CAT ou boletim do hospital' },
       ],
