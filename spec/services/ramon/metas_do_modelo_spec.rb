@@ -32,4 +32,18 @@ RSpec.describe Ramon::MetasDoModelo do
     expect { described_class.importar(account, [{ mes: 'Nov/26', contratos: 'x' }].to_json) }.to raise_error(described_class::Erro, /não é número/)
     expect(MarketingMeta.where(account: account).count).to eq(12)
   end
+
+  it 'meta editada à mão: pede confirmação antes de desfazer, e mantém o liga/desliga' do
+    described_class.importar(account, mensal)
+    MarketingMeta.where(account: account).update_all(ativa: true) # rubocop:disable Rails/SkipsModelValidations
+    MarketingMeta.where(account: account).first.update!(valor: 1, editada_em: Time.current)
+
+    expect { described_class.importar(account, mensal) }
+      .to raise_error(described_class::PrecisaConfirmar) { |e| expect(e.editadas).to eq(1) }
+    described_class.importar(account, mensal, confirmar: true)
+
+    metas = MarketingMeta.where(account: account)
+    expect(metas.where.not(editada_em: nil)).to be_empty
+    expect(metas.pluck(:ativa).uniq).to eq([true])
+  end
 end

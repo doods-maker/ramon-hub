@@ -61,4 +61,50 @@ RSpec.describe 'Ramon Marketing API', type: :request do
     expect(response.parsed_body['meses']).to eq(1)
     expect(MarketingMeta.where(account: account).count).to eq(1)
   end
+
+  describe 'controle das metas' do
+    before { Ramon::MetasDoModelo.importar(account, [{ mes: 'Nov/26', contratos: 15, cac: 900 }].to_json) }
+
+    let(:meta) { MarketingMeta.find_by!(account: account, metrica: 'contratos') }
+
+    def bi_metas
+      ActiveRecord::Base.connection.exec_query("SELECT * FROM bi_marketing_metas WHERE account_id = #{account.id}").to_a
+    end
+
+    it 'nascem desligadas (fora do Metabase) e o interruptor liga e desliga' do
+      expect(bi_metas).to be_empty
+      put "#{url}/metas_ativas", params: { ativas: true }, headers: auth, as: :json
+      expect(bi_metas.size).to eq(2)
+
+      get url, headers: auth, as: :json
+      expect(response.parsed_body['metas']).to include('ativas' => true)
+      expect(response.parsed_body.dig('metas', 'linhas').size).to eq(2)
+
+      put "#{url}/metas_ativas", params: { ativas: false }, headers: auth, as: :json
+      expect(bi_metas).to be_empty
+    end
+
+    it 'edita uma meta, marca como editada e o arquivo novo pede confirmação (409)' do
+      patch "#{url}/metas/#{meta.id}", params: { valor: '18' }, headers: auth, as: :json
+      expect(response.parsed_body).to include('editada' => true)
+      expect(meta.reload.valor).to eq(18)
+
+      texto = [{ mes: 'Nov/26', contratos: 20 }].to_json
+      post "#{url}/importar_metas", params: { texto: texto }, headers: auth, as: :json
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body).to include('precisa_confirmar' => true, 'editadas' => 1)
+
+      post "#{url}/importar_metas", params: { texto: texto, confirmar: true }, headers: auth, as: :json
+      expect(response.parsed_body['meses']).to eq(1)
+    end
+
+    it 'recusa valor inválido e apaga todas' do
+      patch "#{url}/metas/#{meta.id}", params: { valor: 'abc' }, headers: auth, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      delete "#{url}/metas", headers: auth, as: :json
+      expect(response).to have_http_status(:no_content)
+      expect(MarketingMeta.where(account: account)).to be_empty
+    end
+  end
 end

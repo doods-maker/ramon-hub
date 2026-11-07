@@ -2727,10 +2727,21 @@
       },
       "METAS": {
         "TITLE": "Metas do modelo",
-        "COMO": "Rode o exportar-painel.mjs da operação comercial e suba o mensal.json. Substitui todas as metas.",
-        "PERIODO": "Metas de {de} a {ate}.",
+        "COMO": "Base: mensal.json do modelo.mjs, subido só depois de confirmado. Ajuste fino mês a mês na tabela; o que for editado à mão fica em destaque.",
         "VAZIO": "Nenhuma meta carregada.",
-        "OK": "Metas de {meses} meses carregadas."
+        "OK": "Metas de {meses} meses carregadas.",
+        "USAR": "Usar metas",
+        "DESLIGADAS": "Metas desligadas: não aparecem nos cartões de realizado × meta do Metabase.",
+        "APAGAR": "Apagar metas",
+        "CONFIRMAR_APAGAR": "Apagar todas as metas do hub?",
+        "EDITADAS": "{n} meta(s) editada(s) à mão, em destaque.",
+        "EDITADA": "Editada à mão",
+        "MES": "Mês",
+        "SALVA": "Meta salva.",
+        "VALOR_INVALIDO": "Valor inválido.",
+        "SOBRESCREVER_TITULO": "Subir o arquivo por cima das edições?",
+        "SOBRESCREVER_MSG": "Isto desfaz {n} meta(s) editada(s) à mão e volta tudo ao modelo.",
+        "SOBRESCREVER": "Subir mesmo assim"
       },
       "CUSTO": {
         "TITLE": "Custos lançados",
@@ -2754,6 +2765,14 @@
         "AGENCIA": "Agência",
         "EQUIPE": "Equipe",
         "OUTRO": "Outro"
+      },
+      "METRICAS": {
+        "CONTRATOS": "Contratos",
+        "REUNIOES_AGENDADAS": "Reuniões agendadas",
+        "REUNIOES_REALIZADAS": "Reuniões realizadas",
+        "GASTO_ANUNCIO": "Anúncio (R$)",
+        "CUSTO_AREA": "Custo da área (R$)",
+        "CAC": "CAC (R$)"
       }
     }
   },

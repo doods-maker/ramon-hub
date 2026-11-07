@@ -396,6 +396,9 @@ Rails.application.routes.draw do
             delete 'custos/:custo_id', action: :remover_custo
             post :importar_gasto
             post :importar_metas
+            put :metas_ativas
+            patch 'metas/:meta_id', action: :editar_meta
+            delete :metas, action: :apagar_metas
           end
           resource :ramon_extrato, only: [:show], controller: 'ramon_extrato' do
             put :meta

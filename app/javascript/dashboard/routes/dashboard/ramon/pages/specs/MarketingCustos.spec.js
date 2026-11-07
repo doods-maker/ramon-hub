@@ -25,7 +25,7 @@ const resposta = (extra = {}) => ({
       painel_trafego: true,
       ultimo_gasto: { data: '2026-10-14', origem: 'csv' },
     },
-    metas: { de: null, ate: null },
+    metas: { de: null, ate: null, ativas: false, linhas: [] },
     custos: [
       {
         id: 1,

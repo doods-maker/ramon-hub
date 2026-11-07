@@ -30,10 +30,33 @@ class Api::V1::Accounts::RamonMarketingController < Api::V1::Accounts::BaseContr
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
+  # Com meta editada à mão: 409 até a tela confirmar (confirmar: true).
   def importar_metas
-    render json: { meses: Ramon::MetasDoModelo.importar(Current.account, params.require(:texto)) }
+    meses = Ramon::MetasDoModelo.importar(Current.account, params.require(:texto), confirmar: params[:confirmar].present?)
+    render json: { meses: meses }
+  rescue Ramon::MetasDoModelo::PrecisaConfirmar => e
+    render json: { precisa_confirmar: true, editadas: e.editadas }, status: :conflict
   rescue Ramon::MetasDoModelo::Erro => e
     render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def metas_ativas
+    metas.update_all(ativa: ActiveModel::Type::Boolean.new.cast(params[:ativas]) == true) # rubocop:disable Rails/SkipsModelValidations
+    head :no_content
+  end
+
+  def editar_meta
+    valor = BigDecimal(params.require(:valor).to_s, exception: false)
+    return render json: { error: 'valor inválido' }, status: :unprocessable_entity if valor.nil? || valor.negative?
+
+    meta = metas.find(params[:meta_id])
+    meta.update!(valor: valor, editada_em: Time.current)
+    render json: meta_json(meta)
+  end
+
+  def apagar_metas
+    metas.delete_all
+    head :no_content
   end
 
   private
@@ -66,8 +89,14 @@ class Api::V1::Accounts::RamonMarketingController < Api::V1::Accounts::BaseContr
 
   def ligado?(chave) = ENV.fetch(chave, 'off') == 'on'
 
+  def metas = MarketingMeta.where(account: Current.account)
+
   def resumo_metas
-    metas = MarketingMeta.where(account: Current.account)
-    { de: metas.minimum(:mes), ate: metas.maximum(:mes), atualizado_em: metas.maximum(:updated_at) }
+    { de: metas.minimum(:mes), ate: metas.maximum(:mes), atualizado_em: metas.maximum(:updated_at),
+      ativas: metas.exists?(ativa: true), linhas: metas.order(:mes, :metrica).map { |m| meta_json(m) } }
+  end
+
+  def meta_json(meta)
+    { id: meta.id, mes: meta.mes, metrica: meta.metrica, valor: meta.valor, editada: meta.editada_em.present? }
   end
 end

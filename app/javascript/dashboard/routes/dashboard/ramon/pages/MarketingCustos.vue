@@ -9,6 +9,7 @@ import RamonMarketingAPI from 'dashboard/api/ramonMarketing';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import MetasModelo from '../components/marketing/MetasModelo.vue';
 import { formatBrl, parseBrlInput } from '../helpers/currency';
 import {
   ARQUIVO,
@@ -52,13 +53,6 @@ const carregar = async () => {
 const comoData = valor => new Date(`${String(valor).slice(0, 10)}T12:00:00`);
 const dataBr = valor =>
   valor ? comoData(valor).toLocaleDateString('pt-BR') : '';
-const mesBr = valor =>
-  valor
-    ? comoData(valor).toLocaleDateString('pt-BR', {
-        month: 'short',
-        year: 'numeric',
-      })
-    : '';
 
 // Linhas do quadro de estado: chave ligada/desligada ou configurada/faltando.
 const conexao = computed(() => {
@@ -141,12 +135,6 @@ const subirGasto = e =>
     texto => RamonMarketingAPI.importarGasto(texto),
     'RAMON.MARKETING.GASTO.OK'
   );
-const subirMetas = e =>
-  subir(
-    e,
-    texto => RamonMarketingAPI.importarMetas(texto),
-    'RAMON.MARKETING.METAS.OK'
-  );
 
 onMounted(carregar);
 </script>
@@ -170,7 +158,7 @@ onMounted(carregar);
       <Button link xs :label="t('RAMON.MARKETING.TENTAR')" @click="carregar" />
     </div>
     <div v-else class="flex flex-col gap-4">
-      <div class="grid gap-4 lg:grid-cols-3">
+      <div class="grid gap-4 lg:grid-cols-2">
         <section :class="CARTAO" class="flex flex-col gap-2">
           <h2 :class="TITULO">{{ t('RAMON.MARKETING.STATUS.TITLE') }}</h2>
           <div
@@ -202,32 +190,9 @@ onMounted(carregar);
             @change="subirGasto"
           />
         </section>
-
-        <section :class="CARTAO" class="flex flex-col gap-2">
-          <h2 :class="TITULO">{{ t('RAMON.MARKETING.METAS.TITLE') }}</h2>
-          <p class="text-sm text-n-slate-11">
-            {{ t('RAMON.MARKETING.METAS.COMO') }}
-          </p>
-          <p v-if="dados.metas.de" class="text-sm text-n-slate-12">
-            {{
-              t('RAMON.MARKETING.METAS.PERIODO', {
-                de: mesBr(dados.metas.de),
-                ate: mesBr(dados.metas.ate),
-              })
-            }}
-          </p>
-          <p v-else class="text-sm text-n-slate-10">
-            {{ t('RAMON.MARKETING.METAS.VAZIO') }}
-          </p>
-          <input
-            type="file"
-            accept=".json,application/json"
-            :class="ARQUIVO"
-            :aria-label="t('RAMON.MARKETING.METAS.TITLE')"
-            @change="subirMetas"
-          />
-        </section>
       </div>
+
+      <MetasModelo :metas="dados.metas" @atualizar="carregar" />
 
       <section :class="CARTAO" class="flex flex-col gap-3">
         <h2 :class="TITULO">{{ t('RAMON.MARKETING.CUSTO.TITLE') }}</h2>
