@@ -1,5 +1,5 @@
 # Item 21 (metade AdvBox): lead marcado como GANHO no hub → cliente + caso +
-# tarefa criados no AdvBox via API, com os mesmos dados do lead. A metade
+# tarefa 1º CONTATO (menos para quem vai à etapa Documentos) criados no AdvBox via API, com os mesmos dados do lead. A metade
 # ZapSign entra quando houver conta/modelos (gate do Eduardo).
 class Ramon::AdvboxClosingService
   # IDs da conta AdvBox da banca (GET /settings; escolhas do Eduardo 15/07/2026).
@@ -7,6 +7,7 @@ class Ramon::AdvboxClosingService
   USERS_ID = 266_778     # Eduardo Schlata
   STAGE_ID = 3_736_299   # CONTRATO FECHADO (Marketing)
   TASK_ID = 8_745_394    # 1º CONTATO COM O LEAD
+  ANALISE_TASK_ID = 8_745_386 # ANÁLISE DO CASO (checklist completo na etapa Documentos: Ramon::AdvboxDocsTaskService)
 
   # Tese do hub → tipo de processo no AdvBox. Fora do mapa cai no default (a
   # tese-foco) com aviso [CONFERIR tipo] nas notas do caso.
@@ -31,12 +32,10 @@ class Ramon::AdvboxClosingService
   end
 
   def perform
-    return if @lead.won_at.blank? || synced?
+    return if @lead.won_at.blank?
 
-    customer_id = step('customers_id') { find_or_create_customer }
-    lawsuit_id = step('lawsuits_id') { Ramon::AdvboxClient.create_lawsuit(lawsuit_payload(customer_id))['lawsuits_id'] }
-    step('posts_id') { Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id'] }
-    merge_advbox('sincronizado_em' => Time.zone.now.iso8601, 'erro' => nil, 'em' => nil)
+    sincronizar unless synced?
+    retomar_analise
   rescue Ramon::AdvboxClient::UnavailableError
     raise # retry no job (rede/5xx)
   rescue StandardError => e
@@ -44,6 +43,29 @@ class Ramon::AdvboxClosingService
   end
 
   private
+
+  # Etapa Documentos: o lead passou ao Jurídico antes de o caso existir aqui → a ANÁLISE DO CASO que ficou para trás. Fora do
+  # "unless synced?": o retry do job (ADVBOX fora do ar) já encontra o caso sincronizado. Falha dela não é erro de abrir o caso
+  # (advbox.erro): vai ao histórico do lead.
+  def retomar_analise
+    Ramon::Documentos::Passagem.retomar(@lead)
+  rescue Ramon::AdvboxClient::UnavailableError
+    raise
+  rescue StandardError => e
+    Rails.logger.error("AdvboxClosing: ANÁLISE DO CASO do lead #{@lead.id} falhou: #{e.class}: #{e.message}")
+    Ramon::Documentos::Entrada.registrar(@lead, "Jurídico: a tarefa ANÁLISE DO CASO não foi criada no ADVBOX (#{e.class}): criar à mão")
+  end
+
+  def sincronizar
+    customer_id = step('customers_id') { find_or_create_customer }
+    lawsuit_id = step('lawsuits_id') { Ramon::AdvboxClient.create_lawsuit(lawsuit_payload(customer_id))['lawsuits_id'] }
+    # Etapa Documentos (spec §9): lá o 1º contato é do agente; a única tarefa do caso é a ANÁLISE DO CASO, no completo. Vale nos
+    # dois caminhos do Ganho (código e fluxo "Lead ganho": a rotina abrir_caso_advbox chama aqui).
+    unless Ramon::EtapaDeGanho.pelo_agente_de_documentos?(@lead)
+      step('posts_id') { Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id'] }
+    end
+    merge_advbox('sincronizado_em' => Time.zone.now.iso8601, 'erro' => nil, 'em' => nil)
+  end
 
   def synced?
     advbox['sincronizado_em'].present?

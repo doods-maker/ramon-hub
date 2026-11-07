@@ -54,6 +54,13 @@ RSpec.describe Ramon::Documentos::Envio do
                                                'te ligar para ajudar. É só me dizer.'
                                              ])
     end
+
+    it 'encerramento (checklist completo): o texto aprovado, uma mensagem só' do
+      expect(described_class.mandar(lead, :encerramento)).to eq(:texto)
+      expect(enviadas.pluck(:content)).to eq(['Recebemos tudo, Maria! Muito obrigado pela paciência. Agora o seu caso segue para a ' \
+                                              'nossa equipe jurídica, que vai estudar cada detalhe. Qualquer novidade, a gente te avisa ' \
+                                              'por aqui.'])
+    end
   end
 
   it 'texto vazio ou nil no yml desliga o passo: nada sai, nem modelo', :aggregate_failures do
@@ -76,6 +83,11 @@ RSpec.describe Ramon::Documentos::Envio do
       expect(params['processed_params']).to eq('body' => { '1' => 'Maria', '2' => 'RG e CNIS completo' })
       expect(enviadas.last.content).to eq('Olá, Maria. Para o seu caso seguir no escritório Ramon Antonio Advogados, ainda falta: RG e ' \
                                           'CNIS completo. Você pode enviar por aqui mesmo. Se precisar de ajuda, responda esta mensagem.')
+    end
+
+    it 'encerramento: o modelo de cobrança não serve, nada sai' do
+      expect(described_class.mandar(lead, :encerramento)).to eq(:sem_permissao)
+      expect(enviadas).to be_empty
     end
 
     context 'when a caixa não tem o modelo aprovado (antes do número oficial)' do

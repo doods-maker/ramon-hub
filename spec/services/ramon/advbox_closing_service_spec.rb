@@ -125,6 +125,118 @@ RSpec.describe Ramon::AdvboxClosingService do
     expect(lead.reload.custom_attributes.dig('advbox', 'erro')).to be_present
   end
 
+  describe 'Etapa Documentos (chave ligada)' do
+    let(:etapas) { Ramon::EtapasPosVenda.criar!(account) }
+
+    around { |example| with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { example.run } }
+
+    # Checklist completo de verdade: o merge_advbox regrava o lead e o carimbo é recalculado do doc_status.
+    def completo_no_juridico(custom_attributes = {})
+      create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG')
+      status = thesis.thesis_items.where(section: 'documento').to_h { |item| [item.id.to_s, 'recebido'] }
+      lead.update_columns(lead_stage_id: etapas.last.id, docs_completos_em: Time.current, # rubocop:disable Rails/SkipsModelValidations
+                          custom_attributes: custom_attributes.merge('doc_status' => status))
+    end
+
+    def posts_do_tipo(tipo) = a_request(:post, 'https://app.advbox.com.br/api/v1/posts').with { |req| JSON.parse(req.body)['tasks_id'] == tipo }
+
+    # Spec §9 (07/11): o 1º contato de quem vai a Documentos é do agente; a única tarefa do caso é a ANÁLISE DO CASO, no completo.
+    it 'lead que vai a Documentos: cliente e caso, sem a tarefa 1º CONTATO COM O LEAD', :aggregate_failures do
+      lead.update_columns(lead_stage_id: etapas.first.id) # rubocop:disable Rails/SkipsModelValidations
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+
+      described_class.new(lead.reload).perform
+
+      expect(WebMock).not_to have_requested(:post, 'https://app.advbox.com.br/api/v1/posts')
+      advbox = lead.reload.custom_attributes['advbox']
+      expect(advbox).to include('customers_id' => 111, 'lawsuits_id' => 222)
+      expect(advbox['sincronizado_em']).to be_present
+      expect(advbox).not_to have_key('posts_id')
+    end
+
+    it 'lead que vai a Fechado (tese sem Documentos): como hoje, com a tarefa 1º CONTATO' do
+      lead # em Fechado, antes de as etapas novas existirem
+      etapas
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+      stub_create('posts', 'posts_id', 333)
+
+      described_class.new(lead).perform
+
+      expect(posts_do_tipo('8745394')).to have_been_made.once
+    end
+
+    # Review Focus 2: o checklist completou antes de o caso existir no ADVBOX; a ANÁLISE DO CASO sai quando ele nasce.
+    it 'lead que já passou ao Jurídico: cria a ANÁLISE DO CASO assim que o caso nasce', :aggregate_failures do
+      completo_no_juridico
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+      stub_create('posts', 'posts_id', 444)
+
+      described_class.new(lead.reload).perform
+
+      expect(posts_do_tipo('8745386')).to have_been_made.once
+      expect(posts_do_tipo('8745394')).not_to have_been_made
+      expect(lead.reload.custom_attributes.dig('advbox', 'analise_posts_id')).to eq(444)
+    end
+
+    # Review do PR 6, item 3: arrastado à mão para Jurídico com o checklist incompleto não ganha a tarefa.
+    it 'lead no Jurídico com o checklist incompleto: sem ANÁLISE DO CASO' do
+      lead.update_columns(lead_stage_id: etapas.last.id, docs_completos_em: nil) # rubocop:disable Rails/SkipsModelValidations
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+
+      described_class.new(lead.reload).perform
+
+      expect(WebMock).not_to have_requested(:post, 'https://app.advbox.com.br/api/v1/posts')
+    end
+
+    it 'o retry do job (ADVBOX fora do ar na ANÁLISE DO CASO) a cria, com o caso já sincronizado' do
+      completo_no_juridico('advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 })
+      stub_create('posts', 'posts_id', 444)
+
+      described_class.new(lead.reload).perform
+
+      expect(posts_do_tipo('8745386')).to have_been_made.once
+    end
+  end
+
+  # Review do PR 6, item 7: a ANÁLISE DO CASO que falha não vira erro de abertura do caso (advbox.erro).
+  it 'falha ao retomar a ANÁLISE DO CASO não é gravada como erro do caso; fica no histórico', :aggregate_failures do
+    lead.update!(custom_attributes: { 'advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 } })
+    allow(Ramon::Documentos::Passagem).to receive(:retomar).and_raise(ActiveRecord::StatementInvalid, 'deu ruim')
+
+    expect { described_class.new(lead).perform }.not_to raise_error
+
+    expect(lead.reload.custom_attributes['advbox']).not_to have_key('erro')
+    expect(lead.lead_activities.where(kind: 'documentos').pluck(:to_value)).to include(a_string_including('ANÁLISE DO CASO'))
+  end
+
+  it 'ADVBOX fora do ar ao retomar a ANÁLISE DO CASO: sobe para o retry do job, sem erro gravado' do
+    lead.update!(custom_attributes: { 'advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 } })
+    allow(Ramon::Documentos::Passagem).to receive(:retomar).and_raise(Ramon::AdvboxClient::UnavailableError)
+
+    expect { described_class.new(lead).perform }.to raise_error(Ramon::AdvboxClient::UnavailableError)
+    expect(lead.reload.custom_attributes['advbox']).not_to have_key('erro')
+  end
+
+  # Review do PR 6, item 1: a ANÁLISE DO CASO gravada (jsonb_set) entre o reload e o update! do merge_advbox sobrevive.
+  it 'a marca da ANÁLISE DO CASO gravada no meio do merge_advbox sobrevive' do
+    stub_create('customers', 'customers_id', 111)
+    stub_create('lawsuits', 'lawsuits_id', 222)
+    stub_create('posts', 'posts_id', 333)
+    allow(lead).to receive(:reload).and_wrap_original do |original, *args|
+      original.call(*args).tap do
+        Lead.where(id: lead.id).update_all([Ramon::AdvboxDocsTaskService::GRAVAR_ANALISE, '444']) # rubocop:disable Rails/SkipsModelValidations
+      end
+    end
+
+    described_class.new(lead).perform
+
+    expect(Lead.find(lead.id).custom_attributes['advbox']).to include('analise_posts_id' => 444, 'posts_id' => 333)
+  end
+
   it 'não faz nada em lead que não é ganho' do
     aberto = create(:lead, account: account)
     described_class.new(aberto).perform

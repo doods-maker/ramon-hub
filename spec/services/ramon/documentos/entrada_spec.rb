@@ -62,6 +62,15 @@ RSpec.describe Ramon::Documentos::Entrada do
     end
   end
 
+  it 'checklist já completo ao entrar: segue direto para a passagem ao Jurídico, sem ligar a IA nem a cobrança', :aggregate_failures do
+    lead.update_columns(conversation_id: conversa.id, docs_completos_em: Time.current) # rubocop:disable Rails/SkipsModelValidations
+    allow(Captain::AssistenteDaConversa).to receive(:para).with(conversa).and_return(Object.new)
+
+    expect { described_class.call(lead.reload) }.to have_enqueued_job(Ramon::Documentos::PassagemJob).with(lead.id)
+    expect(conversa.reload).to be_open
+    expect(lead.reload.custom_attributes).not_to have_key('documentos_cobranca')
+  end
+
   it 'conversa numa caixa sem IA: não mexe na conversa e avisa a equipe', :aggregate_failures do
     lead.update_columns(conversation_id: conversa.id, sdr_id: sdr.id) # rubocop:disable Rails/SkipsModelValidations
 

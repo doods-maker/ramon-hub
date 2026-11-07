@@ -49,7 +49,7 @@
 
 - Fora deste PR, registrado aqui para não se perder: a Recepção lê a pasta indicada nas notas da ANÁLISE DO CASO, com fallback para `Clientes\<Nome — CPF>\`. Plano próprio no repo da esteira; vigília continua desligada até o Eduardo ligar.
 
-### Task 6: textos (gate do Eduardo) e revisão
+### Task 6: textos e revisão
 
-- Rascunho do encerramento em `comercial\docs\`.
+- **Encerramento APROVADO pelo Eduardo em 07/11:** seção 3.5 de `C:\Users\dudsl\RAdvogados\comercial\docs\2026-11-07-agente-documentos-textos-rascunho.md` (fora do repo), uma mensagem só, literal. Entra no `config/ramon/documentos_cobranca.yml` do PR 5 como `encerramento` e sai pelo `Envio`: janela aberta → texto; fechada → não manda (o modelo `documentos_pendentes` não serve para encerramento) e registra no histórico.
 - `mattpocock-skills:code-review` → `rubocop-vps` → PR (`mattpocock-skills:pr`) → CI → merge → deploy. Depois: smoke ponta a ponta com lead de teste (retomar o smoke V do consolidado, conversa #35) e só então ligar `RAMON_ETAPA_DOCUMENTOS=on`.

@@ -25,6 +25,9 @@ mensagens:
     Por qual você quer começar? Se tiver qualquer dúvida no caminho, é só me chamar por aqui.
   lembrete_1: 'Oi, {nome}! Passando para lembrar do {primeiro_item}. Se tiver dificuldade para conseguir, me conta que eu te mostro o caminho.'
   lembrete_2: 'Bom dia, {nome}! Ainda estou te esperando com o {primeiro_item}. Se preferir, alguém da nossa equipe pode te ligar para ajudar. É só me dizer.'
+  # Checklist completo → Jurídico (Ramon::Documentos::Passagem): só na janela de 24 h; fora dela não sai (o modelo acima é de
+  # cobrança, não serve para encerrar). Aprovado pelo Eduardo em 07/11/2026.
+  encerramento: 'Recebemos tudo, {nome}! Muito obrigado pela paciência. Agora o seu caso segue para a nossa equipe jurídica, que vai estudar cada detalhe. Qualquer novidade, a gente te avisa por aqui.'
 
 # Fora da janela de 24 h: só modelo aprovado pela Meta (categoria utilidade, pt_BR). {{1}} = primeiro nome; {{2}} = o que falta.
 # A submissão à Meta é manual, quando o número oficial existir. Enquanto a caixa não tiver este modelo APROVADO, fora da

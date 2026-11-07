@@ -6,6 +6,7 @@ class Ramon::DriveExportService
   # Documento que serve a qualquer caso do cliente vai para `00 Pessoais` (grupos 03–05 da skill organizar-documentos-cliente).
   PESSOAL = /\b(RG|CPF|CNH|identidade|resid[eê]ncia|CNIS|CTPS)\b/i
   PASTA_PESSOAIS = '00 Pessoais'.freeze
+  COMPLETO = ' — COMPLETO'.freeze # sufixo da pasta do caso quando o checklist fecha (concluir)
 
   def initialize(lead)
     @lead = lead
@@ -23,8 +24,7 @@ class Ramon::DriveExportService
   def pasta_cliente_id
     @pasta_cliente_id ||= drive_state['pasta_id'].presence || begin
       clientes = Ramon::DriveClient.ensure_folder('Clientes', Ramon::DriveClient.root_id)
-      cpf = @lead.contact&.cpf
-      id = Ramon::DriveClient.ensure_folder([nome_cliente, cpf.presence].compact.join(' — '), clientes)
+      id = Ramon::DriveClient.ensure_folder(nome_pasta_cliente, clientes)
       merge_drive('pasta_id' => id)
       id
     end
@@ -42,7 +42,18 @@ class Ramon::DriveExportService
     end
   end
 
+  # Onde a pasta do caso fica depois do concluir, para quem a procura pelo caminho (tarefas no ADVBOX, Recepção da esteira).
+  def caminho_completo = "Clientes\\#{nome_pasta_cliente}\\#{nome_tese}#{COMPLETO}\\"
+
   private
+
+  def nome_pasta_cliente = [nome_cliente, @lead.contact&.cpf.presence].compact.join(' — ')
+
+  def nome_tese = "#{@lead.thesis.name.delete('/\:*?"<>|').squish} – #{@lead.won_at.in_time_zone.strftime('%m.%y')}"
+
+  def nome_cliente
+    @nome_cliente ||= (@lead.contact&.name.presence || @lead.name).to_s.strip
+  end
 
   def drive_state = @lead.custom_attributes&.dig('drive') || {}
 
@@ -100,12 +111,6 @@ class Ramon::DriveExportService
     nome_item.match?(PESSOAL) ? Ramon::DriveClient.ensure_folder(PASTA_PESSOAIS, pasta_cliente_id) : pasta_tese_id
   end
 
-  def nome_tese = "#{@lead.thesis.name.delete('/\:*?"<>|').squish} – #{@lead.won_at.in_time_zone.strftime('%m.%y')}"
-
-  def nome_cliente
-    @nome_cliente ||= (@lead.contact&.name.presence || @lead.name).to_s.strip
-  end
-
   def pasta_do_dia_id
     @pasta_do_dia_id ||= begin
       raiz = Ramon::DriveClient.ensure_folder('A enviar ao ADVBOX', Ramon::DriveClient.root_id)
@@ -120,7 +125,7 @@ class Ramon::DriveExportService
 
   def concluir
     # Marca a pasta do caso, não a do cliente: o nome do cliente fica estável para quem a acha pelo nome (portal).
-    Ramon::DriveClient.rename(pasta_tese_id, "#{nome_tese} — COMPLETO")
+    Ramon::DriveClient.rename(pasta_tese_id, "#{nome_tese}#{COMPLETO}")
     Ramon::AdvboxDocsTaskService.new(@lead).perform
     merge_drive('concluido_em' => Time.zone.now.iso8601)
   end

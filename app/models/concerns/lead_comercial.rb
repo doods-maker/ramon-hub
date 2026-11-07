@@ -9,12 +9,17 @@ module LeadComercial
 
   included do
     before_create :assign_sdr
+    before_save -> { Ramon::AdvboxDocsTaskService.preservar(self) },
+                if: -> { persisted? && won_at.present? && will_save_change_to_custom_attributes? }
     before_save :stamp_docs_completos, if: -> { new_record? || will_save_change_to_custom_attributes? || will_save_change_to_thesis_id? }
     after_save :cancelar_contrato_limpo, if: -> { saved_change_to_won_at? && won_at.nil? && contrato_limpo_em.present? }
     after_save :registrar_contrato_cancelado, if: -> { saved_change_to_won_at? && won_at.nil? }
     after_commit :verificar_registro_completo, on: [:create, :update], if: -> { saved_change_to_thesis_id? || saved_change_to_contact_id? }
     after_commit :assign_conversation_to_sdr, on: [:create, :update],
                                               if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
+    # Checklist completou na etapa Documentos → Jurídico (spec Etapa Documentos §8). O carimbo só muda de nil para valor.
+    after_commit :passar_ao_juridico, on: :update, if: -> { saved_change_to_docs_completos_em? && docs_completos_em.present? }
+    after_commit :avisar_desmarcado, on: :update, if: :saved_change_to_custom_attributes?
     # Registro de ações (audits, somente-inclusão, 5 anos): etapa, ganho/perda,
     # valor e dono do lead, e a exclusão. Aqui e não no Lead (no teto do
     # ClassLength). contact_id fica no destroy para a tela saber de quem era.
@@ -132,6 +137,12 @@ module LeadComercial
   end
 
   def verificar_registro_completo = Ramon::RegistroCompleto.verificar(self)
+
+  def passar_ao_juridico
+    Ramon::Documentos::PassagemJob.perform_later(id) if Ramon::EtapaDeGanho.conduzida?(lead_stage)
+  end
+
+  def avisar_desmarcado = Ramon::Documentos::Passagem.desmarcou(self, saved_change_to_custom_attributes, Current.user)
 
   # Documentos mínimos = checklist inteira da tese "recebido" (decisão 02/10).
   # Carimba o momento em que completou; desmarcar um item apaga o carimbo.

@@ -5,10 +5,13 @@
 # Textos e nome do modelo: config/ramon/documentos_cobranca.yml. Quem envia é o assistente da conversa (o da etapa Documentos).
 module Ramon::Documentos::Envio
   CONFIG = Ramon::Documentos::Cobranca::CONFIG
+  # O modelo da Meta é de cobrança ("ainda falta"): o encerramento fora da janela não sai.
+  SEM_MODELO = %i[encerramento].freeze
 
   module_function
 
-  # passo: :abertura, :lembrete_1 ou :lembrete_2. O checklist do lead tem de ter algo pendente (o CobrancaJob confere).
+  # passo: :abertura, :lembrete_1 ou :lembrete_2 (o checklist do lead tem de ter algo pendente: o CobrancaJob confere), ou
+  # :encerramento (checklist completo: Ramon::Documentos::Passagem), que só sai como texto, na janela.
   # Texto do passo vazio ou nil no yml = passo desligado: nada sai, nem o modelo.
   # @return [Symbol] :texto, :modelo, :sem_permissao ou :desligado (nos dois últimos, nada enviado)
   def mandar(lead, passo)
@@ -20,7 +23,7 @@ module Ramon::Documentos::Envio
     if Conversations::MessageWindowService.new(conversa).can_reply?
       criar(conversa, texto(lead, passo))
       :texto
-    elsif (modelo = modelo_aprovado(conversa))
+    elsif SEM_MODELO.exclude?(passo.to_sym) && (modelo = modelo_aprovado(conversa))
       criar(conversa, corpo_do_modelo(lead), 'template_params' => template_params(lead, modelo))
       :modelo
     else
