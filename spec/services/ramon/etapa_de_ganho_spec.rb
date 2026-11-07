@@ -20,9 +20,11 @@ RSpec.describe Ramon::EtapaDeGanho do
     expect(described_class.principal(account)).to eq(primeira)
   end
 
-  it 'sem etapa de ganho, nil' do
+  it 'sem etapa de ganho, principal é nil e principal! levanta', :aggregate_failures do
+    expect(described_class.principal!(account)).to eq(fechado)
     account.lead_stages.update_all(is_won: false) # rubocop:disable Rails/SkipsModelValidations
 
     expect(described_class.principal(account)).to be_nil
+    expect { described_class.principal!(account) }.to raise_error(ActiveRecord::RecordNotFound)
   end
 end

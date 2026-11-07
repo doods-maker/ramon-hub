@@ -35,9 +35,7 @@ module Ramon::Fluxos::Migracao
     'eventos_advbox' => {
       env: 'RAMON_FLUXO_EVENTOS_ADVBOX', faz: 'os eventos do ADVBOX',
       fluxos: { 'eventos_advbox' => 'evento_advbox' }.freeze,
-      preparar: lambda { |account, desenho|
-        Ramon::Fluxos::Migracao.com_etapa(desenho, (Ramon::EtapaDeGanho.principal(account) || raise(ActiveRecord::RecordNotFound)).id)
-      }
+      preparar: ->(account, desenho) { Ramon::Fluxos::Migracao.com_etapa(desenho, Ramon::EtapaDeGanho.principal!(account).id) }
     },
     # B5-conta: o Resumo do dia (Ramon::Fluxos::ResumoDoDia), no gatilho Horário da conta. env_antiga: o nome de antes,
     # lido só sem o novo — a imagem nova sobe antes da troca na VPS sem virar a chave.

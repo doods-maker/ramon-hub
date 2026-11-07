@@ -14,6 +14,11 @@ module Ramon::EtapaDeGanho
     account.lead_stages.find_by(label: FECHADO, is_won: true) || account.lead_stages.find_by(is_won: true)
   end
 
+  # Para quem não tem o que fazer sem etapa de ganho (importação, preparo do fluxo dos eventos ADVBOX).
+  def principal!(account)
+    principal(account) || raise(ActiveRecord::RecordNotFound, "conta #{account.id} sem etapa de ganho")
+  end
+
   # Onde um lead que acabou de ganhar deve cair. Neste PR é sempre a principal; o PR 2 desvia para Documentos.
   def entrada(lead)
     principal(lead.account)
