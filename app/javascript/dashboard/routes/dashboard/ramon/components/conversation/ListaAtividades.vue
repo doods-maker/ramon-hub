@@ -57,6 +57,7 @@ const GRUPO = {
   registro_completo: 'campo',
   dossie_entregue: 'campo',
   funil_auto: 'etapa',
+  documentos: 'ganho',
 };
 const grupoDe = activity => {
   if (activity.kind !== 'stage_changed') return GRUPO[activity.kind] || 'outro';

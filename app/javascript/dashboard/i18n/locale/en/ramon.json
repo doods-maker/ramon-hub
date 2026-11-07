@@ -1265,6 +1265,7 @@
           "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)",
           "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team",
           "FUNIL_AUTO": "Funnel AI",
+          "DOCUMENTOS": "Documents stage",
           "ROTEIRO": "AI script"
         }
       },

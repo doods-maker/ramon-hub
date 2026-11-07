@@ -1265,6 +1265,7 @@
           "REGISTRO_COMPLETO": "registro completo (tese, CPF, nascimento e nota do SDR)",
           "DOSSIE_ENTREGUE": "marcou o dossiê como entregue ao jurídico",
           "FUNIL_AUTO": "IA do funil",
+          "DOCUMENTOS": "Etapa Documentos",
           "ROTEIRO": "roteiro da IA"
         }
       },

@@ -339,6 +339,22 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#lead_updated -> entrada em Documentos' do
+    it 'com a chave ligada, entrar em Documentos chama a Entrada; desligada, nada', :aggregate_failures do
+      documentos = Ramon::EtapasPosVenda.criar!(account).first
+      lead = create(:lead, account: account, conversation: conversation, contact: contact)
+      allow(Ramon::Documentos::Entrada).to receive(:call)
+      ev = Events::Base.new('lead.updated', Time.zone.now, lead: lead,
+                                                           changed_attributes: { 'lead_stage_id' => [lead.lead_stage_id, documentos.id] })
+
+      listener.lead_updated(ev)
+      expect(Ramon::Documentos::Entrada).not_to have_received(:call)
+
+      with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { listener.lead_updated(ev) }
+      expect(Ramon::Documentos::Entrada).to have_received(:call).with(lead).once
+    end
+  end
+
   describe '#conversation_updated -> move o lead' do
     it 'move o lead pra etapa da fase-* adicionada' do
       lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),

@@ -10,7 +10,7 @@ module Ramon::Fluxos::Passos::Lead
 
   def mover_etapa(config, ctx)
     lead = exigir_lead(ctx)
-    etapa = lead.account.lead_stages.find(config['etapa_id'])
+    etapa = onde_o_ganho_entra(lead, lead.account.lead_stages.find(config['etapa_id']))
     adiante = ja_adiante(config, lead, etapa)
     return adiante if adiante
 
@@ -23,6 +23,14 @@ module Ramon::Fluxos::Passos::Lead
     # a mudança feita pelo próprio fluxo não pode cancelá-lo na próxima espera
     ctx.execucao.contexto = ctx.execucao.contexto.merge('etapa_inicial_id' => etapa.id)
     { saida: 's', resumo: "moveu para #{destino}" }
+  end
+
+  # Entrar no ganho pela etapa principal (Fechado) cai onde o ganho entra (Ramon::EtapaDeGanho.entrada: Documentos para
+  # tese marcada, com a chave ligada): o fluxo "Eventos do ADVBOX" leva aonde o código leva.
+  def onde_o_ganho_entra(lead, etapa)
+    return etapa if lead.lead_stage&.is_won || etapa != Ramon::EtapaDeGanho.principal(lead.account)
+
+    Ramon::EtapaDeGanho.entrada(lead)
   end
 
   # B4.1: "só para a frente" (como a reunião marcada do código): quem já está adiante fica onde está.

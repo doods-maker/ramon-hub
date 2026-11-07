@@ -111,6 +111,27 @@ RSpec.describe Ramon::Fluxos::EventosAdvbox do
     end
   end
 
+  describe 'contrato fechado de tese que passa por Documentos (chave ligada)' do
+    let(:pelo_codigo) { novo_lead('+5548999000021') }
+    let(:pelo_fluxo) { novo_lead('+5548999000022') }
+
+    it 'o fluxo leva a Documentos, como o código' do
+      documentos = Ramon::EtapasPosVenda.criar!(account).first
+      tese = create(:thesis, account: account, name: 'Tese Spec Fluxo Documentos', passa_documentos: true)
+      create(:thesis_item, thesis: tese, section: 'documento', content: 'CNIS completo')
+      [pelo_codigo, pelo_fluxo].each { |l| l.update!(thesis: tese) }
+      with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') do
+        perform_enqueued_jobs { described_class.processar(pelo_codigo, 'contrato_fechado', 'CONTRATO FECHADO') }
+        with_modified_env(RAMON_FLUXO_EVENTOS_ADVBOX: 'on') do
+          Ramon::Fluxos::Migracao.semear(account, 'eventos_advbox')
+          Ramon::Fluxos::Migracao.mudar_modo!(account, 'eventos_advbox', 'normal')
+          perform_enqueued_jobs { described_class.processar(pelo_fluxo, 'contrato_fechado', 'CONTRATO FECHADO') }
+        end
+      end
+      expect([pelo_codigo, pelo_fluxo].map { |l| l.reload.lead_stage }).to eq([documentos, documentos])
+    end
+  end
+
   describe 'contrato fechado nunca faz o Lead ganho em dobro (nem deixa de fazer)' do
     [[false, false], [true, false], [false, true], [true, true]].each do |advbox_flui, ganho_flui|
       it "eventos pelo #{advbox_flui ? 'fluxo' : 'código'}, lead ganho pelo #{ganho_flui ? 'fluxo' : 'código'}: 1 de cada" do
