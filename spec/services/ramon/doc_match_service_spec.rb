@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Ramon::DocMatchService do
   let(:account) { create(:account) }
   let(:thesis) { create(:thesis, account: account) }
-  let!(:rg) { create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG') }
+  let!(:rg) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG', content: 'RG') }
   let(:conversation) { create(:conversation, account: account) }
   let(:lead) { create(:lead, account: account, thesis: thesis, conversation: conversation) }
   let(:message) do
