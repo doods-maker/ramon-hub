@@ -51,7 +51,8 @@ module Ramon::Documentos::Relogio
     if est['acompanhamento_em'].nil? || est['acompanhamento_em'] < ref
       { passo: :acompanhamento, em: somar(ref, RITMO['acompanhamento_dias'] * dia, horario) }
     else
-      { passo: :travado, em: somar(ref, RITMO['travado_dias'] * dia, horario) }
+      # Do acompanhamento, nunca da referência: acompanhamento atrasado (conversa com uma pessoa, pausa) não traz o travado junto.
+      { passo: :travado, em: somar(est['acompanhamento_em'], (RITMO['travado_dias'] - RITMO['acompanhamento_dias']) * dia, horario) }
     end
   end
 
