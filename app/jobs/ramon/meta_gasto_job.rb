@@ -24,7 +24,7 @@ class Ramon::MetaGastoJob < ApplicationJob
     hoje = Time.zone.today
     linhas = Ramon::MetaCapi::Insights.new(token: token, ad_account_id: ad_account_id)
                                       .por_anuncio(desde: hoje - dias.to_i, ate: hoje - 1)
-    gravar(account, linhas)
+    MetaGasto.gravar(account, linhas, origem: 'api')
   rescue Ramon::MetaCapi::Recusado => e
     Rails.logger.warn("MetaGastoJob: #{e.class.name} HTTP #{e.http} code #{e.codigo || '-'}")
     nil
@@ -35,15 +35,5 @@ class Ramon::MetaGastoJob < ApplicationJob
   def token_de(account)
     ENV['RAMON_META_ADS_TOKEN'].presence ||
       Channel::Whatsapp.where(account_id: account.id).order(:id).first&.provider_config.to_h['api_key']
-  end
-
-  def gravar(account, linhas)
-    return 0 if linhas.empty?
-
-    agora = Time.current
-    registros = linhas.map { |l| l.merge(account_id: account.id, created_at: agora, updated_at: agora) }
-    colunas = %i[ad_name campaign_id campaign_name spend impressions clicks] # updated_at: o upsert_all do Rails 7.1 já atualiza (record_timestamps)
-    MetaGasto.upsert_all(registros, unique_by: %i[account_id ad_id data], update_only: colunas) # rubocop:disable Rails/SkipsModelValidations
-    linhas.size
   end
 end

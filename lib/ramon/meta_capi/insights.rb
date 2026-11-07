@@ -3,7 +3,10 @@
 class Ramon::MetaCapi::Insights
   OPEN_TIMEOUT = 5
   READ_TIMEOUT = 30
-  CAMPOS = 'ad_id,ad_name,campaign_id,campaign_name,spend,impressions,clicks,date_start'.freeze
+  CAMPOS = 'ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,objective,spend,impressions,clicks,actions,date_start'.freeze
+  # Resultados que a própria Meta conta (conferência Meta × hub).
+  CONVERSA = 'onsite_conversion.messaging_conversation_started_7d'.freeze
+  LEAD = 'lead'.freeze
   REDE = Ramon::MetaCapi::Cliente::REDE
 
   def initialize(token:, ad_account_id:)
@@ -29,8 +32,14 @@ class Ramon::MetaCapi::Insights
 
   def linha(item)
     { data: Date.parse(item['date_start']), ad_id: item['ad_id'], ad_name: item['ad_name'],
-      campaign_id: item['campaign_id'], campaign_name: item['campaign_name'],
-      spend: BigDecimal(item['spend'].to_s.presence || '0'), impressions: item['impressions'].to_i, clicks: item['clicks'].to_i }
+      adset_id: item['adset_id'], adset_name: item['adset_name'], campaign_id: item['campaign_id'], campaign_name: item['campaign_name'],
+      objetivo: item['objective'], spend: BigDecimal(item['spend'].to_s.presence || '0'),
+      impressions: item['impressions'].to_i, clicks: item['clicks'].to_i,
+      conversas: acao(item, CONVERSA), leads_meta: acao(item, LEAD) }
+  end
+
+  def acao(item, tipo)
+    Array(item['actions']).find { |a| a['action_type'] == tipo }.to_h['value'].to_i
   end
 
   def requisitar(url, query)

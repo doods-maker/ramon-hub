@@ -35,6 +35,15 @@ RSpec.describe 'BI views (bi_leads, bi_stage_transitions)' do # rubocop:disable 
     expect(bi_leads_row(lead.id)['channel']).to eq('outro')
   end
 
+  it 'meta_ad_id vem do clique no WhatsApp ou, na LP, do utm_content numérico com utm_source=meta' do
+    clique = create(:lead, account: account, lead_stage: stage, custom_attributes: { meta_referral: { source_id: '111' } })
+    lp = create(:lead, account: account, lead_stage: stage, custom_attributes: { utm: { utm_source: 'meta', utm_content: '222' } })
+    google = create(:lead, account: account, lead_stage: stage, custom_attributes: { utm: { utm_source: 'google', utm_content: '333' } })
+    texto = create(:lead, account: account, lead_stage: stage, custom_attributes: { utm: { utm_source: 'meta', utm_content: 'video-a' } })
+
+    expect([clique, lp, google, texto].map { |l| bi_leads_row(l.id)['meta_ad_id'] }).to eq(['111', '222', nil, nil])
+  end
+
   it 'reflects the current stage probability' do
     lead = create(:lead, account: account, lead_stage: stage)
 
