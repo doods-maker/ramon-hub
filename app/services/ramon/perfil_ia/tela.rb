@@ -43,7 +43,7 @@ class Ramon::PerfilIa::Tela
     @account.lead_stages.where(is_won: false, is_lost: false).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
   end
 
-  # Depois das abertas, fora da Trilha: a IA envia sozinha (Ramon::PerfilIa::ETAPAS_CONDUZIDAS).
+  # Depois das abertas, fora da Trilha: a IA envia sozinha (Ramon::EtapaDeGanho::CONDUZIDAS).
   def conduzidas = Ramon::EtapaDeGanho.conduzidas(@account).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
 
   # "Testar este perfil" da tese: o assistente da caixa dela (ramon_thesis_id) ou, sem caixa com IA, o global.
