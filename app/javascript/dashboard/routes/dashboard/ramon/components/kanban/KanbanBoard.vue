@@ -13,7 +13,7 @@ import { useAdmin } from 'dashboard/composables/useAdmin';
 import { CAMPO } from '../../helpers/ui';
 import { leadsToCsv } from '../../helpers/leadsCsv';
 import { mensagemErro } from '../../helpers/erro';
-import { entraNoGanho } from '../../helpers/stage';
+import { entraNoGanho, pulaDocumentos } from '../../helpers/stage';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import FilterChips from './FilterChips.vue';
@@ -218,7 +218,26 @@ const cancelLost = () => {
   boardVersion.value += 1; // devolve o card à origem
 };
 
-const confirmWon = async ({ value }) => {
+// Ganho que pula Documentos: o modal de valor pede o motivo (vira nota do lead).
+const wonPedeMotivo = computed(() => {
+  const lead = pendingMove.value && findLead(pendingMove.value.id);
+  return pulaDocumentos(
+    findStage(pendingMove.value?.leadStageId),
+    findStage(lead?.lead_stage_id),
+    lead,
+    stages.value
+  );
+});
+const notaPulaDocumentos = (id, leadStageId, motivo) =>
+  LeadsAPI.createNote(
+    id,
+    t('RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS', {
+      etapa: findStage(leadStageId)?.name,
+      motivo,
+    })
+  ).catch(() => useAlert(t('RAMON.FUNIL.WON.NOTA_ERRO')));
+
+const confirmWon = async ({ value, motivo }) => {
   if (!pendingMove.value) return;
   const { id, leadStageId, position } = pendingMove.value;
   // Um único update: move e (quando informado) grava o valor no mesmo passo.
@@ -234,6 +253,7 @@ const confirmWon = async ({ value }) => {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     return;
   }
+  if (motivo) notaPulaDocumentos(id, leadStageId, motivo);
   pendingMove.value = null;
   wonModalOpen.value = false;
 };
@@ -772,6 +792,7 @@ const exportCsv = () => {
       <WonValueModal
         v-if="wonModalOpen"
         :initial-value="findLead(pendingMove?.id)?.value ?? null"
+        :pede-motivo="wonPedeMotivo"
         @confirm-value="confirmWon"
         @cancel-value="cancelWon"
       />

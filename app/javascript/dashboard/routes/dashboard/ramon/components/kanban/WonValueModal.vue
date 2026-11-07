@@ -5,6 +5,7 @@ import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import Button from 'dashboard/components-next/button/Button.vue';
 import {
   CAMPO,
+  TEXTAREA,
   ROTULO,
   FUNDO_JANELA,
   JANELA,
@@ -14,6 +15,9 @@ import {
 
 const props = defineProps({
   initialValue: { type: [Number, String], default: null },
+  // Ganho que pula Documentos (helpers/stage.js pulaDocumentos): o motivo é
+  // obrigatório e vai para as notas do lead.
+  pedeMotivo: { type: Boolean, default: false },
 });
 const emit = defineEmits(['confirmValue', 'cancelValue']);
 
@@ -28,13 +32,20 @@ onMounted(() => valueInput.value?.focus());
 const isInvalid = computed(
   () => value.value.trim() !== '' && parseBrlInput(value.value) === null
 );
+const motivo = ref('');
+const faltaMotivo = computed(() => props.pedeMotivo && !motivo.value.trim());
+const comMotivo = payload =>
+  props.pedeMotivo ? { ...payload, motivo: motivo.value.trim() } : payload;
 
 // Salvar envia o valor; Pular move sem valor; o clique fora cancela (reverte).
 const save = () => {
-  if (isInvalid.value) return;
-  emit('confirmValue', { value: parseBrlInput(value.value) });
+  if (isInvalid.value || faltaMotivo.value) return;
+  emit('confirmValue', comMotivo({ value: parseBrlInput(value.value) }));
 };
-const skip = () => emit('confirmValue', { value: null });
+const skip = () => {
+  if (faltaMotivo.value) return;
+  emit('confirmValue', comMotivo({ value: null }));
+};
 const cancel = () => emit('cancelValue');
 
 // Esc cancela (reverte o drag), igual ao clique no backdrop.
@@ -67,6 +78,15 @@ onKeyStroke('Escape', cancel);
       >
         {{ $t('RAMON.FUNIL.WON.INVALID') }}
       </p>
+      <label v-if="pedeMotivo" :class="ROTULO" class="mt-3">
+        {{ $t('RAMON.FUNIL.WON.MOTIVO_PULA_DOCUMENTOS') }}
+        <textarea
+          v-model="motivo"
+          data-testid="won-motivo-input"
+          rows="3"
+          :class="TEXTAREA"
+        />
+      </label>
       <div :class="RODAPE_JANELA">
         <Button
           data-testid="won-value-skip"
@@ -74,13 +94,14 @@ onKeyStroke('Escape', cancel);
           faded
           slate
           :label="$t('RAMON.FUNIL.WON.SKIP')"
+          :disabled="faltaMotivo"
           @click="skip"
         />
         <Button
           data-testid="won-value-save"
           sm
           :label="$t('RAMON.FUNIL.WON.SAVE')"
-          :disabled="isInvalid"
+          :disabled="isInvalid || faltaMotivo"
           @click="save"
         />
       </div>

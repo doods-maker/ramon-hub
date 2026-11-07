@@ -498,7 +498,10 @@
         "VALUE_LABEL": "Valor (R$)",
         "SAVE": "Salvar",
         "SKIP": "Pular",
-        "INVALID": "Valor inválido — use números, ex.: 1.500,00"
+        "INVALID": "Valor inválido — use números, ex.: 1.500,00",
+        "MOTIVO_PULA_DOCUMENTOS": "Esta tese passa pela etapa Documentos. Por que ir direto para cá? (obrigatório)",
+        "NOTA_PULA_DOCUMENTOS": "Ganho direto em {etapa}, sem passar por Documentos: {motivo}",
+        "NOTA_ERRO": "O ganho foi gravado, mas o motivo não chegou às notas do lead. Registre lá à mão."
       },
       "NEW": {
         "THESIS": "Tese",

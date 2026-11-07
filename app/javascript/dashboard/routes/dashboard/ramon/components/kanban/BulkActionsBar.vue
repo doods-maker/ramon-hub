@@ -11,8 +11,13 @@ import { vOnClickOutside } from '@vueuse/components';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { DEFAULT_STAGE_COLOR, entraNoGanho } from '../../helpers/stage';
-import { CARTAO, CAMPO, LINHA, MENU } from '../../helpers/ui';
+import LeadsAPI from 'dashboard/api/leads';
+import {
+  DEFAULT_STAGE_COLOR,
+  entraNoGanho,
+  pulaDocumentos,
+} from '../../helpers/stage';
+import { CARTAO, CAMPO, LINHA, MENU, ROTULO, TEXTAREA } from '../../helpers/ui';
 import LostReasonModal from './LostReasonModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 
@@ -52,6 +57,10 @@ const followUpDate = ref('');
 const pendingLostStage = ref(null);
 // Etapa de ganho: segura até a confirmação (passagem, AdvBox, NPS, Drive).
 const pendingWonStage = ref(null);
+// Leads do lote que pulam Documentos (tirado na escolha): o motivo é obrigatório
+// e vira nota de cada um.
+const pulandoIds = ref([]);
+const wonMotivo = ref('');
 
 const runBulk = async payload => {
   closeMenus();
@@ -69,6 +78,7 @@ const stageOfLead = id => {
   const lead = getters['leads/getLeads']?.value?.find(l => l.id === id);
   return stages.value.find(s => s.id === lead?.lead_stage_id);
 };
+const leadDe = id => getters['leads/getLeads']?.value?.find(l => l.id === id);
 
 const pickStage = stage => {
   if (stage.is_lost) {
@@ -78,6 +88,10 @@ const pickStage = stage => {
   }
   if (selectedIds.value.some(id => entraNoGanho(stage, stageOfLead(id)))) {
     closeMenus();
+    pulandoIds.value = selectedIds.value.filter(id =>
+      pulaDocumentos(stage, stageOfLead(id), leadDe(id), stages.value)
+    );
+    wonMotivo.value = '';
     pendingWonStage.value = stage;
     return;
   }
@@ -94,11 +108,24 @@ const confirmLost = async ({ lostReason }) => {
   if (ok) pendingLostStage.value = null;
 };
 
+const faltaMotivo = computed(
+  () => pulandoIds.value.length > 0 && !wonMotivo.value.trim()
+);
 const confirmWon = async () => {
-  const ok = await runBulk({
-    fields: { lead_stage_id: pendingWonStage.value.id },
+  if (faltaMotivo.value) return;
+  const stage = pendingWonStage.value;
+  const ok = await runBulk({ fields: { lead_stage_id: stage.id } });
+  if (!ok) return;
+  const nota = t('RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS', {
+    etapa: stage.name,
+    motivo: wonMotivo.value.trim(),
   });
-  if (ok) pendingWonStage.value = null;
+  pulandoIds.value.forEach(id =>
+    LeadsAPI.createNote(id, nota).catch(() =>
+      useAlert(t('RAMON.FUNIL.WON.NOTA_ERRO'))
+    )
+  );
+  pendingWonStage.value = null;
 };
 
 const pickAgent = agent => runBulk({ fields: { sdr_id: agent.id } });
@@ -275,9 +302,20 @@ onKeyStroke('Escape', () => {
         :message="$t('RAMON.KANBAN.BULK.WON_MESSAGE')"
         :confirm-label="$t('RAMON.KANBAN.BULK.WON_CONFIRM')"
         confirm-color="blue"
+        :confirm-disabled="faltaMotivo"
         @confirm="confirmWon"
         @cancel="pendingWonStage = null"
-      />
+      >
+        <label v-if="pulandoIds.length" :class="ROTULO" class="mt-3">
+          {{ $t('RAMON.FUNIL.WON.MOTIVO_PULA_DOCUMENTOS') }}
+          <textarea
+            v-model="wonMotivo"
+            data-testid="bulk-won-motivo"
+            rows="3"
+            :class="TEXTAREA"
+          />
+        </label>
+      </ConfirmModal>
     </Transition>
   </div>
 </template>

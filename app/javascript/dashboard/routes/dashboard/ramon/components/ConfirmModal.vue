@@ -22,6 +22,8 @@ defineProps({
   // Rótulo do "Cancelar" quando a ação também se chama cancelar (ex.:
   // "Cancelar reunião" → "Manter reunião").
   cancelLabel: { type: String, default: '' },
+  // Campo obrigatório no slot (ex.: motivo) ainda vazio: segura o confirmar.
+  confirmDisabled: { type: Boolean, default: false },
 });
 const emit = defineEmits(['confirm', 'cancel', 'alt']);
 
@@ -37,6 +39,7 @@ onKeyStroke('Escape', () => emit('cancel'));
     <div :class="[JANELA, altLabel ? '!w-[28rem]' : '']">
       <h3 :class="TITULO_JANELA">{{ title }}</h3>
       <p v-if="message" class="text-sm text-n-slate-11">{{ message }}</p>
+      <slot />
       <div :class="RODAPE_JANELA">
         <Button
           data-testid="confirm-modal-cancel"
@@ -61,6 +64,7 @@ onKeyStroke('Escape', () => emit('cancel'));
           sm
           :color="confirmColor"
           :label="confirmLabel"
+          :disabled="confirmDisabled"
           @click="emit('confirm')"
         />
       </div>

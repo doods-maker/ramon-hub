@@ -498,7 +498,10 @@
         "VALUE_LABEL": "Value (R$)",
         "SAVE": "Save",
         "SKIP": "Skip",
-        "INVALID": "Invalid value — numbers only, e.g. 1,500.00"
+        "INVALID": "Invalid value — numbers only, e.g. 1,500.00",
+        "MOTIVO_PULA_DOCUMENTOS": "This thesis goes through the Documents stage. Why go straight here? (required)",
+        "NOTA_PULA_DOCUMENTOS": "Won straight into {etapa}, skipping Documents: {motivo}",
+        "NOTA_ERRO": "The deal was saved, but the reason did not reach the lead notes. Add it there by hand."
       },
       "NEW": {
         "THESIS": "Thesis",

@@ -16,6 +16,13 @@ import { useAlert } from 'dashboard/composables';
 vi.mock('dashboard/composables', () => ({
   useAlert: vi.fn(),
 }));
+vi.mock('dashboard/api/leads', () => ({
+  default: {
+    createNote: vi.fn(() => Promise.resolve({})),
+    get: vi.fn(() => Promise.resolve({ data: { payload: [] } })),
+  },
+}));
+import LeadsAPI from 'dashboard/api/leads';
 
 const dispatch = vi.fn();
 const STAGES = [
@@ -448,6 +455,55 @@ describe('KanbanBoard.vue', () => {
         'leads/move',
         expect.anything()
       );
+    });
+
+    it('ganho que pula Documentos pede o motivo e grava como nota do lead', async () => {
+      const wrapper = mountBoard({
+        stages: [
+          ...STAGES,
+          { id: 7, name: 'Fechado', label: 'fase-fechado', is_won: true },
+          { id: 8, name: 'Documentos', label: 'fase-documentos', is_won: true },
+        ],
+        leads: [
+          {
+            id: 10,
+            lead_stage_id: 1,
+            position: 0,
+            thesis_passa_documentos: true,
+          },
+        ],
+      });
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 7, newIndex: 0 });
+      await flushPromises();
+      const modal = wrapper.findComponent(WonValueModal);
+      expect(modal.props('pedeMotivo')).toBe(true);
+
+      modal.vm.$emit('confirmValue', { value: null, motivo: 'Já trouxe tudo' });
+      await flushPromises();
+      expect(dispatch).toHaveBeenCalledWith(
+        'leads/update',
+        expect.objectContaining({ id: 10, lead_stage_id: 7 })
+      );
+      expect(LeadsAPI.createNote).toHaveBeenCalledWith(
+        10,
+        'RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS'
+      );
+    });
+
+    it('ganho sem pular Documentos não pede motivo nem cria nota', async () => {
+      LeadsAPI.createNote.mockClear();
+      const wrapper = mountBoard({ stages: COM_GANHOS });
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 7, newIndex: 0 });
+      await flushPromises();
+      const modal = wrapper.findComponent(WonValueModal);
+      expect(modal.props('pedeMotivo')).toBe(false);
+      modal.vm.$emit('confirmValue', { value: null });
+      await flushPromises();
+      expect(LeadsAPI.createNote).not.toHaveBeenCalled();
     });
 
     it('NÃO mostra toast quando o movimento cai no modal de perda', async () => {

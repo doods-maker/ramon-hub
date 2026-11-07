@@ -63,6 +63,8 @@ json.stage_name lead.lead_stage&.name
 json.stage_color lead.lead_stage&.color
 json.lead_priority_name lead.lead_priority&.name
 json.thesis_name lead.thesis&.name
+# arrastar para Fechado pula Documentos? (pede o motivo no funil — helpers/stage.js pulaDocumentos)
+json.thesis_passa_documentos lead.thesis&.passa_documentos == true
 # pré-preenche o honorário contratual da Liquidação (continua editável)
 json.thesis_honorario_percentual lead.thesis&.honorario_percentual
 json.sdr_name lead.sdr&.name
