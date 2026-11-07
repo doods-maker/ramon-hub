@@ -4,8 +4,11 @@
 # sino + push (só a tese: o ntfy é público). Ninguém online (ou ninguém no lead): os admins também são avisados.
 # Fora de Documentos, o handoff segue o de sempre. Devolver = "Devolver à IA".
 module Ramon::Documentos::Handoff
-  # A tool de handoff grava o motivo como nota privada do assistente logo antes do bot_handoff!.
-  JANELA_DO_MOTIVO = 2.minutes
+  # A tool de handoff grava o motivo numa nota privada com esta marca em content_attributes, logo antes do bot_handoff!.
+  MARCA = 'ramon_handoff'.freeze
+  # A nota da tool deste handoff: depois da última mensagem do cliente (uma query, subconsulta).
+  DEPOIS_DO_CLIENTE = 'messages.created_at > (SELECT MAX(m.created_at) FROM messages m ' \
+                      'WHERE m.conversation_id = messages.conversation_id AND m.message_type = 0)'.freeze
 
   module_function
 
@@ -26,13 +29,13 @@ module Ramon::Documentos::Handoff
     falta = lead.doc_checklist.reject { |doc| doc[:status] == 'recebido' }.pluck(:title)
     [
       "IA passou a conversa (etapa Documentos) para #{responsavel&.name || 'a equipe'}.",
-      ("Motivo: #{motivo(conversa)}" if motivo(conversa)),
+      "Motivo: #{motivo(conversa) || 'passagem automática (sem motivo da IA: freio, cota ou falha de envio).'}",
       "Falta: #{falta.presence&.join(', ') || 'nada no checklist'}."
-    ].compact.join("\n")
+    ].join("\n")
   end
 
   def motivo(conversa)
-    conversa.messages.where(private: true, sender_type: 'Captain::Assistant', created_at: JANELA_DO_MOTIVO.ago..)
+    conversa.messages.where(private: true).where("content_attributes ->> '#{MARCA}' = 'true'").where(DEPOIS_DO_CLIENTE)
             .order(:created_at).last&.content.presence
   end
 end

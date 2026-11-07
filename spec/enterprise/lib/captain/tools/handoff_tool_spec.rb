@@ -52,6 +52,12 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
           expect(created_message.conversation).to eq(conversation)
         end
 
+        # ramon: Ramon::Documentos::Handoff lê o motivo pela marca, não por qualquer nota privada da IA (rascunho)
+        it 'marca a nota como a da tool de handoff' do
+          tool.perform(tool_context, reason: 'motivo')
+          expect(Message.last.content_attributes[Ramon::Documentos::Handoff::MARCA]).to be(true)
+        end
+
         it 'triggers bot handoff on conversation' do
           # The tool finds the conversation by ID, so we need to mock the found conversation
           found_conversation = Conversation.find(conversation.id)

@@ -56,12 +56,26 @@ RSpec.describe Ramon::Documentos::Handoff do
     expect(avisados).to contain_exactly(sdr.id, admin.id)
   end
 
-  it 'a nota leva o motivo que a IA deixou ao passar a conversa' do
-    create(:message, account: account, conversation: conversa, message_type: :outgoing, private: true,
-                     content: 'Cliente disse que não tem o laudo')
-    conversa.messages.last.update_columns(sender_type: 'Captain::Assistant') # rubocop:disable Rails/SkipsModelValidations
+  def do_cliente(quando) = create(:message, account: account, conversation: conversa, message_type: :incoming, created_at: quando)
+
+  def nota_da_ia(texto, quando, tool: false)
+    create(:message, account: account, conversation: conversa, message_type: :outgoing, private: true, content: texto,
+                     created_at: quando, content_attributes: tool ? { described_class::MARCA => true } : {})
+  end
+
+  it 'a nota leva o motivo da tool de handoff depois da última mensagem do cliente; rascunho da IA não vira motivo' do
+    do_cliente(2.minutes.ago)
+    nota_da_ia('Cliente disse que não tem o laudo', 1.minute.ago, tool: true)
+    nota_da_ia('RASCUNHO: resposta segurada', 30.seconds.ago)
     handoff
-    expect(notas.last).to include('Cliente disse que não tem o laudo', 'CNIS completo')
+    expect(notas.last).to include('Motivo: Cliente disse que não tem o laudo', 'CNIS completo')
+  end
+
+  it 'sem nota da tool depois da última mensagem do cliente (freio, cota, falha): passagem automática' do
+    nota_da_ia('motivo de outra vez', 2.minutes.ago, tool: true)
+    do_cliente(1.minute.ago)
+    handoff
+    expect(notas.last).to include('passagem automática').and(exclude('motivo de outra vez'))
   end
 
   it 'fora de Documentos, ou com a chave desligada, é o handoff de hoje: nada muda', :aggregate_failures do
