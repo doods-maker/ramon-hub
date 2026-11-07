@@ -30,6 +30,16 @@ RSpec.describe 'Lead Config API', type: :request do
     expect(body['lost_reasons'].map { |r| r['name'] }).to include('Honorário')
   end
 
+  it 'diz se a etapa Documentos está ligada (chave RAMON_ETAPA_DOCUMENTOS)', :aggregate_failures do
+    get "/api/v1/accounts/#{account.id}/lead_config", headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['etapa_documentos']).to be(false)
+
+    with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') do
+      get "/api/v1/accounts/#{account.id}/lead_config", headers: admin.create_new_auth_token, as: :json
+    end
+    expect(response.parsed_body['etapa_documentos']).to be(true)
+  end
+
   it 'retorna as origens distintas ordenadas' do
     stage = account.lead_stages.first
     account.leads.create!(name: 'A', lead_stage: stage, source: 'Meta Ads')

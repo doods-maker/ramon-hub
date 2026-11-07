@@ -41,6 +41,7 @@ const buildStore = ({
   wonRequest = null,
   leads = [{ id: 10, lead_stage_id: 1, position: 0 }],
   stages = STAGES,
+  etapaDocumentos = false,
 } = {}) =>
   createStore({
     getters: { getCurrentRole: () => role },
@@ -66,6 +67,7 @@ const buildStore = ({
         namespaced: true,
         getters: {
           getStages: () => stages,
+          getEtapaDocumentos: () => etapaDocumentos,
           getLostReasons: () => [],
           getPriorities: () => [],
           getSources: () => [],
@@ -459,6 +461,7 @@ describe('KanbanBoard.vue', () => {
 
     it('ganho que pula Documentos pede o motivo e grava como nota do lead', async () => {
       const wrapper = mountBoard({
+        etapaDocumentos: true,
         stages: [
           ...STAGES,
           { id: 7, name: 'Fechado', label: 'fase-fechado', is_won: true },
@@ -470,6 +473,7 @@ describe('KanbanBoard.vue', () => {
             lead_stage_id: 1,
             position: 0,
             thesis_passa_documentos: true,
+            docs_total: 2,
           },
         ],
       });

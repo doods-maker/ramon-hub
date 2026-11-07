@@ -145,7 +145,12 @@ describe('BulkActionsBar', () => {
       stages: getters['leadConfig/getStages'],
     };
     getters['leads/getLeads'] = [
-      { id: 10, lead_stage_id: 1, thesis_passa_documentos: true },
+      {
+        id: 10,
+        lead_stage_id: 1,
+        thesis_passa_documentos: true,
+        docs_total: 2,
+      },
       { id: 11, lead_stage_id: 1 },
     ];
     getters['leadConfig/getStages'] = [
@@ -153,6 +158,7 @@ describe('BulkActionsBar', () => {
       { id: 7, name: 'Fechado', label: 'fase-fechado', is_won: true },
       { id: 8, name: 'Documentos', label: 'fase-documentos', is_won: true },
     ];
+    getters['leadConfig/getEtapaDocumentos'] = true;
     const wrapper = mountBar();
     await wrapper.find('[data-testid="bulk-move-stage"]').trigger('click');
     await wrapper
@@ -161,6 +167,7 @@ describe('BulkActionsBar', () => {
     Object.assign(getters, {
       'leads/getLeads': antes.leads,
       'leadConfig/getStages': antes.stages,
+      'leadConfig/getEtapaDocumentos': false,
     });
 
     const modal = wrapper.findComponent(ConfirmModal);

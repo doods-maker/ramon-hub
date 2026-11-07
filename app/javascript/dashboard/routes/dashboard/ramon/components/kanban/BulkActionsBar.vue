@@ -89,7 +89,13 @@ const pickStage = stage => {
   if (selectedIds.value.some(id => entraNoGanho(stage, stageOfLead(id)))) {
     closeMenus();
     pulandoIds.value = selectedIds.value.filter(id =>
-      pulaDocumentos(stage, stageOfLead(id), leadDe(id), stages.value)
+      pulaDocumentos(
+        stage,
+        stageOfLead(id),
+        leadDe(id),
+        stages.value,
+        store.getters['leadConfig/getEtapaDocumentos']
+      )
     );
     wonMotivo.value = '';
     pendingWonStage.value = stage;

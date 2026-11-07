@@ -110,6 +110,7 @@ const build = ({
           ],
           getLostReasons: () => [],
           getChannels: () => [{ key: 'whatsapp', label: 'WhatsApp' }],
+          getEtapaDocumentos: () => true,
         },
       },
       theses: {
@@ -772,7 +773,9 @@ describe('LeadPanelBody', () => {
     it('pede o motivo (obrigatório) e grava como nota do lead', async () => {
       const update = vi.fn();
       const wrapper = mountBody({
-        props: { lead: { ...lead, thesis_passa_documentos: true } },
+        props: {
+          lead: { ...lead, thesis_passa_documentos: true, docs_total: 2 },
+        },
         spies: { update },
       });
       await wrapper.find('[data-testid="panel-stage"]').setValue(2);

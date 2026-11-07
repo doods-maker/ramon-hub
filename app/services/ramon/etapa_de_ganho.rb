@@ -36,10 +36,10 @@ module Ramon::EtapaDeGanho
     etapa_documentos(lead) || principal(lead.account)
   end
 
-  # Documentos: chave ligada, tese marcada "passa pela etapa Documentos" e com checklist de documentos, e a etapa existe.
+  # Documentos: chave ligada, tese marcada "passa pela etapa Documentos", o lead com checklist de documentos (docs_total,
+  # o mesmo critério do funil: helpers/stage.js pulaDocumentos) e a etapa existe.
   def etapa_documentos(lead)
-    tese = lead.thesis
-    return unless documentos_ligado? && tese&.passa_documentos && tese.thesis_items.exists?(section: 'documento')
+    return unless documentos_ligado? && lead.thesis&.passa_documentos && lead.docs_counts[:total].positive?
 
     lead.account.lead_stages.find_by(label: DOCUMENTOS, is_won: true)
   end

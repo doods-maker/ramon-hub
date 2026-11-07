@@ -32,4 +32,6 @@ json.priorities do
   end
 end
 json.channels @channels
+# chave RAMON_ETAPA_DOCUMENTOS: o funil só pede o motivo de pular Documentos com ela ligada
+json.etapa_documentos Ramon::EtapaDeGanho.documentos_ligado?
 json.sources @sources

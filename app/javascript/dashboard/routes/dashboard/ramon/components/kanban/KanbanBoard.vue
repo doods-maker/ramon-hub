@@ -225,7 +225,8 @@ const wonPedeMotivo = computed(() => {
     findStage(pendingMove.value?.leadStageId),
     findStage(lead?.lead_stage_id),
     lead,
-    stages.value
+    stages.value,
+    store.getters['leadConfig/getEtapaDocumentos']
   );
 });
 const notaPulaDocumentos = (id, leadStageId, motivo) =>

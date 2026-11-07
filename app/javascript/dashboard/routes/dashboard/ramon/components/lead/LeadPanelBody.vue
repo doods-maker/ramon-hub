@@ -365,7 +365,8 @@ const onStageChange = targetId => {
       target,
       origem,
       props.lead,
-      stages.value
+      stages.value,
+      store.getters['leadConfig/getEtapaDocumentos']
     );
     wonMotivo.value = '';
     wonPrompt.value = true;

@@ -21,19 +21,36 @@ describe('pulaDocumentos', () => {
   const fechado = { id: 7, label: 'fase-fechado', is_won: true };
   const documentos = { id: 8, label: 'fase-documentos', is_won: true };
   const etapas = [novo, fechado, documentos];
-  const marcado = { thesis_passa_documentos: true };
+  const marcado = { thesis_passa_documentos: true, docs_total: 3 };
 
-  it('entrar no ganho por outra etapa, com a tese marcada e a etapa Documentos na conta: pede o motivo', () => {
-    expect(pulaDocumentos(fechado, novo, marcado, etapas)).toBe(true);
+  it('chave ligada, etapa Documentos na conta, tese marcada e com checklist: pede o motivo', () => {
+    expect(pulaDocumentos(fechado, novo, marcado, etapas, true)).toBe(true);
+  });
+
+  it('chave desligada: nada muda', () => {
+    expect(pulaDocumentos(fechado, novo, marcado, etapas, false)).toBe(false);
+  });
+
+  it('tese marcada sem checklist de documentos: o ganho cai em Fechado mesmo, sem motivo', () => {
+    const semChecklist = { thesis_passa_documentos: true, docs_total: 0 };
+    expect(pulaDocumentos(fechado, novo, semChecklist, etapas, true)).toBe(
+      false
+    );
   });
 
   it('entrar direto em Documentos, ou andar entre ganhos, não', () => {
-    expect(pulaDocumentos(documentos, novo, marcado, etapas)).toBe(false);
-    expect(pulaDocumentos(fechado, documentos, marcado, etapas)).toBe(false);
+    expect(pulaDocumentos(documentos, novo, marcado, etapas, true)).toBe(false);
+    expect(pulaDocumentos(fechado, documentos, marcado, etapas, true)).toBe(
+      false
+    );
   });
 
   it('tese sem a chave ou conta sem a etapa Documentos: fluxo de hoje', () => {
-    expect(pulaDocumentos(fechado, novo, {}, etapas)).toBe(false);
-    expect(pulaDocumentos(fechado, novo, marcado, [novo, fechado])).toBe(false);
+    expect(pulaDocumentos(fechado, novo, { docs_total: 3 }, etapas, true)).toBe(
+      false
+    );
+    expect(pulaDocumentos(fechado, novo, marcado, [novo, fechado], true)).toBe(
+      false
+    );
   });
 });

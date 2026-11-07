@@ -17,12 +17,16 @@ export const entraNoGanho = (destino, origem) =>
   Boolean(destino?.is_won) && !origem?.is_won;
 
 // Ganho que pula Documentos (decisão 07/11): entrar no ganho por outra etapa
-// que não Documentos, com a tese marcada "passa pela etapa Documentos" e a
-// conta tendo a etapa. A coluna escolhida vale, mas pede o motivo (vai para as
-// notas do lead).
+// que não Documentos quando o ganho cairia em Documentos — o mesmo critério do
+// Ramon::EtapaDeGanho.entrada: chave ligada (ligada = etapa_documentos do
+// lead_config), a etapa existe, tese marcada "passa pela etapa Documentos" e o
+// lead tem checklist de documentos. A coluna escolhida vale, mas pede o motivo
+// (vai para as notas do lead). Chave desligada: nada muda.
 const DOCUMENTOS = 'fase-documentos';
-export const pulaDocumentos = (destino, origem, lead, etapas) =>
+export const pulaDocumentos = (destino, origem, lead, etapas, ligada) =>
+  Boolean(ligada) &&
   entraNoGanho(destino, origem) &&
   destino.label !== DOCUMENTOS &&
   Boolean(lead?.thesis_passa_documentos) &&
+  Number(lead?.docs_total) > 0 &&
   (etapas || []).some(e => e.label === DOCUMENTOS && e.is_won);

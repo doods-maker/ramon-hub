@@ -39,4 +39,12 @@ describe('leadConfig getters', () => {
     mutations[types.SET_LEAD_CONFIG](state, { stages: [] });
     expect(state.lostReasons).toEqual([]);
   });
+
+  it('SET_LEAD_CONFIG guarda se a etapa Documentos está ligada (ausente = desligada)', () => {
+    const state = {};
+    mutations[types.SET_LEAD_CONFIG](state, { etapa_documentos: true });
+    expect(getters.getEtapaDocumentos(state)).toBe(true);
+    mutations[types.SET_LEAD_CONFIG](state, {});
+    expect(getters.getEtapaDocumentos(state)).toBe(false);
+  });
 });

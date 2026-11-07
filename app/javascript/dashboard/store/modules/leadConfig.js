@@ -9,6 +9,8 @@ export const state = {
   sources: [],
   channels: [],
   lostReasons: [],
+  // chave RAMON_ETAPA_DOCUMENTOS (Ramon::EtapaDeGanho.documentos_ligado?)
+  etapaDocumentos: false,
   uiFlags: { isFetching: false },
 };
 
@@ -20,6 +22,7 @@ export const getters = {
   getSources: _state => _state.sources,
   getChannels: _state => _state.channels,
   getLostReasons: _state => _state.lostReasons,
+  getEtapaDocumentos: _state => Boolean(_state.etapaDocumentos),
 };
 
 const bySortedPosition = (a, b) => a.position - b.position;
@@ -86,6 +89,7 @@ export const mutations = {
     _state.sources = data.sources || [];
     _state.channels = data.channels || [];
     _state.lostReasons = data.lost_reasons || [];
+    _state.etapaDocumentos = Boolean(data.etapa_documentos);
   },
 
   [types.SET_LEAD_STAGES](_state, data) {
