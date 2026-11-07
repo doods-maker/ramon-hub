@@ -79,11 +79,11 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     expect(response).to have_http_status(:ok)
   end
 
-  it 'a lista traz os 30 do sistema com Hoje, grupo e selo; os 4 números contam só os meus' do
+  it 'a lista traz os 31 do sistema com Hoje, grupo e selo; os 4 números contam só os meus' do
     fluxo_publicado(account, grafo)
     get url, headers: admin.create_new_auth_token, as: :json
     sistema = response.parsed_body['payload'].select { |f| f['origem'] == 'sistema' }
-    expect(sistema.size).to eq(30)
+    expect(sistema.size).to eq(31)
     avisos = sistema.find { |f| f['sistema_chave'] == 'avisos_painel' }
     expect(avisos).to include('hoje' => nil, 'ativo' => false, 'versao' => nil, 'grupo' => 'painel_cliente',
                               'alcance' => 'fala_com_cliente', 'gatilho_rotulo' => 'Todo dia às 08:00 (só com PORTAL_AVISOS=on)')
