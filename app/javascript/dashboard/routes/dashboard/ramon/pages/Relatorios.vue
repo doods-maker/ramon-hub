@@ -6,6 +6,12 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { AVISO, TOM } from '../helpers/ui';
 
+// Reaproveitada pela aba Tráfego da área Marketing (rota passa painel e textos).
+const props = defineProps({
+  painel: { type: String, default: '' },
+  textos: { type: String, default: 'RAMON.RELATORIOS' },
+});
+
 defineOptions({ name: 'RamonRelatorios' });
 
 const { t } = useI18n();
@@ -25,7 +31,7 @@ const fetchEmbed = async ({ silencioso = false } = {}) => {
   if (!silencioso) loading.value = true;
   error.value = false;
   try {
-    const { data } = await RamonRelatoriosAPI.get();
+    const { data } = await RamonRelatoriosAPI.embed(props.painel);
     configured.value = data.configured;
     embedUrl.value = data.url || '';
     clearTimeout(renovacao);
@@ -58,8 +64,8 @@ onUnmounted(() => clearTimeout(renovacao));
 <template>
   <div class="flex flex-col w-full h-full bg-n-background p-4 sm:p-8">
     <RamonPageHeader
-      :title="t('RAMON.RELATORIOS.TITLE')"
-      :subtitle="t('RAMON.RELATORIOS.SUBTITLE')"
+      :title="t(`${textos}.TITLE`)"
+      :subtitle="t(`${textos}.SUBTITLE`)"
       compact
     />
     <div v-if="loading" class="flex-1" />
@@ -68,16 +74,11 @@ onUnmounted(() => clearTimeout(renovacao));
       :class="[AVISO, TOM.ruby]"
       class="flex items-center gap-3 self-start"
     >
-      {{ t('RAMON.RELATORIOS.LOAD_ERROR') }}
-      <Button
-        link
-        xs
-        :label="t('RAMON.RELATORIOS.RETRY')"
-        @click="fetchEmbed()"
-      />
+      {{ t(`${textos}.LOAD_ERROR`) }}
+      <Button link xs :label="t(`${textos}.RETRY`)" @click="fetchEmbed()" />
     </div>
     <p v-else-if="!configured" :class="[AVISO, TOM.slate]" class="self-start">
-      {{ t('RAMON.RELATORIOS.NOT_CONFIGURED') }}
+      {{ t(`${textos}.NOT_CONFIGURED`) }}
     </p>
     <div
       v-else
@@ -86,7 +87,7 @@ onUnmounted(() => clearTimeout(renovacao));
       <iframe
         :src="embedUrl"
         class="border-0 w-full flex-1"
-        :title="t('RAMON.RELATORIOS.TITLE')"
+        :title="t(`${textos}.TITLE`)"
         @error="onIframeErro"
       />
     </div>

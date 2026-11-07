@@ -374,3 +374,4 @@ Spec: `docs/superpowers/specs/2026-11-07-marketing-trafego-design.md`.
 | Arquivo | Mudança | Por quê | Onde |
 |---|---|---|---|
 | `config/schedule.yml` | `ramon_peca_metricas_job` (6h30 BRT, `scheduled_jobs`; desligado por `RAMON_IG_INSIGHTS`) | desempenho das peças publicadas | marketing PR 1 |
+| `config/routes.rb` | `resource :ramon_marketing` (show + `custos`, `custos/:custo_id`, `importar_gasto`, `importar_metas`) em `accounts` | aba Custos e metas | marketing PR 2 |

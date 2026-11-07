@@ -30,7 +30,14 @@ describe('secoesIntranet', () => {
       [
         'RAMON.NAV.GESTAO',
         [
-          ['conteudo', ['ramon_conteudo']],
+          [
+            'marketing',
+            [
+              'ramon_conteudo',
+              'ramon_marketing_trafego',
+              'ramon_marketing_custos',
+            ],
+          ],
           [
             'resultados',
             [

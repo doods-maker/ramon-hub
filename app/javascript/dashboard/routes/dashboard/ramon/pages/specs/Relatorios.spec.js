@@ -17,7 +17,9 @@ vi.mock('dashboard/composables/useAccount', () => ({
   }),
 }));
 
-vi.mock('dashboard/api/ramonRelatorios', () => ({ default: { get: vi.fn() } }));
+vi.mock('dashboard/api/ramonRelatorios', () => ({
+  default: { embed: vi.fn() },
+}));
 
 const mountPage = () =>
   mount(Relatorios, {
@@ -26,7 +28,7 @@ const mountPage = () =>
 
 describe('Relatorios', () => {
   it('mostra aviso quando nao configurado', async () => {
-    RamonRelatoriosAPI.get.mockResolvedValue({ data: { configured: false } });
+    RamonRelatoriosAPI.embed.mockResolvedValue({ data: { configured: false } });
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.text()).toContain('RAMON.RELATORIOS.NOT_CONFIGURED');
@@ -34,7 +36,7 @@ describe('Relatorios', () => {
   });
 
   it('renderiza o iframe quando configurado', async () => {
-    RamonRelatoriosAPI.get.mockResolvedValue({
+    RamonRelatoriosAPI.embed.mockResolvedValue({
       data: {
         configured: true,
         url: 'https://bi.test/embed/dashboard/tok#theme=night',
@@ -48,7 +50,7 @@ describe('Relatorios', () => {
   });
 
   it('mostra erro com retry quando a API falha', async () => {
-    RamonRelatoriosAPI.get.mockRejectedValue(new Error('boom'));
+    RamonRelatoriosAPI.embed.mockRejectedValue(new Error('boom'));
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.text()).toContain('RAMON.RELATORIOS.LOAD_ERROR');
@@ -56,7 +58,7 @@ describe('Relatorios', () => {
 
   it('renova o link 5 min antes de vencer e tenta de novo uma vez se o iframe falhar', async () => {
     vi.useFakeTimers();
-    RamonRelatoriosAPI.get.mockReset();
+    RamonRelatoriosAPI.embed.mockReset();
     const resposta = () => ({
       data: {
         configured: true,
@@ -64,20 +66,20 @@ describe('Relatorios', () => {
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       },
     });
-    RamonRelatoriosAPI.get.mockImplementation(async () => resposta());
+    RamonRelatoriosAPI.embed.mockImplementation(async () => resposta());
     const wrapper = mountPage();
     await flushPromises();
-    expect(RamonRelatoriosAPI.get).toHaveBeenCalledTimes(1);
+    expect(RamonRelatoriosAPI.embed).toHaveBeenCalledTimes(1);
 
     await vi.advanceTimersByTimeAsync(4 * 60 * 1000);
-    expect(RamonRelatoriosAPI.get).toHaveBeenCalledTimes(1);
+    expect(RamonRelatoriosAPI.embed).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(60 * 1000);
-    expect(RamonRelatoriosAPI.get).toHaveBeenCalledTimes(2);
+    expect(RamonRelatoriosAPI.embed).toHaveBeenCalledTimes(2);
 
     await wrapper.find('iframe').trigger('error');
     await wrapper.find('iframe').trigger('error');
     await flushPromises();
-    expect(RamonRelatoriosAPI.get).toHaveBeenCalledTimes(3);
+    expect(RamonRelatoriosAPI.embed).toHaveBeenCalledTimes(3);
     wrapper.unmount();
     vi.useRealTimers();
   });

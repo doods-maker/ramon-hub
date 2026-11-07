@@ -7,7 +7,8 @@ class Api::V1::Accounts::RamonRelatoriosController < Api::V1::Accounts::BaseCont
   def show
     site_url = ENV.fetch('RAMON_METABASE_SITE_URL', nil)
     secret = ENV.fetch('RAMON_METABASE_SECRET_KEY', nil)
-    dashboard_id = ENV.fetch('RAMON_METABASE_DASHBOARD_ID', nil)
+    # ?painel=marketing: aba Tráfego da área Marketing (dashboard próprio no mesmo Metabase).
+    dashboard_id = ENV.fetch(params[:painel] == 'marketing' ? 'RAMON_METABASE_MARKETING_ID' : 'RAMON_METABASE_DASHBOARD_ID', nil)
     not_configured = [site_url, secret].any?(&:blank?) || dashboard_id.to_i <= 0
     return render json: { configured: false } if not_configured
 
