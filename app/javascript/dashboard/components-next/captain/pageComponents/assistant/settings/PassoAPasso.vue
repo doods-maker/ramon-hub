@@ -18,6 +18,7 @@ const { t } = useI18n();
 const K = 'INTEL.PASSO_A_PASSO';
 
 const dados = ref(null);
+// false, ou o motivo da recusa (o do servidor, quando vem)
 const erro = ref(false);
 
 // chamada = () => promessa da API (dentro do try: falha síncrona também vira aviso)
@@ -26,7 +27,7 @@ const guardar = async chamada => {
     dados.value = (await chamada()).data;
     erro.value = false;
   } catch (e) {
-    erro.value = true;
+    erro.value = e?.response?.data?.error || t(`${K}.ERRO`);
   }
 };
 
@@ -49,7 +50,7 @@ const remover = tema =>
   <section v-if="dados?.ligado" data-testid="passo-a-passo" :class="CARTAO">
     <p :class="TITULO">{{ t(`${K}.TITULO`) }}</p>
     <p class="mt-1 mb-3 text-xs text-n-slate-11">{{ t(`${K}.AJUDA`) }}</p>
-    <p v-if="erro" class="mb-2 text-xs text-n-ruby-11">{{ t(`${K}.ERRO`) }}</p>
+    <p v-if="erro" class="mb-2 text-xs text-n-ruby-11">{{ erro }}</p>
     <ul class="reset-base flex list-none flex-col gap-3">
       <li
         v-for="item in dados.temas"
@@ -73,7 +74,7 @@ const remover = tema =>
         </span>
         <input
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png"
           :aria-label="t(`${K}.ENVIAR`, { tema: t(`${K}.TEMAS.${item.tema}`) })"
           :class="ARQUIVO"
           class="max-w-56"

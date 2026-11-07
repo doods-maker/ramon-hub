@@ -139,7 +139,7 @@
     },
     "PASSO_A_PASSO": {
       "TITULO": "Imagens do passo a passo (etapa Documentos)",
-      "AJUDA": "Uma imagem por tema, mandada ao cliente pelo assistente de Documentos quando ele trava. Nunca suba imagem com dado de alguém.",
+      "AJUDA": "Uma imagem JPG ou PNG (até 5 MB) por tema, mandada ao cliente pelo assistente de Documentos quando ele trava. Nunca suba imagem com dado de alguém.",
       "ENVIAR": "Subir a imagem de {tema}",
       "REMOVER": "Remover",
       "ERRO": "Não foi possível salvar a imagem agora.",

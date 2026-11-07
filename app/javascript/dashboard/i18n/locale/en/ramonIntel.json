@@ -139,7 +139,7 @@
     },
     "PASSO_A_PASSO": {
       "TITULO": "Step-by-step images (Documents stage)",
-      "AJUDA": "One image per topic, sent to the client by the Documents assistant when they get stuck. Never use an image showing someone's personal data.",
+      "AJUDA": "One JPG or PNG image (up to 5 MB) per topic, sent to the client by the Documents assistant when they get stuck. Never use an image showing someone's personal data.",
       "ENVIAR": "Upload the image for {tema}",
       "REMOVER": "Remove",
       "ERRO": "Could not save the image now.",

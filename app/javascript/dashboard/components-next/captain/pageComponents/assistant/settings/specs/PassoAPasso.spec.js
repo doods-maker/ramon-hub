@@ -30,6 +30,24 @@ const montar = async () => {
 };
 
 describe('PassoAPasso (imagens por tema, etapa Documentos)', () => {
+  it('só aceita JPG e PNG; recusa do servidor aparece com o motivo dele', async () => {
+    CaptainAssistant.passosAPasso.mockResolvedValue(corpo(true));
+    CaptainAssistant.subirPassoAPasso.mockRejectedValue({
+      response: { data: { error: 'envie uma imagem JPG ou PNG de até 5 MB' } },
+    });
+    const wrapper = await montar();
+    const input = wrapper.find(
+      '[data-testid="tema-meu_inss_cat"] input[type="file"]'
+    );
+    expect(input.attributes('accept')).toBe('image/jpeg,image/png');
+
+    const arquivo = new File(['x'], 'print.gif', { type: 'image/gif' });
+    Object.defineProperty(input.element, 'files', { value: [arquivo] });
+    await input.trigger('change');
+    await flushPromises();
+    expect(wrapper.text()).toContain('envie uma imagem JPG ou PNG de até 5 MB');
+  });
+
   it('chave desligada: a seção nem aparece', async () => {
     CaptainAssistant.passosAPasso.mockResolvedValue(corpo(false));
     const wrapper = await montar();
