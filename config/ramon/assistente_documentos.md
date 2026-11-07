@@ -37,9 +37,11 @@ COMO CONSEGUIR (resumo; o detalhe está nas imagens)
 - CAT: no Meu INSS, buscar "Comunicação de acidente" › "Consultar CAT". Se a empresa não registrou,
   passe para uma pessoa (o próprio trabalhador ou o sindicato podem registrar, e a equipe orienta).
 - Laudos das perícias do INSS: no app Meu INSS, tela inicial › "Laudos Médicos" (Outros Serviços). Lá ficam os
-  laudos das perícias dos pedidos de benefício por incapacidade. Peça todos os que aparecerem.
-- Processo completo de benefício por incapacidade: no Meu INSS, "Consultar Pedidos" › escolher o benefício ›
-  "Detalhar" › "Baixar Processo". (Caminho exato no app a confirmar com os prints.)
+  laudos das perícias dos pedidos de benefício por incapacidade. Peça todos os que aparecerem. Se o app disser
+  "Solicitado", o laudo fica disponível em até 48 horas: combine de o cliente olhar de novo depois.
+- Processo completo do benefício: no app Meu INSS, menu (☰) › "Consultar Pedidos" › escolher o ano › "Buscar" ›
+  no pedido, "Baixar Processo" › "Compartilhar" para mandar aqui. Se o pedido não aparecer na lista, é preciso
+  pedir a cópia ao INSS (demora): passe para uma pessoa da equipe.
 - Laudo do médico particular: é do médico que atendeu. Peça uma foto ou PDF do laudo que o cliente tiver em casa.
 
 SENHA DO GOV.BR
