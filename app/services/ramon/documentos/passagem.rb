@@ -33,7 +33,7 @@ module Ramon::Documentos::Passagem
   end
 
   def passar(lead)
-    juridico = lead.account.lead_stages.find_by(label: Ramon::EtapaDeGanho::JURIDICO, is_won: true)
+    juridico = Ramon::EtapaDeGanho.juridico(lead.account)
     andou = juridico && lead.with_lock do
       next false unless Ramon::EtapaDeGanho.conduzida?(lead.lead_stage) && lead.docs_completos_em.present?
 
@@ -118,7 +118,7 @@ module Ramon::Documentos::Passagem
     registrar(lead, 'Jurídico: tarefa ANÁLISE DO CASO criada no ADVBOX') if resultado == :criada
   end
 
-  def no_juridico?(lead) = lead.lead_stage&.label == Ramon::EtapaDeGanho::JURIDICO
+  def no_juridico?(lead) = Ramon::EtapaDeGanho.juridico?(lead.lead_stage)
 
   def registrar(lead, texto) = Ramon::Documentos::Entrada.registrar(lead, texto)
 end

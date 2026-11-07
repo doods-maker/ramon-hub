@@ -62,5 +62,18 @@ RSpec.describe Ramon::EtapaDeGanho do
       documentos.update!(label: nil)
       ligada { expect(described_class.entrada(lead)).to eq(fechado) }
     end
+
+    # O ADVBOX do Ganho pergunta aqui se o 1º contato é do agente de documentos (spec §9).
+    it '.pelo_agente_de_documentos?: o lead em Documentos ou já no Jurídico, com a chave ligada', :aggregate_failures do
+      juridico = described_class.juridico(account)
+      no = ->(etapa) { build(:lead, account: account, thesis: tese, lead_stage: etapa) }
+
+      ligada do
+        expect(described_class.pelo_agente_de_documentos?(no[documentos])).to be(true)
+        expect(described_class.pelo_agente_de_documentos?(no[juridico])).to be(true)
+        expect(described_class.pelo_agente_de_documentos?(no[fechado])).to be(false)
+      end
+      expect(described_class.pelo_agente_de_documentos?(no[documentos])).to be(false)
+    end
   end
 end

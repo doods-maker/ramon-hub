@@ -48,15 +48,12 @@ class Ramon::AdvboxClosingService
   def sincronizar
     customer_id = step('customers_id') { find_or_create_customer }
     lawsuit_id = step('lawsuits_id') { Ramon::AdvboxClient.create_lawsuit(lawsuit_payload(customer_id))['lawsuits_id'] }
-    step('posts_id') { Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id'] } unless primeiro_contato_do_agente?
+    # Etapa Documentos (spec §9): lá o 1º contato é do agente; a única tarefa do caso é a ANÁLISE DO CASO, no completo. Vale nos
+    # dois caminhos do Ganho (código e fluxo "Lead ganho": a rotina abrir_caso_advbox chama aqui).
+    unless Ramon::EtapaDeGanho.pelo_agente_de_documentos?(@lead)
+      step('posts_id') { Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id'] }
+    end
     merge_advbox('sincronizado_em' => Time.zone.now.iso8601, 'erro' => nil, 'em' => nil)
-  end
-
-  # Etapa Documentos (spec §9, decisão de 07/11): o 1º contato é do agente de documentos; a única tarefa do caso é a ANÁLISE
-  # DO CASO, no completo. Vale nos dois caminhos do Ganho (código e fluxo "Lead ganho": a rotina abrir_caso_advbox chama aqui).
-  def primeiro_contato_do_agente?
-    Ramon::EtapaDeGanho.documentos_ligado? &&
-      [Ramon::EtapaDeGanho::DOCUMENTOS, Ramon::EtapaDeGanho::JURIDICO].include?(@lead.lead_stage&.label)
   end
 
   def synced?

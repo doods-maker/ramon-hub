@@ -20,6 +20,14 @@ module Ramon::EtapaDeGanho
   # As conduzidas que a conta tem, na ordem do funil; chave desligada = nenhuma.
   def conduzidas(account) = documentos_ligado? ? account.lead_stages.where(is_won: true, label: CONDUZIDAS).to_a : []
 
+  # O caminho do agente de documentos: o lead está em Documentos, ou já passou dela ao Jurídico (chave ligada). Lá o 1º contato
+  # depois do Ganho é do agente, não de uma pessoa (spec §9): o ADVBOX do Ganho pergunta aqui.
+  def pelo_agente_de_documentos?(lead) = documentos_ligado? && [DOCUMENTOS, JURIDICO].include?(lead.lead_stage&.label)
+
+  def juridico(account) = account.lead_stages.find_by(label: JURIDICO, is_won: true)
+
+  def juridico?(etapa) = etapa&.is_won == true && etapa.label == JURIDICO
+
   # A etapa de ganho da conta: Fechado; sem ela, a primeira `is_won` por posição.
   def principal(account)
     account.lead_stages.find_by(label: FECHADO, is_won: true) || account.lead_stages.find_by(is_won: true)
