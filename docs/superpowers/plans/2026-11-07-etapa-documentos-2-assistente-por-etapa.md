@@ -41,18 +41,34 @@ As do PR 1, mais: migração nova → `db/schema.rb` regenerado via scratch DB n
 - **Interfaces — Produces:** `Ramon::PerfilIa::ETAPAS_CONDUZIDAS = [Ramon::EtapaDeGanho::DOCUMENTOS]`; `estado` devolve `:sozinha` para elas (envia); demais `is_won` seguem `:fechado`. A tela "Como a IA atende" lista Documentos depois das abertas, com permissões e gatilhos próprios.
 - **Tests:** `estado` por etapa (Documentos `:sozinha`, Fechado/Jurídico `:fechado`, Perdido `:pausada`); `tela` inclui Documentos; pausa manual continua vencendo.
 
-### Task 4: o ganho de tese previdenciária cai em Documentos (atrás da chave)
+### Task 4: o ganho de tese marcada cai em Documentos (atrás da chave)
 
-- **Files:** `app/services/ramon/etapa_de_ganho.rb` (`entrada`), `app/models/thesis.rb` (escopo/consulta de área), Test `spec/services/ramon/etapa_de_ganho_spec.rb`.
-- **Interfaces — Produces:** `entrada(lead)` = Documentos se `ENV['RAMON_ETAPA_DOCUMENTOS'] == 'on'` **e** a etapa existe **e** `Thesis#previdenciaria?` **e** a tese tem item `section: 'documento'`; senão `principal`. `Thesis#previdenciaria? -> Boolean` lê `theses.area` — **conferir os valores reais de `area` em produção antes** (leitura por `docker exec` com psql é barrada; pedir ao Eduardo um `!` de leitura ou usar a tela de teses).
-- **Tests:** as 5 combinações do Review Focus 4–5.
-- **Arrastar à mão:** ver "Pergunta ao Eduardo" no índice; até a resposta, o arrasto respeita a coluna escolhida.
+**Decisão (índice, 07/11):** em vez de `theses.area`, chave explícita por tese.
+
+- **Files:** migração `add_column :theses, :passa_documentos, :boolean, default: false, null: false` (mesma migração da Task 1 ou uma segunda); `app/services/ramon/etapa_de_ganho.rb` (`entrada`); tela de teses (procurar o form de tese em `app/javascript/.../ramon/` — `git grep -n "honorario_na_tabela" app/javascript` acha o form) com a caixa "Passa pela etapa Documentos" (só admin); controller de teses permitindo o campo; jbuilder da tese expondo-o; i18n `en.json`/`pt_BR`. Test `spec/services/ramon/etapa_de_ganho_spec.rb`, request spec do controller de teses, vitest do form.
+- **Interfaces — Produces:** `entrada(lead)` = Documentos se `ENV['RAMON_ETAPA_DOCUMENTOS'] == 'on'` **e** a etapa `fase-documentos` existe **e** `lead.thesis&.passa_documentos` **e** a tese tem item `section: 'documento'`; senão `principal`. **Não** depende de o lead ter conversa (decisão: ganho sem WhatsApp também vai para Documentos, com o SDR conduzindo — Task 5).
+- **Tests:** as combinações do Review Focus 4–5 (trocar "trabalhista/IR" por "tese sem `passa_documentos`").
+
+### Task 4b: arrastar para Fechado pede o motivo (decisão do Eduardo, 07/11)
+
+- **Quando:** a pessoa move à mão (Kanban, painel, lote, atalho) para **Fechado** um lead cuja tese tem `passa_documentos` **e** a conta tem a etapa Documentos. A coluna escolhida vale, mas pede o motivo (obrigatório, como o motivo do Perdido) e grava como **nota do lead** ("Ganho direto em Fechado, sem passar por Documentos: <motivo>").
+- **Files:** os 4 pontos de "mover" do PR 1 (já usam `entraNoGanho`); helper novo em `helpers/stage.js` (ex.: `pulaDocumentos(destino, lead, etapas, teses)`); reaproveitar o modal do motivo de perda se couber, senão um modal simples; nota pelo endpoint de notas que o painel já usa. i18n.
+- **Tests (vitest):** previdenciária + Documentos existe + destino Fechado → pede motivo e cria nota; tese sem a chave, ou sem etapa Documentos → fluxo de hoje; motivo vazio não deixa confirmar.
+
+### Task 5b: ganho sem conversa de WhatsApp
+
+- Lead entra em Documentos **sem conversa**: nada de IA; sino para o SDR do lead (sem SDR: closer; sem nenhum: admins) "Lead em Documentos sem WhatsApp — conduzir os documentos" + linha no histórico. Push sem dado pessoal (`Ramon::NtfyPushJob.rotulo`). Usar o mecanismo de sino que o hub já tem (procurar como `Ramon::NtfyPushJob`/notificações são criadas hoje). Test no serviço da Task 5.
+
+### Task 6c: BI
+
+- Conferir as views `db/views/bi_*` e os painéis do Metabase descritos no repo (`git grep -n "bi_stage_transitions" -- db docs app`): se algo conta "ganhos" por transição para etapa `is_won`, ajustar para contar só a transição de etapa não-ganho → ganho (ou por `won_at`). Se exigir migração de view, fazer aqui com teste; se for só painel do Metabase (fora do repo), anotar no PR para o Eduardo.
 
 ### Task 5: entrar em Documentos devolve a conversa à IA
 
 - **Files:** `app/models/concerns/lead_comercial.rb` (after_commit de mudança de etapa) ou serviço `Ramon::Documentos::Entrada`; Test correspondente.
 - **Interfaces — Produces:** `Ramon::Documentos::Entrada.call(lead)` — conversa do lead → `pending`, tira `ia_pausa`, registra atividade "entrou em Documentos". **Não** manda mensagem (a abertura é do PR 5).
-- **Tests:** lead entra em Documentos → conversa pendente e sem pausa; lead em Documentos sem conversa → nada, sem erro.
+- **Tests:** lead entra em Documentos → conversa pendente e sem pausa; lead em Documentos sem conversa → Task 5b (aviso ao SDR), sem erro.
+- **Atenção:** `contrato_fechado` com o fluxo de eventos ADVBOX no comando passa por `Ramon::Fluxos::Migracao` (`principal!`), não por `entrada` — decidir aqui se o fluxo também desvia para Documentos (deveria: mesmo critério de `entrada`).
 
 ### Task 6: tela para ligar etapa → assistente, assistente "Documentos" e rascunho do texto
 
