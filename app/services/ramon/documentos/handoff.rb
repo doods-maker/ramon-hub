@@ -6,9 +6,10 @@
 module Ramon::Documentos::Handoff
   # A tool de handoff grava o motivo numa nota privada com esta marca em content_attributes, logo antes do bot_handoff!.
   MARCA = 'ramon_handoff'.freeze
-  # A nota da tool deste handoff: depois da última mensagem do cliente (uma query, subconsulta).
-  DEPOIS_DO_CLIENTE = 'messages.created_at > (SELECT MAX(m.created_at) FROM messages m ' \
-                      'WHERE m.conversation_id = messages.conversation_id AND m.message_type = 0)'.freeze
+  # A nota da tool deste handoff: depois da última mensagem do cliente (uma query, subconsulta). Conversa sem mensagem do
+  # cliente (a cobrança de Documentos passa por silêncio): qualquer nota marcada vale.
+  DEPOIS_DO_CLIENTE = 'messages.created_at > COALESCE((SELECT MAX(m.created_at) FROM messages m WHERE m.conversation_id = ' \
+                      "messages.conversation_id AND m.message_type = 0), '-infinity')".freeze
 
   module_function
 

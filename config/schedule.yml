@@ -103,6 +103,12 @@ ramon_janela_whatsapp_job:
   class: 'Ramon::JanelaWhatsappJob'
   queue: scheduled_jobs
 
+# a cada 15 min: abertura, lembretes e gatilhos de silêncio/travado da etapa Documentos (só com RAMON_ETAPA_DOCUMENTOS=on)
+ramon_documentos_cobranca_job:
+  cron: '*/15 * * * *'
+  class: 'Ramon::Documentos::CobrancaJob'
+  queue: scheduled_jobs
+
 # a cada minuto: retoma execuções de fluxo cuja espera venceu (Automações em fluxo)
 ramon_fluxo_relogio_job:
   cron: '*/1 * * * *'

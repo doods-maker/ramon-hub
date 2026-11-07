@@ -79,6 +79,12 @@ RSpec.describe Ramon::Documentos::Handoff do
     expect(notas.last).not_to include('motivo de outra vez')
   end
 
+  it 'conversa sem mensagem do cliente (silêncio da cobrança): a nota marcada vira o motivo' do
+    nota_da_ia('Cobrança: silêncio', 1.minute.ago, tool: true)
+    handoff
+    expect(notas.last).to include('Motivo: Cobrança: silêncio')
+  end
+
   it 'fora de Documentos, ou com a chave desligada, é o handoff de hoje: nada muda', :aggregate_failures do
     handoff(chave: nil)
     lead.update_columns(lead_stage_id: account.lead_stages.find_by(label: 'fase-qualificacao').id) # rubocop:disable Rails/SkipsModelValidations
