@@ -36,3 +36,5 @@ class LeadStage < ApplicationRecord
     account.lead_stages.where.not(id: id).update_all(flag => false) # rubocop:disable Rails/SkipsModelValidations
   end
 end
+
+LeadStage.include_mod_with('Concerns::LeadStage')
