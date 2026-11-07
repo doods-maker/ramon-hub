@@ -1,0 +1,37 @@
+# Cobrança da etapa Documentos (spec Etapa Documentos §7; plano do PR 5). Lido por Ramon::Documentos::Relogio e ::Envio.
+# Os textos e o modelo foram APROVADOS pelo Eduardo em 07/11/2026 (texto que fala com cliente é gate dele): mudar só com o OK.
+# Cada texto é UMA mensagem: cada mensagem enviada tem custo na Meta desde 01/10/2026.
+
+# Horário comercial da cobrança: o formato e o padrão da janela dos fluxos (Ramon::Fluxos::Horario): dias 0 = domingo …
+# 6 = sábado; início e fim em horas (fim exclusivo), fuso de São Paulo. Sem feriados: o Horario não tem calendário.
+horario:
+  dias: [1, 2, 3, 4, 5]
+  inicio: 8
+  fim: 18
+
+# Em horas úteis (dentro do horário acima); "dia útil" = as horas do horário (8h–18h = 10 h).
+ritmo:
+  lembrete_1_horas: 3 # abertura sem resposta → lembrete 1 (o lembrete 2 é na manhã do dia útil seguinte ao lembrete 1)
+  silencio_horas: 4 # lembrete 2 sem resposta → silêncio: a conversa vai para o SDR
+  acompanhamento_dias: 1 # respondeu, sem documento novo → aviso ao SDR, a IA segue
+  travado_dias: 2 # respondeu, sem documento novo → travado: o SDR assume
+
+# {nome} = primeiro nome do lead; {lista} = o que falta, um por linha; {primeiro_item} = o primeiro que falta.
+mensagens:
+  abertura: |-
+    Oi, {nome}! Aqui é da equipe do escritório Ramon Antonio, que bom ter você com a gente. Agora vamos juntar os documentos do seu caso, e eu te ajudo em cada passo. Falta isto:
+    {lista}
+    Por qual você quer começar? Se tiver qualquer dúvida no caminho, é só me chamar por aqui.
+  lembrete_1: 'Oi, {nome}! Passando para lembrar do {primeiro_item}. Se tiver dificuldade para conseguir, me conta que eu te mostro o caminho.'
+  lembrete_2: 'Bom dia, {nome}! Ainda estou te esperando com o {primeiro_item}. Se preferir, alguém da nossa equipe pode te ligar para ajudar. É só me dizer.'
+
+# Fora da janela de 24 h: só modelo aprovado pela Meta (categoria utilidade, pt_BR). {{1}} = primeiro nome; {{2}} = o que falta.
+# A submissão à Meta é manual, quando o número oficial existir. Enquanto a caixa não tiver este modelo APROVADO, fora da
+# janela nada sai e a cobrança vira silêncio (a conversa vai para o SDR).
+modelo:
+  nome: documentos_pendentes
+  corpo: 'Olá, {{1}}. Para o seu caso seguir no escritório Ramon Antonio Advogados, ainda falta: {{2}}. Você pode enviar por aqui mesmo. Se precisar de ajuda, responda esta mensagem.'
+
+# Preço por mensagem entregue (Brasil, utility; texto livre passou a ter o mesmo preço depois de 1.000/mês por número; jul/2026,
+# pesquisa de 07/11). Cada envio (texto livre ou modelo) vira uma linha em Uso e custo com este valor.
+custo_usd_por_mensagem: 0.0068
