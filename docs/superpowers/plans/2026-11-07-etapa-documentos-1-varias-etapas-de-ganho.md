@@ -150,7 +150,7 @@ E nos specs dos chamadores, um exemplo cada: com uma etapa extra `is_won` de `po
   - LeadPanelBody: lead em ganho A escolhe ganho B → sem `wonPrompt`.
   - BulkActionsBar: todos os selecionados já em ganho → sem modal; algum aberto → modal.
   - HotKeys: lead em ganho movido para outro ganho → não chama `leads/requestWon`.
-  - KanbanBoard: marcar etapa como ganho com outra já ganho → **não** abre o diálogo de substituir (aplica direto); como perdido, abre (como hoje).
+  - KanbanBoard: marcar etapa como ganho → abre o diálogo com o aviso de efeitos (`CONFIRM_WON_TITLE`/`CONFIRM_WON_EFFECT`, botão azul), **sem** a frase de substituir a etapa de ganho atual (`CONFIRM_WON_PREVIOUS` sai), e não desmarca as outras; como perdido, abre com a frase de substituir (como hoje). *(Ajuste do Eduardo, 07/11: o aviso de efeitos fica.)*
   - FunnelConversion: com 2 etapas de ganho, o total de ganhos exibido é a **soma** das duas.
 - [ ] **Step 2: Rodar e ver falhar** — `pnpm vitest run <arquivos>` (na worktree com `node_modules`; sem ele, CI).
 - [ ] **Step 3: Implementar** — os 4 pontos de "mover" usam `entraNoGanho(destino, etapaAtualDoLead)`; `onSetStageType` só pede confirmação para `lost`; comentário de `applyStageType` diz que o servidor só desmarca a de **perda**; `FunnelConversion` troca `wonStage` por `wonStages` (filter) e soma `count`.

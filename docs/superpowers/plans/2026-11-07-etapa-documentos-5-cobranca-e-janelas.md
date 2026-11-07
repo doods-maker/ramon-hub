@@ -14,6 +14,7 @@
 - Modelo da Meta: categoria utility, puramente informativo; nome e variáveis em configuração; texto = gate do Eduardo.
 - Caixa sem modelo aprovado (antes do número oficial) → fora da janela não envia; vira silêncio direto.
 - Só leads na etapa `fase-documentos` (os de Fechado nunca entram).
+- `LeadRadar#active_leads` filtra `is_won: false`: Documentos fica fora de parados/cadência — decidir aqui.
 
 ## Review Focus
 

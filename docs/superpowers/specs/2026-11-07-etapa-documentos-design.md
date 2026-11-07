@@ -73,8 +73,9 @@ Eduardo escolheu etapas reais. Então:
 - **Revisar todo código que procura "a" etapa de ganho** (`find_by(is_won: true)` e parecidos):
   `Ramon::AdvboxEventRegras`, regras do funil, importação CSV, `Ramon::Fluxos::Migracao`, funil e
   Kanban do dashboard, views de BI (`bi_leads_v0x`), Painel do Time, métricas de conversão. Regra
-  para cada um: "entrar no ganho" = entrar em **Documentos** (a primeira etapa de ganho, por
-  `position`); "está ganho" = qualquer etapa `is_won`.
+  para cada um: "entrar no ganho" = a etapa que `Ramon::EtapaDeGanho.entrada(lead)` devolve:
+  Fechado no PR 1; Documentos para tese que passa pela etapa Documentos a partir do PR 2;
+  "está ganho" = qualquer etapa `is_won`.
 - **Leads já ganhos** ficam em **Fechado**, como estão. Fechado continua etapa de ganho, mas nada
   novo cai nela, e o agente de documentos e a cobrança **não** olham para ela. *(Decisão do
   Claude: evita cobrar cliente antigo.)* Ligado o recurso, o Ganho passa a levar para Documentos.
