@@ -31,12 +31,12 @@ class Ramon::AdvboxClosingService
   end
 
   def perform
-    return if @lead.won_at.blank? || synced?
+    return if @lead.won_at.blank?
 
-    customer_id = step('customers_id') { find_or_create_customer }
-    lawsuit_id = step('lawsuits_id') { Ramon::AdvboxClient.create_lawsuit(lawsuit_payload(customer_id))['lawsuits_id'] }
-    step('posts_id') { Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id'] }
-    merge_advbox('sincronizado_em' => Time.zone.now.iso8601, 'erro' => nil, 'em' => nil)
+    sincronizar unless synced?
+    # Etapa Documentos: o lead passou ao Jurídico antes de o caso existir aqui → a ANÁLISE DO CASO que ficou para trás. Fora do
+    # "unless": o retry do job (ADVBOX fora do ar) já encontra o caso sincronizado.
+    Ramon::Documentos::Passagem.retomar(@lead)
   rescue Ramon::AdvboxClient::UnavailableError
     raise # retry no job (rede/5xx)
   rescue StandardError => e
@@ -44,6 +44,13 @@ class Ramon::AdvboxClosingService
   end
 
   private
+
+  def sincronizar
+    customer_id = step('customers_id') { find_or_create_customer }
+    lawsuit_id = step('lawsuits_id') { Ramon::AdvboxClient.create_lawsuit(lawsuit_payload(customer_id))['lawsuits_id'] }
+    step('posts_id') { Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id'] }
+    merge_advbox('sincronizado_em' => Time.zone.now.iso8601, 'erro' => nil, 'em' => nil)
+  end
 
   def synced?
     advbox['sincronizado_em'].present?

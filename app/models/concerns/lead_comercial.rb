@@ -15,6 +15,8 @@ module LeadComercial
     after_commit :verificar_registro_completo, on: [:create, :update], if: -> { saved_change_to_thesis_id? || saved_change_to_contact_id? }
     after_commit :assign_conversation_to_sdr, on: [:create, :update],
                                               if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
+    # Checklist completou na etapa Documentos → Jurídico (spec Etapa Documentos §8). O carimbo só muda de nil para valor.
+    after_commit :passar_ao_juridico, on: :update, if: -> { saved_change_to_docs_completos_em? && docs_completos_em.present? }
     # Registro de ações (audits, somente-inclusão, 5 anos): etapa, ganho/perda,
     # valor e dono do lead, e a exclusão. Aqui e não no Lead (no teto do
     # ClassLength). contact_id fica no destroy para a tela saber de quem era.
@@ -132,6 +134,10 @@ module LeadComercial
   end
 
   def verificar_registro_completo = Ramon::RegistroCompleto.verificar(self)
+
+  def passar_ao_juridico
+    Ramon::Documentos::PassagemJob.perform_later(id) if Ramon::EtapaDeGanho.conduzida?(lead_stage)
+  end
 
   # Documentos mínimos = checklist inteira da tese "recebido" (decisão 02/10).
   # Carimba o momento em que completou; desmarcar um item apaga o carimbo.

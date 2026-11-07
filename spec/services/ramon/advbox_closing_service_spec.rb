@@ -125,6 +125,37 @@ RSpec.describe Ramon::AdvboxClosingService do
     expect(lead.reload.custom_attributes.dig('advbox', 'erro')).to be_present
   end
 
+  describe 'Etapa Documentos (chave ligada)' do
+    let(:etapas) { Ramon::EtapasPosVenda.criar!(account) }
+
+    around { |example| with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { example.run } }
+
+    def posts_do_tipo(tipo) = a_request(:post, 'https://app.advbox.com.br/api/v1/posts').with { |req| JSON.parse(req.body)['tasks_id'] == tipo }
+
+    # Review Focus 2: o checklist completou antes de o caso existir no ADVBOX; a ANÁLISE DO CASO sai quando ele nasce.
+    it 'lead que já passou ao Jurídico: cria a ANÁLISE DO CASO assim que o caso nasce', :aggregate_failures do
+      lead.update_columns(lead_stage_id: etapas.last.id) # rubocop:disable Rails/SkipsModelValidations
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+      stub_create('posts', 'posts_id', 444)
+
+      described_class.new(lead.reload).perform
+
+      expect(posts_do_tipo('8745386')).to have_been_made.once
+      expect(lead.reload.custom_attributes.dig('advbox', 'analise_posts_id')).to eq(444)
+    end
+
+    it 'o retry do job (ADVBOX fora do ar na ANÁLISE DO CASO) a cria, com o caso já sincronizado' do
+      lead.update_columns(lead_stage_id: etapas.last.id, # rubocop:disable Rails/SkipsModelValidations
+                          custom_attributes: { 'advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 } })
+      stub_create('posts', 'posts_id', 444)
+
+      described_class.new(lead.reload).perform
+
+      expect(posts_do_tipo('8745386')).to have_been_made.once
+    end
+  end
+
   it 'não faz nada em lead que não é ganho' do
     aberto = create(:lead, account: account)
     described_class.new(aberto).perform

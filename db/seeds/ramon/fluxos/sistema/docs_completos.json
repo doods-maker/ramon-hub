@@ -9,14 +9,15 @@
     "quando": "Toda vez que o lead é gravado mexendo no checklist ou na tese — por exemplo, quando alguém marca um documento como recebido no painel do lead ou confirma a sugestão da IA, ou quando a IA marca um documento na etapa Documentos.",
     "o_que_mexe": [
       "A data \"documentos completos\" do lead.",
-      "Essa data alimenta o Contrato limpo, o Painel do Time (Closer) e o radar de prescrição."
+      "Essa data alimenta o Contrato limpo, o Painel do Time (Closer) e o radar de prescrição.",
+      "Na etapa Documentos (com a etapa ligada): o checklist completo leva o lead ao Jurídico, cria a tarefa ANÁLISE DO CASO no ADVBOX (com a pasta da tese nas notas) e manda ao cliente o encerramento aprovado; desmarcar um documento de quem já está no Jurídico avisa a equipe."
     ],
     "travas": [
       "Só conta o que uma pessoa marcou como \"recebido\": documento enviado pelo Painel do Cliente ou sugerido pela IA não conta até alguém confirmar.",
       "Exceção: na etapa Documentos (com a etapa ligada), a marcação da IA conta. Ela marca o documento como recebido e avisa quem confere (desmarcar desfaz), e essa data alimenta o Contrato limpo e a variável do SDR e do Closer. CNIS resumido a IA não marca.",
       "Lead sem tese, ou tese sem itens de documento, nunca fica completo.",
       "Item novo acrescentado na tese só entra na conta na próxima gravação do lead.",
-      "Não manda sino nem push."
+      "Fora da etapa Documentos, não manda sino nem push. No Jurídico, o lead não volta para Documentos sozinho: quem desmarcou decide."
     ],
     "por_que": "É regra de dado: a data precisa ser exata e sempre igual, porque decide o contrato limpo e, com ele, a variável do SDR e do Closer. Se fosse um fluxo, desligá-lo ou editá-lo mudaria o dinheiro de alguém.",
     "mudar": {
@@ -24,6 +25,7 @@
       "arquivos": [
         "app/models/concerns/lead_comercial.rb",
         "app/models/concerns/lead_docs.rb",
+        "app/services/ramon/documentos/passagem.rb",
         "app/javascript/dashboard/routes/dashboard/ramon/components/lead/DocChecklist.vue"
       ],
       "impacto": "Muda quem entra no Contrato limpo e, portanto, o extrato da variável dos meses seguintes. Datas já gravadas não mudam sozinhas."

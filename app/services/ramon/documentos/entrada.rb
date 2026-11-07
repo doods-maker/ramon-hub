@@ -1,4 +1,5 @@
-# Lead entrou na etapa Documentos (spec Etapa Documentos §2; chamado pelo RamonLeadListener, só com a chave ligada).
+# Lead entrou na etapa Documentos (spec Etapa Documentos §2; chamado pelo RamonLeadListener, só com a chave ligada). Já com o
+# checklist completo: vai direto para a passagem ao Jurídico (Ramon::Documentos::Passagem).
 # Conversa numa caixa com IA: volta para a IA — pendente (o assistente só responde conversa pendente) e sem Pausa; não
 # manda mensagem (a abertura é do PR 5). Sem conversa, ou caixa sem IA: nada de IA; avisa quem conduz os documentos
 # (o SDR do lead; sem ele, o closer; sem nenhum, os administradores). Push só com a tese (Ramon::NtfyPushJob.rotulo).
@@ -6,6 +7,9 @@ module Ramon::Documentos::Entrada
   module_function
 
   def call(lead)
+    # Completou antes de entrar (documentos conferidos antes do Ganho): nada a cobrar, segue para o Jurídico.
+    return Ramon::Documentos::PassagemJob.perform_later(lead.id) if lead.docs_completos_em.present?
+
     conversa = lead.conversation
     return avisar(lead, conversa ? 'numa caixa sem IA' : 'sem WhatsApp') unless conversa && Captain::AssistenteDaConversa.para(conversa)
 
