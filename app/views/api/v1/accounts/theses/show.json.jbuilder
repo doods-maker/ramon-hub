@@ -12,6 +12,7 @@ json.honorario_na_tabela @thesis.honorario_na_tabela
 json.palavras_chave @thesis.palavras_chave
 json.zapsign_template_id @thesis.zapsign_template_id
 json.opcoes_botoes @thesis.opcoes_botoes
+json.passa_documentos @thesis.passa_documentos
 
 json.items @thesis.thesis_items do |item|
   json.id item.id

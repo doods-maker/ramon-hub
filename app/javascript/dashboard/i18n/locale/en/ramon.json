@@ -70,7 +70,8 @@
         "NENHUMA": "no stage",
         "NADA": "AI sends nothing",
         "ATE_AQUI": "AI goes up to here",
-        "FIM": "AI goes to the end"
+        "FIM": "AI goes to the end",
+        "CONDUZIDA": "After the contract · the stage assistant replies"
       },
       "ESTADO": {
         "sozinha": "On its own",
@@ -497,7 +498,10 @@
         "VALUE_LABEL": "Value (R$)",
         "SAVE": "Save",
         "SKIP": "Skip",
-        "INVALID": "Invalid value — numbers only, e.g. 1,500.00"
+        "INVALID": "Invalid value — numbers only, e.g. 1,500.00",
+        "MOTIVO_PULA_DOCUMENTOS": "This thesis goes through the Documents stage. Why go straight here? (required)",
+        "NOTA_PULA_DOCUMENTOS": "Won straight into {etapa}, skipping Documents: {motivo}",
+        "NOTA_ERRO": "The deal was saved, but the reason did not reach the lead notes. Add it there by hand."
       },
       "NEW": {
         "THESIS": "Thesis",
@@ -717,6 +721,9 @@
       "CADENCE_DAYS": "days",
       "PROBABILITY": "Probability (%)",
       "PROBABILITY_HINT": "used in the weighted forecast",
+      "ASSISTENTE": "Assistant for this stage",
+      "ASSISTENTE_DA_CAIXA": "Inbox assistant",
+      "ASSISTENTE_HINT": "Who answers the lead in this stage. Inbox assistant = the one connected to the conversation inbox. Only applies when the inbox has AI.",
       "REMOVE": "Remove",
       "WEIGHT": "Weight",
       "WEIGHT_OF": "weight {weight}",
@@ -1261,6 +1268,7 @@
           "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)",
           "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team",
           "FUNIL_AUTO": "Funnel AI",
+          "DOCUMENTOS": "Documents stage",
           "ROTEIRO": "AI script"
         }
       },
@@ -1490,6 +1498,8 @@
       },
       "ZAPSIGN_MODELO_AJUDA": "Used by \"on its own until the contract\" to generate the contract on the spot. No template = the contract never goes out automatically for this thesis.",
       "ZAPSIGN_SEM_MODELO": "No template",
+      "PASSA_DOCUMENTOS": "Goes through the Documents stage",
+      "PASSA_DOCUMENTOS_AJUDA": "When the contract is signed, the lead of this thesis goes to the Documents stage (the documents assistant gathers what is missing) instead of Closed. Only works when the thesis has documents in the checklist.",
       "ZAPSIGN_MODELOS_ERRO": "Couldn't load the ZapSign templates right now — the saved one is kept.",
       "DELETE_IN_USE": "1 lead uses this thesis — deactivate instead of deleting | {count} leads use this thesis — deactivate instead of deleting",
       "DELETE_IN_USE_HINT": "Once deactivated, the thesis stays on the leads already using it and leaves the thesis choice for new leads.",

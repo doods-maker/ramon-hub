@@ -9,4 +9,5 @@ json.array! @stages do |stage|
   # protegida: o código acha a etapa pelo label (não pode ser removida)
   json.automacao stage.automacao?
   json.nome_cliente stage.nome_cliente
+  json.captain_assistant_id stage.captain_assistant_id
 end

@@ -40,6 +40,33 @@ RSpec.describe Ramon::PerfilIa do
     expect(described_class.de(conversa).estado(etapa['fase-novo'])).to eq(:pausada)
   end
 
+  describe 'etapa conduzida pela IA (Documentos)' do
+    let(:documentos) { Ramon::EtapasPosVenda.criar!(account).first }
+    let(:juridico) { account.lead_stages.find_by!(label: Ramon::EtapaDeGanho::JURIDICO) }
+
+    it 'com a chave ligada, Documentos envia sozinha; Fechado e Jurídico seguem :fechado; Perdido :pausada', :aggregate_failures do
+      with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') do
+        perfil = described_class.de(conversa)
+        expect(perfil.estado(documentos)).to eq(:sozinha)
+        expect(perfil.estado(juridico)).to eq(:fechado)
+        expect(perfil.estado(etapa['fase-fechado'])).to eq(:fechado)
+        expect(perfil.estado(account.lead_stages.find_by(is_lost: true))).to eq(:pausada)
+        expect(perfil.logistica_sai?(documentos)).to be(true)
+      end
+    end
+
+    it 'a Pausa manual continua vencendo em Documentos' do
+      conversa.update!(custom_attributes: { 'ia_pausa' => 'pausada' })
+      with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') do
+        expect(described_class.de(conversa).estado(documentos)).to eq(:pausada)
+      end
+    end
+
+    it 'com a chave desligada, Documentos é pós-venda como hoje (:fechado)' do
+      expect(described_class.de(conversa).estado(documentos)).to eq(:fechado)
+    end
+  end
+
   it 'lixo gravado cai na base; marcador desconhecido = _inicio' do
     gravar('padrao' => { 'base' => 'xablau', 'marcador' => 'fase-apagada', 'permissoes' => { 'logistica' => 'x' } })
     perfil = described_class.de(conversa)

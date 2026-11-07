@@ -74,9 +74,11 @@ export function useRamonLeadHotKeys() {
     // não é ganho novo: move direto.
     const origem = stages.value?.find(s => s.id === lead.lead_stage_id);
     if (entraNoGanho(stage, origem)) {
+      // o lead vai junto: fora dos filtros, o funil não o acha na lista carregada
       store.dispatch('leads/requestWon', {
         id: lead.id,
         leadStageId: stage.id,
+        lead,
       });
       router.push({
         name: 'ramon_funil',

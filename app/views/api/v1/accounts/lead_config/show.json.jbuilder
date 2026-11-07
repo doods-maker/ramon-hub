@@ -13,6 +13,8 @@ json.stages do
     json.nome_cliente stage.nome_cliente
     json.probability stage.probability
     json.stalled_after_days stage.stalled_after_days
+    # Etapa Documentos: assistente próprio da etapa (nil = o da caixa)
+    json.captain_assistant_id stage.captain_assistant_id
   end
 end
 json.lost_reasons do
@@ -30,4 +32,6 @@ json.priorities do
   end
 end
 json.channels @channels
+# chave RAMON_ETAPA_DOCUMENTOS: o funil só pede o motivo de pular Documentos com ela ligada
+json.etapa_documentos Ramon::EtapaDeGanho.documentos_ligado?
 json.sources @sources

@@ -195,6 +195,7 @@ class Ramon::PerfilIa
 
   def estado(etapa = @etapa)
     return :pausada if @pausa == 'pausada' || etapa&.is_lost
+    return :sozinha if Ramon::EtapaDeGanho.conduzida?(etapa) # Documentos: a IA conduz e envia
     return :fechado if etapa&.is_won # pós-venda é das pessoas: só rascunho
 
     posicao(etapa) <= indice_do_marcador ? :sozinha : :rascunho

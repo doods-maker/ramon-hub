@@ -10,3 +10,4 @@ json.automacao @stage.automacao?
 json.nome_cliente @stage.nome_cliente
 json.probability @stage.probability
 json.stalled_after_days @stage.stalled_after_days
+json.captain_assistant_id @stage.captain_assistant_id

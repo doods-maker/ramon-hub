@@ -4,6 +4,7 @@ import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import RamonLeadImportsAPI from 'dashboard/api/ramonLeadImports';
+import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -25,6 +26,10 @@ const { t } = useI18n();
 
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const stages = computed(() => getters['leadConfig/getStages'].value);
+// chave RAMON_ETAPA_DOCUMENTOS: desligada, o assistente da etapa não vale (nem aparece)
+const etapaDocumentos = computed(
+  () => !!store.getters['leadConfig/getEtapaDocumentos']
+);
 
 const saveStalled = (stage, raw) => {
   // o servidor exige > 0 (vazio = sem limite): 0 vira 1 antes de mandar
@@ -92,6 +97,27 @@ const loadConfig = async () => {
   }
 };
 onMounted(loadConfig);
+
+// Assistente desta etapa (Etapa Documentos): só nas etapas de ganho; vazio = o
+// da caixa. Sem Captain (ou sem assistentes), o seletor nem aparece.
+const assistentes = ref([]);
+onMounted(() =>
+  CaptainAssistantAPI.get()
+    .then(({ data }) => {
+      assistentes.value = data.payload || [];
+    })
+    .catch(() => {})
+);
+const saveAssistente = (stage, raw) => {
+  const id = raw === '' ? null : Number(raw);
+  if (id === (stage.captain_assistant_id ?? null)) return;
+  store
+    .dispatch('leadConfig/updateStage', {
+      id: stage.id,
+      captain_assistant_id: id,
+    })
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
+};
 
 const importFileInput = ref(null);
 const importing = ref(false);
@@ -253,6 +279,23 @@ const submitImport = async () => {
               />
             </span>
             <span class="flex shrink-0 items-center gap-2">
+              <select
+                v-if="etapaDocumentos && s.is_won && assistentes.length"
+                :value="s.captain_assistant_id ?? ''"
+                data-testid="stage-assistente"
+                class="!w-44"
+                :class="CAMPO"
+                :title="$t('RAMON.FUNIL_CONFIG.ASSISTENTE_HINT')"
+                :aria-label="$t('RAMON.FUNIL_CONFIG.ASSISTENTE')"
+                @change="e => saveAssistente(s, e.target.value)"
+              >
+                <option value="">
+                  {{ $t('RAMON.FUNIL_CONFIG.ASSISTENTE_DA_CAIXA') }}
+                </option>
+                <option v-for="a in assistentes" :key="a.id" :value="a.id">
+                  {{ a.name }}
+                </option>
+              </select>
               <input
                 :value="s.stalled_after_days"
                 data-testid="stage-stalled-days"

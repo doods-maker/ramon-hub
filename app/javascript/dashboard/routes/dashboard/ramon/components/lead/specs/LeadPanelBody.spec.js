@@ -10,11 +10,14 @@ import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
+import MotivoPulaDocumentos from '../../MotivoPulaDocumentos.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('shared/helpers/clipboard', () => ({ copyTextToClipboard: vi.fn() }));
-vi.mock('dashboard/api/leads', () => ({ default: { getNotes: vi.fn() } }));
+vi.mock('dashboard/api/leads', () => ({
+  default: { getNotes: vi.fn(), createNote: vi.fn(() => Promise.resolve({})) },
+}));
 
 const notesPayload = notes => ({ data: { payload: notes } });
 const nota = (id, body) => ({
@@ -77,7 +80,13 @@ const build = ({
         getters: {
           getStages: () => [
             { id: 1, name: 'Novo', probability: 10, position: 1 },
-            { id: 2, name: 'Fechado', is_won: true, position: 5 },
+            {
+              id: 2,
+              name: 'Fechado',
+              label: 'fase-fechado',
+              is_won: true,
+              position: 5,
+            },
             { id: 3, name: 'Perdido', is_lost: true, position: 6 },
             {
               id: 4,
@@ -92,10 +101,17 @@ const build = ({
               position: 3,
             },
             { id: 6, name: 'Negociação', position: 4 },
-            { id: 7, name: 'Documentos', is_won: true, position: 5 },
+            {
+              id: 7,
+              name: 'Documentos',
+              label: 'fase-documentos',
+              is_won: true,
+              position: 5,
+            },
           ],
           getLostReasons: () => [],
           getChannels: () => [{ key: 'whatsapp', label: 'WhatsApp' }],
+          getEtapaDocumentos: () => true,
         },
       },
       theses: {
@@ -751,6 +767,41 @@ describe('LeadPanelBody', () => {
         lead_stage_id: 2,
         value: 48000,
       });
+    });
+  });
+
+  describe('ganho que pula Documentos', () => {
+    it('pede o motivo (obrigatório) e grava como nota do lead', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({
+        props: {
+          lead: { ...lead, thesis_passa_documentos: true, docs_total: 2 },
+        },
+        spies: { update },
+      });
+      await wrapper.find('[data-testid="panel-stage"]').setValue(2);
+      const salvar = () => wrapper.find('[data-testid="stage-won-save"]');
+      expect(salvar().attributes('disabled')).toBeDefined();
+      await wrapper
+        .findComponent(MotivoPulaDocumentos)
+        .vm.$emit('update:modelValue', 'Já trouxe tudo');
+      await salvar().trigger('click');
+      await flushPromises();
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        lead_stage_id: 2,
+        value: 48000,
+      });
+      expect(LeadsAPI.createNote).toHaveBeenCalledWith(
+        7,
+        'RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS'
+      );
+    });
+
+    it('tese sem a chave: sem campo de motivo', async () => {
+      const wrapper = mountBody();
+      await wrapper.find('[data-testid="panel-stage"]').setValue(2);
+      expect(wrapper.findComponent(MotivoPulaDocumentos).exists()).toBe(false);
     });
   });
 

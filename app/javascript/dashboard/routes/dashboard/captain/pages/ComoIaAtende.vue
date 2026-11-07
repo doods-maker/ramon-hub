@@ -18,6 +18,7 @@ import {
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import {
   COR_DO_ESTADO,
+  TOM_DO_ESTADO,
   ajustes,
   baseDe,
   efetivo,
@@ -91,13 +92,17 @@ const carregar = async () => {
 
 const prontos = computed(() => dados.value.prontos);
 const etapas = computed(() => dados.value.etapas);
+// Etapas de ganho que a IA conduz (Documentos): fora da Trilha, sempre Sozinha, com gatilhos próprios.
+const conduzidas = computed(() => dados.value.conduzidas ?? []);
+// Trilha + conduzidas: onde há gatilhos (ajustes, mudanças e o que vai no PATCH).
+const comGatilhos = computed(() => [...etapas.value, ...conduzidas.value]);
 const cfgDe = id => cfgs.value[id] ?? cfgs.value.padrao;
 const nomePerfil = base => t(`${K}.PERFIS.${base}.NOME`);
 const miniDe = cfg => {
   const marcador = marcadorDe(cfg, prontos.value, etapas.value);
   return etapas.value.map(e => estadoDaEtapa(e.chave, marcador, etapas.value));
 };
-const nAjustes = cfg => ajustes(cfg, prontos.value, etapas.value);
+const nAjustes = cfg => ajustes(cfg, prontos.value, comGatilhos.value);
 const comAjustes = (cfg, chave) => {
   const n = nAjustes(cfg);
   if (!n) return nomePerfil(baseDe(cfg));
@@ -146,14 +151,14 @@ const marcadorAtual = computed(() =>
   marcadorDe(cfgAtual.value, prontos.value, etapas.value)
 );
 const etapaAtual = computed(() =>
-  etapas.value.find(e => e.chave === etapaSel.value)
+  comGatilhos.value.find(e => e.chave === etapaSel.value)
 );
 
 // Mudou = o que a IA faria (ou o "segue o padrão") é outro que o salvo.
 // Gatilhos em ordem fixa: tirar e pôr de volta um gatilho não é mudança.
 const chave = cfg => {
   if (!cfg) return 'null';
-  const ef = efetivo(cfg, prontos.value, etapas.value);
+  const ef = efetivo(cfg, prontos.value, comGatilhos.value);
   return JSON.stringify({
     ...ef,
     gatilhos: Object.fromEntries(
@@ -271,7 +276,7 @@ const testar = () => {
       name: 'captain_assistants_playground_index',
       params: { ...route.params, assistantId: assistenteDoTeste.value },
       state: {
-        perfilTeste: copia(paraGravar(cfgAtual.value, etapas.value)),
+        perfilTeste: copia(paraGravar(cfgAtual.value, comGatilhos.value)),
         thesisId: tipo === 'tese' ? Number(numero) : null,
       },
     })
@@ -282,7 +287,7 @@ const testar = () => {
 const salvar = async () => {
   const corpo = {};
   mudados.value.forEach(id => {
-    const cfg = paraGravar(cfgs.value[id], etapas.value);
+    const cfg = paraGravar(cfgs.value[id], comGatilhos.value);
     if (id === 'padrao') {
       corpo.padrao = cfg;
       return;
@@ -570,6 +575,33 @@ onBeforeRouteLeave(
               :travada="segue"
               @update:marcador="mudarMarcador"
             />
+            <div v-if="conduzidas.length" class="flex flex-wrap gap-2 mt-3">
+              <button
+                v-for="e in conduzidas"
+                :key="e.chave"
+                type="button"
+                :data-testid="`etapa-${e.chave}`"
+                :aria-pressed="e.chave === etapaSel"
+                class="flex flex-col items-start gap-1.5 rounded-xl border border-solid px-3 py-2 text-left"
+                :class="
+                  e.chave === etapaSel
+                    ? 'border-n-slate-12'
+                    : 'border-n-weak hover:border-n-slate-8'
+                "
+                @click="etapaSel = e.chave"
+              >
+                <span class="text-[13px] font-medium text-n-slate-12">
+                  {{ e.nome }}
+                </span>
+                <span :class="[CHIP, TOM_DO_ESTADO.sozinha]">
+                  <span class="size-1.5 rounded-full bg-current" />
+                  {{ t(`${K}.ESTADO.sozinha`) }}
+                </span>
+                <span class="text-[12px] text-n-slate-10">
+                  {{ t(`${K}.TRILHA.CONDUZIDA`) }}
+                </span>
+              </button>
+            </div>
           </section>
 
           <section

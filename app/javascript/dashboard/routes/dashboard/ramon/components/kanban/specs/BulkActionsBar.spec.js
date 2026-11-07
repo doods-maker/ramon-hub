@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import BulkActionsBar from '../BulkActionsBar.vue';
 import LostReasonModal from '../LostReasonModal.vue';
 import ConfirmModal from '../../ConfirmModal.vue';
@@ -10,6 +10,10 @@ vi.mock('vue-i18n', () => ({
 vi.mock('dashboard/composables', () => ({
   useAlert: vi.fn(),
 }));
+vi.mock('dashboard/api/leads', () => ({
+  default: { createNote: vi.fn(() => Promise.resolve({})) },
+}));
+import LeadsAPI from 'dashboard/api/leads';
 
 const dispatch = vi.fn().mockResolvedValue();
 
@@ -132,6 +136,56 @@ describe('BulkActionsBar', () => {
 
     expect(wrapper.findComponent(ConfirmModal).exists()).toBe(true);
     expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('ganho que pula Documentos: motivo obrigatório, vira nota de cada lead que pulou', async () => {
+    const { getters } = stubStore;
+    const antes = {
+      leads: getters['leads/getLeads'],
+      stages: getters['leadConfig/getStages'],
+    };
+    getters['leads/getLeads'] = [
+      {
+        id: 10,
+        lead_stage_id: 1,
+        thesis_passa_documentos: true,
+        docs_total: 2,
+      },
+      { id: 11, lead_stage_id: 1 },
+    ];
+    getters['leadConfig/getStages'] = [
+      { id: 1, name: 'Novo' },
+      { id: 7, name: 'Fechado', label: 'fase-fechado', is_won: true },
+      { id: 8, name: 'Documentos', label: 'fase-documentos', is_won: true },
+    ];
+    getters['leadConfig/getEtapaDocumentos'] = true;
+    const wrapper = mountBar();
+    await wrapper.find('[data-testid="bulk-move-stage"]').trigger('click');
+    await wrapper
+      .findAll('[data-testid="bulk-stage-option"]')[1]
+      .trigger('click');
+    Object.assign(getters, {
+      'leads/getLeads': antes.leads,
+      'leadConfig/getStages': antes.stages,
+      'leadConfig/getEtapaDocumentos': false,
+    });
+
+    const modal = wrapper.findComponent(ConfirmModal);
+    expect(modal.props('confirmDisabled')).toBe(true);
+    await wrapper
+      .find('[data-testid="motivo-pula-documentos"]')
+      .setValue('Pasta completa');
+    expect(modal.props('confirmDisabled')).toBe(false);
+    modal.vm.$emit('confirm');
+    await flushPromises();
+    expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
+      fields: { lead_stage_id: 7 },
+    });
+    expect(LeadsAPI.createNote).toHaveBeenCalledTimes(1);
+    expect(LeadsAPI.createNote).toHaveBeenCalledWith(
+      10,
+      'RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS'
+    );
   });
 
   it('cancelar a confirmação de ganho não dispara o lote', async () => {

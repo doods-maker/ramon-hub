@@ -11,6 +11,8 @@ import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
 import MiniEsteira from './MiniEsteira.vue';
 import { DEFAULT_STAGE_COLOR, entraNoGanho } from '../../helpers/stage';
+import { usePulaDocumentos } from '../../composables/usePulaDocumentos';
+import MotivoPulaDocumentos from '../MotivoPulaDocumentos.vue';
 import LeadNotes from './LeadNotes.vue';
 import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
@@ -186,6 +188,16 @@ const stageId = ref(props.lead?.lead_stage_id ?? null);
 const lostModalOpen = ref(false);
 const wonPrompt = ref(false);
 const wonValue = ref('');
+// sobe para recarregar as notas (nota-rascunho de confirmação que nasce no
+// backend, motivo do ganho que pulou Documentos)
+const notesTick = ref(0);
+// Ganho que pula Documentos: o motivo é obrigatório e vira nota do lead.
+const wonPedeMotivo = ref(false);
+const wonMotivo = ref('');
+const faltaMotivo = computed(
+  () => wonPedeMotivo.value && !wonMotivo.value.trim()
+);
+const { pedeMotivo, anotar } = usePulaDocumentos();
 
 watch(
   () => props.lead,
@@ -320,9 +332,11 @@ const commitStage = async (targetId, extra = {}) => {
       lead_stage_id: targetId,
       ...extra,
     });
+    return true;
   } catch (e) {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     stageId.value = props.lead?.lead_stage_id ?? null;
+    return false;
   } finally {
     lostModalOpen.value = false;
     wonPrompt.value = false;
@@ -345,6 +359,8 @@ const onStageChange = targetId => {
   const origem = stages.value.find(s => s.id === props.lead?.lead_stage_id);
   if (entraNoGanho(target, origem)) {
     wonValue.value = formatBrl(props.lead?.value);
+    wonPedeMotivo.value = pedeMotivo(target, origem, props.lead);
+    wonMotivo.value = '';
     wonPrompt.value = true;
     return;
   }
@@ -357,11 +373,21 @@ const cancelLostStage = () => {
   lostModalOpen.value = false;
   stageId.value = props.lead?.lead_stage_id ?? null;
 };
+// Move e, se pulou Documentos, grava o motivo nas notas (só depois do ganho gravado).
+const commitWon = async extra => {
+  if (faltaMotivo.value) return;
+  const motivo = wonPedeMotivo.value ? wonMotivo.value.trim() : '';
+  const target = stageId.value;
+  const ok = await commitStage(target, extra);
+  if (!ok || !motivo) return;
+  const etapa = stages.value.find(s => s.id === target);
+  if (await anotar(props.lead.id, etapa, motivo)) notesTick.value += 1;
+};
 const confirmWonStage = () => {
   const parsed = parseBrlInput(wonValue.value);
-  commitStage(stageId.value, parsed == null ? {} : { value: parsed });
+  commitWon(parsed == null ? {} : { value: parsed });
 };
-const skipWonStage = () => commitStage(stageId.value);
+const skipWonStage = () => commitWon({});
 
 // ----- + Tarefa: form inline. Tipo Reunião = no backend: etapa,
 // Closer, Google (rascunho de confirmação, lembretes internos) -----
@@ -375,8 +401,6 @@ const taskTitle = ref('');
 const taskDate = ref('');
 const taskFormato = ref('video');
 const isMeetingForm = computed(() => taskKind.value === 'meeting');
-// nota-rascunho de confirmação nasce no backend: recarrega as notas
-const notesTick = ref(0);
 const tomorrowAt9 = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -1092,6 +1116,7 @@ const discard = async () => {
                 :class="CAMPO"
                 @keyup.enter="confirmWonStage"
               />
+              <MotivoPulaDocumentos v-if="wonPedeMotivo" v-model="wonMotivo" />
               <div class="flex justify-end gap-2">
                 <Button
                   data-testid="stage-won-skip"
@@ -1099,12 +1124,14 @@ const discard = async () => {
                   faded
                   slate
                   :label="$t('RAMON.FUNIL.WON.SKIP')"
+                  :disabled="faltaMotivo"
                   @click="skipWonStage"
                 />
                 <Button
                   data-testid="stage-won-save"
                   sm
                   :label="$t('RAMON.FUNIL.WON.SAVE')"
+                  :disabled="faltaMotivo"
                   @click="confirmWonStage"
                 />
               </div>

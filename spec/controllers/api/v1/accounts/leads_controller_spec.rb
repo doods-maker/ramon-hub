@@ -113,6 +113,7 @@ RSpec.describe 'Leads API', type: :request do
     expect(body['stage_name']).to eq('Novo')
     expect(body['stage_color']).to eq('#6b7280')
     expect(body['thesis_name']).to eq('Auxílio-acidente (B36)')
+    expect(body['thesis_passa_documentos']).to be(false)
     expect(body['contact_name']).to eq('Cliente X')
     expect(body['contact_phone']).to eq('+5547999990000')
     expect(body['contact_email']).to eq('x@cli.com')

@@ -229,6 +229,35 @@ describe('Como a IA atende', () => {
     });
   });
 
+  it('Documentos (conduzida) fica fora da Trilha: sempre Sozinha, com gatilhos próprios que vão no salvar', async () => {
+    const corpo = dados();
+    corpo.conduzidas = [{ chave: 'fase-documentos', nome: 'Documentos' }];
+    corpo.acoes = corpo.acoes.map(a =>
+      a.chave === 'pedir_documentos'
+        ? { ...a, etapas: [...a.etapas, 'fase-documentos'] }
+        : a
+    );
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    RamonIaAtendimentoAPI.salvar.mockResolvedValue({ data: corpo });
+    const wrapper = await montar();
+    await clicar(wrapper, 'perfil-cautelosa'); // Marcador cedo: não limita Documentos
+    await clicar(wrapper, 'etapa-fase-documentos');
+    expect(achar(wrapper, 'etapa-fase-documentos').text()).toContain(
+      'On its own'
+    );
+    expect(permissao(wrapper, 'pedir_documentos').text()).toBe('On its own');
+
+    await clicar(wrapper, 'gatilho-pediu_pessoa');
+    await clicar(wrapper, 'salvar');
+    await flushPromises();
+    const gatilhos = corpo.gatilhos
+      .map(g => g.chave)
+      .filter(g => g !== 'pediu_pessoa');
+    expect(RamonIaAtendimentoAPI.salvar).toHaveBeenCalledWith({
+      padrao: { base: 'cautelosa', gatilhos: { 'fase-documentos': gatilhos } },
+    });
+  });
+
   it('erro 422 do salvar vira alerta com a mensagem do servidor', async () => {
     RamonIaAtendimentoAPI.salvar.mockRejectedValue({
       response: { data: { error: 'marcador desconhecido: x' } },

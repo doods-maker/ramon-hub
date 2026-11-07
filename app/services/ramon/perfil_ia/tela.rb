@@ -2,8 +2,8 @@
 class Ramon::PerfilIa::Tela
   # Em que Etapa a linha da ação aparece na tela (citar_honorario aparece em duas).
   ETAPAS_DA_ACAO = {
-    'fora_do_horario' => %w[fase-novo],
-    'pedir_documentos' => %w[fase-qualificacao], 'desqualificar' => %w[fase-qualificacao],
+    'fora_do_horario' => %w[fase-novo fase-documentos],
+    'pedir_documentos' => %w[fase-qualificacao fase-documentos], 'desqualificar' => %w[fase-qualificacao],
     'mover_etapa' => %w[fase-qualificacao], 'marcar_reuniao' => %w[fase-qualificacao],
     'citar_honorario' => %w[fase-qualificacao fase-negociacao],
     'logistica' => %w[fase-reuniao-agendada], 'contrato_zapsign' => %w[fase-negociacao]
@@ -15,7 +15,7 @@ class Ramon::PerfilIa::Tela
 
   def corpo
     { prontos: Ramon::PerfilIa::PRONTOS, inicial: Ramon::PerfilIa::INICIAL, acoes: acoes, gatilhos: gatilhos,
-      etapas: etapas, padrao: Ramon::PerfilIa.cfg_salvo(@account, 'padrao') || Ramon::PerfilIa::INICIAL,
+      etapas: etapas, conduzidas: conduzidas, padrao: Ramon::PerfilIa.cfg_salvo(@account, 'padrao') || Ramon::PerfilIa::INICIAL,
       teses: teses, caixas: caixas, limites: Ramon::IaLimites.corpo(@account), numeros: Ramon::PerfilIa::Numeros.todos(@account),
       assistente_id: assistente_global, avisos: Ramon::PerfilIa::Avisos.de(@account) }
   end
@@ -42,6 +42,9 @@ class Ramon::PerfilIa::Tela
   def etapas
     @account.lead_stages.where(is_won: false, is_lost: false).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
   end
+
+  # Depois das abertas, fora da Trilha: a IA envia sozinha (Ramon::EtapaDeGanho::CONDUZIDAS).
+  def conduzidas = Ramon::EtapaDeGanho.conduzidas(@account).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
 
   # "Testar este perfil" da tese: o assistente da caixa dela (ramon_thesis_id) ou, sem caixa com IA, o global.
   def teses

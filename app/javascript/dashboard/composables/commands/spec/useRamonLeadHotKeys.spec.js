@@ -163,9 +163,11 @@ describe('useRamonLeadHotKeys', () => {
       a => a.id === 'ramon_lead_10_move_4'
     );
     await won.handler();
+    // o lead vai junto: fora dos filtros do Kanban, o funil não o acharia na lista
     expect(store.dispatch).toHaveBeenCalledWith('leads/requestWon', {
       id: 10,
       leadStageId: 4,
+      lead: expect.objectContaining({ id: 10 }),
     });
     expect(router.push).toHaveBeenCalledWith({
       name: 'ramon_funil',

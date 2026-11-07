@@ -29,4 +29,15 @@ RSpec.describe Ramon::PerfilIa::Gravacao do
     expect(salvo['padrao']).to eq('base' => 'equilibrada')
     expect(salvo['teses'][tese.id.to_s]['gatilhos']).to eq('fase-novo' => ['irritado'])
   end
+
+  it 'Documentos (chave ligada) aceita gatilhos, mas não é Marcador', :aggregate_failures do
+    Ramon::EtapasPosVenda.criar!(account)
+    with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') do
+      expect_recusa({ 'padrao' => { 'marcador' => 'fase-documentos' } }, /marcador desconhecido/)
+      described_class.gravar!(account, 'padrao' => { 'gatilhos' => { 'fase-documentos' => ['irritado'] } })
+    end
+    expect(account.reload.settings.dig('ia_atendimento', 'padrao', 'gatilhos')).to eq('fase-documentos' => ['irritado'])
+    expect { described_class.gravar!(account, 'padrao' => { 'gatilhos' => { 'fase-documentos' => [] } }) }
+      .to raise_error(ArgumentError, /etapa desconhecida/)
+  end
 end

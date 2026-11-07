@@ -3,7 +3,7 @@ class CaptainListener < BaseListener
 
   def conversation_resolved(event)
     conversation = extract_conversation_and_account(event)[0]
-    assistant = conversation.inbox.captain_assistant
+    assistant = Captain::AssistenteDaConversa.para(conversation)
 
     return unless conversation.inbox.captain_active?
 

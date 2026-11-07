@@ -23,18 +23,16 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
   end
 
   def perform_time_based(inbox)
-    Current.executed_by = inbox.captain_assistant
-
     resolvable_pending_conversations(inbox).each do |conversation|
+      Current.executed_by = assistente(conversation)
       create_resolution_message(conversation, inbox)
       conversation.resolved!
     end
   end
 
   def perform_with_evaluation(inbox)
-    Current.executed_by = inbox.captain_assistant
-
     resolvable_pending_conversations(inbox).each do |conversation|
+      Current.executed_by = assistente(conversation)
       evaluation = evaluate_conversation(conversation, inbox)
       next unless still_resolvable_after_evaluation?(conversation)
 
@@ -64,6 +62,15 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
     conversation.pending? && conversation.last_activity_at < auto_resolve_cutoff_time
   rescue ActiveRecord::RecordNotFound
     false
+  end
+
+  # ramon (Etapa Documentos): o assistente é por conversa (o da etapa do lead, senão o da caixa), escolhido uma vez
+  # por conversa neste job (executed_by, remetente e textos de resolução/handoff usam o mesmo).
+  def assistente(conversation)
+    @assistentes ||= {}
+    return @assistentes[conversation.id] if @assistentes.key?(conversation.id)
+
+    @assistentes[conversation.id] = Captain::AssistenteDaConversa.para(conversation)
   end
 
   def auto_resolve_cutoff_time
@@ -99,11 +106,11 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
     ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation)
   end
 
-  def create_private_note(conversation, inbox, content)
+  def create_private_note(conversation, _inbox, content)
     conversation.messages.create!(
       message_type: :outgoing,
       private: true,
-      sender: inbox.captain_assistant,
+      sender: assistente(conversation),
       account_id: conversation.account_id,
       inbox_id: conversation.inbox_id,
       content: content
@@ -112,24 +119,24 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
 
   def create_resolution_message(conversation, inbox)
     I18n.with_locale(inbox.account.locale) do
-      resolution_message = inbox.captain_assistant.config['resolution_message']
+      resolution_message = assistente(conversation).config['resolution_message']
       conversation.messages.create!(
         message_type: :outgoing,
         account_id: conversation.account_id,
         inbox_id: conversation.inbox_id,
         content: resolution_message.presence || I18n.t('conversations.activity.auto_resolution_message'),
-        sender: inbox.captain_assistant
+        sender: assistente(conversation)
       )
     end
   end
 
-  def create_handoff_message(conversation, inbox)
-    handoff_message = inbox.captain_assistant.config['handoff_message']
+  def create_handoff_message(conversation, _inbox)
+    handoff_message = assistente(conversation).config['handoff_message']
     return if handoff_message.blank?
 
     conversation.messages.create!(
       message_type: :outgoing,
-      sender: inbox.captain_assistant,
+      sender: assistente(conversation),
       account_id: conversation.account_id,
       inbox_id: conversation.inbox_id,
       content: handoff_message,

@@ -20,9 +20,10 @@ class Api::V1::Accounts::Conversations::FaqsController < Api::V1::Accounts::Conv
 
   private
 
-  # O assistente da caixa desta conversa; se a caixa não tem, o primeiro que atende alguma caixa (o Atendimento).
+  # O assistente desta conversa (o da etapa do lead, senão o da caixa); se a caixa não tem, o primeiro que atende alguma
+  # caixa (o Atendimento).
   def assistente_de_leads
-    @conversation.inbox.captain_assistant ||
+    Captain::AssistenteDaConversa.para(@conversation) ||
       Current.account.captain_assistants.joins(:captain_inboxes).order(:id).first
   end
 

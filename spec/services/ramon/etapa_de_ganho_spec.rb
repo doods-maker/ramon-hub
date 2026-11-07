@@ -27,4 +27,40 @@ RSpec.describe Ramon::EtapaDeGanho do
     expect(described_class.principal(account)).to be_nil
     expect { described_class.principal!(account) }.to raise_error(ActiveRecord::RecordNotFound)
   end
+
+  describe '.entrada com a etapa Documentos' do
+    let!(:documentos) { Ramon::EtapasPosVenda.criar!(account).first }
+    let(:tese) { create(:thesis, account: account, name: 'Tese Spec Documentos', passa_documentos: true) }
+    let(:lead) { build(:lead, account: account, thesis: tese) }
+
+    before { create(:thesis_item, thesis: tese, section: 'documento', content: 'CNIS completo') }
+
+    def ligada(&) = with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on', &)
+
+    it 'chave ligada, tese que passa por Documentos e com item de documento: Documentos' do
+      ligada { expect(described_class.entrada(lead)).to eq(documentos) }
+    end
+
+    it 'chave desligada: Fechado, mesmo para a tese que passa por Documentos' do
+      expect(described_class.entrada(lead)).to eq(fechado)
+    end
+
+    it 'tese sem a chave, lead sem tese ou tese sem item de documento: Fechado', :aggregate_failures do
+      outra = create(:thesis, account: account, name: 'Tese Spec Sem Chave')
+      create(:thesis_item, thesis: outra, section: 'documento', content: 'RG')
+      sem_item = create(:thesis, account: account, name: 'Tese Spec Sem Item', passa_documentos: true)
+      create(:thesis_item, thesis: sem_item, section: 'abertura', content: 'Oi')
+
+      ligada do
+        expect(described_class.entrada(build(:lead, account: account, thesis: outra))).to eq(fechado)
+        expect(described_class.entrada(build(:lead, account: account, thesis: nil))).to eq(fechado)
+        expect(described_class.entrada(build(:lead, account: account, thesis: sem_item))).to eq(fechado)
+      end
+    end
+
+    it 'conta sem a etapa Documentos: Fechado' do
+      documentos.update!(label: nil)
+      ligada { expect(described_class.entrada(lead)).to eq(fechado) }
+    end
+  end
 end

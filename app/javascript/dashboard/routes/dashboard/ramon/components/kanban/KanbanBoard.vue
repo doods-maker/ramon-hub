@@ -14,6 +14,7 @@ import { CAMPO } from '../../helpers/ui';
 import { leadsToCsv } from '../../helpers/leadsCsv';
 import { mensagemErro } from '../../helpers/erro';
 import { entraNoGanho } from '../../helpers/stage';
+import { usePulaDocumentos } from '../../composables/usePulaDocumentos';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import FilterChips from './FilterChips.vue';
@@ -218,7 +219,24 @@ const cancelLost = () => {
   boardVersion.value += 1; // devolve o card à origem
 };
 
-const confirmWon = async ({ value }) => {
+// Ganho que pula Documentos: o modal de valor pede o motivo (vira nota do lead).
+// Lead do ganho pendente: o da lista; o do Ctrl K pode estar fora dos filtros
+// (não carregado) e vem no próprio pedido.
+const pendingLead = computed(
+  () =>
+    pendingMove.value &&
+    (findLead(pendingMove.value.id) || pendingMove.value.lead)
+);
+const { pedeMotivo, anotar } = usePulaDocumentos();
+const wonPedeMotivo = computed(() =>
+  pedeMotivo(
+    findStage(pendingMove.value?.leadStageId),
+    findStage(pendingLead.value?.lead_stage_id),
+    pendingLead.value
+  )
+);
+
+const confirmWon = async ({ value, motivo }) => {
   if (!pendingMove.value) return;
   const { id, leadStageId, position } = pendingMove.value;
   // Um único update: move e (quando informado) grava o valor no mesmo passo.
@@ -234,6 +252,7 @@ const confirmWon = async ({ value }) => {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     return;
   }
+  if (motivo) anotar(id, findStage(leadStageId), motivo);
   pendingMove.value = null;
   wonModalOpen.value = false;
 };
@@ -771,7 +790,8 @@ const exportCsv = () => {
     >
       <WonValueModal
         v-if="wonModalOpen"
-        :initial-value="findLead(pendingMove?.id)?.value ?? null"
+        :initial-value="pendingLead?.value ?? null"
+        :pede-motivo="wonPedeMotivo"
         @confirm-value="confirmWon"
         @cancel-value="cancelWon"
       />

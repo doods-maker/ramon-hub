@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_03_040000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_07_020000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1126,8 +1126,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_03_040000) do
     t.integer "probability", default: 0, null: false
     t.integer "stalled_after_days"
     t.string "nome_cliente"
+    t.bigint "captain_assistant_id"
     t.index ["account_id", "label"], name: "index_lead_stages_on_account_id_and_label", unique: true
     t.index ["account_id", "name"], name: "index_lead_stages_on_account_id_and_name", unique: true
+    t.index ["captain_assistant_id"], name: "index_lead_stages_on_captain_assistant_id"
   end
 
   create_table "lead_tasks", force: :cascade do |t|
@@ -1999,6 +2001,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_03_040000) do
     t.string "palavras_chave", default: [], null: false, array: true
     t.string "zapsign_template_id"
     t.string "opcoes_botoes", default: "desligado", null: false
+    t.boolean "passa_documentos", default: false, null: false
     t.index ["account_id", "name"], name: "index_theses_on_account_id_and_name", unique: true
   end
 

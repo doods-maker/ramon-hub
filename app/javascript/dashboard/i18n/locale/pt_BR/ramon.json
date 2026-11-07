@@ -70,7 +70,8 @@
         "NENHUMA": "nenhuma etapa",
         "NADA": "IA não manda nada",
         "ATE_AQUI": "IA vai até aqui",
-        "FIM": "IA vai até o fim"
+        "FIM": "IA vai até o fim",
+        "CONDUZIDA": "Depois do contrato · responde o assistente da etapa"
       },
       "ESTADO": {
         "sozinha": "Sozinha",
@@ -497,7 +498,10 @@
         "VALUE_LABEL": "Valor (R$)",
         "SAVE": "Salvar",
         "SKIP": "Pular",
-        "INVALID": "Valor inválido — use números, ex.: 1.500,00"
+        "INVALID": "Valor inválido — use números, ex.: 1.500,00",
+        "MOTIVO_PULA_DOCUMENTOS": "Esta tese passa pela etapa Documentos. Por que ir direto para cá? (obrigatório)",
+        "NOTA_PULA_DOCUMENTOS": "Ganho direto em {etapa}, sem passar por Documentos: {motivo}",
+        "NOTA_ERRO": "O ganho foi gravado, mas o motivo não chegou às notas do lead. Registre lá à mão."
       },
       "NEW": {
         "THESIS": "Tese",
@@ -717,6 +721,9 @@
       "CADENCE_DAYS": "dias",
       "PROBABILITY": "Probabilidade (%)",
       "PROBABILITY_HINT": "usada na previsão ponderada",
+      "ASSISTENTE": "Assistente desta etapa",
+      "ASSISTENTE_DA_CAIXA": "Assistente da caixa",
+      "ASSISTENTE_HINT": "Quem atende o lead nesta etapa. Assistente da caixa = o ligado à caixa da conversa. Só vale quando a caixa tem IA.",
       "REMOVE": "Remover",
       "WEIGHT": "Peso",
       "WEIGHT_OF": "peso {weight}",
@@ -1261,6 +1268,7 @@
           "REGISTRO_COMPLETO": "registro completo (tese, CPF, nascimento e nota do SDR)",
           "DOSSIE_ENTREGUE": "marcou o dossiê como entregue ao jurídico",
           "FUNIL_AUTO": "IA do funil",
+          "DOCUMENTOS": "Etapa Documentos",
           "ROTEIRO": "roteiro da IA"
         }
       },
@@ -1490,6 +1498,8 @@
       },
       "ZAPSIGN_MODELO_AJUDA": "Usado pelo modo \"sozinha até o contrato\" para gerar o contrato na hora. Sem modelo = o contrato não sai automático para esta tese.",
       "ZAPSIGN_SEM_MODELO": "Sem modelo",
+      "PASSA_DOCUMENTOS": "Passa pela etapa Documentos",
+      "PASSA_DOCUMENTOS_AJUDA": "Ao assinar o contrato, o lead desta tese vai para a etapa Documentos (o assistente de documentos junta o que falta) em vez de Fechado. Só vale se a tese tem documentos no checklist.",
       "ZAPSIGN_MODELOS_ERRO": "Não deu para carregar os modelos do ZapSign agora — o modelo salvo é mantido.",
       "DELETE_IN_USE": "1 lead usa esta tese — desative em vez de excluir | {count} leads usam esta tese — desative em vez de excluir",
       "DELETE_IN_USE_HINT": "Desativada, a tese continua nos leads que já a usam e sai da escolha de tese dos leads novos.",

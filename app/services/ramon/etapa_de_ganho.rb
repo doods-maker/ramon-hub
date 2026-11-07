@@ -6,8 +6,19 @@ module Ramon::EtapaDeGanho
   FECHADO = 'fase-fechado'.freeze
   DOCUMENTOS = 'fase-documentos'.freeze
   JURIDICO = 'fase-juridico'.freeze
+  # Etapas de ganho que a IA conduz e onde envia sozinha (spec §2), com gatilhos próprios na tela "Como a IA atende".
+  CONDUZIDAS = [DOCUMENTOS].freeze
 
   module_function
+
+  # Chave da Etapa Documentos (ENV direto, padrão dos RAMON_*): desligada, tudo como antes do PR 2.
+  def documentos_ligado? = ENV.fetch('RAMON_ETAPA_DOCUMENTOS', nil) == 'on'
+
+  # Chave desligada: nenhuma é conduzida (são pós-venda como as outras, :fechado no Perfil da IA).
+  def conduzida?(etapa) = etapa&.is_won == true && CONDUZIDAS.include?(etapa.label) && documentos_ligado?
+
+  # As conduzidas que a conta tem, na ordem do funil; chave desligada = nenhuma.
+  def conduzidas(account) = documentos_ligado? ? account.lead_stages.where(is_won: true, label: CONDUZIDAS).to_a : []
 
   # A etapa de ganho da conta: Fechado; sem ela, a primeira `is_won` por posição.
   def principal(account)
@@ -19,8 +30,17 @@ module Ramon::EtapaDeGanho
     principal(account) || raise(ActiveRecord::RecordNotFound, "conta #{account.id} sem etapa de ganho")
   end
 
-  # Onde um lead que acabou de ganhar deve cair. Neste PR é sempre a principal; o PR 2 desvia para Documentos.
+  # Onde um lead que acabou de ganhar deve cair: Documentos (abaixo) ou a principal. Não depende de o lead ter conversa:
+  # sem WhatsApp, Documentos fica com o SDR (Ramon::Documentos::Entrada).
   def entrada(lead)
-    principal(lead.account)
+    etapa_documentos(lead) || principal(lead.account)
+  end
+
+  # Documentos: chave ligada, tese marcada "passa pela etapa Documentos", o lead com checklist de documentos (docs_total,
+  # o mesmo critério do funil: helpers/stage.js pulaDocumentos) e a etapa existe.
+  def etapa_documentos(lead)
+    return unless documentos_ligado? && lead.thesis&.passa_documentos && lead.docs_counts[:total].positive?
+
+    lead.account.lead_stages.find_by(label: DOCUMENTOS, is_won: true)
   end
 end

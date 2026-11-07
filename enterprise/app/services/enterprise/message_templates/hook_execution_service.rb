@@ -34,8 +34,11 @@ module Enterprise::MessageTemplates::HookExecutionService
   # O id da mensagem vai junto: se o cliente mandar outra, só a resposta da mais nova é enviada.
   def schedule_captain_response
     job = Captain::Conversation::ResponseBuilderJob.set(wait: message.attachments.present? ? ATRASO_ANEXO : 0)
-    job.perform_later(conversation, conversation.inbox.captain_assistant, message.id)
+    job.perform_later(conversation, assistente, message.id)
   end
+
+  # ramon (Etapa Documentos): o da etapa do lead, senão o da caixa; caixa sem IA = nil.
+  def assistente = @assistente ||= Captain::AssistenteDaConversa.para(conversation)
 
   # ponytail: o perfil é lido no agendamento; mudar perfil/Etapa/Pausa durante a espera não muda o atraso
   def atraso_resposta_ia
@@ -46,7 +49,7 @@ module Enterprise::MessageTemplates::HookExecutionService
   end
 
   def should_process_captain_response?
-    conversation.pending? && message.incoming? && inbox.captain_assistant.present?
+    conversation.pending? && message.incoming? && assistente.present?
   end
 
   def perform_handoff
@@ -62,7 +65,7 @@ module Enterprise::MessageTemplates::HookExecutionService
   # senão i18n na língua da conta) e mesmo atraso. Mesma regra do handoff no job (inclui fora do horário em rascunho).
   # O id da mensagem vai junto: se uma pessoa responder durante a espera, o aviso não sai.
   def agendar_aviso_de_handoff
-    content = inbox.captain_assistant.config['handoff_message'].presence ||
+    content = assistente.config['handoff_message'].presence ||
               I18n.with_locale(conversation.account.locale) { I18n.t('conversations.captain.handoff') }
     params = { message_type: :outgoing, account_id: conversation.account_id, inbox_id: conversation.inbox_id, content: content }
     Conversations::ActivityMessageJob.set(wait: atraso_resposta_ia).perform_later(conversation, params, message.id)
@@ -77,6 +80,6 @@ module Enterprise::MessageTemplates::HookExecutionService
   end
 
   def captain_handling_conversation?
-    conversation.pending? && inbox.respond_to?(:captain_assistant) && inbox.captain_assistant.present?
+    conversation.pending? && assistente.present?
   end
 end

@@ -10,6 +10,8 @@ class LeadStage < ApplicationRecord
   validates :name, presence: true, uniqueness: { scope: :account_id }
   validates :probability, numericality: { in: 0..100 }
   validates :stalled_after_days, numericality: { greater_than: 0 }, allow_nil: true
+  # só quando muda: assistente apagado depois (sem FK) não trava salvar a etapa por outro motivo
+  validate :assistente_da_conta, if: -> { captain_assistant_id? && will_save_change_to_captain_assistant_id? }
   default_scope { order(:position) }
 
   before_save :ensure_single_lost
@@ -26,6 +28,13 @@ class LeadStage < ApplicationRecord
 
   private
 
+  # Assistente desta etapa (Etapa Documentos): só um da conta. Captain é enterprise: sem ele, nenhum vale.
+  def assistente_da_conta
+    return if account.try(:captain_assistants)&.exists?(id: captain_assistant_id)
+
+    errors.add(:captain_assistant_id, 'não é um assistente desta conta')
+  end
+
   # Ganho pode ter várias etapas (Fechado, Documentos, Jurídico — ADR 0015);
   # perdido continua único: marcar uma desmarca a anterior.
   def ensure_single_lost
@@ -36,3 +45,5 @@ class LeadStage < ApplicationRecord
     account.lead_stages.where.not(id: id).update_all(flag => false) # rubocop:disable Rails/SkipsModelValidations
   end
 end
+
+LeadStage.include_mod_with('Concerns::LeadStage')
