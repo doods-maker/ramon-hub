@@ -14,7 +14,7 @@
 - Modelo da Meta: categoria utility, puramente informativo; nome e variáveis em configuração; texto = gate do Eduardo.
 - Caixa sem modelo aprovado (antes do número oficial) → fora da janela não envia; vira silêncio direto.
 - Só leads na etapa `fase-documentos` (os de Fechado nunca entram).
-- `LeadRadar#active_leads` filtra `is_won: false`: Documentos fica fora de parados/cadência — decidir aqui.
+- `LeadRadar#active_leads` filtra `is_won: false`: Documentos fica fora de parados/cadência — **decidido (07/11): continua fora**; a cobrança da etapa (lembretes, acompanhamento, silêncio e travado) cuida desses leads. Comentário em `Ramon::LeadRadar.active_leads`.
 
 ## Review Focus
 
@@ -53,9 +53,11 @@
 
 - **Files:** atividade no lead a cada envio (passo, canal); custo do modelo registrado em Uso e custo como linha de WhatsApp (valor da tabela em configuração: US$ 0,0068 utility BR, jul/2026); `db/seeds/ramon/fluxos/sistema/cobranca_documentos.json` (regra fixa, para aparecer na aba "Do sistema"); Tests.
 
-### Task 6: textos (gate do Eduardo)
+### Task 6: textos — APROVADOS pelo Eduardo em 07/11
 
-- Rascunho em `comercial\docs\`: abertura, lembrete 1, lembrete 2 e o modelo `cobranca_documentos` (utility, sem oferta). Submissão do modelo à Meta só depois do "aprovado".
+- Fonte (fora do repo, usar literalmente): `C:\Users\dudsl\RAdvogados\comercial\docs\2026-11-07-agente-documentos-textos-rascunho.md`, seção 3 (3.1 apresentação, 3.2 lembrete 1, 3.3 lembrete 2; 3.5 encerramento é do PR 6) e seção 4 (modelo `documentos_pendentes`, utility, corpo com `{{1}}` = nome e `{{2}}` = o que falta). Cada um é **UMA mensagem** (regra do Eduardo: cada mensagem tem custo). `{nome}`, `{lista}` e `{primeiro_item}` vêm do lead/checklist.
+- Os textos ficam num arquivo do repo (ex.: `config/ramon/documentos_mensagens.yml`), lidos pelo `Envio`; o nome do modelo também (`documentos_pendentes`). A submissão do modelo à Meta é manual, quando o número oficial existir; até lá, fora da janela = `:sem_permissao` → silêncio → SDR.
+- **Custo (pesquisa de 07/11):** desde 01/10/2026 a Meta cobra também o texto livre depois de 1.000 mensagens/mês por número, e o modelo utility mesmo dentro da janela. A Task 5 registra cada envio em Uso e custo (texto livre e modelo, US$ 0,0068 cada, valor em configuração).
 
 ### Task 7: revisão e PR
 

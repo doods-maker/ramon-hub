@@ -66,6 +66,14 @@ module Ramon::LlmUso
     Rails.logger.warn("[Ramon::LlmUso] uso do agente não gravado: #{e.class}: #{e.message}")
   end
 
+  # Mensagem do WhatsApp paga à Meta (cobrança de Documentos): preço fixo por mensagem, sem tokens — a mesma tela, função própria.
+  def registrar_whatsapp(lead, model:, custo_usd:)
+    LlmChamada.create!(account_id: lead.account_id, funcao: 'whatsapp_documentos', provider: 'meta', model: model,
+                       custo_usd: custo_usd, lead_id: lead.id, conversation_id: lead.conversation_id)
+  rescue StandardError => e
+    Rails.logger.warn("[Ramon::LlmUso] custo do WhatsApp não gravado: #{e.class}: #{e.message}")
+  end
+
   def de_instrumentacao(params)
     metadata = params[:metadata] || {}
     { account_id: params[:account_id], funcao: funcao_captain(params[:feature_name]), model: params[:model],

@@ -394,4 +394,15 @@ Spec: `docs/superpowers/specs/2026-11-07-marketing-trafego-design.md`.
 |---|---|---|---|
 | `config/schedule.yml` | `ramon_peca_metricas_job` (6h30 BRT, `scheduled_jobs`; desligado por `RAMON_IG_INSIGHTS`) | desempenho das peças publicadas | marketing PR 1 |
 | `config/routes.rb` | `resource :ramon_marketing` (show + `custos`, `custos/:custo_id`, `importar_gasto`, `importar_metas`) em `accounts` | aba Custos e metas | marketing PR 2 |
+
+## Cobrança e janelas — Etapa Documentos · PR 5 (07/11/2026)
+
+Só age com a chave `RAMON_ETAPA_DOCUMENTOS` ligada. Lógica em `app/` (`Ramon::Documentos::{Relogio,Envio,CobrancaJob}`);
+ritmo, horário, textos aprovados e modelo em `config/ramon/documentos_cobranca.yml`.
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `config/schedule.yml` | `ramon_documentos_cobranca_job` (*/15, `scheduled_jobs`) | abertura, lembretes, acompanhamento, silêncio e travado | etapa-documentos PR 5 |
+| `app/models/concerns/lead_docs.rb` | +`before_save` → `Ramon::Documentos::Cobranca.antes_de_salvar` (relê `documentos_cobranca` do banco com FOR UPDATE; soma o documento novo) | save comum (DocMatch) não apaga marca; documento novo (conversa, Painel, pessoa) alimenta o relógio | etapa-documentos PR 5 |
+| `lib/ramon/llm_uso.rb` | +`registrar_whatsapp` (função `whatsapp_documentos`, custo fixo por mensagem) | custo da Meta em Uso e custo | etapa-documentos PR 5 |
 | `config/routes.rb` | `metas_ativas`, `metas/:meta_id`, `metas` (liga/desliga, edita, apaga) em `resource :ramon_marketing` | metas sob controle do Eduardo | marketing metas 07/11 |

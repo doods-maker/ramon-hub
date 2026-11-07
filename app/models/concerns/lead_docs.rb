@@ -9,6 +9,8 @@ module LeadDocs
     before_save -> { self.portal_token = nil }, if: -> { will_save_change_to_lead_stage_id? && lead_stage&.is_lost }
     # Desmarcar "recebido" solta o anexo e o vínculo do Drive daquele item (o arquivo no Drive fica: é do cliente).
     before_save :soltar_docs_desmarcados, if: :custom_attributes_changed?
+    # Estado da cobrança de Documentos: o do banco prevalece, e documento novo (conversa, Painel ou pessoa) alimenta o relógio.
+    before_save -> { Ramon::Documentos::Cobranca.antes_de_salvar(self) }
   end
 
   # Contagem do checklist de documentos.

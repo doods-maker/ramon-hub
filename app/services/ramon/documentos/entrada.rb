@@ -10,6 +10,7 @@ module Ramon::Documentos::Entrada
     return avisar(lead, conversa ? 'numa caixa sem IA' : 'sem WhatsApp') unless conversa && Captain::AssistenteDaConversa.para(conversa)
 
     conversa.update!(status: :pending, custom_attributes: Ramon::PerfilIa.com_pausa(conversa.custom_attributes || {}, nil))
+    Ramon::Documentos::Cobranca.ligar(lead) # relógio do zero: a abertura sai na próxima rodada. Sem IA, não liga.
     registrar(lead, 'Entrou em Documentos: a conversa voltou para o assistente da etapa')
   end
 
