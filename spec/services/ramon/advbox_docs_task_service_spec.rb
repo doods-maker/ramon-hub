@@ -56,6 +56,19 @@ RSpec.describe Ramon::AdvboxDocsTaskService do
       expect(Ramon::AdvboxClient).to have_received(:create_post).twice # a que falhou + a do retry
     end
 
+    # Review do PR 6, item 1: merge_advbox, merge_drive e o DocMatch regravam o custom_attributes inteiro de uma cópia velha.
+    it 'a marca sobrevive a quem regrava o custom_attributes inteiro a partir de uma cópia lida antes dela', :aggregate_failures do
+      copia_velha = Lead.find(lead.id)
+      allow(Ramon::AdvboxClient).to receive(:create_post).and_return({ 'posts_id' => 777 })
+      described_class.new(lead).analise_do_caso
+
+      copia_velha.update!(custom_attributes: copia_velha.custom_attributes.merge('drive' => { 'concluido_em' => 'agora' }))
+
+      expect(lead.reload.custom_attributes['advbox']).to eq('lawsuits_id' => 999, 'analise_posts_id' => 777)
+      expect(lead.custom_attributes['drive']).to eq('concluido_em' => 'agora')
+      expect(described_class.new(lead).analise_do_caso).to eq(:ja_criada)
+    end
+
     it 'ADVBOX recusou (4xx): não grava e diz o motivo' do
       allow(Ramon::AdvboxClient).to receive(:create_post).and_raise(Ramon::AdvboxClient::RequestError.new(422, 'inválido'))
       expect(described_class.new(lead).analise_do_caso).to eq(:recusada)

@@ -9,6 +9,8 @@ module LeadComercial
 
   included do
     before_create :assign_sdr
+    before_save -> { Ramon::AdvboxDocsTaskService.preservar(self) },
+                if: -> { persisted? && won_at.present? && will_save_change_to_custom_attributes? }
     before_save :stamp_docs_completos, if: -> { new_record? || will_save_change_to_custom_attributes? || will_save_change_to_thesis_id? }
     after_save :cancelar_contrato_limpo, if: -> { saved_change_to_won_at? && won_at.nil? && contrato_limpo_em.present? }
     after_save :registrar_contrato_cancelado, if: -> { saved_change_to_won_at? && won_at.nil? }

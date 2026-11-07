@@ -184,6 +184,22 @@ RSpec.describe Ramon::AdvboxClosingService do
     end
   end
 
+  # Review do PR 6, item 1: a ANÁLISE DO CASO gravada (jsonb_set) entre o reload e o update! do merge_advbox sobrevive.
+  it 'a marca da ANÁLISE DO CASO gravada no meio do merge_advbox sobrevive' do
+    stub_create('customers', 'customers_id', 111)
+    stub_create('lawsuits', 'lawsuits_id', 222)
+    stub_create('posts', 'posts_id', 333)
+    allow(lead).to receive(:reload).and_wrap_original do |original, *args|
+      original.call(*args).tap do
+        Lead.where(id: lead.id).update_all([Ramon::AdvboxDocsTaskService::GRAVAR_ANALISE, '444']) # rubocop:disable Rails/SkipsModelValidations
+      end
+    end
+
+    described_class.new(lead).perform
+
+    expect(Lead.find(lead.id).custom_attributes['advbox']).to include('analise_posts_id' => 444, 'posts_id' => 333)
+  end
+
   it 'não faz nada em lead que não é ganho' do
     aberto = create(:lead, account: account)
     described_class.new(aberto).perform

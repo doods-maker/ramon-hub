@@ -10,6 +10,21 @@ class Ramon::AdvboxDocsTaskService
   GRAVAR_ANALISE = "custom_attributes = jsonb_set(COALESCE(custom_attributes, '{}'::jsonb), '{advbox}', " \
                    "COALESCE(custom_attributes -> 'advbox', '{}'::jsonb) || jsonb_build_object('analise_posts_id', ?::jsonb))".freeze
   TRAVA = 120 # s; quem chama junto (passagem ao Jurídico e fim do Ganho no ADVBOX) espera a vez do outro
+  SEM_ID = 'criada sem id na resposta'.freeze
+  MARCA = "(custom_attributes #> '{advbox,analise_posts_id}')::text".freeze
+
+  # before_save do lead ganho (LeadComercial): quem regrava o custom_attributes inteiro a partir de uma cópia lida antes da
+  # marca (merge_advbox, merge_drive, DocMatch) não a apaga. A leitura é FOR UPDATE: um GRAVAR_ANALISE em curso termina antes,
+  # ou espera este save e grava por cima dele.
+  def self.preservar(lead)
+    return if lead.custom_attributes&.dig('advbox', 'analise_posts_id').present?
+
+    marca = Lead.unscoped.where(id: lead.id).lock.pick(Arel.sql(MARCA))
+    return if marca.blank? || marca == 'null'
+
+    attrs = lead.custom_attributes.to_h
+    lead.custom_attributes = attrs.merge('advbox' => attrs['advbox'].to_h.merge('analise_posts_id' => JSON.parse(marca)))
+  end
 
   def initialize(lead)
     @lead = lead
@@ -56,21 +71,21 @@ class Ramon::AdvboxDocsTaskService
   def analise_criada? = @lead.custom_attributes&.dig('advbox', 'analise_posts_id').present?
 
   # ponytail: trava no Redis (como o rascunho do AvisoDaIa); some no fim ou em TRAVA s se o processo morrer no meio.
-  def com_trava
+  def com_trava(&)
     chave = "RAMON::ANALISE_DO_CASO::#{@lead.id}"
     return :ocupada unless Redis::Alfred.set(chave, 1, nx: true, ex: TRAVA)
 
     begin
-      @lead.reload
-      yield
+      @lead.with_lock(&) # relê com FOR UPDATE: a marca que vale é a do banco
     ensure
       Redis::Alfred.delete(chave)
     end
   end
 
+  # O id real da tarefa; sem ele na resposta (a tarefa nasceu), uma marca: a 2ª não pode nascer.
   def criar_analise
-    id = Ramon::AdvboxClient.create_post(payload_analise)&.dig('posts_id')
-    Lead.unscoped.where(id: @lead.id).update_all([GRAVAR_ANALISE, (id || true).to_json]) # rubocop:disable Rails/SkipsModelValidations
+    id = Ramon::AdvboxClient.create_post(payload_analise)&.dig('posts_id').presence || SEM_ID
+    Lead.unscoped.where(id: @lead.id).update_all([GRAVAR_ANALISE, id.to_json]) # rubocop:disable Rails/SkipsModelValidations
     @lead.reload
     :criada
   end
