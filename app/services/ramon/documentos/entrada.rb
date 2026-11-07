@@ -10,15 +10,8 @@ module Ramon::Documentos::Entrada
     return avisar(lead, conversa ? 'numa caixa sem IA' : 'sem WhatsApp') unless conversa && Captain::AssistenteDaConversa.para(conversa)
 
     conversa.update!(status: :pending, custom_attributes: Ramon::PerfilIa.com_pausa(conversa.custom_attributes || {}, nil))
-    ligar_cobranca(lead)
+    Ramon::Documentos::Cobranca.ligar(lead) # relógio do zero: a abertura sai na próxima rodada. Sem IA, não liga.
     registrar(lead, 'Entrou em Documentos: a conversa voltou para o assistente da etapa')
-  end
-
-  # Relógio da cobrança (Ramon::Documentos::CobrancaJob) do zero a cada entrada: a abertura sai na próxima rodada. Sem IA, não
-  # liga (quem conduz é a pessoa avisada). update_columns: sem os callbacks de cadência (lição do B4.3).
-  def ligar_cobranca(lead)
-    relogio = { Ramon::Documentos::Cobranca::CHAVE => { 'entrou_em' => Time.current.iso8601 } }
-    lead.with_lock { lead.update_columns(custom_attributes: lead.custom_attributes.merge(relogio)) } # rubocop:disable Rails/SkipsModelValidations
   end
 
   def avisar(lead, motivo)

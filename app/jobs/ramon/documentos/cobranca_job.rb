@@ -4,7 +4,7 @@
 # - abertura e lembretes → Ramon::Documentos::Envio; sem permissão (janela fechada e sem modelo aprovado) → silêncio direto;
 # - acompanhamento → sino ao responsável (Ramon::Documentos::Responsavel), a IA segue atendendo;
 # - silêncio e travado → nota com o motivo + bot_handoff!: o handoff de Documentos (PR 3) passa a conversa para o responsável.
-# Idempotente: decide e grava a marca do passo (update_columns, sem os callbacks de cadência: lição do B4.3) sob o lock do lead;
+# Idempotente: decide e grava a marca do passo (só a sub-chave, atômico: Ramon::Documentos::Cobranca.marcar) sob o lock do lead;
 # o envio vem depois do lock. Duas rodadas juntas fazem o passo uma vez; se o envio falhar, não repete (antes faltar que spammar).
 # Chave RAMON_ETAPA_DOCUMENTOS desligada: não faz nada.
 class Ramon::Documentos::CobrancaJob < ApplicationJob
@@ -57,10 +57,7 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
     lead.custom_attributes[CHAVE].merge('ultima_resposta_em' => conversa.messages.incoming.maximum(:created_at)&.iso8601)
   end
 
-  def marcar(lead, passo)
-    cobranca = lead.custom_attributes[CHAVE].merge("#{passo}_em" => Time.current.iso8601)
-    lead.update_columns(custom_attributes: lead.custom_attributes.merge(CHAVE => cobranca)) # rubocop:disable Rails/SkipsModelValidations
-  end
+  def marcar(lead, passo) = Ramon::Documentos::Cobranca.marcar(lead, { "#{passo}_em" => Time.current.iso8601 })
 
   def executar(lead, passo)
     if ENVIOS.include?(passo)
@@ -84,7 +81,7 @@ class Ramon::Documentos::CobrancaJob < ApplicationJob
 
   def sem_permissao(lead, passo)
     historico(lead, "Cobrança: #{NOMES.fetch(passo)} não saiu: janela de 24 h fechada e a caixa sem o modelo aprovado")
-    lead.with_lock { marcar(lead, :silencio) }
+    marcar(lead, :silencio)
     passar(lead, :silencio)
   end
 
