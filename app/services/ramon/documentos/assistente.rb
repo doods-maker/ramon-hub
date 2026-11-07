@@ -24,13 +24,22 @@ module Ramon::Documentos::Assistente
 
   def instrucoes = TEXTO.read
 
+  # O texto aprovado em blocos (separados por linha em branco), sem mexer em nenhuma palavra.
+  def blocos = instrucoes.strip.split(/\n{2,}/)
+
+  # A descrição do Captain::Assistant vai até 255 caracteres: leva só o 1º bloco (quem é e qual é o trabalho).
+  def descricao = blocos.first
+
+  # Os demais blocos viram as regras gerais (response_guidelines), o lugar que o prompt do assistente lê em todo turno.
+  def diretrizes = blocos.drop(1)
+
   # @return [Captain::Assistant]
   def criar_ou_atualizar!(account)
     raise 'O Captain (enterprise) não está nesta instalação: nada a criar.' unless defined?(Captain::Assistant)
 
     assistente = account.captain_assistants.find_or_initialize_by(name: NOME)
-    assistente.update!(description: instrucoes, config: (assistente.config || {}).merge(config_da_caixa(account)),
-                       response_guidelines: [], guardrails: [])
+    config = (assistente.config || {}).merge(config_da_caixa(account)).merge('instructions' => instrucoes)
+    assistente.update!(description: descricao, config: config, response_guidelines: diretrizes, guardrails: [])
     skill!(account, assistente)
     account.lead_stages.find_by(label: Ramon::EtapaDeGanho::DOCUMENTOS)&.update!(captain_assistant: assistente)
     assistente
