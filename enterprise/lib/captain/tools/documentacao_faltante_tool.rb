@@ -1,6 +1,7 @@
 # Leitura pura: o que ainda falta no caso — documentos da checklist da tese,
 # lacunas que a colheita nao conseguiu preencher e tarefas em aberto. Reusa o
-# mesmo calculo do Dossie (checklist da tese x custom_attributes.doc_status).
+# mesmo calculo do Dossie (checklist da tese x custom_attributes.doc_status). Alertas = o que a IA leu e o agente
+# precisa saber (CNIS resumido: Ramon::DocMatchService.alertas).
 class Captain::Tools::DocumentacaoFaltanteTool < Captain::Tools::RamonBaseTool
   description 'Lista o que ainda falta no caso: documentos pendentes da checklist da tese, lacunas da colheita ' \
               '(dados que ninguem informou ainda) e tarefas em aberto. Use antes de reuniao ou de fechar contrato.'
@@ -23,6 +24,7 @@ class Captain::Tools::DocumentacaoFaltanteTool < Captain::Tools::RamonBaseTool
       nome: lead.name,
       tese: lead.thesis&.name,
       documentos_pendentes: pendencias[:docs_missing],
+      alertas: ::Ramon::DocMatchService.alertas(lead), # ex.: CNIS resumido → pedir o completo
       tarefas_abertas: pendencias[:tasks],
       lacunas_da_colheita: colheita(lead, 'lacunas'),
       a_confirmar: colheita(lead, 'confirmar')

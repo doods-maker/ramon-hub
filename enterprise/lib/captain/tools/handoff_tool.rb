@@ -31,7 +31,8 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
       sender: @assistant,
       account: conversation.account,
       inbox: conversation.inbox,
-      content: reason
+      content: reason,
+      content_attributes: { ::Ramon::Documentos::Handoff::MARCA => true } # ramon: o motivo que o handoff de Documentos lê
     )
 
     # Trigger the bot handoff (sets status to open + dispatches events)

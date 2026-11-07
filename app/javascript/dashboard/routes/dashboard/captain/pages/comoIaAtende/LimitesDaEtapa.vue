@@ -10,6 +10,7 @@ import {
   alternarGatilho,
   baseDe,
   efetivo,
+  gatilhosPadrao,
   permissaoEfetiva,
   proximaPermissao,
 } from 'dashboard/routes/dashboard/ramon/helpers/perfilIa';
@@ -77,10 +78,18 @@ const linhas = computed(() =>
 );
 const avisosDe = acao => props.avisos.filter(a => a.acao === acao);
 const ligados = computed(() => atual.value.gatilhos[props.etapa.chave]);
+const padrao = computed(() => gatilhosPadrao(props.etapa, pronto.value));
 const gatilhosAjustados = computed(
   () =>
-    ligados.value.length !== pronto.value.gatilhos.length ||
-    ligados.value.some(g => !pronto.value.gatilhos.includes(g))
+    ligados.value.length !== padrao.value.length ||
+    ligados.value.some(g => !padrao.value.includes(g))
+);
+// Gatilho só de Documentos (so_documentos) aparece só nas etapas conduzidas.
+const conduzida = computed(() =>
+  (props.dados.conduzidas ?? []).some(e => e.chave === props.etapa.chave)
+);
+const visiveis = computed(() =>
+  props.dados.gatilhos.filter(g => conduzida.value || !g.so_documentos)
 );
 
 // Pendente (sem texto aprovado) nunca entra no prompt: aparece desligado mesmo se a lista o traz.
@@ -242,7 +251,7 @@ const alternar = gatilho =>
         </span>
         <span class="flex flex-wrap justify-end gap-1.5 md:max-w-[62%]">
           <button
-            v-for="gatilho in dados.gatilhos"
+            v-for="gatilho in visiveis"
             :key="gatilho.chave"
             type="button"
             :data-testid="`gatilho-${gatilho.chave}`"

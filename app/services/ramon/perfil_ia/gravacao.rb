@@ -46,7 +46,7 @@ module Ramon::PerfilIa::Gravacao
     base!(cfg['base']) if cfg.key?('base')
     marcador!(cfg['marcador'], etapas.trilha) if cfg.key?('marcador')
     permissoes!(cfg['permissoes']) if cfg.key?('permissoes')
-    gatilhos!(cfg['gatilhos'], etapas.com_gatilhos) if cfg.key?('gatilhos')
+    gatilhos!(cfg['gatilhos'], etapas) if cfg.key?('gatilhos')
     cfg
   end
 
@@ -71,15 +71,23 @@ module Ramon::PerfilIa::Gravacao
   end
 
   # Gatilho pendente (sem texto) pode estar no cfg: os prontos o trazem; só não entra no prompt.
+  # Os gatilhos de Documentos (Gatilhos::DOCUMENTOS) só valem nas etapas conduzidas (as que não estão na Trilha).
   def self.gatilhos!(gatilhos, etapas)
     raise ArgumentError, 'gatilhos inválidos' unless gatilhos.is_a?(Hash)
 
     gatilhos.each do |etapa, lista|
-      raise ArgumentError, "etapa desconhecida: #{etapa}" unless etapas.include?(etapa)
+      raise ArgumentError, "etapa desconhecida: #{etapa}" unless etapas.com_gatilhos.include?(etapa)
       raise ArgumentError, "gatilhos de #{etapa} inválidos" unless lista.is_a?(Array)
 
-      desconhecidos = lista - Ramon::PerfilIa::GATILHOS.keys
-      raise ArgumentError, "gatilho desconhecido: #{desconhecidos.first}" if desconhecidos.any?
+      lista!(lista, aberta: etapas.trilha.include?(etapa))
     end
+  end
+
+  def self.lista!(lista, aberta:)
+    desconhecidos = lista - Ramon::PerfilIa::GATILHOS.keys
+    raise ArgumentError, "gatilho desconhecido: #{desconhecidos.first}" if desconhecidos.any?
+
+    fora = aberta ? lista & Ramon::PerfilIa::Gatilhos::DOCUMENTOS : []
+    raise ArgumentError, "gatilho #{fora.first} só vale na etapa Documentos" if fora.any?
   end
 end

@@ -46,6 +46,10 @@ export const estadoDaEtapa = (chave, marcador, etapas) =>
     ? 'sozinha'
     : 'rascunho';
 
+// Gatilhos de uma Etapa sem lista gravada: os da base; a conduzida (Documentos) traz os dela (gatilhos_padrao).
+export const gatilhosPadrao = (etapa, pronto) =>
+  etapa.gatilhos_padrao ?? pronto.gatilhos;
+
 // O que a IA faria com este cfg: base, Marcador válido, Permissão de cada ação e Gatilhos de cada Etapa.
 export const efetivo = (cfg, prontos, etapas) => {
   const base = baseDe(cfg);
@@ -60,7 +64,10 @@ export const efetivo = (cfg, prontos, etapas) => {
       ])
     ),
     gatilhos: Object.fromEntries(
-      etapas.map(e => [e.chave, cfg.gatilhos?.[e.chave] ?? pronto.gatilhos])
+      etapas.map(e => [
+        e.chave,
+        cfg.gatilhos?.[e.chave] ?? gatilhosPadrao(e, pronto),
+      ])
     ),
   };
 };
@@ -76,7 +83,7 @@ export const ajustes = (cfg, prontos, etapas) => {
     acao => atual.permissoes[acao] !== pronto.permissoes[acao]
   ).length;
   const gatilhos = etapas.reduce(
-    (n, e) => n + diferenca(atual.gatilhos[e.chave], pronto.gatilhos),
+    (n, e) => n + diferenca(atual.gatilhos[e.chave], gatilhosPadrao(e, pronto)),
     0
   );
   return (atual.marcador === pronto.marcador ? 0 : 1) + acoes + gatilhos;

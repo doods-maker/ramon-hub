@@ -31,6 +31,9 @@ module LeadDocs
     end
   end
 
+  # O que ainda falta: a definição única de "documento pendente" (dossiê, handoff de Documentos, alertas da IA).
+  def docs_pendentes = doc_checklist.reject { |doc| doc[:status] == 'recebido' }
+
   private
 
   def soltar_docs_desmarcados

@@ -8,7 +8,7 @@
 #   interna  (cinza) = escreve no hub, só a equipe vê (nota, etiqueta, tarefa, qualificação)
 #   sugestao (âmbar) = cria Sugestão pendente que o humano aprova
 #                      (classes RamonEscritaTool e AdvboxMcpEscritaTool — o spec confere)
-#   rascunho (verde) = devolve texto pronto pro cliente; quem envia é o humano
+#   rascunho (verde) = fala com o cliente: texto pronto ou, no passo a passo, imagem que vai com a resposta da IA
 # sistema: em qual sistema a ferramenta mexe — define a seção na tela Ferramentas:
 #   funil (casos do hub) · advbox · motor (cálculos) · zapsign · agenda · faq · conversa
 #######################################################
@@ -236,6 +236,14 @@
   icon: 'link'
   nivel: rascunho
   sistema: funil
+
+# Etapa Documentos: a imagem do tema vai anexada à resposta da IA (uma mensagem só), só com o lead em Documentos e a chave ligada.
+- id: enviar_passo_a_passo
+  title: 'Imagem do passo a passo'
+  description: 'Anexa à resposta da IA a imagem do passo a passo do gov.br ou do Meu INSS (uma imagem por tema)'
+  icon: 'image'
+  nivel: rascunho
+  sistema: conversa
 
 - id: marcar_perdido
   title: 'Marcar como perdido'

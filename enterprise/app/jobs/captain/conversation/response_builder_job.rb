@@ -191,7 +191,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
         # ramon (15/10): content_type + content_attributes; pergunta de escolha do roteiro vai com botões se a tese pedir
         **Ramon::Roteiro::Opcoes.atributos(@conversation, message_content, @perfil.carimbo(@enviando_handoff), @response, handoff: @enviando_handoff),
         preserve_waiting_since: preserve_waiting_since },
-      @message_id, handoff: @enviando_handoff == true
+      # ramon: imagem do passo a passo do turno vai anexada a esta resposta (uma mensagem só); nunca no aviso de handoff
+      @message_id, handoff: @enviando_handoff == true, passo_a_passo: (@response&.dig('passo_a_passo') unless @enviando_handoff)
     )
   end
 

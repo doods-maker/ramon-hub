@@ -18,6 +18,7 @@ RSpec.describe Ramon::PerfilIa::Gravacao do
     expect_recusa({ 'padrao' => { 'marcador' => 'fase-ganho-inexistente' } }, /marcador desconhecido/)
     expect_recusa({ 'padrao' => { 'gatilhos' => { 'etapa-x' => [] } } }, /etapa desconhecida/)
     expect_recusa({ 'padrao' => { 'gatilhos' => { 'fase-novo' => ['inventado'] } } }, /gatilho desconhecido/)
+    expect_recusa({ 'padrao' => { 'gatilhos' => { 'fase-novo' => ['govbr_codigo'] } } }, /só vale na etapa Documentos/)
     expect_recusa({ 'teses' => { '0' => { 'base' => 'acelerada' } } }, /não é desta conta/)
     expect_recusa({ 'caixas' => { '0' => { 'base' => 'acelerada' } } }, /não é desta conta/)
   end
@@ -34,9 +35,9 @@ RSpec.describe Ramon::PerfilIa::Gravacao do
     Ramon::EtapasPosVenda.criar!(account)
     with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') do
       expect_recusa({ 'padrao' => { 'marcador' => 'fase-documentos' } }, /marcador desconhecido/)
-      described_class.gravar!(account, 'padrao' => { 'gatilhos' => { 'fase-documentos' => ['irritado'] } })
+      described_class.gravar!(account, 'padrao' => { 'gatilhos' => { 'fase-documentos' => %w[irritado sem_documento] } })
     end
-    expect(account.reload.settings.dig('ia_atendimento', 'padrao', 'gatilhos')).to eq('fase-documentos' => ['irritado'])
+    expect(account.reload.settings.dig('ia_atendimento', 'padrao', 'gatilhos')).to eq('fase-documentos' => %w[irritado sem_documento])
     expect { described_class.gravar!(account, 'padrao' => { 'gatilhos' => { 'fase-documentos' => [] } }) }
       .to raise_error(ArgumentError, /etapa desconhecida/)
   end

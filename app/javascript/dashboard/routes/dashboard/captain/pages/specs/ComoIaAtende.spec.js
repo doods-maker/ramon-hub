@@ -258,6 +258,34 @@ describe('Como a IA atende', () => {
     });
   });
 
+  it('gatilho só de Documentos aparece só nela, ligado pelo padrão da etapa', async () => {
+    const corpo = dados();
+    corpo.conduzidas = [
+      {
+        chave: 'fase-documentos',
+        nome: 'Documentos',
+        gatilhos_padrao: ['sem_documento', 'pediu_pessoa'],
+      },
+    ];
+    corpo.gatilhos = [
+      ...corpo.gatilhos,
+      { chave: 'sem_documento', nome: 'sem_documento', so_documentos: true },
+    ];
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    const wrapper = await montar();
+    await clicar(wrapper, 'etapa-fase-novo');
+    expect(achar(wrapper, 'gatilho-sem_documento').exists()).toBe(false);
+
+    await clicar(wrapper, 'etapa-fase-documentos');
+    expect(
+      achar(wrapper, 'gatilho-sem_documento').attributes('aria-pressed')
+    ).toBe('true');
+    expect(achar(wrapper, 'gatilho-juridica').attributes('aria-pressed')).toBe(
+      'false'
+    );
+    expect(achar(wrapper, 'selo').text()).toBe('Profile Balanced');
+  });
+
   it('erro 422 do salvar vira alerta com a mensagem do servidor', async () => {
     RamonIaAtendimentoAPI.salvar.mockRejectedValue({
       response: { data: { error: 'marcador desconhecido: x' } },

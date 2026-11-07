@@ -137,6 +137,23 @@
       "TEXTO_FINAL_ERRO": "Could not load the text right now.",
       "FECHAR": "Close"
     },
+    "PASSO_A_PASSO": {
+      "TITULO": "Step-by-step images (Documents stage)",
+      "AJUDA": "One JPG or PNG image (up to 5 MB) per topic, sent to the client by the Documents assistant when they get stuck. Never use an image showing someone's personal data.",
+      "ENVIAR": "Upload the image for {tema}",
+      "REMOVER": "Remove",
+      "ERRO": "Could not save the image now.",
+      "TEMAS": {
+        "govbr_criar_conta": "gov.br: create the account",
+        "govbr_recuperar_senha": "gov.br: recover the password",
+        "govbr_duas_etapas": "gov.br: turn off two-step verification",
+        "meu_inss_cnis": "Meu INSS: full CNIS",
+        "meu_inss_laudos": "Meu INSS: medical examination reports",
+        "meu_inss_processo": "Meu INSS: copy of the case file",
+        "meu_inss_decisao": "Meu INSS: INSS decision",
+        "meu_inss_cat": "Meu INSS: CAT"
+      }
+    },
     "CAIXAS": {
       "TITULO": "Connected inboxes — {nome}"
     },

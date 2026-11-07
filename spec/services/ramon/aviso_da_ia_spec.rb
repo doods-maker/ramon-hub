@@ -24,6 +24,17 @@ RSpec.describe 'Ramon::AvisoDaIa' do
     expect(avisados).to contain_exactly(sdr.id, admin.id)
   end
 
+  it 'user_ids explícitos: só eles; lista vazia cai nos administradores', :aggregate_failures do
+    closer = create(:user, account: account, role: :agent)
+    lead.update_columns(closer_id: closer.id) # rubocop:disable Rails/SkipsModelValidations -- sem atribuir a conversa
+    Ramon::AvisoDaIa.avisar(lead.reload, 'x', 't', 'c', user_ids: [sdr.id])
+    expect(avisados).to eq([sdr.id])
+
+    Notification.delete_all
+    Ramon::AvisoDaIa.avisar(lead, 'x', 't', 'c', user_ids: [])
+    expect(avisados).to eq([admin.id])
+  end
+
   it 'rascunho da IA: avisa o responsável uma vez por conversa a cada 10 min' do
     conversa = create(:conversation, account: account)
     lead.update_columns(conversation_id: conversa.id) # rubocop:disable Rails/SkipsModelValidations -- sem atribuir a conversa

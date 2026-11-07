@@ -26,6 +26,15 @@ RSpec.describe Ramon::RespostaIaAtrasadaJob do
     expect { described_class.perform_now(conversation, params, cliente.id) }.not_to(change { conversation.messages.count })
   end
 
+  it 'com a imagem do passo a passo do turno: uma mensagem só, o texto como legenda da imagem', :aggregate_failures do
+    imagem = ActiveStorage::Blob.create_and_upload!(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'meu_inss_cnis.png',
+                                                    content_type: 'image/png')
+    expect { described_class.perform_now(conversation, params, cliente.id, passo_a_passo: imagem.id) }
+      .to change { conversation.messages.count }.by(1)
+    enviada = conversation.messages.reorder(:id).last
+    expect([enviada.content, enviada.attachments.size]).to eq(['resposta da IA', 1])
+  end
+
   it 'aviso de handoff sai mesmo com a conversa já aberta' do
     conversation.update!(status: :open)
     expect { described_class.perform_now(conversation, params, cliente.id, handoff: true) }.to change { conversation.messages.count }.by(1)

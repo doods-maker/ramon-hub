@@ -62,6 +62,22 @@ RSpec.describe Ramon::PerfilIa do
       end
     end
 
+    it 'Documentos sem lista gravada: os gatilhos dela, na ordem de GATILHOS; o pendente (irritado) fica fora do prompt' do
+      lead = create(:lead, account: account, conversation: conversa)
+      lead.update_columns(lead_stage_id: documentos.id) # rubocop:disable Rails/SkipsModelValidations
+      gravar('padrao' => { 'base' => 'acelerada' })
+      textos = with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { described_class.de(lead.reload).textos_dos_gatilhos }
+      expect(textos).to eq(described_class::GATILHOS.values_at(*%w[pediu_pessoa juridica govbr_senha_recebida govbr_codigo
+                                                                   govbr_sem_acesso sem_documento]).pluck('texto'))
+    end
+
+    it 'os gatilhos de Documentos não entram nas etapas abertas pelos perfis prontos' do
+      gravar('padrao' => { 'base' => 'cautelosa' })
+      lead = create(:lead, account: account, conversation: conversa, lead_stage: etapa['fase-qualificacao'])
+      textos = with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { described_class.de(lead).textos_dos_gatilhos }
+      expect(textos).not_to include(*described_class::GATILHOS.values_at(*described_class::Gatilhos::DOCUMENTOS).pluck('texto'))
+    end
+
     it 'com a chave desligada, Documentos é pós-venda como hoje (:fechado)' do
       expect(described_class.de(conversa).estado(documentos)).to eq(:fechado)
     end
@@ -196,7 +212,7 @@ RSpec.describe Ramon::PerfilIa do
     it 'Cautelosa em Qualificação: os 6 textos aprovados, na ordem de GATILHOS (pendentes ficam de fora)' do
       gravar('padrao' => { 'base' => 'cautelosa' })
       expect(perfil_em_qualificacao.textos_dos_gatilhos).to eq(textos.values.pluck('texto'))
-      expect(described_class::GATILHOS.values.pluck('texto').compact.size).to eq(6)
+      expect(described_class::GATILHOS.except(*described_class::Gatilhos::DOCUMENTOS).values.pluck('texto').compact.size).to eq(6)
     end
 
     it 'Acelerada não tem honorario_de_novo nem nao_le' do

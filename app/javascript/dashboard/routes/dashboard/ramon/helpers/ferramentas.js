@@ -2,7 +2,7 @@ import { TOM } from './ui';
 
 // Cor de cada nível de ferramenta (campo `nivel` do config/agents/tools.yml):
 // azul = só consulta · âmbar = prepara Sugestão (o humano aprova) ·
-// verde (teal do kit) = rascunho pro cliente · neutro = escrita interna.
+// verde (teal do kit) = fala com o cliente (texto pronto ou imagem do passo a passo) · neutro = escrita interna.
 // A ordem das chaves é a ordem da legenda na tela de Skills.
 export const NIVEL_TOM = {
   consulta: TOM.blue,

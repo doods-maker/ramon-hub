@@ -367,6 +367,25 @@ Toda leitura de `inbox.captain_assistant` no atendimento passa por `Captain::Ass
 | `enterprise/app/listeners/captain_listener.rb` · `enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb` (`inbox_assistant`) · `enterprise/lib/enterprise/captain/reply_suggestion_service.rb` | 1 linha cada | idem | etapa-documentos PR 2 |
 | `enterprise/app/models/enterprise/concerns/lead_stage.rb` (novo) + `LeadStage.include_mod_with` | `belongs_to :captain_assistant` (optional, sem FK) | etapa → assistente | etapa-documentos PR 2 |
 
+## Marcação direta, avisos e gatilhos — Etapa Documentos · PR 3 (07/11/2026)
+
+Tudo só age com a chave `RAMON_ETAPA_DOCUMENTOS` ligada e o lead na etapa Documentos (`Ramon::EtapaDeGanho.conduzida?`).
+Exceções: a tela das imagens aparece no assistente ligado à etapa (o "Documentos", criado pela rake), e a mensagem do
+portal do cliente deixa de abrir a janela do canal para todo mundo.
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `app/listeners/ramon_lead_listener.rb` | +`conversation_bot_handoff` (evento nativo `conversation.bot_handoff`) → `Ramon::Documentos::Handoff` | handoff em Documentos vai para o SDR/closer, com nota e aviso | etapa-documentos PR 3 |
+| `enterprise/app/models/captain/assistant.rb` | +`has_many_attached :passos_a_passo` | imagens do passo a passo, uma por tema (fora do git); a mensagem leva cópia | etapa-documentos PR 3 |
+| `enterprise/app/controllers/api/v1/accounts/captain/passos_a_passo_controller.rb` (novo) + rota `resources :passos_a_passo` dentro de `captain/assistants` em `config/routes.rb` | listar, subir (troca) e remover a imagem de um tema; só admin | tela do assistente em Inteligência | etapa-documentos PR 3 |
+| `enterprise/lib/captain/tools/enviar_passo_a_passo_tool.rb` (novo) + entrada em `config/agents/tools.yml` (nível rascunho: fala com o cliente) | casca de `Ramon::Documentos::PassoAPasso.preparar`: guarda a imagem no estado do turno (uma por turno) | o agente de Documentos manda a imagem | etapa-documentos PR 3 |
+| `enterprise/app/services/captain/assistant/agent_runner_service.rb` (`process_agent_result`) | +`response['passo_a_passo']` (estado do turno) | a imagem chega ao envio da resposta | etapa-documentos PR 3 |
+| `enterprise/app/jobs/captain/conversation/response_builder_job.rb` (`create_outgoing_message`) + `app/jobs/ramon/resposta_ia_atrasada_job.rb` | `passo_a_passo:` no envio atrasado; a resposta sai com a imagem anexada (texto = legenda), nunca no aviso de handoff | uma mensagem por resposta | etapa-documentos PR 3 |
+| `enterprise/lib/captain/tools/handoff_tool.rb` | nota do motivo com `content_attributes.ramon_handoff` | o handoff de Documentos lê o motivo só dessa nota | etapa-documentos PR 3 |
+| `app/services/conversations/message_window_service.rb` (`last_incoming_message`) + `app/controllers/public/portal_controller.rb` | upload do portal marcado `ramon_origem = portal` e fora da conta da janela | upload pelo portal não abre a janela do WhatsApp | etapa-documentos PR 3 |
+| `app/javascript/dashboard/api/captain/assistant.js` | +`passosAPasso`, `subirPassoAPasso`, `removerPassoAPasso` | tela das imagens | etapa-documentos PR 3 |
+| `app/javascript/dashboard/routes/dashboard/captain/assistants/settings/Settings.vue` | +`PassoAPasso` (só admin; só aparece no assistente da etapa conduzida) | tela das imagens | etapa-documentos PR 3 |
+| `enterprise/lib/captain/tools/documentacao_faltante_tool.rb` | +`alertas` (`Ramon::DocMatchService.alertas`) | o agente pede o CNIS completo quando chegou o resumido | etapa-documentos PR 3 |
 ## Área Marketing — tráfego, custos e metas (07/11/2026)
 
 Spec: `docs/superpowers/specs/2026-11-07-marketing-trafego-design.md`.

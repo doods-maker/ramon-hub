@@ -40,6 +40,22 @@ class CaptainAssistant extends ApiClient {
   textoFinal(assistantId) {
     return axios.get(`${this.url}/${assistantId}/texto_final`);
   }
+
+  // ramon (Etapa Documentos): imagens do passo a passo, uma por tema.
+  passosAPasso(assistantId) {
+    return axios.get(`${this.url}/${assistantId}/passos_a_passo`);
+  }
+
+  subirPassoAPasso(assistantId, tema, arquivo) {
+    const corpo = new FormData();
+    corpo.append('tema', tema);
+    corpo.append('file', arquivo);
+    return axios.post(`${this.url}/${assistantId}/passos_a_passo`, corpo);
+  }
+
+  removerPassoAPasso(assistantId, tema) {
+    return axios.delete(`${this.url}/${assistantId}/passos_a_passo/${tema}`);
+  }
 }
 
 export default new CaptainAssistant();

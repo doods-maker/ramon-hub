@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Ramon::DocMatchService do
   let(:account) { create(:account) }
   let(:thesis) { create(:thesis, account: account) }
-  let!(:rg) { create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG') }
+  let!(:rg) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG', content: 'RG') }
   let(:conversation) { create(:conversation, account: account) }
   let(:lead) { create(:lead, account: account, thesis: thesis, conversation: conversation) }
   let(:message) do
@@ -76,6 +76,7 @@ RSpec.describe Ramon::DocMatchService do
     expect(attrs.dig('doc_anexos', rg.id.to_s)).to eq(message.attachments.first.id)
     expect(attrs['doc_sugestao']).to be_nil
     expect(lead.docs_completos_em).to be_present
+    expect(Notification.where(primary_actor: lead, notification_type: 'ramon_fluxo_aviso')).to be_empty # aviso só em Documentos
   end
 
   it 'em lead ganho, mesmo com visão, só sugere (marcar sobe pro Drive/ADVBOX)' do
@@ -128,6 +129,80 @@ RSpec.describe Ramon::DocMatchService do
     plain = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
     expect(Ramon::LlmClient).not_to receive(:complete)
     described_class.new(plain).perform
+  end
+
+  # Etapa Documentos (spec §5): lá a IA marca direto, mesmo com o lead ganho; CNIS só o completo.
+  context 'with o lead na etapa Documentos' do
+    let(:documentos) { Ramon::EtapasPosVenda.criar!(account).first }
+
+    before { lead.update_columns(lead_stage_id: documentos.id, won_at: Time.current) } # rubocop:disable Rails/SkipsModelValidations
+
+    def perform_com(item_json, chave: 'on')
+      resposta = Ramon::LlmClient::Result.new(content: item_json, input_tokens: 1, output_tokens: 1)
+      allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)
+      with_modified_env(ANTHROPIC_API_KEY: 'sk-test', RAMON_ETAPA_DOCUMENTOS: chave) { described_class.new(message).perform }
+      lead.reload.custom_attributes
+    end
+
+    it 'marca recebido e vincula o anexo', :aggregate_failures do
+      attrs = perform_com(%({"item_id": #{rg.id}}))
+      expect(attrs.dig('doc_status', rg.id.to_s)).to eq('recebido')
+      expect(attrs.dig('doc_anexos', rg.id.to_s)).to eq(message.attachments.first.id)
+      expect(attrs['doc_sugestao']).to be_nil
+    end
+
+    it 'avisa o SDR (mesmo offline: o aviso é por existência) para verificar; o push leva só a tese', :aggregate_failures do
+      sdr = create(:user, account: account, role: :agent) # auto_offline sem presença = offline
+      closer = create(:user, account: account, role: :agent, auto_offline: false) # online, mas o SDR existe
+      lead.update_columns(closer_id: closer.id) # rubocop:disable Rails/SkipsModelValidations
+      lead.update_columns(sdr_id: sdr.id, name: 'Fulano de Tal') # rubocop:disable Rails/SkipsModelValidations
+      allow(Ramon::NtfyPushJob).to receive(:perform_later)
+
+      perform_com(%({"item_id": #{rg.id}}))
+
+      avisos = Notification.where(primary_actor: lead, notification_type: 'ramon_fluxo_aviso')
+      expect(avisos.pluck(:user_id)).to eq([sdr.id])
+      expect(avisos.first.meta['label']).to eq('IA marcou RG de Fulano de Tal: verificar')
+      expect(Ramon::NtfyPushJob).to have_received(:perform_later)
+        .with(lead.id, title: "IA marcou documento (#{thesis.name})", body: satisfy { |corpo| corpo.exclude?('Fulano') })
+    end
+
+    it 'chave desligada: só sugere, como em qualquer lead ganho', :aggregate_failures do
+      attrs = perform_com(%({"item_id": #{rg.id}}), chave: nil)
+      expect(attrs['doc_status']).to be_blank
+      expect(attrs.dig('doc_sugestao', 'item_id')).to eq(rg.id)
+    end
+
+    it 'CNIS resumido: não marca e grava o alerta para o agente pedir o completo', :aggregate_failures do
+      cnis = create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS completo')
+      attrs = perform_com(%({"item_id": #{cnis.id}, "cnis_resumido": true}))
+      expect(attrs['doc_status']).to be_blank
+      expect(attrs.dig('doc_alertas', 'cnis_resumido')).to be_present
+      expect(described_class.alertas(lead.reload)).to contain_exactly(a_string_including('remunerações'))
+    end
+
+    it 'cnis_resumido em item que não é CNIS é ignorado: marca normalmente' do
+      attrs = perform_com(%({"item_id": #{rg.id}, "cnis_resumido": true}))
+      expect(attrs.dig('doc_status', rg.id.to_s)).to eq('recebido')
+    end
+
+    it 'CNIS completo chegou depois do resumido: o alerta some' do
+      cnis = create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS completo')
+      perform_com(%({"item_id": #{cnis.id}, "cnis_resumido": true}))
+      perform_com(%({"item_id": #{cnis.id}}))
+      expect(described_class.alertas(lead.reload)).to be_empty
+    end
+  end
+
+  it 'fora da etapa Documentos, mesmo com a chave ligada, o CNIS segue como hoje: sem pergunta do resumido, marca', :aggregate_failures do
+    cnis = create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS completo')
+    resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{cnis.id}, "cnis_resumido": true}), input_tokens: 1, output_tokens: 1)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)
+    with_modified_env(ANTHROPIC_API_KEY: 'sk-test', RAMON_ETAPA_DOCUMENTOS: 'on') { described_class.new(message).perform }
+
+    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(system: described_class::SYSTEM_PROMPT))
+    expect(lead.reload.custom_attributes.dig('doc_status', cnis.id.to_s)).to eq('recebido')
+    expect(lead.custom_attributes['doc_alertas']).to be_nil
   end
 
   context 'when the item is already marked as received' do

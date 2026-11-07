@@ -77,6 +77,12 @@ RSpec.describe 'Portal do cliente (link mágico)', type: :request do
       expect(response).to redirect_to("/portal/#{lead.portal_token}")
     end
 
+    # ramon: não é mensagem do WhatsApp, não abre a janela de 24 h (Conversations::MessageWindowService)
+    it 'marca a mensagem como vinda do portal' do
+      post "/portal/#{lead.ensure_portal_token!}/upload", params: { file: file }
+      expect(conversation.messages.reorder(:id).last.content_attributes['ramon_origem']).to eq('portal')
+    end
+
     it 'recusa content-type fora da lista sem criar mensagem' do
       bad = fixture_file_upload(Rails.root.join('spec/assets/sample.mp3'), 'audio/mpeg')
 

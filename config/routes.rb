@@ -75,6 +75,8 @@ Rails.application.routes.draw do
               end
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
               resources :scenarios
+              # ramon (Etapa Documentos): imagens do passo a passo, uma por tema
+              resources :passos_a_passo, only: [:index, :create, :destroy], param: :tema
               # ramon: Casos de teste da IA
               resources :ia_casos, only: [:index, :create, :update, :destroy]
               resources :ia_rodadas, only: [:index, :show, :create] do

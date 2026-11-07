@@ -355,6 +355,14 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#conversation_bot_handoff -> Documentos' do
+    it 'passa a conversa para o handoff de Documentos (que decide se é com ele)' do
+      allow(Ramon::Documentos::Handoff).to receive(:call)
+      listener.conversation_bot_handoff(Events::Base.new('conversation.bot_handoff', Time.zone.now, conversation: conversation))
+      expect(Ramon::Documentos::Handoff).to have_received(:call).with(conversation)
+    end
+  end
+
   describe '#conversation_updated -> move o lead' do
     it 'move o lead pra etapa da fase-* adicionada' do
       lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),

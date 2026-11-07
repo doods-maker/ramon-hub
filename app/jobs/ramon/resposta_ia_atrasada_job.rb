@@ -8,10 +8,13 @@ class Ramon::RespostaIaAtrasadaJob < ApplicationJob
   # conversa saiu da IA (pausada/assumida).
   # ponytail: "Só rascunho" ligado durante a espera não segura este envio (a conversa segue pendente); reler o Perfil
   # aqui se isso incomodar.
-  def perform(conversation, message_params, apos_id, handoff: false)
+  # passo_a_passo: blob da imagem que a tool enviar_passo_a_passo preparou no turno; vai anexada a esta mensagem, que vira a
+  # legenda (uma mensagem por resposta: Ramon::Documentos::PassoAPasso).
+  def perform(conversation, message_params, apos_id, handoff: false, passo_a_passo: nil)
     depois = conversation.messages.where('id > ?', apos_id)
     return if depois.outgoing.exists?(sender_type: 'User', private: false)
     return if !handoff && (depois.incoming.exists? || !conversation.reload.pending?)
+    return Ramon::Documentos::PassoAPasso.criar_mensagem(conversation, message_params, passo_a_passo) if passo_a_passo
 
     conversation.messages.create!(message_params)
   end

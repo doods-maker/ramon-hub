@@ -103,8 +103,8 @@ class Captain::Assistant::AgentRunnerService
     response['ferramenta_falhou'] = estado[Captain::Tools::BasePublicTool::FALHOU] || false
     # ramon: o passo do roteiro mostrado à IA neste turno (só a pergunta dele ganha botões, Ramon::Roteiro::Opcoes)
     response['roteiro_passo'] = estado[Captain::Tools::RoteiroPassoAtualTool::MOSTRADO]
-    response['tools_usadas'] = Array(estado[:ramon_tools_usadas]) # ramon: Tools do turno, para o Ramon::PerfilIa.decidir
-    response
+    # ramon: Tools do turno (Ramon::PerfilIa.decidir) e a imagem do passo a passo que vai com a resposta (uma linha: teto da classe)
+    response.merge('tools_usadas' => Array(estado[:ramon_tools_usadas]), 'passo_a_passo' => estado[Ramon::Documentos::PassoAPasso::ESTADO])
   end
 
   # ramon: numa linha só — a classe está no teto do Metrics/ClassLength.
