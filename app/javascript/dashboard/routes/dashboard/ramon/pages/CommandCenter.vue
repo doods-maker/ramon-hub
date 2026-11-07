@@ -128,7 +128,7 @@ const dayMonth = date => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
 // KPI_CLICAVEL: o <button> global (_base.scss) zera borda/padding/raio sem
 // layer — os ! devolvem a pele do CARTAO.
 const KPI_CLICAVEL =
-  '!border !border-solid !rounded-xl !p-3 !text-left hover:border-n-strong';
+  '!border !border-solid !rounded-xl !p-4 !text-left hover:border-n-strong';
 const kpis = computed(() => [
   {
     key: 'overdue',
