@@ -149,4 +149,37 @@ RSpec.describe Ramon::PainelTime do
       expect(kpis('closer')[:vou_pensar_48h]).to eq(valor: 66.7, num: 2, den: 3)
     end
   end
+
+  # Regra de design: todo número com período e variação. Comparação justa =
+  # período anterior cortado no mesmo ponto (1–18/out 14h × 1–18/nov 14h).
+  describe 'período anterior' do
+    def anterior(periodo, papel = 'closer')
+      described_class.new(account: account, papel: papel, periodo: periodo).perform
+    end
+
+    it 'mês corrente × mês passado até o mesmo dia e hora', :aggregate_failures do
+      ganho(agora - 1.month - 2.days, reuniao_resultado: 'qualificada', reuniao_registrada_em: agora - 1.month - 3.days)
+      lead(reuniao_resultado: 'qualificada', reuniao_registrada_em: agora - 1.month - 3.days)
+      lead(reuniao_resultado: 'qualificada', reuniao_registrada_em: agora - 1.month + 2.days) # depois do corte
+
+      resultado = anterior('mes')
+
+      expect(resultado[:anterior]).to eq(inicio: '2026-10-01T00:00:00-03:00', fim: '2026-10-18T14:00:00-03:00')
+      expect(resultado[:time][:anterior][:kpis][:conversao]).to eq(valor: 50.0, num: 1, den: 2)
+      expect(resultado[:pessoas].first[:anterior][:kpis][:conversao]).to eq(valor: 50.0, num: 1, den: 2)
+    end
+
+    it 'hoje × ontem até a mesma hora; semana × semana passada até o mesmo ponto', :aggregate_failures do
+      expect(anterior('hoje')[:anterior]).to eq(inicio: '2026-11-17T00:00:00-03:00', fim: '2026-11-17T14:00:00-03:00')
+      expect(anterior('semana')[:anterior]).to eq(inicio: '2026-11-09T00:00:00-03:00', fim: '2026-11-11T14:00:00-03:00')
+    end
+
+    it 'mês passado (fechado) × mês retrasado inteiro' do
+      expect(anterior('mes_passado')[:anterior]).to eq(inicio: '2026-09-01T00:00:00-03:00', fim: '2026-10-01T00:00:00-03:00')
+    end
+
+    it 'sem resposta é contado agora: fica sem anterior' do
+      expect(anterior('mes', 'sdr')[:time][:anterior][:kpis]).not_to have_key(:sem_resposta)
+    end
+  end
 end

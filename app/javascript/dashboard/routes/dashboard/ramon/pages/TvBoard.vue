@@ -11,6 +11,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { brlCompact } from '../helpers/currency';
 import { CARTAO } from '../helpers/ui';
+import Variacao from '../components/Variacao.vue';
 
 // Kit em tamanho de TV: rótulo/sub/número maiores que os do hub.
 const ROTULO_TV =
@@ -292,6 +293,14 @@ const funnelLine = computed(() => {
             >
               {{ brlCompact(month.won_value) }}
             </p>
+            <!-- TV: letra grande, lida de longe -->
+            <Variacao
+              :atual="month.prev ? Number(month.won_value) || 0 : null"
+              :anterior="month.prev ? Number(month.prev.won_value) || 0 : null"
+              :periodo="month.prev"
+              data-testid="tv-hero-variacao"
+              class="mt-2 !text-xl"
+            />
           </div>
           <div
             v-if="goalValue > 0"

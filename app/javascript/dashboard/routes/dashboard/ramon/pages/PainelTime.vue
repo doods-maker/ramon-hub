@@ -8,6 +8,7 @@ import { useStore } from 'dashboard/composables/store';
 import RamonPainelTimeAPI from 'dashboard/api/ramonPainelTime';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import Variacao from '../components/Variacao.vue';
 import {
   AVISO,
   CARTAO,
@@ -143,6 +144,9 @@ const cartoes = computed(() =>
       return {
         chave,
         valor: valorDe(chave, kpi),
+        atual: kpi?.valor ?? null,
+        anterior: linha.value?.anterior?.kpis?.[chave]?.valor ?? null,
+        meta: metas.value[chave] ?? {},
         alvo: alvoTexto(chave),
         detalhe: detalhe(kpi),
         status,
@@ -388,6 +392,13 @@ onMounted(carregar);
               >
                 {{ item.valor }}
               </p>
+              <Variacao
+                :atual="item.atual"
+                :anterior="item.anterior"
+                :unidade="item.meta.unidade"
+                :sentido="item.meta.sentido"
+                :periodo="dados?.anterior"
+              />
               <p
                 class="m-0 flex flex-wrap items-center gap-1.5 text-[11.5px] text-n-slate-10"
               >
@@ -439,6 +450,11 @@ onMounted(carregar);
             >
               {{ volumeLinha }}
             </p>
+            <Variacao
+              :atual="linha?.volume?.total ?? null"
+              :anterior="linha?.anterior?.volume_total ?? null"
+              :periodo="dados?.anterior"
+            />
           </div>
         </section>
 

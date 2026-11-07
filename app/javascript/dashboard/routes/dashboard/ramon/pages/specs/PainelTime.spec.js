@@ -79,6 +79,41 @@ describe('PainelTime.vue', () => {
     );
   });
 
+  it('cada cartão mostra a variação contra o período anterior', async () => {
+    const time = linha(null, null, 71);
+    time.anterior = {
+      kpis: { primeira_resposta: kpi(4, 30, null), show: kpi(65, 20, 31) },
+      volume_total: 80,
+    };
+    const wrapper = await montar(
+      resposta({
+        time,
+        anterior: {
+          inicio: '2026-10-01T00:00:00-03:00',
+          fim: '2026-10-18T14:00:00-03:00',
+        },
+      })
+    );
+    const variacao = chave =>
+      wrapper.find(
+        `[data-testid="painel-kpi-${chave}"] [data-testid="variacao"]`
+      );
+    // 1ª resposta caiu de 4 para 3 min: melhor (sentido max)
+    expect(variacao('primeira_resposta').attributes('data-seta')).toBe('desce');
+    expect(variacao('primeira_resposta').text()).toContain('25');
+    expect(variacao('show').text()).toContain('RAMON.VARIACAO.PONTOS 6');
+    expect(variacao('show').text()).toContain(
+      'RAMON.VARIACAO.VS_DIAS 01/10 18/10'
+    );
+    // sem anterior (contado agora / sem dado): sem variação
+    expect(variacao('sem_resposta').exists()).toBe(false);
+    expect(
+      wrapper
+        .find('[data-testid="painel-volume"] [data-testid="variacao"]')
+        .text()
+    ).toContain('RAMON.VARIACAO.PORCENTO 20');
+  });
+
   it('gestor escolhe a pessoa: os cartões passam a ser dela', async () => {
     const wrapper = await montar();
     await wrapper

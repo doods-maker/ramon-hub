@@ -9,6 +9,7 @@ class Ramon::IaUsoResumo
   METRICAS = ['COUNT(*)', 'COALESCE(SUM(input_tokens), 0)', 'COALESCE(SUM(output_tokens), 0)', 'SUM(custo_usd)',
               "COUNT(*) FILTER (WHERE status = 'erro')"].map { |sql| Arel.sql(sql) }.freeze
   FUNCOES_ESCOLHA = %w[atendimento copiloto documentos agente].freeze
+  PASSO = { 'hoje' => 1.day, '7d' => 7.days, '30d' => 30.days, 'mes' => 1.month }.freeze
 
   def initialize(account, periodo)
     @account = account
@@ -20,7 +21,7 @@ class Ramon::IaUsoResumo
       periodo: @periodo, de: inicio.to_date, ate: hoje, total: total, por_dia: por_dia,
       por_funcao: agrupar(:funcao), por_modelo: agrupar(:model), por_assistente: por_assistente,
       hoje_usd: Ramon::IaGastoAlerta.gasto_hoje(@account.id), teto_diario_usd: Ramon::IaGastoAlerta.teto(@account),
-      agente: agente, fluxos: fluxos, escolhas: escolhas, chaves: Ramon::LlmEscolha.chaves
+      agente: agente, fluxos: fluxos, escolhas: escolhas, chaves: Ramon::LlmEscolha.chaves, anterior: anterior
     }
   end
 
@@ -31,6 +32,14 @@ class Ramon::IaUsoResumo
   def hoje = agora.to_date
 
   def inicio = @periodo == 'mes' ? agora.beginning_of_month : (agora - DIAS.fetch(@periodo).days).beginning_of_day
+
+  # O mesmo período um passo atrás, cortado no mesmo momento: variação justa do custo.
+  def anterior
+    passo = PASSO.fetch(@periodo)
+    faixa = (inicio - passo)...(agora - passo)
+    chamadas, custo = LlmChamada.where(account_id: @account.id, created_at: faixa).pick(*METRICAS.values_at(0, 3))
+    { inicio: faixa.begin.iso8601, fim: faixa.end.iso8601, custo_usd: custo&.to_f, chamadas: chamadas.to_i }
+  end
 
   def escopo = LlmChamada.where(account_id: @account.id, created_at: inicio..)
 

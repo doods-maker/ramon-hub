@@ -53,6 +53,21 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     end
   end
 
+  it 'compara os ganhos da semana com a semana passada até o mesmo momento' do
+    travel_to Time.utc(2026, 10, 7, 13, 0, 0) do # quarta, 10h em São Paulo
+      won_stage = account.lead_stages.find_by(is_won: true)
+      antes_do_corte = create(:lead, account: account, lead_stage: won_stage)
+      antes_do_corte.update_column(:won_at, Time.utc(2026, 9, 29, 15, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      depois_do_corte = create(:lead, account: account, lead_stage: won_stage)
+      depois_do_corte.update_column(:won_at, Time.utc(2026, 10, 2, 15, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      get url, headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['week']).to include(
+        'won_prev' => 1,
+        'won_prev_window' => { 'inicio' => '2026-09-28T00:00:00-03:00', 'fim' => '2026-09-30T10:00:00-03:00' }
+      )
+    end
+  end
+
   it 'counts weekly wins and sums funnel value' do
     won_stage = account.lead_stages.find_by(is_won: true)
     create(:lead, account: account, lead_stage: won_stage, value: 1500)
@@ -252,6 +267,20 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
   it 'placar de TV só vai para o admin' do
     get url, headers: agent.create_new_auth_token, as: :json
     expect(response.parsed_body['tv']).to be_nil
+  end
+
+  it 'tv: ganho do mês com o mês passado até o mesmo dia e hora' do
+    travel_to Time.utc(2026, 11, 18, 17, 0, 0) do # 14h em São Paulo
+      won_stage = account.lead_stages.find_by(is_won: true)
+      antes_do_corte = create(:lead, account: account, lead_stage: won_stage, value: 10_000)
+      antes_do_corte.update_column(:won_at, Time.utc(2026, 10, 10, 15, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      depois_do_corte = create(:lead, account: account, lead_stage: won_stage, value: 5_000)
+      depois_do_corte.update_column(:won_at, Time.utc(2026, 10, 25, 15, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      get url, headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['tv']['month']['prev']).to eq(
+        'won_value' => 10_000.0, 'won_count' => 1, 'inicio' => '2026-10-01T00:00:00-03:00', 'fim' => '2026-10-18T14:00:00-03:00'
+      )
+    end
   end
 
   describe 'seção tv (Placar de TV)' do

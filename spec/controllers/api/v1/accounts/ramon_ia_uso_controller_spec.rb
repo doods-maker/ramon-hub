@@ -38,6 +38,19 @@ RSpec.describe 'Ramon IA Uso API', type: :request do
     expect(body['fluxos']['hoje']).to eq(3)
   end
 
+  it 'compara com o período anterior cortado no mesmo momento' do
+    travel_to Time.utc(2026, 11, 18, 17, 0, 0) do # 14h em São Paulo
+      chamada('copiloto', 0.75, created_at: Time.utc(2026, 11, 8, 15, 0, 0)) # 7 dias antes da janela
+      chamada('copiloto', 2, created_at: Time.utc(2026, 11, 11, 18, 0, 0)) # depois do corte (11/11 14h)
+
+      get url, params: { periodo: '7d' }, headers: admin.create_new_auth_token
+
+      expect(response.parsed_body['anterior']).to eq(
+        'inicio' => '2026-11-05T00:00:00-03:00', 'fim' => '2026-11-11T14:00:00-03:00', 'custo_usd' => 0.75, 'chamadas' => 1
+      )
+    end
+  end
+
   it 'mostra provedor/modelo em vigor por função, chaves e a assinatura só no agente', :aggregate_failures do
     with_modified_env DEEPSEEK_API_KEY: 'k', OPENAI_API_KEY: nil, ANTHROPIC_API_KEY: nil do
       get url, headers: admin.create_new_auth_token, as: :json

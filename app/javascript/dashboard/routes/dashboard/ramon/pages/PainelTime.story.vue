@@ -97,6 +97,18 @@ const SDR_TIME = sdr(
   [7, 8, 3, 0, 0, 11, 8, 5, 11, 8, 0, 0, 7, 7, 10, 5, 3]
 );
 
+// Mesmo período de setembro (1–18), para a variação dos cartões.
+SDR_TIME.anterior = {
+  kpis: {
+    primeira_resposta: kpi(4.8, 70, null),
+    registro_completo: kpi(85, 60, 71),
+    qualificado_agendada: kpi(74, 31, 42),
+    show: kpi(72, 23, 32),
+    nao_qualificada: kpi(18, 4, 22),
+  },
+  volume_total: 80,
+};
+
 const RAFAEL = {
   user: { id: 12, name: 'Rafael Cardoso Lemos' },
   meta_mes: {
@@ -116,6 +128,18 @@ const RAFAEL = {
     dossie_24h: kpi(90.9, 10, 11),
   },
   volume: { total: 11, serie: semanal([2, 4, 3, 2]) },
+  anterior: {
+    kpis: {
+      conversao: kpi(45, 9, 20),
+      assinado_na_reuniao: kpi(75, 6, 8),
+      vou_pensar_48h: kpi(50, 1, 2),
+      docs_7d: kpi(81.8, 9, 11),
+      cancelamento_7d: kpi(6, 1, 16),
+      painel: kpi(50, 4, 8),
+      dossie_24h: kpi(100, 8, 8),
+    },
+    volume_total: 8,
+  },
 };
 
 const papelDo = config => config?.params?.papel || 'sdr';
@@ -136,7 +160,16 @@ const responder = async (_url, config) => {
   const papel = papelDo(config);
   const corpo = RESPOSTAS[cenario][papel] ?? { time: null, pessoas: [] };
   return {
-    data: { papel, periodo: 'mes', metas: METAS[papel], ...corpo },
+    data: {
+      papel,
+      periodo: 'mes',
+      anterior: {
+        inicio: '2026-09-01T00:00:00-03:00',
+        fim: '2026-09-18T14:00:00-03:00',
+      },
+      metas: METAS[papel],
+      ...corpo,
+    },
   };
 };
 window.axios = { get: responder };

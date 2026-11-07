@@ -30,8 +30,17 @@ class Ramon::TvMetrics < Ramon::CockpitMetrics
       won_count: month_wins.count,
       goal: ENV.fetch('RAMON_MONTHLY_GOAL_BRL', '0').to_f,
       business_days_left: business_days_left,
-      today: tv_today
+      today: tv_today,
+      prev: tv_month_prev
     }
+  end
+
+  # Mês passado até o mesmo dia e hora: variação justa do "Ganho no mês".
+  def tv_month_prev
+    agora = Time.current.in_time_zone(TIME_ZONE)
+    range = (agora.beginning_of_month - 1.month)...(agora - 1.month)
+    wins = leads_funil.where(won_at: range).reorder(nil)
+    { won_value: wins.sum(:value).to_f, won_count: wins.count, inicio: range.begin.iso8601, fim: range.end.iso8601 }
   end
 
   # Dias úteis seg–sex restantes no mês (hoje inclusive), no fuso do escritório.
