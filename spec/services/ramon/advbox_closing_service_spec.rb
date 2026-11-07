@@ -132,6 +132,33 @@ RSpec.describe Ramon::AdvboxClosingService do
 
     def posts_do_tipo(tipo) = a_request(:post, 'https://app.advbox.com.br/api/v1/posts').with { |req| JSON.parse(req.body)['tasks_id'] == tipo }
 
+    # Spec §9 (07/11): o 1º contato de quem vai a Documentos é do agente; a única tarefa do caso é a ANÁLISE DO CASO, no completo.
+    it 'lead que vai a Documentos: cliente e caso, sem a tarefa 1º CONTATO COM O LEAD', :aggregate_failures do
+      lead.update_columns(lead_stage_id: etapas.first.id) # rubocop:disable Rails/SkipsModelValidations
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+
+      described_class.new(lead.reload).perform
+
+      expect(WebMock).not_to have_requested(:post, 'https://app.advbox.com.br/api/v1/posts')
+      advbox = lead.reload.custom_attributes['advbox']
+      expect(advbox).to include('customers_id' => 111, 'lawsuits_id' => 222)
+      expect(advbox['sincronizado_em']).to be_present
+      expect(advbox).not_to have_key('posts_id')
+    end
+
+    it 'lead que vai a Fechado (tese sem Documentos): como hoje, com a tarefa 1º CONTATO' do
+      lead # em Fechado, antes de as etapas novas existirem
+      etapas
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+      stub_create('posts', 'posts_id', 333)
+
+      described_class.new(lead).perform
+
+      expect(posts_do_tipo('8745394')).to have_been_made.once
+    end
+
     # Review Focus 2: o checklist completou antes de o caso existir no ADVBOX; a ANÁLISE DO CASO sai quando ele nasce.
     it 'lead que já passou ao Jurídico: cria a ANÁLISE DO CASO assim que o caso nasce', :aggregate_failures do
       lead.update_columns(lead_stage_id: etapas.last.id) # rubocop:disable Rails/SkipsModelValidations
@@ -142,6 +169,7 @@ RSpec.describe Ramon::AdvboxClosingService do
       described_class.new(lead.reload).perform
 
       expect(posts_do_tipo('8745386')).to have_been_made.once
+      expect(posts_do_tipo('8745394')).not_to have_been_made
       expect(lead.reload.custom_attributes.dig('advbox', 'analise_posts_id')).to eq(444)
     end
 

@@ -3,7 +3,8 @@
 #   Dossiê e NPS do ganho só com o lead ainda ganho, como os callbacks do Lead: execução atrasada não escreve nada.
 # - pesquisa_nps / pesquisa_nps_exito: Ramon::NpsDraftJob (rascunho nas notas; 1 vez por fase — nps.pedido_em /
 #   nps.pedido_exito_em; link do Google = RAMON_GOOGLE_REVIEW_URL)
-# - abrir_caso_advbox: Ramon::AdvboxClosingService (cliente + processo em CONTRATO FECHADO + tarefa 1º CONTATO). Grava no
+# - abrir_caso_advbox: Ramon::AdvboxClosingService (cliente + processo em CONTRATO FECHADO + tarefa 1º CONTATO, menos para quem
+#   vai à etapa Documentos: lá o 1º contato é do agente). Grava no
 #   ADVBOX de verdade, com a garantia de hoje: só com ADVBOX_API_TOKEN, nunca de novo com advbox.sincronizado_em, cada id
 #   guardado assim que nasce (a nova tentativa do motor retoma dali). Fora do ar sobe o erro → o motor tenta de novo em
 #   1/5/15 min; recusa (4xx) fica anotada no lead (advbox.erro), como hoje, e o fluxo segue.
@@ -80,7 +81,7 @@ module Ramon::Fluxos::Passos::Rotina
     return "ADVBOX: caso já aberto em #{feito} (não chama de novo)" if feito.present?
     return 'ADVBOX: sem token no hub, não abriu o caso (como o código)' if ENV.fetch('ADVBOX_API_TOKEN', nil).blank?
     return 'ADVBOX: o lead não está mais ganho, não abriu o caso' if lead.won_at.blank?
-    return 'faria: abrir o caso no ADVBOX (cliente, processo em CONTRATO FECHADO e tarefa 1º CONTATO)' if ensaio
+    return 'faria: abrir o caso no ADVBOX (cliente, processo em CONTRATO FECHADO e tarefa 1º CONTATO, menos em Documentos)' if ensaio
 
     Ramon::AdvboxClosingService.new(lead).perform
     advbox = lead.reload.custom_attributes['advbox'].to_h
