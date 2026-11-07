@@ -173,25 +173,40 @@ RSpec.describe Ramon::Documentos::Passagem do
     end
   end
 
-  # Spec §8 (ajuste de 07/11): o lead não volta para Documentos sozinho, mas a equipe sempre fica sabendo.
+  # Spec §8 (ajuste de 07/11): o lead não volta para Documentos sozinho, mas a equipe sempre fica sabendo — a cada desmarcação
+  # (review do PR 6, item 5), num job: quem desmarcou não pode tomar erro.
   describe 'desmarcar um documento de quem já está no Jurídico' do
     let(:pessoa) { create(:user, account: account, role: :agent, name: 'Ana Conferente') }
 
-    before { Current.user = pessoa }
+    before do
+      Current.user = pessoa
+      allow(Ramon::AdvboxClient).to receive(:settings).and_return({ 'users' => [] })
+    end
+
     after { Current.user = nil }
 
-    def marcar!(status) = lead.reload.update!(custom_attributes: lead.custom_attributes.merge('doc_status' => { item.id.to_s => status }))
+    def marcar!(status, id = item.id)
+      lead.reload.update!(custom_attributes: lead.custom_attributes.deep_merge('doc_status' => { id.to_s => status }))
+    end
+
     def rotulos = avisos.order(:id).map { |aviso| [aviso.user_id, aviso.meta['label']] }
 
-    it 'avisa o SDR e os administradores, com nota na conversa e linha no histórico; a tarefa e a etapa ficam', :aggregate_failures do
+    it 'enfileira o aviso com o documento e quem desmarcou' do
+      completo_em(juridico)
+      expect { marcar!('pendente') }.to have_enqueued_job(Ramon::Documentos::DesmarcadoJob).with(lead.id, [item.id.to_s], pessoa.id)
+    end
+
+    it 'avisa o SDR e o responsável da ANÁLISE DO CASO, com nota e histórico; a tarefa e a etapa ficam', :aggregate_failures do
       sdr = create(:user, account: account, role: :agent)
+      eduardo = create(:user, account: account, role: :agent)
+      allow(Ramon::AdvboxClient).to receive(:settings).and_return({ 'users' => [{ 'id' => 266_778, 'email' => eduardo.email.upcase }] })
       completo_em(juridico)
       lead.update_columns(sdr_id: sdr.id) # rubocop:disable Rails/SkipsModelValidations
 
-      marcar!('pendente')
+      perform_enqueued_jobs(only: Ramon::Documentos::DesmarcadoJob) { marcar!('pendente') }
 
       texto = 'CNIS completo foi desmarcado de Maria da Silva, que já está no Jurídico: decidir se volta para Documentos'
-      expect(rotulos).to contain_exactly([sdr.id, texto], [admin.id, texto])
+      expect(rotulos).to contain_exactly([sdr.id, texto], [eduardo.id, texto]) # não todos os administradores
       expect(conversa.messages.where(private: true).last.content).to include(texto, 'Ana Conferente')
       expect(historico.last).to include(texto, 'Ana Conferente')
       expect(Ramon::NtfyPushJob).to have_received(:perform_later)
@@ -200,20 +215,23 @@ RSpec.describe Ramon::Documentos::Passagem do
       expect(Ramon::AdvboxClient).not_to have_received(:create_post)
     end
 
-    it 'um aviso por desmarcação: remarcar não avisa; desmarcar de novo, sim' do
+    it 'toda desmarcação avisa, mesmo com o checklist já incompleto; remarcar, não' do
+      outro = create(:thesis_item, thesis: tese, section: 'documento', title: 'RG')
       completo_em(juridico)
+      marcar!('recebido', outro.id)
 
-      marcar!('pendente')
-      marcar!('recebido')
-      marcar!('pendente')
+      perform_enqueued_jobs(only: Ramon::Documentos::DesmarcadoJob) do
+        marcar!('pendente')
+        marcar!('pendente', outro.id)
+        marcar!('recebido')
+      end
 
-      expect(avisos.where(user_id: admin.id).count).to eq(2)
+      expect(avisos.pluck(:meta).pluck('label')).to contain_exactly(a_string_starting_with('CNIS completo foi'), a_string_starting_with('RG foi'))
     end
 
     it 'em Documentos, não avisa (o agente segue pedindo)' do
       completo_em(documentos)
-      marcar!('pendente')
-      expect(avisos).to be_empty
+      expect { marcar!('pendente') }.not_to have_enqueued_job(Ramon::Documentos::DesmarcadoJob)
     end
   end
 end

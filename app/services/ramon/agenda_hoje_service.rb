@@ -15,6 +15,12 @@ class Ramon::AgendaHojeService
     tarefas_de_hoje.map { |tarefa| linha(tarefa) }
   end
 
+  # Público: a passagem ao Jurídico acha o responsável da ANÁLISE DO CASO pelo mesmo casamento por e-mail.
+  def usuario_do_hub(advbox_user_id)
+    email = emails_advbox[advbox_user_id]
+    email && @account.users.find_by('LOWER(users.email) = ?', email.downcase)
+  end
+
   private
 
   def tarefas_de_hoje
@@ -32,11 +38,6 @@ class Ramon::AgendaHojeService
       advbox_post_id: tarefa['id'], cliente_nome: cliente&.dig('name'), advbox_customer_id: cliente&.dig('customer_id'),
       notas: tarefa['notes'], responsavel_advbox: responsavel['name'], destinatario_id: usuario_do_hub(responsavel['user_id'])&.id
     }
-  end
-
-  def usuario_do_hub(advbox_user_id)
-    email = emails_advbox[advbox_user_id]
-    email && @account.users.find_by('LOWER(users.email) = ?', email.downcase)
   end
 
   def emails_advbox

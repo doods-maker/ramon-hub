@@ -72,29 +72,46 @@ module Ramon::Documentos::Passagem
                             "Jurídico: ANÁLISE DO CASO pendente (#{Ramon::NtfyPushJob.rotulo(lead)})", 'Veja o aviso no sino', user_ids: [])
   end
 
-  # Desmarcaram um documento de quem já está no Jurídico (o carimbo docs_completos_em sumiu; gancho do lead): o lead não volta
-  # sozinho, quem desmarcou decide. Sino ao SDR (sem SDR, o closer) e aos administradores (o responsável da ANÁLISE DO CASO é o
-  # Eduardo), nota privada e histórico com quem desmarcou; push só com a tese. A tarefa no ADVBOX não é tocada.
-  # mudanca: o saved_change do custom_attributes (antes, depois); nil quando o que mudou foi a tese.
-  def desmarcado(lead, mudanca, user)
+  # Gancho do lead (after_commit de toda gravação do custom_attributes): documento que saiu de "recebido" num lead do Jurídico
+  # → o aviso, num job (quem desmarcou não pode tomar erro). mudanca: o saved_change do custom_attributes (antes, depois).
+  def desmarcou(lead, mudanca, user)
     return unless Ramon::EtapaDeGanho.documentos_ligado? && no_juridico?(lead)
 
-    texto = "#{desmarcados(lead, mudanca)}, que já está no Jurídico: decidir se volta para Documentos"
+    ids = saidos_de_recebido(mudanca)
+    Ramon::Documentos::DesmarcadoJob.perform_later(lead.id, ids, user&.id) if ids.any?
+  end
+
+  def saidos_de_recebido(mudanca)
+    antes, depois = mudanca.map { |attrs| attrs.to_h['doc_status'].to_h }
+    antes.select { |id, status| status == 'recebido' && depois[id] != 'recebido' }.keys
+  end
+
+  # Spec §8: o lead não volta sozinho, quem desmarcou decide; a equipe sempre fica sabendo. Sino ao SDR (sem SDR, o closer) e ao
+  # responsável da ANÁLISE DO CASO (o usuário do hub com o e-mail do ADVBOX dele); sem nenhum dos dois, os administradores.
+  # Nota privada e histórico com quem desmarcou; push só com a tese. A tarefa no ADVBOX não é tocada.
+  def avisar_desmarcado(lead, item_ids, user)
+    return unless no_juridico?(lead)
+
+    texto = "#{desmarcados(lead, item_ids)}, que já está no Jurídico: decidir se volta para Documentos"
     Ramon::AvisoDaIa.avisar(lead, texto, "Jurídico: documento desmarcado (#{Ramon::NtfyPushJob.rotulo(lead)})",
-                            'Decidir se volta para Documentos', user_ids: [lead.sdr_id || lead.closer_id].compact, admins: true)
+                            'Decidir se volta para Documentos', user_ids: [lead.sdr_id || lead.closer_id, responsavel_da_analise(lead)].compact.uniq)
     nota = "#{texto}. Desmarcado por #{user&.name || 'automação'}; a tarefa no ADVBOX não foi mexida."
     Messages::MessageBuilder.new(nil, lead.conversation, { content: nota, private: true }).perform if lead.conversation
     registrar(lead, nota)
   end
 
-  def desmarcados(lead, mudanca)
-    antes, depois = Array(mudanca).map { |attrs| attrs.to_h.fetch('doc_status', {}) }
-    ids = antes.to_h.select { |id, status| status == 'recebido' && depois.to_h[id] != 'recebido' }.keys
-    titulos = ThesisItem.where(id: ids, thesis_id: lead.thesis_id).order(:position).pluck(:title)
-    return "O checklist de #{lead.name} ficou incompleto" if titulos.empty?
-
+  def desmarcados(lead, item_ids)
+    titulos = ThesisItem.where(id: item_ids, thesis_id: lead.thesis_id).order(:position).pluck(:title)
     verbo = titulos.one? ? 'foi desmarcado' : 'foram desmarcados'
-    "#{titulos.to_sentence(two_words_connector: ' e ', last_word_connector: ' e ')} #{verbo} de #{lead.name}"
+    "#{titulos.to_sentence(two_words_connector: ' e ', last_word_connector: ' e ').presence || 'Um documento'} #{verbo} de #{lead.name}"
+  end
+
+  # ADVBOX fora do ar (o e-mail vem das configurações dele, em cache de 24 h): o aviso sai sem ele.
+  def responsavel_da_analise(lead)
+    Ramon::AgendaHojeService.new(lead.account).usuario_do_hub(Ramon::AdvboxClosingService::USERS_ID)&.id
+  rescue StandardError => e
+    Rails.logger.warn("[Ramon::Documentos::Passagem] responsável da ANÁLISE DO CASO não achado: #{e.class}")
+    nil
   end
 
   def registrar_tarefa(lead, resultado)
