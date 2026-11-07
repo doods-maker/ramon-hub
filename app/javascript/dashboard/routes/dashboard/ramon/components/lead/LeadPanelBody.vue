@@ -10,7 +10,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
 import MiniEsteira from './MiniEsteira.vue';
-import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import { DEFAULT_STAGE_COLOR, entraNoGanho } from '../../helpers/stage';
 import LeadNotes from './LeadNotes.vue';
 import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
@@ -338,9 +338,11 @@ const onStageChange = targetId => {
     lostModalOpen.value = true;
     return;
   }
-  // Ganho: SEMPRE pede confirmação, pré-preenchida quando o lead já tem valor
-  // (o automático da Onda 3 não pode virar "valor de contrato" em silêncio).
-  if (target?.is_won) {
+  // Entrar no ganho: SEMPRE pede confirmação, pré-preenchida quando o lead já
+  // tem valor (o automático da Onda 3 não pode virar "valor de contrato" em
+  // silêncio). Ganho → ganho não é ganho novo: grava direto.
+  const origem = stages.value.find(s => s.id === props.lead?.lead_stage_id);
+  if (entraNoGanho(target, origem)) {
     wonValue.value = formatBrl(props.lead?.value);
     wonPrompt.value = true;
     return;

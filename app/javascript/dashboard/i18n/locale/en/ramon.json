@@ -330,7 +330,8 @@
       "FUNNEL": {
         "TITLE": "Pipeline · conversion",
         "EMPTY": "No stages configured yet — set up the funnel first.",
-        "ADVANCE": "↳ {rate}% advance"
+        "ADVANCE": "↳ {rate}% advance",
+        "WON": "Won"
       },
       "TEAM": {
         "TITLE": "Week · team",
@@ -529,9 +530,6 @@
         "REMOVE_EMPTY": "No visible leads in this stage — any leads outside the current filter will be moved to the target stage.",
         "REMOVE_NO_TARGET": "There's no other stage to receive the leads — create one before removing.",
         "REMOVE_LOCKED": "Used by automations (quiz, scheduling, contract) — cannot be removed",
-        "CONFIRM_WON_TITLE": "Mark \"{name}\" as the won stage?",
-        "CONFIRM_WON_EFFECT": "Leads entering this stage open a case in AdvBox, export to Drive, generate NPS and the handoff note.",
-        "CONFIRM_WON_PREVIOUS": "The stage \"{name}\" stops being the won stage.",
         "CONFIRM_LOST_TITLE": "Mark \"{name}\" as the lost stage?",
         "CONFIRM_LOST_EFFECT": "Leads moved to this stage ask for the lost reason and count as lost in reports.",
         "CONFIRM_LOST_PREVIOUS": "The stage \"{name}\" stops being the lost stage.",

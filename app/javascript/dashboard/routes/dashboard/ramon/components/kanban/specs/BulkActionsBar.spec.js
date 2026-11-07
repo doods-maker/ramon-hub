@@ -16,11 +16,17 @@ const dispatch = vi.fn().mockResolvedValue();
 const stubStore = {
   getters: {
     'leads/getSelectedIds': [10, 11],
+    'leads/getLeads': [
+      { id: 10, lead_stage_id: 1 },
+      { id: 11, lead_stage_id: 1 },
+      { id: 12, lead_stage_id: 7 },
+    ],
     'leads/getDockConversationId': null,
     'leadConfig/getStages': [
       { id: 1, name: 'Novo', color: '#000' },
       { id: 9, name: 'Perdido', color: '#111', is_lost: true },
       { id: 8, name: 'Ganho', color: '#222', is_won: true },
+      { id: 7, name: 'Fechado', color: '#333', is_won: true },
     ],
     'leadConfig/getLostReasons': [{ id: 5, name: 'Preço' }],
     'agents/getAgents': [{ id: 3, name: 'Eduardo' }],
@@ -98,6 +104,34 @@ describe('BulkActionsBar', () => {
     expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
       fields: { lead_stage_id: 8 },
     });
+  });
+
+  it('selecionados todos já ganhos: mover para outra etapa de ganho vai direto', async () => {
+    stubStore.getters['leads/getSelectedIds'] = [12];
+    const wrapper = mountBar();
+    await wrapper.find('[data-testid="bulk-move-stage"]').trigger('click');
+    await wrapper
+      .findAll('[data-testid="bulk-stage-option"]')[2]
+      .trigger('click');
+    stubStore.getters['leads/getSelectedIds'] = [10, 11];
+
+    expect(wrapper.findComponent(ConfirmModal).exists()).toBe(false);
+    expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
+      fields: { lead_stage_id: 8 },
+    });
+  });
+
+  it('algum selecionado ainda aberto: ganho pede confirmação', async () => {
+    stubStore.getters['leads/getSelectedIds'] = [12, 10];
+    const wrapper = mountBar();
+    await wrapper.find('[data-testid="bulk-move-stage"]').trigger('click');
+    await wrapper
+      .findAll('[data-testid="bulk-stage-option"]')[2]
+      .trigger('click');
+    stubStore.getters['leads/getSelectedIds'] = [10, 11];
+
+    expect(wrapper.findComponent(ConfirmModal).exists()).toBe(true);
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
   it('cancelar a confirmação de ganho não dispara o lote', async () => {

@@ -177,6 +177,28 @@ describe('useRamonLeadHotKeys', () => {
     );
   });
 
+  it('lead já ganho indo para outra etapa de ganho move direto, sem modal de valor', async () => {
+    const { ramonLeadHotKeys } = setup({
+      leads: [{ id: 20, name: 'Davi Reis', lead_stage_id: 5 }],
+      stages: [
+        ...STAGES,
+        { id: 5, name: 'Fechado', position: 5, is_won: true },
+      ],
+    });
+    const won = ramonLeadHotKeys.value.find(
+      a => a.id === 'ramon_lead_20_move_4'
+    );
+    await won.handler();
+    expect(store.dispatch).not.toHaveBeenCalledWith(
+      'leads/requestWon',
+      expect.anything()
+    );
+    expect(store.dispatch).toHaveBeenCalledWith('leads/move', {
+      id: 20,
+      leadStageId: 4,
+    });
+  });
+
   it('creates a follow-up task for tomorrow 9h with the default title', async () => {
     const { ramonLeadHotKeys } = setup();
     const task = ramonLeadHotKeys.value.find(

@@ -18,7 +18,22 @@ const { t } = useI18n();
 const openStages = computed(() =>
   props.stages.filter(stage => !stage.is_won && !stage.is_lost)
 );
-const wonStage = computed(() => props.stages.find(stage => stage.is_won));
+// Várias etapas de ganho (Fechado, Documentos, Jurídico — ADR 0015): uma linha
+// só, somando; com uma etapa, o nome dela. O clique leva à primeira.
+// ponytail: clique vai só para a 1ª etapa de ganho; filtro por várias se pedirem.
+const wonStage = computed(() => {
+  const won = props.stages.filter(stage => stage.is_won);
+  if (won.length <= 1) return won[0];
+  return {
+    ...won[0],
+    name: t('RAMON.COMMAND.FUNNEL.WON'),
+    count: won.reduce((sum, stage) => sum + Number(stage.count || 0), 0),
+    total_value: won.reduce(
+      (sum, stage) => sum + Number(stage.total_value || 0),
+      0
+    ),
+  };
+});
 const segments = computed(() =>
   openStages.value.filter(stage => Number(stage.count) > 0)
 );

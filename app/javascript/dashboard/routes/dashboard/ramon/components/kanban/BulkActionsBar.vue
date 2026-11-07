@@ -1,7 +1,8 @@
 <script setup>
 // Barra de ações em lote (mock 1d): aparece quando há seleção, fixa embaixo do
 // board. Mover p/ etapa de perda pede o motivo UMA vez (LostReasonModal) e
-// aplica a todos; p/ etapa de ganho pede confirmação (dispara automações);
+// aplica a todos; p/ etapa de ganho pede confirmação (dispara automações) se
+// algum selecionado ainda não está ganho (ganho → ganho não é ganho novo);
 // o resto vira um único POST bulk_actions → job no backend.
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -10,7 +11,7 @@ import { vOnClickOutside } from '@vueuse/components';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import { DEFAULT_STAGE_COLOR, entraNoGanho } from '../../helpers/stage';
 import { CARTAO, CAMPO, LINHA, MENU } from '../../helpers/ui';
 import LostReasonModal from './LostReasonModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
@@ -64,13 +65,18 @@ const runBulk = async payload => {
   }
 };
 
+const stageOfLead = id => {
+  const lead = getters['leads/getLeads']?.value?.find(l => l.id === id);
+  return stages.value.find(s => s.id === lead?.lead_stage_id);
+};
+
 const pickStage = stage => {
   if (stage.is_lost) {
     closeMenus();
     pendingLostStage.value = stage;
     return;
   }
-  if (stage.is_won) {
+  if (selectedIds.value.some(id => entraNoGanho(stage, stageOfLead(id)))) {
     closeMenus();
     pendingWonStage.value = stage;
     return;
