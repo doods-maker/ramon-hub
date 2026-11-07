@@ -22,14 +22,30 @@ module Ramon::Documentos::Cobranca
     Lead.unscoped.where(id: lead.id).update_all([LIGAR, { 'entrou_em' => Time.current.iso8601 }.to_json]) # rubocop:disable Rails/SkipsModelValidations
   end
 
-  # before_save do lead (LeadDocs). A sub-chave que vale é a do banco, lida com FOR UPDATE: o UPDATE de marcar espera esta
-  # transação ou já terminou. Documento novo neste save (item que passou a recebido, de quem for) entra junto.
+  # before_save do lead (LeadDocs). Em Documentos, a sub-chave que vale é a do banco, lida com FOR UPDATE: o UPDATE de marcar
+  # espera esta transação ou já terminou; documento novo neste save (item que passou a recebido, de quem for) entra junto.
+  # Fora de Documentos, o estado não existe: o save que já grava o custom_attributes leva sem ele.
   def antes_de_salvar(lead)
     return unless lead.persisted? && lead.custom_attributes_changed? && na_cobranca?(lead)
 
+    lead.custom_attributes = lead.custom_attributes.except(CHAVE).merge(em_documentos?(lead) ? do_banco_com_documento(lead) : {})
+  end
+
+  # Saiu de Documentos (Jurídico, perdido, arrastado): o estado sai junto, num UPDATE que confere a etapa no banco
+  # (RamonLeadListener, depois que a etapa mudou).
+  def desligar_fora_de_documentos(lead)
+    Lead.unscoped.where(id: lead.id).where("custom_attributes -> '#{CHAVE}' IS NOT NULL")
+        .where.not(lead_stage_id: LeadStage.where(label: Ramon::EtapaDeGanho::DOCUMENTOS).select(:id))
+        .update_all("custom_attributes = custom_attributes - '#{CHAVE}'") # rubocop:disable Rails/SkipsModelValidations
+  end
+
+  def em_documentos?(lead) = lead.lead_stage&.label == Ramon::EtapaDeGanho::DOCUMENTOS
+
+  def do_banco_com_documento(lead)
     atual = do_banco(lead)
-    atual = atual.merge('ultimo_documento_em' => Time.current.iso8601) if atual && documento_novo?(lead)
-    lead.custom_attributes = lead.custom_attributes.except(CHAVE).merge(atual ? { CHAVE => atual } : {})
+    return {} unless atual
+
+    { CHAVE => documento_novo?(lead) ? atual.merge('ultimo_documento_em' => Time.current.iso8601) : atual }
   end
 
   def na_cobranca?(lead) = lead.custom_attributes.key?(CHAVE) || lead.custom_attributes_was.to_h.key?(CHAVE)

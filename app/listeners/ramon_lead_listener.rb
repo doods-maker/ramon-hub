@@ -83,6 +83,7 @@ class RamonLeadListener < BaseListener
     Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
     Ramon::TeseLabelSync.apply_to_conversation(event.data[:lead])
     entrada_em_documentos(event)
+    Ramon::Documentos::Cobranca.desligar_fora_de_documentos(event.data[:lead]) if mudou_de_etapa?(event)
   end
 
   def conversation_updated(event)
@@ -99,6 +100,8 @@ class RamonLeadListener < BaseListener
   end
 
   private
+
+  def mudou_de_etapa?(event) = (event.data[:changed_attributes] || {}).key?('lead_stage_id')
 
   # Etapa Documentos (só com a chave ligada): a etapa do evento, não a de agora (o lead pode ter andado de novo).
   def entrada_em_documentos(event)

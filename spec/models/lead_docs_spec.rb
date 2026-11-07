@@ -40,6 +40,7 @@ RSpec.describe LeadDocs do
     it 'item que vira recebido marca ultimo_documento_em; desmarcar ou regravar o mesmo não marca', :aggregate_failures do
       lead = create(:lead, account: account, custom_attributes: { 'doc_status' => { '4' => 'recebido' },
                                                                   'documentos_cobranca' => { 'entrou_em' => 1.day.ago.iso8601 } })
+      lead.update_columns(lead_stage_id: Ramon::EtapasPosVenda.criar!(account).first.id) # rubocop:disable Rails/SkipsModelValidations
 
       freeze_time do
         lead.update!(custom_attributes: lead.custom_attributes.deep_merge('doc_status' => { '5' => 'recebido' }))

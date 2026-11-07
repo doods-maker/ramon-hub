@@ -39,4 +39,23 @@ RSpec.describe Ramon::Documentos::Cobranca do
     expect(cobranca).to include('entrou_em', 'lembrete_1_em')
     expect(lead.custom_attributes['doc_status']).to eq('9' => 'pendente')
   end
+
+  describe 'fora de Documentos nada acontece' do
+    let(:juridico) { account.lead_stages.find_by(label: Ramon::EtapaDeGanho::JURIDICO) }
+
+    it 'desligar_fora_de_documentos: lead que saiu perde o estado; em Documentos, fica', :aggregate_failures do
+      described_class.desligar_fora_de_documentos(lead)
+      expect(cobranca).to be_present
+
+      lead.update_columns(lead_stage_id: juridico.id) # rubocop:disable Rails/SkipsModelValidations
+      described_class.desligar_fora_de_documentos(lead)
+      expect(lead.reload.custom_attributes).to eq('outro' => 1)
+    end
+
+    it 'save fora de Documentos: documento novo não marca e o estado não volta', :aggregate_failures do
+      lead.update_columns(lead_stage_id: juridico.id) # rubocop:disable Rails/SkipsModelValidations
+      lead.update!(custom_attributes: lead.custom_attributes.merge('doc_status' => { '9' => 'recebido' }))
+      expect(lead.reload.custom_attributes).to eq('outro' => 1, 'doc_status' => { '9' => 'recebido' })
+    end
+  end
 end
