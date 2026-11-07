@@ -35,7 +35,8 @@ module Ramon::Documentos::Handoff
   end
 
   def motivo(conversa)
-    conversa.messages.where(private: true).where("content_attributes ->> '#{MARCA}' = 'true'").where(DEPOIS_DO_CLIENTE)
+    # content_attributes é store com coder JSON numa coluna json: string JSON, desembrulhada com #>> '{}'
+    conversa.messages.where(private: true).where("(content_attributes #>> '{}')::jsonb ->> '#{MARCA}' = 'true'").where(DEPOIS_DO_CLIENTE)
             .order(:created_at).last&.content.presence
   end
 end
