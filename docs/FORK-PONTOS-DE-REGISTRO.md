@@ -355,3 +355,14 @@ Tudo ramifica em `inbox.equipe`; fora da caixa Equipe o comportamento nativo nã
 | `helper/actionCable.js` | evento `ramon.equipe.lida` → `useEquipeStore().atualizarLeitura` | ✓✓ ao vivo | equipe-whatsapp 02/11 |
 | `shared/helpers/markdownIt/link.js` | regex de menção aceita `todos` | `@todos` | equipe-whatsapp 02/11 |
 | `i18n/locale/{en,pt_BR}/ramon.json` | textos `RAMON.EQUIPE` | telas | equipe-whatsapp 02/11 |
+
+## Assistente por etapa — Etapa Documentos · PR 2 (07/11/2026)
+
+Toda leitura de `inbox.captain_assistant` no atendimento passa por `Captain::AssistenteDaConversa.para(conversa)` (núcleo, `app/services/captain/`): o assistente da etapa do lead (`lead_stages.captain_assistant_id`), senão o da caixa; caixa sem IA = nil. Sem etapa com assistente, comportamento idêntico ao upstream.
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `enterprise/app/services/enterprise/message_templates/hook_execution_service.rb` | `assistente` (memo) no lugar de `inbox.captain_assistant` em resposta, handoff por cota e `captain_handling_conversation?` | a IA da etapa responde | etapa-documentos PR 2 |
+| `enterprise/app/jobs/captain/inbox_pending_conversations_resolution_job.rb` | `assistente(conversation)` por conversa (executed_by, remetente, textos de resolução/handoff) | idem | etapa-documentos PR 2 |
+| `enterprise/app/listeners/captain_listener.rb` · `enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb` (`inbox_assistant`) · `enterprise/lib/enterprise/captain/reply_suggestion_service.rb` | 1 linha cada | idem | etapa-documentos PR 2 |
+| `enterprise/app/models/enterprise/concerns/lead_stage.rb` (novo) + `LeadStage.include_mod_with` | `belongs_to :captain_assistant` (optional, sem FK) | etapa → assistente | etapa-documentos PR 2 |
