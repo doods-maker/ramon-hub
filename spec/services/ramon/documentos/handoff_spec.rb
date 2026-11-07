@@ -71,11 +71,12 @@ RSpec.describe Ramon::Documentos::Handoff do
     expect(notas.last).to include('Motivo: Cliente disse que não tem o laudo', 'CNIS completo')
   end
 
-  it 'sem nota da tool depois da última mensagem do cliente (freio, cota, falha): passagem automática' do
+  it 'sem nota da tool depois da última mensagem do cliente (freio, cota, falha): passagem automática', :aggregate_failures do
     nota_da_ia('motivo de outra vez', 2.minutes.ago, tool: true)
     do_cliente(1.minute.ago)
     handoff
-    expect(notas.last).to include('passagem automática').and(exclude('motivo de outra vez'))
+    expect(notas.last).to include('passagem automática')
+    expect(notas.last).not_to include('motivo de outra vez')
   end
 
   it 'fora de Documentos, ou com a chave desligada, é o handoff de hoje: nada muda', :aggregate_failures do
