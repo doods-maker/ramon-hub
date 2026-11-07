@@ -10,6 +10,8 @@ RSpec.describe MessageTemplates::HookExecutionService, if: ChatwootApp.enterpris
   let(:da_etapa) { create(:captain_assistant, account: account, config: { 'handoff_message' => 'Chamei a equipe dos documentos.' }) }
   let(:etapa) { account.lead_stages.find_by!(label: 'fase-novo') }
 
+  around { |example| with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { example.run } }
+
   before do
     create(:captain_inbox, captain_assistant: da_caixa, inbox: inbox)
     etapa.update!(captain_assistant: da_etapa)

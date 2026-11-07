@@ -17,7 +17,11 @@ const STAGES = [
   },
 ];
 
-const buildStore = ({ updateStage = vi.fn(), stages = STAGES } = {}) =>
+const buildStore = ({
+  updateStage = vi.fn(),
+  stages = STAGES,
+  etapaDocumentos = true,
+} = {}) =>
   createStore({
     modules: {
       leadConfig: {
@@ -27,6 +31,7 @@ const buildStore = ({ updateStage = vi.fn(), stages = STAGES } = {}) =>
             { id: 1, name: 'Alta', weight: 3, position: 0 },
           ],
           getStages: () => stages,
+          getEtapaDocumentos: () => etapaDocumentos,
         },
         actions: {
           updateStage,
@@ -35,8 +40,8 @@ const buildStore = ({ updateStage = vi.fn(), stages = STAGES } = {}) =>
     },
   });
 
-const mountPage = ({ updateStage, stages } = {}) => {
-  const store = buildStore({ updateStage, stages });
+const mountPage = ({ updateStage, stages, etapaDocumentos } = {}) => {
+  const store = buildStore({ updateStage, stages, etapaDocumentos });
   return mount(FunilConfig, {
     global: {
       plugins: [store],
@@ -185,6 +190,18 @@ it('etapa de ganho escolhe o assistente da etapa (vazio = o da caixa)', async ()
 
 it('sem assistentes (sem o Captain), nada de seletor', async () => {
   const wrapper = mountPage({
+    stages: [{ id: 3, name: 'Documentos', is_won: true }],
+  });
+  await flushPromises();
+  expect(wrapper.find('[data-testid="stage-assistente"]').exists()).toBe(false);
+});
+
+it('chave da etapa Documentos desligada: nada de seletor de assistente', async () => {
+  CaptainAssistantAPI.get.mockResolvedValueOnce({
+    data: { payload: [{ id: 5, name: 'Documentos' }] },
+  });
+  const wrapper = mountPage({
+    etapaDocumentos: false,
     stages: [{ id: 3, name: 'Documentos', is_won: true }],
   });
   await flushPromises();

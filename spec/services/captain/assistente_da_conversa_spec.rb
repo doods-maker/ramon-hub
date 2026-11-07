@@ -30,11 +30,18 @@ RSpec.describe Captain::AssistenteDaConversa do
       expect(described_class.para(conversa)).to eq(da_caixa)
     end
 
-    it 'lead em etapa com assistente: o da etapa' do
+    it 'lead em etapa com assistente, com a chave ligada: o da etapa' do
       documentos.update!(captain_assistant: da_etapa)
       create(:lead, account: account, conversation: conversa, lead_stage: documentos)
 
-      expect(described_class.para(conversa)).to eq(da_etapa)
+      with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { expect(described_class.para(conversa)).to eq(da_etapa) }
+    end
+
+    it 'chave desligada: o da caixa, mesmo com a etapa tendo assistente' do
+      documentos.update!(captain_assistant: da_etapa)
+      create(:lead, account: account, conversation: conversa, lead_stage: documentos)
+
+      expect(described_class.para(conversa)).to eq(da_caixa)
     end
 
     it 'caixa sem IA continua nil, mesmo com a etapa tendo assistente' do
@@ -42,7 +49,7 @@ RSpec.describe Captain::AssistenteDaConversa do
       documentos.update!(captain_assistant: da_etapa)
       create(:lead, account: account, conversation: conversa, lead_stage: documentos)
 
-      expect(described_class.para(conversa.reload)).to be_nil
+      with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { expect(described_class.para(conversa.reload)).to be_nil }
     end
   end
 end

@@ -26,6 +26,10 @@ const { t } = useI18n();
 
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const stages = computed(() => getters['leadConfig/getStages'].value);
+// chave RAMON_ETAPA_DOCUMENTOS: desligada, o assistente da etapa não vale (nem aparece)
+const etapaDocumentos = computed(
+  () => !!store.getters['leadConfig/getEtapaDocumentos']
+);
 
 const saveStalled = (stage, raw) => {
   // o servidor exige > 0 (vazio = sem limite): 0 vira 1 antes de mandar
@@ -276,7 +280,7 @@ const submitImport = async () => {
             </span>
             <span class="flex shrink-0 items-center gap-2">
               <select
-                v-if="s.is_won && assistentes.length"
+                v-if="etapaDocumentos && s.is_won && assistentes.length"
                 :value="s.captain_assistant_id ?? ''"
                 data-testid="stage-assistente"
                 class="!w-44"
