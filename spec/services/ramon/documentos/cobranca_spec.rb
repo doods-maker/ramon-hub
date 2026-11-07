@@ -40,6 +40,37 @@ RSpec.describe Ramon::Documentos::Cobranca do
     expect(lead.custom_attributes['doc_status']).to eq('9' => 'pendente')
   end
 
+  describe '.devolvida (spec §7: dois lembretes "até uma pessoa agir")' do
+    let(:conversa) { create(:conversation, account: account, status: :pending) }
+
+    before do
+      lead.update_columns(conversation_id: conversa.id) # rubocop:disable Rails/SkipsModelValidations
+      described_class.marcar(lead, { 'abertura_em' => 'a', 'lembrete_1_em' => 'b', 'lembrete_2_em' => 'c', 'silencio_em' => 'd',
+                                     'acompanhamento_em' => 'e', 'travado_em' => 'f' })
+    end
+
+    it 'a pessoa devolve à IA (aberta → pendente): o ciclo recomeça da devolução; a abertura fica' do
+      freeze_time do
+        described_class.devolvida(conversa, { 'status' => %w[open pending] })
+        expect(cobranca).to eq('entrou_em' => '2026-10-05T10:00:00-03:00', 'abertura_em' => 'a', 'devolvido_em' => Time.current.iso8601)
+      end
+    end
+
+    it 'tirar a Pausa com a conversa pendente também é devolver' do
+      described_class.devolvida(conversa, { 'custom_attributes' => [{ 'ia_pausa' => 'pausada' }, {}] })
+      expect(cobranca.keys).to include('devolvido_em')
+      expect(cobranca.keys).not_to include('silencio_em')
+    end
+
+    it 'outra mudança (pessoa assumiu, etiqueta) não recomeça nada' do
+      conversa.update_columns(status: :open) # rubocop:disable Rails/SkipsModelValidations
+      described_class.devolvida(conversa.reload, { 'status' => %w[pending open] })
+      described_class.devolvida(conversa, { 'label_list' => [[], ['x']] })
+      expect(cobranca.keys).to include('silencio_em')
+      expect(cobranca.keys).not_to include('devolvido_em')
+    end
+  end
+
   describe 'fora de Documentos nada acontece' do
     let(:juridico) { account.lead_stages.find_by(label: Ramon::EtapaDeGanho::JURIDICO) }
 

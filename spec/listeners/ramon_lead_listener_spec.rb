@@ -559,6 +559,23 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#conversation_updated -> devolvida à IA em Documentos' do
+    it 'o ciclo da cobrança recomeça' do
+      documentos = Ramon::EtapasPosVenda.criar!(account).first
+      conversation.update_columns(status: :pending) # rubocop:disable Rails/SkipsModelValidations
+      lead = create(:lead, account: account)
+      lead.update_columns(lead_stage_id: documentos.id, conversation_id: conversation.id, # rubocop:disable Rails/SkipsModelValidations
+                          custom_attributes: { 'documentos_cobranca' => { 'entrou_em' => 'x', 'silencio_em' => 'y' } })
+
+      devolucao = { 'status' => %w[open pending] }
+      evento = Events::Base.new('conversation.updated', Time.zone.now, conversation: conversation.reload, changed_attributes: devolucao)
+      listener.conversation_updated(evento)
+
+      expect(lead.reload.custom_attributes['documentos_cobranca'].keys).to include('devolvido_em')
+      expect(lead.reload.custom_attributes['documentos_cobranca'].keys).not_to include('silencio_em')
+    end
+  end
+
   describe '#message_created -> tese automática (F3)' do
     it 'lead sem tese recebe a tese padrão da caixa na 1ª mensagem' do
       tese = account.theses.first

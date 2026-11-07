@@ -11,8 +11,8 @@
 module Ramon::Documentos::Relogio
   CONFIG = Ramon::Documentos::Cobranca::CONFIG
   RITMO = CONFIG.fetch('ritmo').freeze
-  # As marcas do silêncio e a do documento: a contagem do "sem documento novo" parte da mais recente.
-  REFERENCIAS = %w[abertura_em lembrete_1_em lembrete_2_em silencio_em ultimo_documento_em].freeze
+  # As marcas do silêncio, a do documento e a da devolução à IA: a contagem do "sem documento novo" parte da mais recente.
+  REFERENCIAS = %w[abertura_em lembrete_1_em lembrete_2_em silencio_em ultimo_documento_em devolvido_em].freeze
 
   module_function
 
@@ -34,7 +34,10 @@ module Ramon::Documentos::Relogio
   def sem_resposta(est, horario)
     return { passo: :abertura, em: Ramon::Fluxos::Horario.proximo(est['entrou_em'], horario) } unless est['abertura_em']
     return if est['silencio_em']
-    return { passo: :lembrete_1, em: somar(est['abertura_em'], RITMO['lembrete_1_horas'], horario) } unless est['lembrete_1_em']
+    unless est['lembrete_1_em']
+      # Devolvida à IA por uma pessoa: o ciclo recomeça da devolução (spec §7, "até uma pessoa agir").
+      return { passo: :lembrete_1, em: somar(est.values_at('abertura_em', 'devolvido_em').compact.max, RITMO['lembrete_1_horas'], horario) }
+    end
     return { passo: :lembrete_2, em: manha_seguinte(est['lembrete_1_em'], horario) } unless est['lembrete_2_em']
 
     { passo: :silencio, em: somar(est['lembrete_2_em'], RITMO['silencio_horas'], horario) }

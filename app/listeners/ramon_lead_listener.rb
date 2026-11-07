@@ -91,6 +91,7 @@ class RamonLeadListener < BaseListener
     changes = event.data[:changed_attributes]
     return if changes.blank?
 
+    Ramon::Documentos::Cobranca.devolvida(conversation, changes)
     label_change = changes['label_list'] || changes[:label_list]
     return if label_change.blank?
 

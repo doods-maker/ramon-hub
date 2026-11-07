@@ -9,6 +9,8 @@ module Ramon::Documentos::Cobranca
   MARCAR = "custom_attributes = jsonb_set(custom_attributes, '{#{CHAVE}}', (COALESCE(custom_attributes -> '#{CHAVE}', '{}'::jsonb) " \
            '- ARRAY(SELECT jsonb_array_elements_text(?::jsonb))) || ?::jsonb)'.freeze
   LIGAR = "custom_attributes = jsonb_set(custom_attributes, '{#{CHAVE}}', ?::jsonb)".freeze
+  # O que a devolução à IA zera: o ciclo de lembretes e os gatilhos (a abertura é uma por entrada).
+  RECOMECO = %w[lembrete_1_em lembrete_2_em silencio_em acompanhamento_em travado_em].freeze
 
   module_function
 
@@ -20,6 +22,20 @@ module Ramon::Documentos::Cobranca
   # Entrada em Documentos: o relógio do zero.
   def ligar(lead)
     Lead.unscoped.where(id: lead.id).update_all([LIGAR, { 'entrou_em' => Time.current.iso8601 }.to_json]) # rubocop:disable Rails/SkipsModelValidations
+  end
+
+  # Uma pessoa devolveu a conversa à IA ("Devolver à IA": a conversa sai de aberta para pendente, ou perde a Pausa já
+  # pendente; RamonLeadListener#conversation_updated): o ciclo recomeça da devolução — dois lembretes "até uma pessoa agir".
+  def devolvida(conversa, mudancas)
+    return unless conversa.pending? && devolucao?(mudancas.to_h.stringify_keys)
+
+    lead = conversa.account.leads.find_by(conversation_id: conversa.id)
+    marcar(lead, { 'devolvido_em' => Time.current.iso8601 }, remover: RECOMECO) if lead && em_documentos?(lead) && lead.custom_attributes.key?(CHAVE)
+  end
+
+  def devolucao?(mudancas)
+    pausa = Array(mudancas['custom_attributes']).map { |attrs| attrs.to_h[Ramon::PerfilIa::PAUSA] }
+    Array(mudancas['status']).map(&:to_s) == %w[open pending] || (pausa.first.present? && pausa.last.blank?)
   end
 
   # before_save do lead (LeadDocs). Em Documentos, a sub-chave que vale é a do banco, lida com FOR UPDATE: o UPDATE de marcar
