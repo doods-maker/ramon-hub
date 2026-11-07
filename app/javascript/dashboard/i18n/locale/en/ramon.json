@@ -2640,7 +2640,10 @@
       "RELATORIOS": "Reports",
       "EXTRATO": "Variable pay statement",
       "PAINEL_TIME": "Team dashboard",
-      "REGISTRO_ACOES": "Action log"
+      "REGISTRO_ACOES": "Action log",
+      "MARKETING": "Marketing",
+      "TRAFEGO": "Traffic",
+      "CUSTOS_METAS": "Costs and targets"
     },
     "RAIL": {
       "INTERNOS": "Internal",
@@ -2687,6 +2690,69 @@
       "VS_DIAS": "vs {de}–{ate}",
       "VS_DIA": "vs {dia}",
       "VS_ATE": "vs {dia} until {hora}h"
+    },
+    "MARKETING": {
+      "ERRO": "Could not load.",
+      "TENTAR": "Retry",
+      "TRAFEGO": {
+        "TITLE": "Traffic",
+        "SUBTITLE": "Spend × hub funnel: Meta × hub, cost per stage, return and targets",
+        "NOT_CONFIGURED": "The traffic dashboard is not configured yet. Set RAMON_METABASE_MARKETING_ID to the Metabase dashboard number."
+      },
+      "CUSTOS": {
+        "TITLE": "Costs and targets",
+        "SUBTITLE": "Log costs, upload the Ads Manager CSV and the model targets. Numbers live in the Traffic tab."
+      },
+      "STATUS": {
+        "TITLE": "Meta connection",
+        "GASTO": "Automatic spend",
+        "CONTA_ANUNCIOS": "Ad account",
+        "PAINEL_TRAFEGO": "Traffic dashboard",
+        "INSIGHTS_IG": "Post performance",
+        "CAPI": "Conversion events",
+        "LIGADO": "On",
+        "NAO_LIGADO": "Off",
+        "CONFIGURADO": "Configured",
+        "NAO_CONFIGURADO": "Missing",
+        "SEM_GASTO": "No spend recorded yet.",
+        "ULTIMO_GASTO": "Last spend recorded: {data}, via {origem}.",
+        "NOTA": "Meta is turned on only after Tech Provider approval."
+      },
+      "GASTO": {
+        "TITLE": "Ads Manager spend (CSV)",
+        "COMO": "Export at ad level, broken down by Day, with the ID columns (campaign, ad set and ad). Uploading again updates the same days.",
+        "OK": "{linhas} spend rows saved."
+      },
+      "METAS": {
+        "TITLE": "Model targets",
+        "COMO": "Run exportar-painel.mjs from the sales model and upload mensal.json. Replaces all targets.",
+        "PERIODO": "Targets from {de} to {ate}.",
+        "VAZIO": "No targets loaded.",
+        "OK": "Targets for {meses} months loaded."
+      },
+      "CUSTO": {
+        "TITLE": "Logged costs",
+        "DATA": "Date",
+        "VALOR": "Amount",
+        "CATEGORIA": "Category",
+        "TESE": "Thesis",
+        "OBSERVACAO": "Note",
+        "ESCOLHA": "Choose",
+        "GERAL": "General (split)",
+        "LANCAR": "Log",
+        "INCOMPLETO": "Fill in date, amount and category.",
+        "VAZIO": "No costs logged.",
+        "REMOVER": "Remove cost",
+        "CONFIRMAR_REMOVER": "Remove this cost?"
+      },
+      "CATEGORIAS": {
+        "IMPULSIONAMENTO": "Boost",
+        "CRIATIVO": "Creative",
+        "FERRAMENTA": "Tool",
+        "AGENCIA": "Agency",
+        "EQUIPE": "Team",
+        "OUTRO": "Other"
+      }
     }
   },
   "CAPTAIN_RAMON": {

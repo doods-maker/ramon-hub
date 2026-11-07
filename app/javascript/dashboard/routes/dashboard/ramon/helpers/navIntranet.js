@@ -64,10 +64,15 @@ const SECOES = [
     label: 'RAMON.NAV.GESTAO',
     grupos: [
       {
-        key: 'conteudo',
-        label: 'RAMON.NAV.CONTEUDO',
-        icon: 'i-lucide-instagram',
-        abas: [aba('ramon_conteudo', 'CONTEUDO', { adminOnly: true })],
+        // Área Marketing (spec 2026-11-07): conteúdo + tráfego (Metabase) + custos e metas.
+        key: 'marketing',
+        label: 'RAMON.NAV.MARKETING',
+        icon: 'i-lucide-megaphone',
+        abas: [
+          aba('ramon_conteudo', 'CONTEUDO', { adminOnly: true }),
+          aba('ramon_marketing_trafego', 'TRAFEGO', { adminOnly: true }),
+          aba('ramon_marketing_custos', 'CUSTOS_METAS', { adminOnly: true }),
+        ],
       },
       {
         key: 'resultados',

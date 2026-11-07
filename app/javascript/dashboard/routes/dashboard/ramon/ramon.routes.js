@@ -121,6 +121,20 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    // Aba Tráfego: o mesmo embed dos Relatórios, apontando para o dashboard de marketing.
+    path: frontendURL('accounts/:accountId/ramon/marketing/trafego'),
+    name: 'ramon_marketing_trafego',
+    component: () => import('./pages/Relatorios.vue'),
+    props: { painel: 'marketing', textos: 'RAMON.MARKETING.TRAFEGO' },
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
+  {
+    path: frontendURL('accounts/:accountId/ramon/marketing/custos'),
+    name: 'ramon_marketing_custos',
+    component: () => import('./pages/MarketingCustos.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/portal'),
     name: 'ramon_portal_clientes',
     component: () => import('./pages/PortalClientes.vue'),

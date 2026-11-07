@@ -389,6 +389,12 @@ Rails.application.routes.draw do
             resources :execucoes, only: [:index, :show], controller: 'ramon_fluxo_execucoes'
           end
           resource :ramon_relatorios, only: [:show], controller: 'ramon_relatorios'
+          resource :ramon_marketing, only: [:show], controller: 'ramon_marketing' do
+            post :custos, action: :criar_custo
+            delete 'custos/:custo_id', action: :remover_custo
+            post :importar_gasto
+            post :importar_metas
+          end
           resource :ramon_extrato, only: [:show], controller: 'ramon_extrato' do
             put :meta
           end

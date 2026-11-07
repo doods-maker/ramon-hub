@@ -2640,7 +2640,10 @@
       "RELATORIOS": "Relatórios",
       "EXTRATO": "Extrato da variável",
       "PAINEL_TIME": "Painel do time",
-      "REGISTRO_ACOES": "Registro de ações"
+      "REGISTRO_ACOES": "Registro de ações",
+      "MARKETING": "Marketing",
+      "TRAFEGO": "Tráfego",
+      "CUSTOS_METAS": "Custos e metas"
     },
     "RAIL": {
       "INTERNOS": "Internos",
@@ -2687,6 +2690,69 @@
       "VS_DIAS": "vs {de}–{ate}",
       "VS_DIA": "vs {dia}",
       "VS_ATE": "vs {dia} até {hora}h"
+    },
+    "MARKETING": {
+      "ERRO": "Não foi possível carregar.",
+      "TENTAR": "Tentar de novo",
+      "TRAFEGO": {
+        "TITLE": "Tráfego",
+        "SUBTITLE": "Gasto × funil do hub: Meta × hub, custo por etapa, retorno e metas",
+        "NOT_CONFIGURED": "O painel de tráfego ainda não está configurado. Defina RAMON_METABASE_MARKETING_ID com o número do dashboard no Metabase."
+      },
+      "CUSTOS": {
+        "TITLE": "Custos e metas",
+        "SUBTITLE": "Lance os custos, suba o CSV do Gerenciador e as metas do modelo. Os números ficam na aba Tráfego."
+      },
+      "STATUS": {
+        "TITLE": "Conexão com a Meta",
+        "GASTO": "Gasto automático",
+        "CONTA_ANUNCIOS": "Conta de anúncios",
+        "PAINEL_TRAFEGO": "Painel de tráfego",
+        "INSIGHTS_IG": "Desempenho das peças",
+        "CAPI": "Avisos de conversão",
+        "LIGADO": "Ligado",
+        "NAO_LIGADO": "Desligado",
+        "CONFIGURADO": "Configurado",
+        "NAO_CONFIGURADO": "Falta",
+        "SEM_GASTO": "Nenhum gasto gravado ainda.",
+        "ULTIMO_GASTO": "Último gasto gravado: {data}, via {origem}.",
+        "NOTA": "A Meta liga só com o Tech Provider aprovado."
+      },
+      "GASTO": {
+        "TITLE": "Gasto do Gerenciador (CSV)",
+        "COMO": "Exporte no nível anúncio, com detalhamento por Dia e as colunas de identificação (campanha, conjunto e anúncio). Subir de novo atualiza os mesmos dias.",
+        "OK": "{linhas} linhas de gasto gravadas."
+      },
+      "METAS": {
+        "TITLE": "Metas do modelo",
+        "COMO": "Rode o exportar-painel.mjs da operação comercial e suba o mensal.json. Substitui todas as metas.",
+        "PERIODO": "Metas de {de} a {ate}.",
+        "VAZIO": "Nenhuma meta carregada.",
+        "OK": "Metas de {meses} meses carregadas."
+      },
+      "CUSTO": {
+        "TITLE": "Custos lançados",
+        "DATA": "Data",
+        "VALOR": "Valor",
+        "CATEGORIA": "Categoria",
+        "TESE": "Tese",
+        "OBSERVACAO": "Observação",
+        "ESCOLHA": "Escolha",
+        "GERAL": "Geral (rateado)",
+        "LANCAR": "Lançar",
+        "INCOMPLETO": "Preencha data, valor e categoria.",
+        "VAZIO": "Nenhum custo lançado.",
+        "REMOVER": "Remover custo",
+        "CONFIRMAR_REMOVER": "Remover este custo?"
+      },
+      "CATEGORIAS": {
+        "IMPULSIONAMENTO": "Impulsionamento",
+        "CRIATIVO": "Criativo",
+        "FERRAMENTA": "Ferramenta",
+        "AGENCIA": "Agência",
+        "EQUIPE": "Equipe",
+        "OUTRO": "Outro"
+      }
     }
   },
   "CAPTAIN_RAMON": {

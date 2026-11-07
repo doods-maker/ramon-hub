@@ -50,4 +50,12 @@ RSpec.describe 'Ramon Relatorios API', type: :request do
     expect(body['url']).to end_with('#theme=night&bordered=false&titled=false')
     expect(Time.zone.parse(body['expires_at'])).to be_within(1.minute).of(8.hours.from_now)
   end
+
+  it 'painel=marketing usa o dashboard da área Marketing' do
+    with_modified_env(envs.merge('RAMON_METABASE_MARKETING_ID' => '9')) do
+      get url, params: { painel: 'marketing' }, headers: admin.create_new_auth_token
+    end
+    token = response.parsed_body['url'][%r{/embed/dashboard/([^#]+)}, 1]
+    expect(JWT.decode(token, 'a' * 64, true, algorithm: 'HS256').first.dig('resource', 'dashboard')).to eq(9)
+  end
 end
