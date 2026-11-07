@@ -34,6 +34,24 @@ RSpec.describe Ramon::MetaGastoCsv do
     expect(MetaGasto.find_by!(ad_id: '222').spend).to eq(BigDecimal('12.00'))
   end
 
+  it 'não sobrescreve o anúncio+dia que já veio da API' do
+    MetaGasto.gravar(account, [{ ad_id: '111', data: Date.new(2026, 10, 14), spend: 99, conversas: 40 }], origem: 'api')
+    expect(described_class.importar(account, csv_pt)).to eq(1)
+    expect(MetaGasto.find_by!(ad_id: '111')).to have_attributes(spend: 99, conversas: 40, origem: 'api')
+  end
+
+  it 'prefere Cliques (todos), o mesmo número da API, a Cliques no link' do
+    csv = "Identificação do anúncio,Dia,Valor usado (BRL),Cliques no link,Cliques (todos)\n444,2026-10-14,1,5,9\n"
+    described_class.importar(account, csv)
+    expect(MetaGasto.find_by!(ad_id: '444').clicks).to eq(9)
+  end
+
+  it 'soma as linhas repetidas do mesmo anúncio+dia (detalhamento por posicionamento)' do
+    csv = "Ad ID;Day;Amount spent (BRL);Impressions\n555;2026-10-14;1.500;10\n555;2026-10-14;2,50;5\n"
+    expect(described_class.importar(account, csv)).to eq(1)
+    expect(MetaGasto.find_by!(ad_id: '555')).to have_attributes(spend: BigDecimal('1502.50'), impressions: 15)
+  end
+
   it 'sem a coluna Dia ou ID do anúncio explica como exportar' do
     expect { described_class.importar(account, "Nome do anúncio,Valor usado (BRL)\nA,10\n") }
       .to raise_error(described_class::Erro, /Faltam colunas: dia, identificacao do anuncio.*detalhamento por Dia/)

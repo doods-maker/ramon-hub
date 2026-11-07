@@ -27,6 +27,9 @@ RSpec.describe Ramon::MetasDoModelo do
     described_class.importar(account, mensal)
     expect { described_class.importar(account, '{"x":1}') }.to raise_error(described_class::Erro)
     expect { described_class.importar(account, [{ mes: 'Xyz/26', contratos: 1 }].to_json) }.to raise_error(described_class::Erro, /mês inválido/)
+    expect { described_class.importar(account, [{ mes: 'Nov/26', contratos: 1 }, { mes: 'Nov/26', contratos: 2 }].to_json) }
+      .to raise_error(described_class::Erro, /repetido/)
+    expect { described_class.importar(account, [{ mes: 'Nov/26', contratos: 'x' }].to_json) }.to raise_error(described_class::Erro, /não é número/)
     expect(MarketingMeta.where(account: account).count).to eq(12)
   end
 end

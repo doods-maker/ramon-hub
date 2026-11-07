@@ -25,6 +25,14 @@ RSpec.describe Ramon::PecaMetricasJob do
     expect(antiga.reload.metricas_em).to be_nil
   end
 
+  it 'timeout numa peça não impede as outras' do
+    outra = create(:peca, status: 'publicado', ig_media_id: 'm3', agendado_para: 2.days.ago)
+    stub_request(:get, url).to_timeout
+    stub_request(:get, %r{/m3/insights}).to_return(body: { data: [{ name: 'reach', values: [{ value: 7 }] }] }.to_json)
+    with_modified_env(RAMON_IG_INSIGHTS: 'on') { described_class.perform_now }
+    expect(outra.reload.alcance).to eq(7)
+  end
+
   it 'erro da Meta numa peça não derruba o job' do
     stub_request(:get, url).to_return(status: 400, body: { error: { message: 'sem permissão' } }.to_json)
     expect { with_modified_env(RAMON_IG_INSIGHTS: 'on') { described_class.perform_now } }.not_to raise_error

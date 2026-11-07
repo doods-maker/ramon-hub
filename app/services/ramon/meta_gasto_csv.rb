@@ -17,7 +17,7 @@ class Ramon::MetaGastoCsv
     objetivo: %w[objetivo objective],
     spend: ['valor usado', 'amount spent'],
     impressions: %w[impressoes impressions],
-    clicks: ['cliques no link', 'link clicks', 'cliques (todos)', 'clicks (all)'],
+    clicks: ['cliques (todos)', 'clicks (all)', 'cliques no link', 'link clicks'], # 1º = o mesmo `clicks` da API
     resultados: %w[resultados results],
     indicador: ['indicador de resultados', 'result indicator']
   }.freeze
@@ -34,7 +34,7 @@ class Ramon::MetaGastoCsv
   def linhas
     tabela = CSV.parse(@texto, headers: true, col_sep: separador)
     indice = indice_das_colunas(tabela.headers)
-    tabela.filter_map { |row| linha(row, indice) }
+    somar_repetidas(tabela.filter_map { |row| linha(row, indice) })
   rescue CSV::MalformedCSVError => e
     raise Erro, "CSV ilegível: #{e.message}"
   end
@@ -48,8 +48,9 @@ class Ramon::MetaGastoCsv
 
   def indice_das_colunas(headers)
     normalizados = headers.map { |h| normalizar(h) }
+    # Nomes em ordem de preferência: o primeiro que existir no CSV vence.
     indice = COLUNAS.transform_values do |nomes|
-      normalizados.index { |h| nomes.any? { |n| h == n || h.start_with?("#{n} (") } }
+      nomes.lazy.filter_map { |n| normalizados.index { |h| h == n || h.start_with?("#{n} (") } }.first
     end
     exigir_obrigatorias(indice)
     indice
@@ -76,6 +77,15 @@ class Ramon::MetaGastoCsv
                 clicks: inteiro(v.call(:clicks)), **resultados(inteiro(v.call(:resultados)), v.call(:indicador).to_s))
   end
 
+  # Export com detalhamento extra (posicionamento, idade...) repete anúncio+dia: soma, senão o upsert recusa.
+  SOMAVEIS = %i[spend impressions clicks conversas leads_meta].freeze
+
+  def somar_repetidas(linhas)
+    linhas.group_by { |l| l.values_at(:ad_id, :data) }.values.map do |grupo|
+      grupo.first.merge(SOMAVEIS.index_with { |k| grupo.sum { |l| l[k] } })
+    end
+  end
+
   # "Resultados" do Gerenciador só valem quando o indicador diz o que foi contado.
   def resultados(qtd, indicador)
     { conversas: indicador.include?('messaging_conversation_started') ? qtd : 0,
@@ -90,10 +100,12 @@ class Ramon::MetaGastoCsv
     raise Erro, "data inválida: #{texto}"
   end
 
-  # 1.234,56 · 1,234.56 · 1234,56 · 1234.56 → BigDecimal. O último separador é o decimal.
+  # 1.234,56 · 1,234.56 · 1234,56 · 1234.56 → BigDecimal. O último separador é o decimal,
+  # menos "1.500" (só pontos em grupos de 3): milhar do pt-BR — valor em inglês sempre vem com 2 casas.
   def dinheiro(texto)
     limpo = texto.to_s.gsub(/[^\d,.-]/, '')
     return BigDecimal(0) if limpo.blank?
+    return BigDecimal(limpo.delete('.')) if limpo.match?(/\A-?\d{1,3}(\.\d{3})+\z/)
 
     decimal = limpo.rindex(',').to_i > limpo.rindex('.').to_i ? ',' : '.'
     milhar = decimal == ',' ? '.' : ','

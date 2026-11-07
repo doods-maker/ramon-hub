@@ -15,6 +15,7 @@ class Ramon::MetasDoModelo
 
     registros = registros(account, linhas)
     raise Erro, 'nenhuma meta no arquivo' if registros.empty?
+    raise Erro, 'mês repetido no arquivo' if linhas.pluck('mes').uniq.size < linhas.size
 
     MarketingMeta.transaction do
       MarketingMeta.where(account_id: account.id).delete_all
@@ -30,7 +31,10 @@ class Ramon::MetasDoModelo
     linhas.flat_map do |l|
       mes = mes(l['mes'])
       METRICAS.filter_map do |chave, metrica|
-        { account_id: account.id, mes: mes, metrica: metrica, valor: l[chave], created_at: agora, updated_at: agora } unless l[chave].nil?
+        next if l[chave].nil?
+        raise Erro, "#{chave} de #{l['mes']} não é número" unless l[chave].is_a?(Numeric)
+
+        { account_id: account.id, mes: mes, metrica: metrica, valor: l[chave], created_at: agora, updated_at: agora }
       end
     end
   end

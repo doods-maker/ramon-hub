@@ -11,8 +11,8 @@ class Ramon::PecaMetricasJob < ApplicationJob
     Peca.where(status: 'publicado').where.not(ig_media_id: nil).where(agendado_para: JANELA.ago..).find_each do |peca|
       metricas = Ramon::InstagramPublisher.new(peca).metricas(peca.ig_media_id)
       peca.update_columns(metricas.merge(metricas_em: Time.current)) # rubocop:disable Rails/SkipsModelValidations
-    rescue Ramon::InstagramPublisher::Erro => e
-      Rails.logger.warn("PecaMetricasJob: peça #{peca.id}: #{e.message}")
+    rescue StandardError => e # Meta recusou, rede, timeout: loga e segue para a próxima peça
+      Rails.logger.warn("PecaMetricasJob: peça #{peca.id}: #{e.class.name} #{e.message}")
     end
   end
 end

@@ -366,3 +366,11 @@ Toda leitura de `inbox.captain_assistant` no atendimento passa por `Captain::Ass
 | `enterprise/app/jobs/captain/inbox_pending_conversations_resolution_job.rb` | `assistente(conversation)` por conversa (executed_by, remetente, textos de resolução/handoff) | idem | etapa-documentos PR 2 |
 | `enterprise/app/listeners/captain_listener.rb` · `enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb` (`inbox_assistant`) · `enterprise/lib/enterprise/captain/reply_suggestion_service.rb` | 1 linha cada | idem | etapa-documentos PR 2 |
 | `enterprise/app/models/enterprise/concerns/lead_stage.rb` (novo) + `LeadStage.include_mod_with` | `belongs_to :captain_assistant` (optional, sem FK) | etapa → assistente | etapa-documentos PR 2 |
+
+## Área Marketing — tráfego, custos e metas (07/11/2026)
+
+Spec: `docs/superpowers/specs/2026-11-07-marketing-trafego-design.md`.
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `config/schedule.yml` | `ramon_peca_metricas_job` (6h30 BRT, `scheduled_jobs`; desligado por `RAMON_IG_INSIGHTS`) | desempenho das peças publicadas | marketing PR 1 |
