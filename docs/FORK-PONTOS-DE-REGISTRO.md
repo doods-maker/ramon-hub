@@ -405,3 +405,4 @@ ritmo, horário, textos aprovados e modelo em `config/ramon/documentos_cobranca.
 | `config/schedule.yml` | `ramon_documentos_cobranca_job` (*/15, `scheduled_jobs`) | abertura, lembretes, acompanhamento, silêncio e travado | etapa-documentos PR 5 |
 | `app/models/concerns/lead_docs.rb` | +`before_save` → `Ramon::Documentos::Cobranca.antes_de_salvar` (relê `documentos_cobranca` do banco com FOR UPDATE; soma o documento novo) | save comum (DocMatch) não apaga marca; documento novo (conversa, Painel, pessoa) alimenta o relógio | etapa-documentos PR 5 |
 | `lib/ramon/llm_uso.rb` | +`registrar_whatsapp` (função `whatsapp_documentos`, custo fixo por mensagem) | custo da Meta em Uso e custo | etapa-documentos PR 5 |
+| `config/routes.rb` | `metas_ativas`, `metas/:meta_id`, `metas` (liga/desliga, edita, apaga) em `resource :ramon_marketing` | metas sob controle do Eduardo | marketing metas 07/11 |

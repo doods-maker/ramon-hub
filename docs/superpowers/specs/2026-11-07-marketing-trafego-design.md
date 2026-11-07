@@ -18,7 +18,8 @@ Tech Provider**.
 | Rateio | Custo sem tese é rateado entre as teses pela proporção de leads do mês. |
 | Atribuição | Último clique (já é assim). LP: parâmetros de URL dinâmicos na Meta, `utm_source=meta&utm_campaign={{campaign.id}}&utm_content={{ad.id}}`; `bi_leads` lê `utm_content` como ad_id só se `utm_source='meta'` e numérico. Sem fbclid. |
 | Peças | Alcance, salvamentos, compartilhamentos, curtidas e comentários por peça publicada; puxador desligado. |
-| Metas | Fonte única = `modelo.mjs`. O `mensal.json` do `exportar-painel.mjs` é subido na aba e **substitui todas** as metas. Métricas: contratos, agendadas, realizadas, anúncio, custo da área, CAC. Mensal, total, sem tese. |
+| Metas | Base = `modelo.mjs`, no controle interno; sobe ao hub **só depois de confirmada**. O `mensal.json` do `exportar-painel.mjs` **substitui todas** as metas. Métricas: contratos, agendadas, realizadas, anúncio, custo da área, CAC. Mensal, total, sem tese. |
+| Controle das metas (07/11, 2º grill) | Interruptor **"Usar metas"** (desligadas não entram no Metabase; nascem desligadas, inclusive as já subidas), **tabela editável** mês × métrica com marca "editada à mão", **aviso (409) antes de um arquivo novo desfazer edições** e "Apagar metas". |
 | Ligar | `RAMON_META_GASTO` e `RAMON_IG_INSIGHTS` ficam `off` até o Tech Provider. |
 
 ## Dados (PR 1)
