@@ -54,6 +54,38 @@ RSpec.describe 'Lead Stages API', type: :request do
       expect(response).to have_http_status(:success)
       expect(response.parsed_body['nome_cliente']).to eq('Proposta em análise')
     end
+
+    describe 'assistente desta etapa' do
+      let(:stage) { account.lead_stages.create!(name: 'Documentos', label: 'fase-documentos', is_won: true, position: 0) }
+
+      def ligar(assistente_id)
+        patch "/api/v1/accounts/#{account.id}/lead_stages/#{stage.id}",
+              params: { captain_assistant_id: assistente_id }, headers: admin.create_new_auth_token, as: :json
+      end
+
+      it 'recusa assistente que não é desta conta (sem o Captain, qualquer um) e aceita voltar ao da caixa', :aggregate_failures do
+        ligar(999_999)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(stage.reload.captain_assistant_id).to be_nil
+
+        ligar(nil)
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body).to include('captain_assistant_id' => nil)
+      end
+
+      it 'grava o assistente da conta e o devolve no show e na configuração do funil', :aggregate_failures, if: ChatwootApp.enterprise? do
+        assistente = create(:captain_assistant, account: account)
+        outra = create(:captain_assistant)
+
+        ligar(outra.id)
+        expect(response).to have_http_status(:unprocessable_entity)
+
+        ligar(assistente.id)
+        expect(response.parsed_body['captain_assistant_id']).to eq(assistente.id)
+        get "/api/v1/accounts/#{account.id}/lead_config", headers: admin.create_new_auth_token, as: :json
+        expect(response.parsed_body['stages'].find { |s| s['id'] == stage.id }).to include('captain_assistant_id' => assistente.id)
+      end
+    end
   end
 
   describe 'DELETE destroy' do

@@ -1,8 +1,23 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
+import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import FunilConfig from '../FunilConfig.vue';
 
-const buildStore = ({ updateStage = vi.fn() } = {}) =>
+vi.mock('dashboard/api/captain/assistant', () => ({
+  default: { get: vi.fn(() => Promise.reject(new Error('sem Captain'))) },
+}));
+
+const STAGES = [
+  { id: 1, name: 'Novo', stalled_after_days: 3, probability: 20 },
+  {
+    id: 2,
+    name: 'Qualificação',
+    stalled_after_days: null,
+    probability: null,
+  },
+];
+
+const buildStore = ({ updateStage = vi.fn(), stages = STAGES } = {}) =>
   createStore({
     modules: {
       leadConfig: {
@@ -11,15 +26,7 @@ const buildStore = ({ updateStage = vi.fn() } = {}) =>
           getPriorities: () => [
             { id: 1, name: 'Alta', weight: 3, position: 0 },
           ],
-          getStages: () => [
-            { id: 1, name: 'Novo', stalled_after_days: 3, probability: 20 },
-            {
-              id: 2,
-              name: 'Qualificação',
-              stalled_after_days: null,
-              probability: null,
-            },
-          ],
+          getStages: () => stages,
         },
         actions: {
           updateStage,
@@ -28,8 +35,8 @@ const buildStore = ({ updateStage = vi.fn() } = {}) =>
     },
   });
 
-const mountPage = ({ updateStage } = {}) => {
-  const store = buildStore({ updateStage });
+const mountPage = ({ updateStage, stages } = {}) => {
+  const store = buildStore({ updateStage, stages });
   return mount(FunilConfig, {
     global: {
       plugins: [store],
@@ -145,4 +152,41 @@ it('clears probability when the input is emptied', async () => {
     id: 1,
     probability: null,
   });
+});
+
+it('etapa de ganho escolhe o assistente da etapa (vazio = o da caixa)', async () => {
+  CaptainAssistantAPI.get.mockResolvedValueOnce({
+    data: { payload: [{ id: 5, name: 'Documentos' }] },
+  });
+  const updateStage = vi.fn();
+  const wrapper = mountPage({
+    updateStage,
+    stages: [
+      ...STAGES,
+      { id: 3, name: 'Documentos', is_won: true, captain_assistant_id: null },
+      { id: 4, name: 'Jurídico', is_won: true, captain_assistant_id: 5 },
+    ],
+  });
+  await flushPromises();
+  const selects = wrapper.findAll('[data-testid="stage-assistente"]');
+  expect(selects).toHaveLength(2);
+
+  await selects[0].setValue('5');
+  expect(updateStage).toHaveBeenLastCalledWith(expect.anything(), {
+    id: 3,
+    captain_assistant_id: 5,
+  });
+  await selects[1].setValue('');
+  expect(updateStage).toHaveBeenLastCalledWith(expect.anything(), {
+    id: 4,
+    captain_assistant_id: null,
+  });
+});
+
+it('sem assistentes (sem o Captain), nada de seletor', async () => {
+  const wrapper = mountPage({
+    stages: [{ id: 3, name: 'Documentos', is_won: true }],
+  });
+  await flushPromises();
+  expect(wrapper.find('[data-testid="stage-assistente"]').exists()).toBe(false);
 });
