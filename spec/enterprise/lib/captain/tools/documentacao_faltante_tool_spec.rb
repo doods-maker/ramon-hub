@@ -30,6 +30,16 @@ RSpec.describe Captain::Tools::DocumentacaoFaltanteTool, type: :model do
       expect(JSON.parse(tool.perform(tool_context, lead_id: lead.id.to_s))['documentos_pendentes']).to be_empty
     end
 
+    it 'avisa o agente que o CNIS recebido é o resumido, enquanto o CNIS seguir pendente' do
+      create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS')
+      lead = create(:lead, account: account, thesis: thesis,
+                           custom_attributes: { 'doc_alertas' => { 'cnis_resumido' => Time.zone.now.iso8601 } })
+
+      resultado = JSON.parse(tool.perform(tool_context, lead_id: lead.id.to_s))
+
+      expect(resultado['alertas']).to contain_exactly(a_string_including('resumido', 'remunerações'))
+    end
+
     it 'pede o caso quando nao consegue resolver' do
       expect(tool.perform(tool_context)).to eq(described_class::SEM_LEAD)
     end
