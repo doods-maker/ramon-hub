@@ -202,6 +202,25 @@ RSpec.describe Ramon::AdvboxClosingService do
     end
   end
 
+  # Review do PR 6, item 7: a ANÁLISE DO CASO que falha não vira erro de abertura do caso (advbox.erro).
+  it 'falha ao retomar a ANÁLISE DO CASO não é gravada como erro do caso; fica no histórico', :aggregate_failures do
+    lead.update!(custom_attributes: { 'advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 } })
+    allow(Ramon::Documentos::Passagem).to receive(:retomar).and_raise(ActiveRecord::StatementInvalid, 'deu ruim')
+
+    expect { described_class.new(lead).perform }.not_to raise_error
+
+    expect(lead.reload.custom_attributes['advbox']).not_to have_key('erro')
+    expect(lead.lead_activities.where(kind: 'documentos').pluck(:to_value)).to include(a_string_including('ANÁLISE DO CASO'))
+  end
+
+  it 'ADVBOX fora do ar ao retomar a ANÁLISE DO CASO: sobe para o retry do job, sem erro gravado' do
+    lead.update!(custom_attributes: { 'advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 } })
+    allow(Ramon::Documentos::Passagem).to receive(:retomar).and_raise(Ramon::AdvboxClient::UnavailableError)
+
+    expect { described_class.new(lead).perform }.to raise_error(Ramon::AdvboxClient::UnavailableError)
+    expect(lead.reload.custom_attributes['advbox']).not_to have_key('erro')
+  end
+
   # Review do PR 6, item 1: a ANÁLISE DO CASO gravada (jsonb_set) entre o reload e o update! do merge_advbox sobrevive.
   it 'a marca da ANÁLISE DO CASO gravada no meio do merge_advbox sobrevive' do
     stub_create('customers', 'customers_id', 111)

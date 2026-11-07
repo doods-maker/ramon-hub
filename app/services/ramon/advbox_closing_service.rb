@@ -34,9 +34,7 @@ class Ramon::AdvboxClosingService
     return if @lead.won_at.blank?
 
     sincronizar unless synced?
-    # Etapa Documentos: o lead passou ao Jurídico antes de o caso existir aqui → a ANÁLISE DO CASO que ficou para trás. Fora do
-    # "unless": o retry do job (ADVBOX fora do ar) já encontra o caso sincronizado.
-    Ramon::Documentos::Passagem.retomar(@lead)
+    retomar_analise
   rescue Ramon::AdvboxClient::UnavailableError
     raise # retry no job (rede/5xx)
   rescue StandardError => e
@@ -44,6 +42,18 @@ class Ramon::AdvboxClosingService
   end
 
   private
+
+  # Etapa Documentos: o lead passou ao Jurídico antes de o caso existir aqui → a ANÁLISE DO CASO que ficou para trás. Fora do
+  # "unless synced?": o retry do job (ADVBOX fora do ar) já encontra o caso sincronizado. Falha dela não é erro de abrir o caso
+  # (advbox.erro): vai ao histórico do lead.
+  def retomar_analise
+    Ramon::Documentos::Passagem.retomar(@lead)
+  rescue Ramon::AdvboxClient::UnavailableError
+    raise
+  rescue StandardError => e
+    Rails.logger.error("AdvboxClosing: ANÁLISE DO CASO do lead #{@lead.id} falhou: #{e.class}: #{e.message}")
+    Ramon::Documentos::Entrada.registrar(@lead, "Jurídico: a tarefa ANÁLISE DO CASO não foi criada no ADVBOX (#{e.class}): criar à mão")
+  end
 
   def sincronizar
     customer_id = step('customers_id') { find_or_create_customer }
