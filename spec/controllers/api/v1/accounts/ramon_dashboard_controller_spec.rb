@@ -269,6 +269,20 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(response.parsed_body['tv']).to be_nil
   end
 
+  it 'tv: ganho do mês com o mês passado até o mesmo dia e hora' do
+    travel_to Time.utc(2026, 11, 18, 17, 0, 0) do # 14h em São Paulo
+      won_stage = account.lead_stages.find_by(is_won: true)
+      antes_do_corte = create(:lead, account: account, lead_stage: won_stage, value: 10_000)
+      antes_do_corte.update_column(:won_at, Time.utc(2026, 10, 10, 15, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      depois_do_corte = create(:lead, account: account, lead_stage: won_stage, value: 5_000)
+      depois_do_corte.update_column(:won_at, Time.utc(2026, 10, 25, 15, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      get url, headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['tv']['month']['prev']).to eq(
+        'won_value' => 10_000.0, 'won_count' => 1, 'inicio' => '2026-10-01T00:00:00-03:00', 'fim' => '2026-10-18T14:00:00-03:00'
+      )
+    end
+  end
+
   describe 'seção tv (Placar de TV)' do
     let(:won_stage) { account.lead_stages.find_by(is_won: true) }
     let(:thesis) { account.theses.first || create(:thesis, account: account) }

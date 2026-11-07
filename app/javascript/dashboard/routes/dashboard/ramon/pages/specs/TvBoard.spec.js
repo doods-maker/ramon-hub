@@ -42,6 +42,12 @@ const payload = () => ({
       goal: 400000,
       business_days_left: 6,
       today: { won_count: 2, new_count: 9, avg_first_response_minutes: 18.4 },
+      prev: {
+        won_value: 240000,
+        won_count: 6,
+        inicio: '2026-10-01T00:00:00-03:00',
+        fim: '2026-10-18T14:00:00-03:00',
+      },
     },
     by_thesis: [
       {
@@ -150,6 +156,10 @@ describe('TvBoard.vue', () => {
     expect(wrapper.find('[data-testid="tv-hero-value"]').text()).toContain(
       'R$'
     );
+    // 312 mil × 240 mil no mesmo ponto do mês passado: sobe (▲ 30%)
+    const variacao = wrapper.find('[data-testid="tv-hero-variacao"]');
+    expect(variacao.attributes('data-seta')).toBe('sobe');
+    expect(variacao.text()).toContain('RAMON.VARIACAO.VS_DIAS');
     expect(wrapper.find('[data-testid="tv-goal"]').text()).toContain('78%');
     expect(wrapper.find('[data-testid="tv-today"]').text()).toContain('18min');
     expect(wrapper.findAll('[data-testid="tv-thesis-row"]')).toHaveLength(4);
