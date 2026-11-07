@@ -65,8 +65,9 @@ class Conversations::MessageWindowService
   end
 
   # ramon: upload pelo portal do cliente (ramon_origem = portal) não é mensagem do canal e não abre a janela.
+  # content_attributes é store com coder JSON numa coluna json: o valor gravado é uma string JSON (#>> '{}' desembrulha).
   def last_incoming_message
     @last_incoming_message ||= @conversation.messages.where(account_id: @conversation.account_id).incoming
-                                            .where("(content_attributes ->> 'ramon_origem') IS DISTINCT FROM 'portal'")&.last
+                                            .where("((content_attributes #>> '{}')::jsonb ->> 'ramon_origem') IS DISTINCT FROM 'portal'")&.last
   end
 end
