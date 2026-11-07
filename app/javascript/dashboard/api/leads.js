@@ -136,6 +136,10 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/portal_link`);
   }
 
+  extractColheita(leadId) {
+    return axios.post(`${this.url}/${leadId}/colheita`);
+  }
+
   followUpDraft(leadId) {
     return axios.post(`${this.url}/${leadId}/follow_up_draft`);
   }

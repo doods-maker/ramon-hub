@@ -84,6 +84,9 @@ const THESIS = {
       title: 'Tinha carteira assinada no acidente?',
     },
     { id: 24, section: 'qualificacao', title: 'Recebe algum benefício hoje?' },
+    { id: 41, section: 'colheita', title: 'Profissão na época do acidente' },
+    { id: 42, section: 'colheita', title: 'Data do acidente' },
+    { id: 43, section: 'colheita', title: 'Empresa abriu CAT?' },
     {
       id: 31,
       section: 'apresentacao',
@@ -142,6 +145,13 @@ const LEAD = {
       14: 'solicitado',
     },
     qualificacao_status: { 21: 'ok', 22: 'ok', 23: 'falta' },
+    colheita_status: { 41: 'ia', 43: true },
+    colheita: {
+      extraida_em: diasAtras(1),
+      lacunas: [
+        { campo: 'Data do acidente', como_obter: 'CAT ou boletim do hospital' },
+      ],
+    },
     ultima_simulacao: {
       mensal: 706,
       atrasados: 25416,

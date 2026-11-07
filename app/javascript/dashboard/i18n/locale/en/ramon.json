@@ -1350,6 +1350,23 @@
       "COPIED": "Portal link copied",
       "ERROR": "Could not generate the portal link — try again"
     },
+    "COLHEITA": {
+      "TITLE": "Still to ask",
+      "COUNT": "{done}/{total} collected",
+      "EXTRACT": "Extract from conversation",
+      "EXTRACT_REQUESTED": "Extraction requested — the harvest updates in a few seconds",
+      "LACUNAS_TITLE": "Meeting gaps (AI)",
+      "EXTRACTED_AT": "Extracted from the conversation at {date}",
+      "AI_BADGE": "✨ AI",
+      "AI_BADGE_TIP": "Checked by the AI from the conversation — click to undo",
+      "CHARGE": "Request gap documents",
+      "COPIED": "Draft copied — review and paste into WhatsApp",
+      "DRAFT": {
+        "GREETING": "Hi {name}, how are you? From our conversation, just a few documents are missing to complete your case:",
+        "ITEM": "• {item}",
+        "CLOSING": "Send them here whenever you can and we'll move forward. Any questions, just message me!"
+      }
+    },
     "FUNIL_AUTO": {
       "FILA_DO_DIA": "Today's queue",
       "TEMPERATURA": {
