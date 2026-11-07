@@ -35,6 +35,9 @@ class Captain::Assistant < ApplicationRecord
   has_many :messages, as: :sender, dependent: :nullify
   has_many :copilot_threads, dependent: :destroy_async
   has_many :scenarios, class_name: 'Captain::Scenario', dependent: :destroy_async
+  # ramon (Etapa Documentos): imagens do passo a passo, uma por tema (nome do arquivo = tema; Ramon::Documentos::PassoAPasso).
+  # dependent: false: a mensagem enviada ao cliente usa o mesmo blob; trocar a imagem não pode apagar a do histórico.
+  has_many_attached :passos_a_passo, dependent: false
 
   # ramon: até onde a IA vai sozinha é do Perfil da IA (Ramon::PerfilIa, por tese/caixa/padrão); não há marca no assistente.
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name

@@ -48,6 +48,7 @@ const montar = () =>
         AssistantSystemSettingsForm: true,
         AssistantControlItems: true,
         TextoFinal: true,
+        PassoAPasso: true,
         Button: {
           props: ['disabled'],
           emits: ['click'],

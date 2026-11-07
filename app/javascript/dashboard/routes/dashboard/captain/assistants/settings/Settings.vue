@@ -17,6 +17,7 @@ import AssistantSystemSettingsForm from 'dashboard/components-next/captain/pageC
 import AssistantControlItems from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantControlItems.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import TextoFinal from 'dashboard/components-next/captain/pageComponents/assistant/settings/TextoFinal.vue';
+import PassoAPasso from 'dashboard/components-next/captain/pageComponents/assistant/settings/PassoAPasso.vue';
 import {
   CAMPO,
   CARTAO_STATUS,
@@ -183,6 +184,9 @@ const handleDeleteSuccess = () => {
             />
           </div>
           <span class="h-px w-full bg-n-weak mt-2" />
+          <Policy :permissions="['administrator']">
+            <PassoAPasso :key="assistantId" :assistant-id="assistantId" />
+          </Policy>
           <Policy :permissions="['administrator']">
             <details
               data-testid="zona-de-risco"

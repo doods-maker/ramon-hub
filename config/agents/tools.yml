@@ -237,6 +237,14 @@
   nivel: rascunho
   sistema: funil
 
+# Etapa Documentos: envia sozinha (uma mensagem com a imagem do tema), só com o lead em Documentos e a chave ligada.
+- id: enviar_passo_a_passo
+  title: 'Imagem do passo a passo'
+  description: 'Manda ao cliente a imagem do passo a passo do gov.br ou do Meu INSS (uma imagem por tema)'
+  icon: 'image'
+  nivel: interna
+  sistema: conversa
+
 - id: marcar_perdido
   title: 'Marcar como perdido'
   description: 'Sugere marcar o caso como perdido com o motivo — o humano aprova no Cockpit'

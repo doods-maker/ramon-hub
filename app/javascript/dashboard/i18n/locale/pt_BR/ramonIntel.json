@@ -137,6 +137,23 @@
       "TEXTO_FINAL_ERRO": "Não foi possível carregar o texto agora.",
       "FECHAR": "Fechar"
     },
+    "PASSO_A_PASSO": {
+      "TITULO": "Imagens do passo a passo (etapa Documentos)",
+      "AJUDA": "Uma imagem por tema, mandada ao cliente pelo assistente de Documentos quando ele trava. Nunca suba imagem com dado de alguém.",
+      "ENVIAR": "Subir a imagem de {tema}",
+      "REMOVER": "Remover",
+      "ERRO": "Não foi possível salvar a imagem agora.",
+      "TEMAS": {
+        "govbr_criar_conta": "gov.br: criar a conta",
+        "govbr_recuperar_senha": "gov.br: recuperar a senha",
+        "govbr_duas_etapas": "gov.br: desligar a verificação em duas etapas",
+        "meu_inss_cnis": "Meu INSS: CNIS completo",
+        "meu_inss_laudos": "Meu INSS: laudos das perícias",
+        "meu_inss_processo": "Meu INSS: cópia do processo",
+        "meu_inss_decisao": "Meu INSS: decisão do INSS",
+        "meu_inss_cat": "Meu INSS: CAT"
+      }
+    },
     "CAIXAS": {
       "TITULO": "Caixas conectadas — {nome}"
     },

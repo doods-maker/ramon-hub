@@ -366,3 +366,15 @@ Toda leitura de `inbox.captain_assistant` no atendimento passa por `Captain::Ass
 | `enterprise/app/jobs/captain/inbox_pending_conversations_resolution_job.rb` | `assistente(conversation)` por conversa (executed_by, remetente, textos de resolução/handoff) | idem | etapa-documentos PR 2 |
 | `enterprise/app/listeners/captain_listener.rb` · `enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb` (`inbox_assistant`) · `enterprise/lib/enterprise/captain/reply_suggestion_service.rb` | 1 linha cada | idem | etapa-documentos PR 2 |
 | `enterprise/app/models/enterprise/concerns/lead_stage.rb` (novo) + `LeadStage.include_mod_with` | `belongs_to :captain_assistant` (optional, sem FK) | etapa → assistente | etapa-documentos PR 2 |
+
+## Marcação direta, avisos e gatilhos — Etapa Documentos · PR 3 (07/11/2026)
+
+Tudo só age com a chave `RAMON_ETAPA_DOCUMENTOS` ligada e o lead na etapa Documentos (`Ramon::EtapaDeGanho.conduzida?`).
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `app/listeners/ramon_lead_listener.rb` | +`conversation_bot_handoff` (evento nativo `conversation.bot_handoff`) → `Ramon::Documentos::Handoff` | handoff em Documentos vai para o SDR/closer, com nota e aviso | etapa-documentos PR 3 |
+| `enterprise/app/models/captain/assistant.rb` | +`has_many_attached :passos_a_passo, dependent: false` | imagens do passo a passo, uma por tema (fora do git) | etapa-documentos PR 3 |
+| `enterprise/app/controllers/api/v1/accounts/captain/passos_a_passo_controller.rb` (novo) + rota `resources :passos_a_passo` dentro de `captain/assistants` em `config/routes.rb` | listar, subir (troca) e remover a imagem de um tema; só admin | tela do assistente em Inteligência | etapa-documentos PR 3 |
+| `enterprise/lib/captain/tools/enviar_passo_a_passo_tool.rb` (novo) + entrada em `config/agents/tools.yml` | casca de `Ramon::Documentos::PassoAPasso` (1 mensagem, 1 anexo, janela de 24 h) | o agente de Documentos manda a imagem | etapa-documentos PR 3 |
+| `enterprise/lib/captain/tools/documentacao_faltante_tool.rb` | +`alertas` (`Ramon::DocMatchService.alertas`) | o agente pede o CNIS completo quando chegou o resumido | etapa-documentos PR 3 |
