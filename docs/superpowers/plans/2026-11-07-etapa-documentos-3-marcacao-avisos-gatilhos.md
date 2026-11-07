@@ -45,14 +45,21 @@
 
 - **Files:** `app/services/ramon/perfil_ia/gatilhos.rb` (4 chaves com `'texto' => nil`: `govbr_senha_recebida`, `govbr_codigo`, `govbr_sem_acesso`, `sem_documento`), default de gatilhos da etapa Documentos em `perfil_ia.rb` (os 4 + `pediu_pessoa`, `irritado`, `juridica`); handoff em Documentos (no ponto do `bot_handoff!` do hook/tool) atribui a `Responsavel.de(lead)`, grava nota privada (gatilho + o que falta) e avisa.
 - **Tests:** gatilho pendente fora do prompt; handoff em Documentos → conversa aberta, atribuída ao SDR online / closer, nota privada criada, aviso enviado; fora de Documentos o handoff é o de hoje.
-- **Texto das linhas dos gatilhos:** rascunho em `comercial\docs\` para o Eduardo; só entram no código depois do "aprovado".
+- **Texto das linhas dos gatilhos: APROVADO pelo Eduardo em 07/11.** Usar literalmente a tabela da seção 2 de `C:\Users\dudsl\RAdvogados\comercial\docs\2026-11-07-agente-documentos-textos-rascunho.md` (fora do repo): os 4 gatilhos entram já com `'texto'` preenchido, não `nil`. Nomes na tela: "Senha do gov.br recebida", "Código de verificação do gov.br", "Sem acesso ao gov.br", "Cliente não tem o documento".
 
 ### Task 6: imagens do passo a passo — tool `enviar_passo_a_passo(tema)`
 
 - **Files:** Create `enterprise/lib/captain/tools/enviar_passo_a_passo_tool.rb` (registrar no `tool_registry_service.rb`, liberado só no perfil Documentos); guarda das imagens por tema fora do git (ActiveStorage anexado ao assistente "Documentos", com nome `<tema>-<ordem>`; tela de upload em Inteligência › Assistentes, só admin); Tests.
-- **Interfaces — Produces:** temas fixos `govbr_criar_conta`, `govbr_subir_nivel`, `govbr_desligar_duas_etapas`, `govbr_recuperar_senha`, `meu_inss_cnis`, `meu_inss_processo`, `meu_inss_cat` (lista em constante; tema sem imagem → o tool responde "sem imagem, explique em texto"). O tool manda as imagens do tema em ordem, numa mensagem com anexos, respeitando a janela de 24 h (fora dela não envia).
-- **Tests:** tema com 3 imagens → 1 mensagem outgoing com 3 anexos em ordem; tema vazio → nenhuma mensagem; janela fechada → nenhuma mensagem.
-- **Conteúdo (gate do Eduardo):** as fotos dele, conferidas com a pesquisa e recortadas (sem CPF, nome, telefone, rosto).
+- **Decisão do Eduardo (07/11, custo da Meta por mensagem):** **UMA imagem por tema** (um quadro com todos os passos, no modelo aprovado), e o tool manda **uma mensagem com um anexo**.
+- **Interfaces — Produces:** temas fixos `govbr_criar_conta`, `govbr_recuperar_senha`, `govbr_duas_etapas`, `meu_inss_cnis`, `meu_inss_laudos`, `meu_inss_processo`, `meu_inss_decisao`, `meu_inss_cat` (constante; tema sem imagem → o tool responde "sem imagem: explique em texto"). Envia 1 mensagem com 1 anexo, só dentro da janela de 24 h (fora dela não envia e diz isso ao agente).
+- **Tests:** tema com imagem → 1 mensagem outgoing com 1 anexo; tema sem imagem → nenhuma mensagem; janela fechada → nenhuma mensagem.
+- **Conteúdo:** 4 imagens prontas e aprovadas em `C:\Users\dudsl\RAdvogados\comercial\docs\passo-a-passo-govbr\` (`govbr-duas-etapas.jpg`, `meu-inss-cnis.png`, `govbr-criar-conta.png`, `govbr-recuperar-senha.png`). Não vão para o git (repo público); o Claude sobe pela tela depois do deploy.
+
+### Task 6b: assistente "Documentos" com as instruções aprovadas
+
+- **Decisão:** as instruções foram **APROVADAS pelo Eduardo em 07/11** (seção 1 de `C:\Users\dudsl\RAdvogados\comercial\docs\2026-11-07-agente-documentos-textos-rascunho.md`, já com "uma mensagem por resposta" e os temas de laudos e processo).
+- **Files:** rake idempotente `ramon:documentos:assistente[account_id]` (em `lib/tasks/`) que cria ou atualiza o `Captain::Assistant` "Documentos" com essas instruções (texto num arquivo do repo, ex.: `config/ramon/assistente_documentos.md` — não é segredo), copia do assistente da caixa o que for config técnica (modelo, handoff_message, etc. — conferir os campos de `Captain::Assistant`), libera só as tools do perfil Documentos (incluindo `enviar_passo_a_passo`) e liga o assistente à etapa `fase-documentos` (`lead_stages.captain_assistant_id`). Não liga a chave `RAMON_ETAPA_DOCUMENTOS`. Código Captain só existe com enterprise: a rake deve sair com mensagem clara se `Captain::Assistant` não existir.
+- **Tests:** spec da rake/serviço com `if: ChatwootApp.enterprise?` + teste do núcleo para o carregamento do texto.
 
 ### Task 7: ficha do `docs_completos`
 
