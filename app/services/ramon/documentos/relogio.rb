@@ -3,8 +3,8 @@
 # passo venceu. Não lê banco nem envia nada (isso é do Ramon::Documentos::CobrancaJob). Duas fases:
 # - o cliente não respondeu desde que entrou: abertura → lembrete 1 (3 h úteis) → lembrete 2 (manhã do dia útil seguinte ao
 #   lembrete 1) → silêncio (4 h úteis depois) e mais nada: teto de 2 lembretes até uma pessoa agir;
-# - respondeu (mensagem ou documento novo; a resposta zera o silêncio): sem documento novo desde a última cobrança ou o último
-#   documento, acompanhamento com 1 dia útil e travado com 2. Documento novo recomeça a contagem.
+# - respondeu (mensagem do cliente, o upload do Painel incluído; zera o silêncio): sem documento novo desde a última cobrança ou o
+#   último documento, acompanhamento com 1 dia útil e travado 1 dia útil depois dele. Documento novo (de quem for) recomeça.
 # Só vence em horário comercial: o cliente que escreve às 23h é respondido pela IA (Perfil da IA), a cobrança espera.
 # Números e horário em config/ramon/documentos_cobranca.yml.
 # ponytail: sem feriados — Ramon::Fluxos::Horario não tem calendário, feriado conta como dia útil; o calendário entra lá, para todos.
@@ -29,10 +29,8 @@ module Ramon::Documentos::Relogio
 
   def ler(estado) = estado.to_h.transform_values { |valor| valor.presence && Time.zone.parse(valor.to_s) }
 
-  def respondeu?(est)
-    resposta = est.values_at('ultima_resposta_em', 'ultimo_documento_em').compact.max
-    resposta.present? && resposta > est['entrou_em']
-  end
+  # Só mensagem do cliente (o upload do Painel cria uma). Documento marcado por uma pessoa não é o cliente respondendo.
+  def respondeu?(est) = est['ultima_resposta_em'].present? && est['ultima_resposta_em'] > est['entrou_em']
 
   def sem_resposta(est, horario)
     return { passo: :abertura, em: Ramon::Fluxos::Horario.proximo(est['entrou_em'], horario) } unless est['abertura_em']
