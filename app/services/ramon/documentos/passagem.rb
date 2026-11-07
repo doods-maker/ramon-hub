@@ -67,6 +67,31 @@ module Ramon::Documentos::Passagem
                             "Jurídico: ANÁLISE DO CASO pendente (#{Ramon::NtfyPushJob.rotulo(lead)})", 'Veja o aviso no sino', user_ids: [])
   end
 
+  # Desmarcaram um documento de quem já está no Jurídico (o carimbo docs_completos_em sumiu; gancho do lead): o lead não volta
+  # sozinho, quem desmarcou decide. Sino ao SDR (sem SDR, o closer) e aos administradores (o responsável da ANÁLISE DO CASO é o
+  # Eduardo), nota privada e histórico com quem desmarcou; push só com a tese. A tarefa no ADVBOX não é tocada.
+  # mudanca: o saved_change do custom_attributes (antes, depois); nil quando o que mudou foi a tese.
+  def desmarcado(lead, mudanca, user)
+    return unless Ramon::EtapaDeGanho.documentos_ligado? && no_juridico?(lead)
+
+    texto = "#{desmarcados(lead, mudanca)}, que já está no Jurídico: decidir se volta para Documentos"
+    Ramon::AvisoDaIa.avisar(lead, texto, "Jurídico: documento desmarcado (#{Ramon::NtfyPushJob.rotulo(lead)})",
+                            'Decidir se volta para Documentos', user_ids: [lead.sdr_id || lead.closer_id].compact, admins: true)
+    nota = "#{texto}. Desmarcado por #{user&.name || 'automação'}; a tarefa no ADVBOX não foi mexida."
+    Messages::MessageBuilder.new(nil, lead.conversation, { content: nota, private: true }).perform if lead.conversation
+    registrar(lead, nota)
+  end
+
+  def desmarcados(lead, mudanca)
+    antes, depois = Array(mudanca).map { |attrs| attrs.to_h.fetch('doc_status', {}) }
+    ids = antes.to_h.select { |id, status| status == 'recebido' && depois.to_h[id] != 'recebido' }.keys
+    titulos = ThesisItem.where(id: ids, thesis_id: lead.thesis_id).order(:position).pluck(:title)
+    return "O checklist de #{lead.name} ficou incompleto" if titulos.empty?
+
+    verbo = titulos.one? ? 'foi desmarcado' : 'foram desmarcados'
+    "#{titulos.to_sentence(two_words_connector: ' e ', last_word_connector: ' e ')} #{verbo} de #{lead.name}"
+  end
+
   def registrar_tarefa(lead, resultado)
     registrar(lead, 'Jurídico: tarefa ANÁLISE DO CASO criada no ADVBOX') if resultado == :criada
   end

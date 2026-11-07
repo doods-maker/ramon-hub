@@ -160,4 +160,48 @@ RSpec.describe Ramon::Documentos::Passagem do
       expect { completar! }.not_to have_enqueued_job(Ramon::Documentos::PassagemJob)
     end
   end
+
+  # Spec §8 (ajuste de 07/11): o lead não volta para Documentos sozinho, mas a equipe sempre fica sabendo.
+  describe 'desmarcar um documento de quem já está no Jurídico' do
+    let(:pessoa) { create(:user, account: account, role: :agent, name: 'Ana Conferente') }
+
+    before { Current.user = pessoa }
+    after { Current.user = nil }
+
+    def marcar!(status) = lead.reload.update!(custom_attributes: lead.custom_attributes.merge('doc_status' => { item.id.to_s => status }))
+    def rotulos = avisos.order(:id).map { |aviso| [aviso.user_id, aviso.meta['label']] }
+
+    it 'avisa o SDR e os administradores, com nota na conversa e linha no histórico; a tarefa e a etapa ficam', :aggregate_failures do
+      sdr = create(:user, account: account, role: :agent)
+      completo_em(juridico)
+      lead.update_columns(sdr_id: sdr.id) # rubocop:disable Rails/SkipsModelValidations
+
+      marcar!('pendente')
+
+      texto = 'CNIS completo foi desmarcado de Maria da Silva, que já está no Jurídico: decidir se volta para Documentos'
+      expect(rotulos).to contain_exactly([sdr.id, texto], [admin.id, texto])
+      expect(conversa.messages.where(private: true).last.content).to include(texto, 'Ana Conferente')
+      expect(historico.last).to include(texto, 'Ana Conferente')
+      expect(Ramon::NtfyPushJob).to have_received(:perform_later)
+        .with(lead.id, title: 'Jurídico: documento desmarcado (Tese Spec Passagem)', body: 'Decidir se volta para Documentos')
+      expect(lead.reload.lead_stage).to eq(juridico)
+      expect(Ramon::AdvboxClient).not_to have_received(:create_post)
+    end
+
+    it 'um aviso por desmarcação: remarcar não avisa; desmarcar de novo, sim' do
+      completo_em(juridico)
+
+      marcar!('pendente')
+      marcar!('recebido')
+      marcar!('pendente')
+
+      expect(avisos.where(user_id: admin.id).count).to eq(2)
+    end
+
+    it 'em Documentos, não avisa (o agente segue pedindo)' do
+      completo_em(documentos)
+      marcar!('pendente')
+      expect(avisos).to be_empty
+    end
+  end
 end
