@@ -35,6 +35,14 @@ RSpec.describe Ramon::AdvboxEventProcessor do
     expect(lead.lead_activities.where(kind: 'advbox_contrato_fechado')).to be_present
   end
 
+  it 'CONTRATO FECHADO com outra etapa de ganho antes de Fechado leva o lead a Fechado' do
+    account.lead_stages.create!(name: 'Ganho extra', is_won: true, position: -1)
+
+    process({ 'process' => { 'stage' => 'CONTRATO FECHADO' }, 'client' => { 'cpf' => '529.982.247-25' } })
+
+    expect(lead.reload.lead_stage.label).to eq('fase-fechado')
+  end
+
   it 'REQUERIMENTO PROTOCOLADO cria follow-up de 45 dias (match por telefone com máscara)' do
     process({ 'process' => { 'stage' => 'REQUERIMENTO PROTOCOLADO' },
               'client' => { 'telefone' => '(48) 99988-7766' } })

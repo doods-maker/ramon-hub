@@ -330,7 +330,8 @@
       "FUNNEL": {
         "TITLE": "Funil · conversão",
         "EMPTY": "Nenhuma etapa configurada — monte o funil primeiro.",
-        "ADVANCE": "↳ {rate}% avançam"
+        "ADVANCE": "↳ {rate}% avançam",
+        "WON": "Ganhos"
       },
       "TEAM": {
         "TITLE": "Semana · time",
@@ -531,7 +532,6 @@
         "REMOVE_LOCKED": "Usada pelas automações (quiz, agendamento, contrato) — não pode ser removida",
         "CONFIRM_WON_TITLE": "Marcar \"{name}\" como etapa de ganho?",
         "CONFIRM_WON_EFFECT": "Leads que entrarem nesta etapa abrem caso no AdvBox, exportam para o Drive, geram NPS e a nota de passagem.",
-        "CONFIRM_WON_PREVIOUS": "A etapa \"{name}\" deixa de ser a de ganho.",
         "CONFIRM_LOST_TITLE": "Marcar \"{name}\" como etapa de perda?",
         "CONFIRM_LOST_EFFECT": "Leads movidos para esta etapa pedem o motivo da perda e passam a contar como perdidos nos relatórios.",
         "CONFIRM_LOST_PREVIOUS": "A etapa \"{name}\" deixa de ser a de perda.",

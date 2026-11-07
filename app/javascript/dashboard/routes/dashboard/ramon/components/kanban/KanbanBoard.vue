@@ -13,6 +13,7 @@ import { useAdmin } from 'dashboard/composables/useAdmin';
 import { CAMPO } from '../../helpers/ui';
 import { leadsToCsv } from '../../helpers/leadsCsv';
 import { mensagemErro } from '../../helpers/erro';
+import { entraNoGanho } from '../../helpers/stage';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import FilterChips from './FilterChips.vue';
@@ -58,6 +59,7 @@ const orderedStages = ref([]);
 const stageToRemove = ref(null);
 const newStageModalOpen = ref(false);
 // Ganho/Perdido mudam o que acontece com os leads da etapa: confirmar antes.
+// Perdido é único (substitui o atual); ganho pode ter várias (ADR 0015).
 const stageTypeToConfirm = ref(null);
 
 // Estado do primeiro carregamento: skeleton enquanto busca, erro com retry.
@@ -150,10 +152,11 @@ const onMove = async ({ id, leadStageId, newIndex }) => {
     lostModalOpen.value = true;
     return;
   }
-  // Etapa de ganho de lead: SEMPRE segura o movimento e pede confirmação do
+  // Entrar no ganho: SEMPRE segura o movimento e pede confirmação do
   // valor (pré-preenchido quando já existe), para o valor estimado automático
-  // nunca virar "valor de contrato" sem 1 clique/Enter humano.
-  if (stage?.is_won) {
+  // nunca virar "valor de contrato" sem 1 clique/Enter humano. Ganho → ganho
+  // (Fechado → Documentos → Jurídico) não é ganho novo: move direto.
+  if (entraNoGanho(stage, findStage(lead?.lead_stage_id))) {
     pendingMove.value = { id, leadStageId, position: newIndex };
     wonModalOpen.value = true;
     return;
@@ -395,7 +398,7 @@ const onSetStageClientName = ({ id, nomeCliente }) =>
   updateStage({ id, nome_cliente: nomeCliente });
 const applyStageType = async ({ id, type }) => {
   await updateStage({ id, is_won: type === 'won', is_lost: type === 'lost' });
-  // o servidor desmarca a etapa de ganho/perda anterior: recarrega todas
+  // o servidor desmarca a etapa de perda anterior (ganho pode ter várias): recarrega todas
   store.dispatch('leadConfig/get');
 };
 const onSetStageType = ({ id, type }) => {
@@ -405,7 +408,9 @@ const onSetStageType = ({ id, type }) => {
     applyStageType({ id, type });
     return;
   }
-  const atual = stages.value.find(s => s[flag] && s.id !== id);
+  // só a perda substitui a etapa atual; ganho não desmarca as outras
+  const atual =
+    type === 'lost' && stages.value.find(s => s.is_lost && s.id !== id);
   stageTypeToConfirm.value = {
     id,
     type,
@@ -413,31 +418,22 @@ const onSetStageType = ({ id, type }) => {
     atual: atual?.name,
   };
 };
+const stageTypeWon = computed(() => stageTypeToConfirm.value?.type === 'won');
 const stageTypeMessage = computed(() => {
   const confirm = stageTypeToConfirm.value;
   if (!confirm) return '';
-  const won = confirm.type === 'won';
-  const efeito = won
-    ? t('RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT')
-    : t('RAMON.FUNIL.STAGE.CONFIRM_LOST_EFFECT');
+  if (stageTypeWon.value) return t('RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT');
+  const efeito = t('RAMON.FUNIL.STAGE.CONFIRM_LOST_EFFECT');
   if (!confirm.atual) return efeito;
-  const anterior = won
-    ? t('RAMON.FUNIL.STAGE.CONFIRM_WON_PREVIOUS', { name: confirm.atual })
-    : t('RAMON.FUNIL.STAGE.CONFIRM_LOST_PREVIOUS', { name: confirm.atual });
-  return `${efeito} ${anterior}`;
+  return `${efeito} ${t('RAMON.FUNIL.STAGE.CONFIRM_LOST_PREVIOUS', { name: confirm.atual })}`;
 });
 const stageTypeTitle = computed(() => {
   const confirm = stageTypeToConfirm.value;
   if (!confirm) return '';
-  return confirm.type === 'won'
+  return stageTypeWon.value
     ? t('RAMON.FUNIL.STAGE.CONFIRM_WON_TITLE', { name: confirm.name })
     : t('RAMON.FUNIL.STAGE.CONFIRM_LOST_TITLE', { name: confirm.name });
 });
-const stageTypeConfirmLabel = computed(() =>
-  stageTypeToConfirm.value?.type === 'won'
-    ? t('RAMON.FUNIL.STAGE.TYPE_WON')
-    : t('RAMON.FUNIL.STAGE.TYPE_LOST')
-);
 const confirmStageType = () => {
   const confirm = stageTypeToConfirm.value;
   stageTypeToConfirm.value = null;
@@ -800,8 +796,12 @@ const exportCsv = () => {
       data-testid="stage-type-confirm"
       :title="stageTypeTitle"
       :message="stageTypeMessage"
-      :confirm-label="stageTypeConfirmLabel"
-      :confirm-color="stageTypeToConfirm.type === 'won' ? 'blue' : 'ruby'"
+      :confirm-label="
+        stageTypeWon
+          ? $t('RAMON.FUNIL.STAGE.TYPE_WON')
+          : $t('RAMON.FUNIL.STAGE.TYPE_LOST')
+      "
+      :confirm-color="stageTypeWon ? 'blue' : 'ruby'"
       @confirm="confirmStageType"
       @cancel="stageTypeToConfirm = null"
     />

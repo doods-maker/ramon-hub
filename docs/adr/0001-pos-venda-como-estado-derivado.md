@@ -1,5 +1,8 @@
 # Pós-venda é estado derivado do lead ganho, não etapas do funil
 
+> **Status:** revogado em parte pelo [ADR 0015](0015-varias-etapas-de-ganho.md) (07/11/2026): Documentos e
+> Jurídico viram etapas de ganho depois de Fechado; o checklist continua medindo o que falta.
+
 O funil precisa acompanhar o pós-venda (coleta de documentos até o caso estar
 completo), mas a mecânica de ganho amarra `won_at` à permanência na etapa
 `is_won`: sair dela apaga a data de ganho, e sair-e-voltar re-dispara a cascata

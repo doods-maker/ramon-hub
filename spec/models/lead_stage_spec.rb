@@ -22,11 +22,10 @@ RSpec.describe LeadStage do
     expect(described_class.column_names).to include('color')
   end
 
-  it 'mantém no máximo uma etapa de ganho' do
+  it 'aceita várias etapas de ganho' do
     a = account.lead_stages.create!(name: 'Ganho A', is_won: true)
     b = account.lead_stages.create!(name: 'Ganho B', is_won: true)
-    expect(a.reload.is_won).to be(false)
-    expect(b.reload.is_won).to be(true)
+    expect([a.reload.is_won, b.reload.is_won]).to eq([true, true])
   end
 
   it 'mantém no máximo uma etapa de perda' do

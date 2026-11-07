@@ -71,6 +71,16 @@ RSpec.describe Ramon::LeadsCsvImport do
     expect(lead.lead_notes.where('body LIKE ?', '📋 DOSSIÊ%')).to be_empty
   end
 
+  it 'caso ganho cai em Fechado mesmo com outra etapa de ganho antes dela' do
+    account.lead_stages.create!(name: 'Ganho extra', is_won: true, position: -1)
+
+    run_import(<<~CSV)
+      nome,telefone,email,cpf,data_nascimento,sexo,tese,etapa,valor,ganho_em,canal,origem
+      João,4899990001,,,,M,Auxílio-acidente (B36),,"1500,00",10/01/2024,,advbox
+    CSV
+    expect(account.leads.reorder(:id).last.lead_stage.label).to eq('fase-fechado')
+  end
+
   it 'cria caso aberto na primeira etapa quando etapa não informada' do
     run_import(<<~CSV)
       nome,telefone,email,cpf,data_nascimento,sexo,tese,etapa,valor,ganho_em,canal,origem

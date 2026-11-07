@@ -10,3 +10,8 @@ export const slaApplies = (stageId, stages) => {
   )[0];
   return entry.id === stageId && !entry.is_won && !entry.is_lost;
 };
+
+// Entrar no ganho pede valor e dispara a cascata; andar entre etapas de ganho
+// (Fechado → Documentos → Jurídico) não é um ganho novo (ADR 0015).
+export const entraNoGanho = (destino, origem) =>
+  Boolean(destino?.is_won) && !origem?.is_won;

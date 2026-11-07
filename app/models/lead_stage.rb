@@ -12,7 +12,7 @@ class LeadStage < ApplicationRecord
   validates :stalled_after_days, numericality: { greater_than: 0 }, allow_nil: true
   default_scope { order(:position) }
 
-  before_save :ensure_single_won_lost
+  before_save :ensure_single_lost
 
   def automacao?
     AUTOMATION_LABELS.include?(label)
@@ -26,8 +26,9 @@ class LeadStage < ApplicationRecord
 
   private
 
-  def ensure_single_won_lost
-    unset_flag_on_others(:is_won) if is_won? && (new_record? || will_save_change_to_is_won?)
+  # Ganho pode ter várias etapas (Fechado, Documentos, Jurídico — ADR 0015);
+  # perdido continua único: marcar uma desmarca a anterior.
+  def ensure_single_lost
     unset_flag_on_others(:is_lost) if is_lost? && (new_record? || will_save_change_to_is_lost?)
   end
 

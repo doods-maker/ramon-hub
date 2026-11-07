@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { brlCompact } from 'dashboard/routes/dashboard/ramon/helpers/currency';
 import { prescriptionInfo } from 'dashboard/routes/dashboard/ramon/helpers/prescription';
+import { entraNoGanho } from 'dashboard/routes/dashboard/ramon/helpers/stage';
 import {
   ICON_ASSIGN_TEAM,
   ICON_SNOOZE_UNTIL_TOMORRROW,
@@ -68,9 +69,11 @@ export function useRamonLeadHotKeys() {
   };
 
   const moveLead = async (lead, stage) => {
-    // Ganho dispara automações (passagem, AdvBox, NPS, Drive): passa pelo
-    // modal de valor do funil, igual ao arrastar o card.
-    if (stage.is_won) {
+    // Entrar no ganho dispara automações (passagem, AdvBox, NPS, Drive): passa
+    // pelo modal de valor do funil, igual ao arrastar o card. Ganho → ganho
+    // não é ganho novo: move direto.
+    const origem = stages.value?.find(s => s.id === lead.lead_stage_id);
+    if (entraNoGanho(stage, origem)) {
       store.dispatch('leads/requestWon', {
         id: lead.id,
         leadStageId: stage.id,

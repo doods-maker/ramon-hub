@@ -85,6 +85,24 @@ describe('FunnelConversion.vue', () => {
     expect(wrapper.emitted('stageSelect')).toEqual([[1], [1]]);
   });
 
+  it('com várias etapas de ganho, a linha de ganho soma as etapas', () => {
+    const documentos = {
+      ...stages[2],
+      stage_id: 7,
+      name: 'Documentos',
+      count: 2,
+      total_value: 5000,
+    };
+    const wrapper = mountFunnel({
+      stages: [...stages, documentos],
+      conversion,
+    });
+    const won = wrapper.findAll('[data-testid="funnel-won"]');
+    expect(won).toHaveLength(1);
+    expect(won[0].text()).toContain('RAMON.COMMAND.FUNNEL.WON');
+    expect(won[0].text()).toContain('5 ·');
+  });
+
   it('shows the empty message without stages', () => {
     const wrapper = mountFunnel({ stages: [], conversion: [] });
     expect(wrapper.text()).toContain('RAMON.COMMAND.FUNNEL.EMPTY');

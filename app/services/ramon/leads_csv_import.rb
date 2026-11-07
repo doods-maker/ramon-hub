@@ -92,7 +92,7 @@ class Ramon::LeadsCsvImport
   end
 
   def target_stage(etapa_name, won_at)
-    return @account.lead_stages.find_by!(is_won: true) if won_at.present?
+    return Ramon::EtapaDeGanho.principal!(@account) if won_at.present?
     return @account.lead_stages.order(:position).first if etapa_name.blank?
 
     @account.lead_stages.find_by('lower(name) = ?', etapa_name.downcase) ||

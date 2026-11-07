@@ -92,6 +92,7 @@ const build = ({
               position: 3,
             },
             { id: 6, name: 'Negociação', position: 4 },
+            { id: 7, name: 'Documentos', is_won: true, position: 5 },
           ],
           getLostReasons: () => [],
           getChannels: () => [{ key: 'whatsapp', label: 'WhatsApp' }],
@@ -749,6 +750,25 @@ describe('LeadPanelBody', () => {
         id: 7,
         lead_stage_id: 2,
         value: 48000,
+      });
+    });
+  });
+
+  describe('de uma etapa de ganho para outra', () => {
+    it('não pede valor: ganho → ganho não é ganho novo', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({
+        props: { lead: { ...lead, lead_stage_id: 2 } },
+        spies: { update },
+      });
+      await wrapper.find('[data-testid="panel-stage"]').setValue(7);
+      await flushPromises();
+      expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+        false
+      );
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        lead_stage_id: 7,
       });
     });
   });

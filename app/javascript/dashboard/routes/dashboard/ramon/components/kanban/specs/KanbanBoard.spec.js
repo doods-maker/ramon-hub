@@ -18,10 +18,22 @@ vi.mock('dashboard/composables', () => ({
 }));
 
 const dispatch = vi.fn();
+const STAGES = [
+  { id: 1, name: 'Novo', color: '#000' },
+  { id: 2, name: 'Qualificado', color: '#111' },
+  { id: 9, name: 'Perdido', color: '#222', is_lost: true },
+];
+// Fechado e Documentos: duas etapas de ganho (ADR 0015).
+const COM_GANHOS = [
+  ...STAGES,
+  { id: 7, name: 'Fechado', color: '#333', is_won: true },
+  { id: 8, name: 'Documentos', color: '#444', is_won: true },
+];
 const buildStore = ({
   role = 'administrator',
   wonRequest = null,
   leads = [{ id: 10, lead_stage_id: 1, position: 0 }],
+  stages = STAGES,
 } = {}) =>
   createStore({
     getters: { getCurrentRole: () => role },
@@ -46,11 +58,7 @@ const buildStore = ({
       leadConfig: {
         namespaced: true,
         getters: {
-          getStages: () => [
-            { id: 1, name: 'Novo', color: '#000' },
-            { id: 2, name: 'Qualificado', color: '#111' },
-            { id: 9, name: 'Perdido', color: '#222', is_lost: true },
-          ],
+          getStages: () => stages,
           getLostReasons: () => [],
           getPriorities: () => [],
           getSources: () => [],
@@ -147,9 +155,9 @@ describe('KanbanBoard.vue', () => {
     });
   });
 
-  it('setStageType ganho pede confirmação antes de salvar e recarrega as etapas', async () => {
+  it('setStageType ganho avisa os efeitos (sem substituir a outra etapa de ganho) e recarrega as etapas', async () => {
     dispatch.mockResolvedValue({});
-    const wrapper = mountBoard();
+    const wrapper = mountBoard({ stages: COM_GANHOS });
     wrapper
       .findComponent(KanbanColumn)
       .vm.$emit('setStageType', { id: 1, type: 'won' });
@@ -159,9 +167,10 @@ describe('KanbanBoard.vue', () => {
       expect.anything()
     );
     const modal = wrapper.findComponent(ConfirmModal);
-    expect(modal.props('message')).toContain(
-      'RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT'
-    );
+    expect(modal.props('title')).toBe('RAMON.FUNIL.STAGE.CONFIRM_WON_TITLE');
+    expect(modal.props('message')).toBe('RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT');
+    expect(modal.props('confirmLabel')).toBe('RAMON.FUNIL.STAGE.TYPE_WON');
+    expect(modal.props('confirmColor')).toBe('blue');
     dispatch.mockClear();
     modal.vm.$emit('confirm');
     await flushPromises();
@@ -407,6 +416,38 @@ describe('KanbanBoard.vue', () => {
         position: 2,
         lostReason: 'Preço',
       });
+    });
+
+    it('de uma etapa de ganho para outra move direto, sem o modal de valor', async () => {
+      const wrapper = mountBoard({
+        stages: COM_GANHOS,
+        leads: [{ id: 10, lead_stage_id: 7, position: 0 }],
+      });
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 8, newIndex: 0 });
+      await flushPromises();
+
+      expect(wrapper.findComponent(WonValueModal).exists()).toBe(false);
+      expect(dispatch).toHaveBeenCalledWith('leads/move', {
+        id: 10,
+        leadStageId: 8,
+        position: 0,
+      });
+    });
+
+    it('de etapa aberta para ganho segura o movimento no modal de valor', async () => {
+      const wrapper = mountBoard({ stages: COM_GANHOS });
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 8, newIndex: 0 });
+      await flushPromises();
+
+      expect(wrapper.findComponent(WonValueModal).exists()).toBe(true);
+      expect(dispatch).not.toHaveBeenCalledWith(
+        'leads/move',
+        expect.anything()
+      );
     });
 
     it('NÃO mostra toast quando o movimento cai no modal de perda', async () => {
