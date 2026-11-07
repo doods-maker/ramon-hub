@@ -64,7 +64,9 @@ class Conversations::MessageWindowService
     GlobalConfigService.load(config_key, nil) ? MESSAGING_WINDOW_7_DAYS : MESSAGING_WINDOW_24_HOURS
   end
 
+  # ramon: upload pelo portal do cliente (ramon_origem = portal) não é mensagem do canal e não abre a janela.
   def last_incoming_message
-    @last_incoming_message ||= @conversation.messages.where(account_id: @conversation.account_id).incoming&.last
+    @last_incoming_message ||= @conversation.messages.where(account_id: @conversation.account_id).incoming
+                                            .where("(content_attributes ->> 'ramon_origem') IS DISTINCT FROM 'portal'")&.last
   end
 end

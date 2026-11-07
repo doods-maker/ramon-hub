@@ -5,7 +5,11 @@ require 'rails_helper'
 RSpec.describe Ramon::Documentos::PassoAPasso do
   let(:account) { create(:account) }
   let(:documentos) { Ramon::EtapasPosVenda.criar!(account).first }
-  let(:conversa) { create(:conversation, account: account, status: :pending) }
+  let(:caixa) do
+    canal = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false, validate_provider_config: false)
+    create(:inbox, channel: canal, account: account)
+  end
+  let(:conversa) { create(:conversation, account: account, inbox: caixa, status: :pending) }
   let(:imagem) do
     ActiveStorage::Blob.create_and_upload!(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'meu_inss_cnis.png',
                                            content_type: 'image/png')
@@ -41,6 +45,14 @@ RSpec.describe Ramon::Documentos::PassoAPasso do
 
   it 'janela de 24 h fechada: nada enviado', :aggregate_failures do
     conversa.messages.incoming.update_all(created_at: 25.hours.ago) # rubocop:disable Rails/SkipsModelValidations
+    expect(enviar('meu_inss_cnis')).to eq(described_class::FORA_DA_JANELA)
+    expect(enviadas).to be_empty
+  end
+
+  it 'upload do portal do cliente não abre a janela do WhatsApp', :aggregate_failures do
+    conversa.messages.incoming.update_all(created_at: 25.hours.ago) # rubocop:disable Rails/SkipsModelValidations
+    create(:message, account: account, conversation: conversa, inbox: caixa, message_type: :incoming,
+                     content_attributes: { 'ramon_origem' => 'portal' })
     expect(enviar('meu_inss_cnis')).to eq(described_class::FORA_DA_JANELA)
     expect(enviadas).to be_empty
   end

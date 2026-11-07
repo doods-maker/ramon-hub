@@ -5,7 +5,6 @@
 module Ramon::Documentos::PassoAPasso
   TEMAS = %w[govbr_criar_conta govbr_recuperar_senha govbr_duas_etapas meu_inss_cnis meu_inss_laudos meu_inss_processo
              meu_inss_decisao meu_inss_cat].freeze
-  JANELA = 24.hours
   ENVIADA = 'Imagem enviada ao cliente. Não mande outra mensagem repetindo os passos: pergunte se ele conseguiu.'.freeze
   SEM_IMAGEM = 'Sem imagem para este tema: explique os passos em texto.'.freeze
   FORA_DA_JANELA = 'Fora da janela de 24 h do WhatsApp: a imagem não foi enviada.'.freeze
@@ -38,9 +37,7 @@ module Ramon::Documentos::PassoAPasso
       Ramon::PerfilIa.de(conversa).logistica_sai_agora?
   end
 
-  # ponytail: janela pela última mensagem do cliente, igual para todo canal; a regra fina (janela grátis de anúncio) é do PR 5.
-  def janela_aberta?(conversa)
-    ultima = conversa.messages.incoming.maximum(:created_at)
-    ultima.present? && ultima > JANELA.ago
-  end
+  # Janela do canal (WhatsApp: 24 h desde a última mensagem do cliente; upload do portal não conta). A janela grátis de
+  # anúncio é do PR 5.
+  def janela_aberta?(conversa) = Conversations::MessageWindowService.new(conversa).can_reply?
 end

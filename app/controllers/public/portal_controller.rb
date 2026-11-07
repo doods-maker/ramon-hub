@@ -77,7 +77,8 @@ class Public::PortalController < ActionController::Base
       inbox_id: conversation.inbox_id,
       message_type: :incoming,
       sender: conversation.contact,
-      content: 'Documento enviado pelo portal do cliente'
+      content: 'Documento enviado pelo portal do cliente',
+      content_attributes: { 'ramon_origem' => 'portal' } # não abre a janela do WhatsApp (Conversations::MessageWindowService)
     )
     message.attachments.build(account_id: conversation.account_id, file: params[:file],
                               file_type: file_type(params[:file].content_type))

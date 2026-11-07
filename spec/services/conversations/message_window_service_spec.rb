@@ -361,6 +361,14 @@ RSpec.describe Conversations::MessageWindowService do
     let!(:whatsapp_inbox) { create(:inbox, channel: whatsapp_channel, account: whatsapp_channel.account) }
     let!(:conversation) { create(:conversation, inbox: whatsapp_inbox, account: whatsapp_channel.account) }
 
+    # ramon: upload pelo portal do cliente (link mágico) não é mensagem do WhatsApp
+    it 'return false when the only recent incoming message came from the client portal' do
+      create(:message, account: conversation.account, inbox: whatsapp_inbox, conversation: conversation, created_at: 25.hours.ago)
+      create(:message, account: conversation.account, inbox: whatsapp_inbox, conversation: conversation, created_at: 1.hour.ago,
+                       content_attributes: { 'ramon_origem' => 'portal' })
+      expect(described_class.new(conversation).can_reply?).to be false
+    end
+
     it 'return false if the last message is outgoing' do
       service = described_class.new(conversation)
       expect(service.can_reply?).to be false
