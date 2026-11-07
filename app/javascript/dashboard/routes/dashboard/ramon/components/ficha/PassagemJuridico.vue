@@ -88,7 +88,7 @@ const reuniao = computed(() => p.value.reuniao);
 </script>
 
 <template>
-  <section :class="CARTAO" class="!p-4" data-testid="ficha-passagem">
+  <section :class="CARTAO" data-testid="ficha-passagem">
     <header class="flex flex-wrap items-center justify-between gap-2">
       <h2
         class="flex items-center gap-1.5 text-sm font-semibold text-n-slate-12"

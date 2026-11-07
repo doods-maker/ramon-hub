@@ -167,7 +167,7 @@ onBeforeUnmount(() => clearInterval(poll));
       />
     </div>
 
-    <section v-if="reuniao.ata" :class="CARTAO" class="!p-4">
+    <section v-if="reuniao.ata" :class="CARTAO">
       <h2 :class="TITULO" class="mb-2">
         {{ t('RAMON.REUNIOES.ATA_TITLE') }}
       </h2>
@@ -178,7 +178,7 @@ onBeforeUnmount(() => clearInterval(poll));
       />
     </section>
 
-    <section v-if="reuniao.audio_url" :class="CARTAO" class="!p-4">
+    <section v-if="reuniao.audio_url" :class="CARTAO">
       <h2 :class="TITULO" class="mb-2">
         {{ t('RAMON.REUNIOES.AUDIO_TITLE') }}
       </h2>
@@ -189,7 +189,7 @@ onBeforeUnmount(() => clearInterval(poll));
       />
     </section>
 
-    <section v-if="reuniao.transcricao" :class="CARTAO" class="!p-4">
+    <section v-if="reuniao.transcricao" :class="CARTAO">
       <button
         type="button"
         :class="TITULO"

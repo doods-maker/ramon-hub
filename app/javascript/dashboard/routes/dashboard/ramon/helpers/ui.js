@@ -1,8 +1,11 @@
 // Kit visual do painel do lead (padrão único, 03/10/2026). Botão = components-next
 // Button; o resto (cartão, campo, aba, chip) vem daqui — nunca classe à mão.
+// Regras de design (checklist conferido em cada tela): docs/regras-de-design.md
 
 // Cartão: um estilo só. Dentro de cartão não há cartão — vira SECAO.
-export const CARTAO = 'rounded-xl border border-n-weak bg-n-solid-1 p-3';
+// 16px de espaço interno (regra de design). Exceção: cartão do funil fica
+// !p-3 (coluna de 240px, 2 botões compactos por linha).
+export const CARTAO = 'rounded-xl border border-n-weak bg-n-solid-1 p-4';
 // Cartão de status: CARTAO + filete colorido à esquerda (somar a cor da borda).
 export const CARTAO_STATUS = `${CARTAO} border-l-4`;
 export const FILETE = {
