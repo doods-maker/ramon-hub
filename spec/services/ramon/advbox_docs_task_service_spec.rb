@@ -21,7 +21,7 @@ RSpec.describe Ramon::AdvboxDocsTaskService do
     it 'cria a tarefa ANÁLISE DO CASO para o Eduardo, com a pasta da tese, e guarda o id no lead', :aggregate_failures do
       expect(Ramon::AdvboxClient).to receive(:create_post)
         .with(hash_including(tasks_id: '8745386', from: '266778', guests: [266_778], lawsuits_id: '999',
-                             comments: a_string_including(pasta, "Lead ##{lead.id}")))
+                             comments: a_string_including(pasta, "lead ##{lead.id}")))
         .and_return({ 'posts_id' => 777 })
 
       expect(described_class.new(lead).analise_do_caso).to eq(:criada)
