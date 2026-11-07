@@ -24,7 +24,9 @@ module Ramon::Documentos::PassoAPasso
 
     mensagem = conversa.messages.new(account_id: conversa.account_id, inbox_id: conversa.inbox_id, message_type: :outgoing,
                                      sender: remetente)
-    mensagem.attachments.new(account_id: conversa.account_id, file_type: :image, file: imagem)
+    # Cópia, não o blob do tema: o anexo da mensagem é apagado com a conversa (purge) e levaria a imagem do tema junto.
+    mensagem.attachments.new(account_id: conversa.account_id, file_type: :image,
+                             file: { io: StringIO.new(imagem.download), filename: imagem.filename.to_s, content_type: imagem.content_type })
     mensagem.save!
     ENVIADA
   end

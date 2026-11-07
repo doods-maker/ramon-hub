@@ -1,6 +1,6 @@
 # ramon (Etapa Documentos): imagens do passo a passo do assistente, uma por tema (Ramon::Documentos::PassoAPasso), na tela
-# do assistente em Inteligência. Só administrador. Trocar ou remover não apaga o arquivo: a imagem já enviada ao cliente
-# usa o mesmo blob e fica no histórico da conversa.
+# do assistente em Inteligência. Só administrador. Trocar ou remover apaga o arquivo do tema; a mensagem já enviada ao
+# cliente tem a sua cópia.
 class Api::V1::Accounts::Captain::PassosAPassoController < Api::V1::Accounts::BaseController
   LIMITE = 5.megabytes # imagem do WhatsApp
   TEMAS = Ramon::Documentos::PassoAPasso::TEMAS

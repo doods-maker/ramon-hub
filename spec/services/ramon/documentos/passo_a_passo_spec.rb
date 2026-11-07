@@ -33,6 +33,11 @@ RSpec.describe Ramon::Documentos::PassoAPasso do
     expect(enviadas.first.attachments.map { |a| a.file.filename.to_s }).to eq(['meu_inss_cnis.png'])
   end
 
+  it 'anexa uma cópia: apagar a conversa não apaga a imagem do tema' do
+    enviar('meu_inss_cnis')
+    expect(enviadas.first.attachments.first.file.blob.id).not_to eq(imagem.id)
+  end
+
   it 'tema sem imagem: nada enviado, o agente explica em texto', :aggregate_failures do
     expect(enviar('meu_inss_cat')).to eq(described_class::SEM_IMAGEM)
     expect(enviadas).to be_empty
