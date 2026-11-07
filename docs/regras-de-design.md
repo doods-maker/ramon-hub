@@ -24,7 +24,7 @@ Decisões nossas que vencem a regra genérica estão marcadas com **Hub:**.
 - [ ] Link com cor **e** sublinhado.
 
 ## Tema escuro
-- [ ] Fundo cinza bem escuro, não preto puro. **Hub:** hoje é preto puro (decisão 03/10/2026); cinza em teste desde 07/11/2026.
+- [ ] Fundo cinza bem escuro, não preto puro. **Hub:** fundo #121212, cartão #1c1c1c, menu #222 (era preto puro até 07/11/2026).
 - [ ] Texto quase branco (`slate-12` = #ededed); hierarquia por tom de cinza, não por branco puro.
 - [ ] Cor da marca mais clara no escuro (texto azul = `blue-11` #60a5fa).
 - [ ] Camada acima = cinza mais claro, não sombra (sombra some no escuro).

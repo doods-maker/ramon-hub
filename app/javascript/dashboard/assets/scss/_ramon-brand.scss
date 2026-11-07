@@ -1,7 +1,7 @@
 // Marca Ramon Antonio — override dos tokens do design system (vence _next-colors por ordem de @import).
 // RGB sem vírgula (Tailwind: rgb(var(--token) / <alpha-value>)).
 // Visual "branco e preto" (aprovado 03/10/2026, substitui o Marfim & Bronze):
-// claro = branco puro, escuro = preto puro, neutros SEM tom (nem frio nem quente);
+// claro = branco puro, escuro = cinza #121212 (07/11/2026), neutros SEM tom (nem frio nem quente);
 // destaque AZUL nos dois temas (botão #2563eb). Cor só com significado
 // (ruby = atraso/risco, amber = atenção, teal/green = ganho) e fundo colorido
 // sempre translúcido (bg-n-*-9/10 etc., nunca bloco chapado).
@@ -67,19 +67,20 @@
   --ramon-column: 250 250 250;
 }
 
-/* ===== Tema ESCURO (.dark) — preto puro, mesmo azul ===== */
+/* ===== Tema ESCURO (.dark) — cinza #121212 (era preto puro até 07/11/2026), mesmo azul =====
+   Camada acima = cinza mais claro (sombra some no escuro); slate-10 = 4,8:1 sobre o cartão. */
 .dark {
-  --slate-1: 10 10 10;
-  --slate-2: 15 15 15;
-  --slate-3: 20 20 20;
-  --slate-4: 28 28 28;
-  --slate-5: 34 34 34;
-  --slate-6: 41 41 41;
-  --slate-7: 54 54 54;
-  --slate-8: 77 77 77;
-  --slate-9: 107 107 107;
-  --slate-10: 122 122 122;
-  --slate-11: 161 161 161;
+  --slate-1: 26 26 26;
+  --slate-2: 31 31 31;
+  --slate-3: 36 36 36;
+  --slate-4: 44 44 44;
+  --slate-5: 50 50 50;
+  --slate-6: 57 57 57;
+  --slate-7: 70 70 70;
+  --slate-8: 93 93 93;
+  --slate-9: 118 118 118;
+  --slate-10: 136 136 136;
+  --slate-11: 170 170 170;
   --slate-12: 237 237 237;
   --iris-1: 8 12 22;
   --iris-2: 11 17 32;
@@ -109,28 +110,28 @@
   --solid-blue: 17 35 68;
   --ramon-enviada: 0 92 75; // #005c4b (verde do WhatsApp no escuro)
   --ramon-nao-lida-texto: 37 211 102; // #25d366
-  --solid-blue-2: 14 14 14;
-  --solid-1: 10 10 10;
-  --solid-2: 14 14 14;
-  --solid-3: 22 22 22;
-  --solid-active: 28 28 28;
-  --border-strong: 46 46 46; // #2e2e2e
-  --border-weak: 31 31 31; // #1f1f1f
+  --solid-blue-2: 34 34 34;
+  --solid-1: 28 28 28;
+  --solid-2: 34 34 34;
+  --solid-3: 40 40 40;
+  --solid-active: 46 46 46;
+  --border-strong: 58 58 58;
+  --border-weak: 44 44 44;
   // o :root acima vence o .dark do core (mesma especificidade, vem depois):
   // sem isto a borda dos cartões/botões/abas do components-next fica clara no escuro
-  --border-container: 31 31 31;
-  --background-color: 0 0 0;
-  --surface-1: 0 0 0;
-  --surface-2: 10 10 10;
-  --surface-active: 28 28 28;
-  --card-color: 14 14 14;
-  --button-color: 28 28 28;
-  --label-background: 28 28 28;
-  --alpha-1: 28, 28, 28, 0.8;
+  --border-container: 44 44 44;
+  --background-color: 18 18 18;
+  --surface-1: 18 18 18;
+  --surface-2: 24 24 24;
+  --surface-active: 46 46 46;
+  --card-color: 28 28 28;
+  --button-color: 46 46 46;
+  --label-background: 46 46 46;
+  --alpha-1: 44, 44, 44, 0.8;
   --alpha-2: 160, 160, 160, 0.12;
-  --alpha-3: 20, 20, 20, 0.95;
-  --ramon-rail: 0 0 0;
-  --ramon-column: 10 10 10;
+  --alpha-3: 30, 30, 30, 0.95;
+  --ramon-rail: 18 18 18;
+  --ramon-column: 24 24 24;
 }
 
 /* Fundo do trilho (WorldRail) */
