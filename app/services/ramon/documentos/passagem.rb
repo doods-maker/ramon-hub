@@ -24,9 +24,12 @@ module Ramon::Documentos::Passagem
     analise(lead) if no_juridico?(lead.reload)
   end
 
-  # O caso apareceu no ADVBOX depois da passagem (AdvboxClosingService): a tarefa que ficou para trás, sem novo aviso.
+  # O caso apareceu no ADVBOX depois da passagem (AdvboxClosingService): a tarefa que ficou para trás, sem novo aviso. Só com o
+  # checklist completo: quem foi arrastado à mão para o Jurídico, incompleto, não ganha a tarefa.
   def retomar(lead)
-    registrar_tarefa(lead, Ramon::AdvboxDocsTaskService.new(lead).analise_do_caso) if Ramon::EtapaDeGanho.documentos_ligado? && no_juridico?(lead)
+    return unless Ramon::EtapaDeGanho.documentos_ligado? && no_juridico?(lead) && lead.docs_completos_em.present?
+
+    registrar_tarefa(lead, Ramon::AdvboxDocsTaskService.new(lead).analise_do_caso)
   end
 
   def passar(lead)

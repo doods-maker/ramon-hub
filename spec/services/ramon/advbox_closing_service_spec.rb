@@ -130,6 +130,14 @@ RSpec.describe Ramon::AdvboxClosingService do
 
     around { |example| with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { example.run } }
 
+    # Checklist completo de verdade: o merge_advbox regrava o lead e o carimbo é recalculado do doc_status.
+    def completo_no_juridico(custom_attributes = {})
+      create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG')
+      status = thesis.thesis_items.where(section: 'documento').to_h { |item| [item.id.to_s, 'recebido'] }
+      lead.update_columns(lead_stage_id: etapas.last.id, docs_completos_em: Time.current, # rubocop:disable Rails/SkipsModelValidations
+                          custom_attributes: custom_attributes.merge('doc_status' => status))
+    end
+
     def posts_do_tipo(tipo) = a_request(:post, 'https://app.advbox.com.br/api/v1/posts').with { |req| JSON.parse(req.body)['tasks_id'] == tipo }
 
     # Spec §9 (07/11): o 1º contato de quem vai a Documentos é do agente; a única tarefa do caso é a ANÁLISE DO CASO, no completo.
@@ -161,7 +169,7 @@ RSpec.describe Ramon::AdvboxClosingService do
 
     # Review Focus 2: o checklist completou antes de o caso existir no ADVBOX; a ANÁLISE DO CASO sai quando ele nasce.
     it 'lead que já passou ao Jurídico: cria a ANÁLISE DO CASO assim que o caso nasce', :aggregate_failures do
-      lead.update_columns(lead_stage_id: etapas.last.id) # rubocop:disable Rails/SkipsModelValidations
+      completo_no_juridico
       stub_create('customers', 'customers_id', 111)
       stub_create('lawsuits', 'lawsuits_id', 222)
       stub_create('posts', 'posts_id', 444)
@@ -173,9 +181,19 @@ RSpec.describe Ramon::AdvboxClosingService do
       expect(lead.reload.custom_attributes.dig('advbox', 'analise_posts_id')).to eq(444)
     end
 
+    # Review do PR 6, item 3: arrastado à mão para Jurídico com o checklist incompleto não ganha a tarefa.
+    it 'lead no Jurídico com o checklist incompleto: sem ANÁLISE DO CASO' do
+      lead.update_columns(lead_stage_id: etapas.last.id, docs_completos_em: nil) # rubocop:disable Rails/SkipsModelValidations
+      stub_create('customers', 'customers_id', 111)
+      stub_create('lawsuits', 'lawsuits_id', 222)
+
+      described_class.new(lead.reload).perform
+
+      expect(WebMock).not_to have_requested(:post, 'https://app.advbox.com.br/api/v1/posts')
+    end
+
     it 'o retry do job (ADVBOX fora do ar na ANÁLISE DO CASO) a cria, com o caso já sincronizado' do
-      lead.update_columns(lead_stage_id: etapas.last.id, # rubocop:disable Rails/SkipsModelValidations
-                          custom_attributes: { 'advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 } })
+      completo_no_juridico('advbox' => { 'lawsuits_id' => 222, 'sincronizado_em' => 1.minute.ago.iso8601 })
       stub_create('posts', 'posts_id', 444)
 
       described_class.new(lead.reload).perform
