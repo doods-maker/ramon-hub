@@ -34,7 +34,8 @@ Tech Provider**.
 - `ramon_pecas` += `alcance`, `salvamentos`, `compartilhamentos`, `curtidas`,
   `comentarios`, `metricas_em`.
 - Serviços: `Ramon::MetaGastoCsv` (CSV pt-BR ou inglês, `,` ou `;`, decimal com
-  vírgula ou ponto; exige colunas Dia e ID do anúncio) e `Ramon::MetasDoModelo`
+  vírgula ou ponto; exige Dia, ID do anúncio e Valor usado; soma linhas repetidas do
+  mesmo anúncio+dia; nunca sobrescreve o que veio da API) e `Ramon::MetasDoModelo`
   (lê o `mensal.json`).
 - Jobs: `Ramon::MetaGastoJob` passa a gravar conjunto, objetivo e resultados;
   `Ramon::PecaMetricasJob` (diário, `RAMON_IG_INSIGHTS`, peças publicadas nos
@@ -53,7 +54,8 @@ Tech Provider**.
 ## Metabase e doc (PR 3)
 
 - Script de cartões: Meta × hub por campanha/dia; custo por lead → qualificado →
-  reunião → contrato por tese e campanha; retorno (gasto × honorário); CAC mídia
+  reunião → contrato por tese e por campanha (contratos = fechados no mês, igual em
+  todos os cartões); retorno (gasto × honorário); CAC mídia
   e completo; realizado × meta mês a mês e acumulado; peças × alcance × leads do
   Instagram na semana.
 - Doc do padrão de parâmetros de URL e de como exportar o CSV (nível anúncio,
