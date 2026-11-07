@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_08_100002) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_08_100003) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1714,6 +1714,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_08_100002) do
     t.decimal "valor", precision: 14, scale: 2, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "ativa", default: false, null: false
+    t.datetime "editada_em"
     t.index ["account_id", "mes", "metrica"], name: "index_ramon_marketing_metas_on_account_id_and_mes_and_metrica", unique: true
   end
 
@@ -2399,7 +2401,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_08_100002) do
       mes,
       metrica,
       valor
-     FROM ramon_marketing_metas;
+     FROM ramon_marketing_metas
+    WHERE ativa;
   SQL
   create_view "bi_pecas", sql_definition: <<-SQL
       SELECT id,
