@@ -70,7 +70,8 @@
         "NENHUMA": "nenhuma etapa",
         "NADA": "IA não manda nada",
         "ATE_AQUI": "IA vai até aqui",
-        "FIM": "IA vai até o fim"
+        "FIM": "IA vai até o fim",
+        "CONDUZIDA": "Depois do contrato · responde o assistente da etapa"
       },
       "ESTADO": {
         "sozinha": "Sozinha",

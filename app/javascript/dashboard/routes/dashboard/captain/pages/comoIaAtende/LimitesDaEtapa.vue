@@ -52,7 +52,11 @@ const LINHA =
 
 const pronto = computed(() => props.dados.prontos[baseDe(props.cfg)]);
 const atual = computed(() =>
-  efetivo(props.cfg, props.dados.prontos, props.dados.etapas)
+  // gatilhos também das conduzidas (Documentos); a Permissão segue a Trilha (conduzida = sempre antes do Marcador)
+  efetivo(props.cfg, props.dados.prontos, [
+    ...props.dados.etapas,
+    ...(props.dados.conduzidas ?? []),
+  ])
 );
 const linhas = computed(() =>
   props.dados.acoes

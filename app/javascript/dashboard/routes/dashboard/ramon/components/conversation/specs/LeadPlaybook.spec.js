@@ -146,6 +146,19 @@ describe('LeadPlaybook.vue', () => {
       true
     );
   });
+  it('na etapa Documentos, a seção de documentos vem primeiro com o selo', () => {
+    const wrapper = mountPlaybook(
+      { id: 1, thesis_id: 1, lead_stage_id: 12 },
+      [thesisWithItems],
+      vi.fn(),
+      [{ id: 12, name: 'Documentos', label: 'fase-documentos' }]
+    );
+    const first = wrapper.findAll('[data-testid="playbook-section"]')[0];
+    expect(first.text()).toContain('RAMON.PLAYBOOK.SECTIONS.DOCUMENTO');
+    expect(first.find('[data-testid="playbook-stage-badge"]').exists()).toBe(
+      true
+    );
+  });
   it('copia o roteiro com {{nome}} já trocado pelo primeiro nome do lead', async () => {
     const thesis = {
       ...thesisWithItems,

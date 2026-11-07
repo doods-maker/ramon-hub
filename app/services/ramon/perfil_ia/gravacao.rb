@@ -3,16 +3,23 @@
 # extra: pedaço de settings que vai junto no mesmo save (limites gerais, Ramon::IaLimites).
 module Ramon::PerfilIa::Gravacao
   CHAVES_DO_CFG = %w[base marcador permissoes gatilhos].freeze
+  Etapas = Struct.new(:trilha, :com_gatilhos)
 
   def self.gravar!(account, alvos, extra = {})
     raise ArgumentError, 'corpo inválido' unless alvos.is_a?(Hash)
 
-    etapas = account.lead_stages.where(is_won: false, is_lost: false).map { |e| Ramon::PerfilIa.chave_da_etapa(e) }
+    etapas = etapas(account)
     settings = Hash(account.settings)
     atual = Hash(settings[Ramon::PerfilIa::CHAVE])
     novo = atual.merge(alvos.slice('teses', 'caixas').to_h { |tipo, secao| [tipo, mesclar(atual[tipo], tipo, secao, account, etapas)] })
     novo['padrao'] = cfg_valido!(alvos['padrao'], etapas) if alvos.key?('padrao')
     account.update!(settings: settings.merge(Ramon::PerfilIa::CHAVE => novo).merge(extra))
+  end
+
+  # Marcador só nas abertas; gatilhos também nas conduzidas (Documentos).
+  def self.etapas(account)
+    trilha = account.lead_stages.where(is_won: false, is_lost: false).map { |e| Ramon::PerfilIa.chave_da_etapa(e) }
+    Etapas.new(trilha, trilha + Ramon::EtapaDeGanho.conduzidas(account).map { |e| Ramon::PerfilIa.chave_da_etapa(e) })
   end
 
   # Seção atual com os alvos enviados por cima (nil tira o alvo).
@@ -37,9 +44,9 @@ module Ramon::PerfilIa::Gravacao
 
     cfg = cfg.slice(*CHAVES_DO_CFG)
     base!(cfg['base']) if cfg.key?('base')
-    marcador!(cfg['marcador'], etapas) if cfg.key?('marcador')
+    marcador!(cfg['marcador'], etapas.trilha) if cfg.key?('marcador')
     permissoes!(cfg['permissoes']) if cfg.key?('permissoes')
-    gatilhos!(cfg['gatilhos'], etapas) if cfg.key?('gatilhos')
+    gatilhos!(cfg['gatilhos'], etapas.com_gatilhos) if cfg.key?('gatilhos')
     cfg
   end
 

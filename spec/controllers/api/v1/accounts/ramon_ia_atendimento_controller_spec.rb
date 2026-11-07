@@ -44,6 +44,18 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
     expect(body).to include('numeros' => {}, 'assistente_id' => nil)
   end
 
+  it 'Documentos aparece depois das abertas (fora da Trilha) só com a chave ligada', :aggregate_failures do
+    Ramon::EtapasPosVenda.criar!(account)
+    get url, headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['conduzidas']).to eq([])
+
+    with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') { get url, headers: admin.create_new_auth_token, as: :json }
+    body = response.parsed_body
+    expect(body['conduzidas']).to eq([{ 'chave' => 'fase-documentos', 'nome' => 'Documentos' }])
+    expect(body['etapas'].pluck('chave')).not_to include('fase-documentos')
+    expect(body['acoes'].find { |a| a['chave'] == 'pedir_documentos' }['etapas']).to include('fase-documentos')
+  end
+
   it 'PATCH válido grava só os alvos enviados e devolve o corpo do GET', :aggregate_failures do
     outra = create(:thesis, account: account)
     account.update!(settings: { 'ia_atendimento' => { 'teses' => { outra.id.to_s => { 'base' => 'equilibrada' } } } })

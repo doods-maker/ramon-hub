@@ -39,6 +39,7 @@ const STAGE_SECTION = {
   'fase-negociacao': 'objecao',
   'fase-ultima-chance': 'objecao',
   'fase-fechado': 'documento',
+  'fase-documentos': 'documento',
 };
 
 const thesis = computed(() =>

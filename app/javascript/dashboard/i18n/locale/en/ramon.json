@@ -70,7 +70,8 @@
         "NENHUMA": "no stage",
         "NADA": "AI sends nothing",
         "ATE_AQUI": "AI goes up to here",
-        "FIM": "AI goes to the end"
+        "FIM": "AI goes to the end",
+        "CONDUZIDA": "After the contract · the stage assistant replies"
       },
       "ESTADO": {
         "sozinha": "On its own",

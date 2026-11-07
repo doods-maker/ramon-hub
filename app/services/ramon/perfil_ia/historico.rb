@@ -89,7 +89,7 @@ class Ramon::PerfilIa::Historico
   # ponytail: um PerfilIa por cfg (1 SELECT das Etapas cada); juntar se a página de 50 linhas pesar
   def perfil(cfg) = Ramon::PerfilIa.new(nil, Lead.new(account: @account), 'historico', Ramon::PerfilIa.normalizar(cfg), :historico)
 
-  def etapas = @etapas ||= @account.lead_stages.where(is_won: false, is_lost: false).to_a
+  def etapas = @etapas ||= @account.lead_stages.where(is_won: false, is_lost: false).to_a + Ramon::EtapaDeGanho.conduzidas(@account)
 
   # _inicio/_fim vão como estão (a tela traduz); Etapa vai pelo nome.
   def nome_marcador(chave)

@@ -6,8 +6,19 @@ module Ramon::EtapaDeGanho
   FECHADO = 'fase-fechado'.freeze
   DOCUMENTOS = 'fase-documentos'.freeze
   JURIDICO = 'fase-juridico'.freeze
+  # Etapas de ganho que a IA conduz e onde envia sozinha (spec §2), com gatilhos próprios na tela "Como a IA atende".
+  CONDUZIDAS = [DOCUMENTOS].freeze
 
   module_function
+
+  # Chave da Etapa Documentos (ENV direto, padrão dos RAMON_*): desligada, tudo como antes do PR 2.
+  def documentos_ligado? = ENV.fetch('RAMON_ETAPA_DOCUMENTOS', nil) == 'on'
+
+  # Chave desligada: nenhuma é conduzida (são pós-venda como as outras, :fechado no Perfil da IA).
+  def conduzida?(etapa) = etapa&.is_won == true && CONDUZIDAS.include?(etapa.label) && documentos_ligado?
+
+  # As conduzidas que a conta tem, na ordem do funil; chave desligada = nenhuma.
+  def conduzidas(account) = documentos_ligado? ? account.lead_stages.where(is_won: true, label: CONDUZIDAS).to_a : []
 
   # A etapa de ganho da conta: Fechado; sem ela, a primeira `is_won` por posição.
   def principal(account)
