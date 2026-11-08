@@ -27,4 +27,28 @@ describe MessageTemplates::Template::OutOfOffice do
       )
     end
   end
+
+  # ramon (teste ponta a ponta de 07/11): o aviso genérico da caixa ("adiante seu CNIS...") destoa para quem está juntando os
+  # documentos com o assistente da etapa Documentos.
+  context 'when the lead is in the Documentos stage' do
+    let(:conversation) { create(:conversation) }
+    let(:documentos) { Ramon::EtapasPosVenda.criar!(conversation.account).first }
+
+    before { create(:lead, account: conversation.account, conversation: conversation, lead_stage: documentos, won_at: 1.day.ago) }
+
+    it 'does not send the out of office message with the switch on' do
+      with_modified_env(RAMON_ETAPA_DOCUMENTOS: 'on') do
+        described_class.new(conversation: conversation).perform
+        described_class.perform_if_applicable(conversation)
+      end
+
+      expect(conversation.messages.template).to be_empty
+    end
+
+    it 'sends it as before with the switch off' do
+      described_class.new(conversation: conversation).perform
+
+      expect(conversation.messages.template.count).to eq(1)
+    end
+  end
 end

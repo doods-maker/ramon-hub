@@ -499,7 +499,10 @@
         "SAVE": "Save",
         "SKIP": "Skip",
         "INVALID": "Invalid value — numbers only, e.g. 1,500.00",
-        "MOTIVO_PULA_DOCUMENTOS": "This thesis goes through the Documents stage. Why go straight here? (required)",
+        "PERGUNTA_DOCUMENTOS": "This thesis goes through the Documents stage. Where does the lead go?",
+        "IR_PARA_DOCUMENTOS": "To Documents (the documents assistant gathers what is missing)",
+        "FICAR_SEM_DOCUMENTOS": "Stay here, without going through Documents",
+        "MOTIVO_PULA_DOCUMENTOS": "Why stay here? (required, goes to the lead notes)",
         "NOTA_PULA_DOCUMENTOS": "Won straight into {etapa}, skipping Documents: {motivo}",
         "NOTA_ERRO": "The deal was saved, but the reason did not reach the lead notes. Add it there by hand."
       },

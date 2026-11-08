@@ -1,6 +1,7 @@
 // Ganho que pula Documentos (decisão 07/11), num lugar só para o Kanban (arrastar
 // e Ctrl K), o lote e o painel do lead: quando pedir o motivo (helpers/stage.js
 // pulaDocumentos, com as etapas e a chave do lead_config) e a nota que ele vira.
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
@@ -15,6 +16,12 @@ export const usePulaDocumentos = () => {
   const pedeMotivo = (destino, origem, lead) =>
     pulaDocumentos(destino, origem, lead, etapas.value, ligada.value);
 
+  // "Ir para Documentos" (o padrão do modal, teste de 07/11) troca a coluna
+  // escolhida por esta.
+  const documentos = computed(() =>
+    (etapas.value || []).find(e => e.label === 'fase-documentos')
+  );
+
   // Depois do ganho gravado: falha não desfaz o ganho, só avisa. true = gravou.
   const anotar = (leadId, etapa, motivo) =>
     LeadsAPI.createNote(
@@ -27,5 +34,5 @@ export const usePulaDocumentos = () => {
         return false;
       });
 
-  return { pedeMotivo, anotar };
+  return { pedeMotivo, anotar, documentos };
 };

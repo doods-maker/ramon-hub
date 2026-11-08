@@ -227,7 +227,7 @@ const pendingLead = computed(
     pendingMove.value &&
     (findLead(pendingMove.value.id) || pendingMove.value.lead)
 );
-const { pedeMotivo, anotar } = usePulaDocumentos();
+const { pedeMotivo, anotar, documentos } = usePulaDocumentos();
 const wonPedeMotivo = computed(() =>
   pedeMotivo(
     findStage(pendingMove.value?.leadStageId),
@@ -236,15 +236,18 @@ const wonPedeMotivo = computed(() =>
   )
 );
 
-const confirmWon = async ({ value, motivo }) => {
+const confirmWon = async ({ value, motivo, paraDocumentos }) => {
   if (!pendingMove.value) return;
   const { id, leadStageId, position } = pendingMove.value;
+  // "Ir para Documentos": a coluna vira Documentos (a posição era da outra).
+  const destino = paraDocumentos
+    ? { lead_stage_id: documentos.value.id }
+    : { lead_stage_id: leadStageId, position };
   // Um único update: move e (quando informado) grava o valor no mesmo passo.
   try {
     await store.dispatch('leads/update', {
       id,
-      lead_stage_id: leadStageId,
-      position,
+      ...destino,
       ...(value != null ? { value } : {}),
     });
   } catch (e) {

@@ -54,10 +54,12 @@ const followUpDate = ref('');
 const pendingLostStage = ref(null);
 // Etapa de ganho: segura até a confirmação (passagem, AdvBox, NPS, Drive).
 const pendingWonStage = ref(null);
-// Leads do lote que pulam Documentos (tirado na escolha): o motivo é obrigatório
-// e vira nota de cada um.
+// Leads do lote que pulariam Documentos (tirado na escolha): o padrão os leva
+// para Documentos; ficar pede o motivo, que vira nota de cada um.
 const pulandoIds = ref([]);
 const wonMotivo = ref('');
+const wonFicar = ref(false);
+const wonDocumentos = ref(null); // a etapa Documentos, lida na escolha
 
 const runBulk = async payload => {
   closeMenus();
@@ -75,7 +77,7 @@ const stageOfLead = id => {
   const lead = getters['leads/getLeads']?.value?.find(l => l.id === id);
   return stages.value.find(s => s.id === lead?.lead_stage_id);
 };
-const { pedeMotivo, anotar } = usePulaDocumentos();
+const { pedeMotivo, anotar, documentos } = usePulaDocumentos();
 const leadDe = id => getters['leads/getLeads']?.value?.find(l => l.id === id);
 
 const pickStage = stage => {
@@ -90,6 +92,8 @@ const pickStage = stage => {
       pedeMotivo(stage, stageOfLead(id), leadDe(id))
     );
     wonMotivo.value = '';
+    wonFicar.value = false;
+    wonDocumentos.value = documentos.value;
     pendingWonStage.value = stage;
     return;
   }
@@ -107,11 +111,31 @@ const confirmLost = async ({ lostReason }) => {
 };
 
 const faltaMotivo = computed(
-  () => pulandoIds.value.length > 0 && !wonMotivo.value.trim()
+  () => pulandoIds.value.length > 0 && wonFicar.value && !wonMotivo.value.trim()
 );
+// "Ir para Documentos": quem pularia Documentos vai para lá, o resto para a
+// coluna escolhida (dois lotes, cada um com os seus ids).
+const loteComDocumentos = async stage => {
+  const paraDocs = pulandoIds.value;
+  const resto = selectedIds.value.filter(id => !paraDocs.includes(id));
+  const lotes = [
+    [resto, stage],
+    [paraDocs, wonDocumentos.value],
+  ].filter(([ids]) => ids.length);
+  const oks = await Promise.all(
+    lotes.map(([ids, etapa]) =>
+      runBulk({ ids, fields: { lead_stage_id: etapa.id } })
+    )
+  );
+  return oks.every(Boolean);
+};
 const confirmWon = async () => {
   if (faltaMotivo.value) return;
   const stage = pendingWonStage.value;
+  if (pulandoIds.value.length && !wonFicar.value) {
+    if (await loteComDocumentos(stage)) pendingWonStage.value = null;
+    return;
+  }
   const ok = await runBulk({ fields: { lead_stage_id: stage.id } });
   if (!ok) return;
   pulandoIds.value.forEach(id => anotar(id, stage, wonMotivo.value.trim()));
@@ -299,6 +323,7 @@ onKeyStroke('Escape', () => {
         <MotivoPulaDocumentos
           v-if="pulandoIds.length"
           v-model="wonMotivo"
+          v-model:ficar="wonFicar"
           class="mt-3"
         />
       </ConfirmModal>

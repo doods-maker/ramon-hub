@@ -14,10 +14,23 @@ describe('WonValueModal.vue', () => {
     expect(wrapper.emitted('confirmValue')[0]).toEqual([{ value: null }]);
   });
 
-  it('pulando Documentos, o motivo é obrigatório e vai junto', async () => {
+  // Teste ponta a ponta de 07/11: o padrão é ir para Documentos (o assistente assume), sem motivo.
+  it('tese que passa por Documentos: por padrão vai para Documentos, sem motivo', async () => {
+    const wrapper = montar({ pedeMotivo: true });
+    expect(
+      wrapper.find('[data-testid="motivo-pula-documentos"]').exists()
+    ).toBe(false);
+    await wrapper.find('[data-testid="won-value-skip"]').trigger('click');
+    expect(wrapper.emitted('confirmValue')[0]).toEqual([
+      { value: null, paraDocumentos: true },
+    ]);
+  });
+
+  it('ficar na coluna escolhida exige o motivo, que vai junto', async () => {
     const wrapper = montar({ pedeMotivo: true });
     const salvar = () => wrapper.find('[data-testid="won-value-save"]');
     const pular = () => wrapper.find('[data-testid="won-value-skip"]');
+    await wrapper.find('[data-testid="pula-documentos-ficar"]').setValue(true);
     expect(salvar().attributes('disabled')).toBeDefined();
     expect(pular().attributes('disabled')).toBeDefined();
 

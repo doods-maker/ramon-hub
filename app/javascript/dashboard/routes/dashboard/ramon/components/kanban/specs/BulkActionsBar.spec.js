@@ -138,7 +138,7 @@ describe('BulkActionsBar', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
-  it('ganho que pula Documentos: motivo obrigatório, vira nota de cada lead que pulou', async () => {
+  it('ganho que pula Documentos, ficando no Fechado: motivo obrigatório, vira nota de cada lead que pulou', async () => {
     const { getters } = stubStore;
     const antes = {
       leads: getters['leads/getLeads'],
@@ -171,6 +171,7 @@ describe('BulkActionsBar', () => {
     });
 
     const modal = wrapper.findComponent(ConfirmModal);
+    await wrapper.find('[data-testid="pula-documentos-ficar"]').setValue(true);
     expect(modal.props('confirmDisabled')).toBe(true);
     await wrapper
       .find('[data-testid="motivo-pula-documentos"]')
@@ -186,6 +187,55 @@ describe('BulkActionsBar', () => {
       10,
       'RAMON.FUNIL.WON.NOTA_PULA_DOCUMENTOS'
     );
+  });
+
+  // Teste ponta a ponta de 07/11: o padrão leva quem passa por Documentos para lá; o resto vai à coluna escolhida.
+  it('ganho com "Ir para Documentos": quem passa por Documentos vai para lá, o resto para a coluna escolhida, sem nota', async () => {
+    LeadsAPI.createNote.mockClear();
+    const { getters } = stubStore;
+    const antes = {
+      leads: getters['leads/getLeads'],
+      stages: getters['leadConfig/getStages'],
+    };
+    getters['leads/getLeads'] = [
+      {
+        id: 10,
+        lead_stage_id: 1,
+        thesis_passa_documentos: true,
+        docs_total: 2,
+      },
+      { id: 11, lead_stage_id: 1 },
+    ];
+    getters['leadConfig/getStages'] = [
+      { id: 1, name: 'Novo' },
+      { id: 7, name: 'Fechado', label: 'fase-fechado', is_won: true },
+      { id: 8, name: 'Documentos', label: 'fase-documentos', is_won: true },
+    ];
+    getters['leadConfig/getEtapaDocumentos'] = true;
+    const wrapper = mountBar();
+    await wrapper.find('[data-testid="bulk-move-stage"]').trigger('click');
+    await wrapper
+      .findAll('[data-testid="bulk-stage-option"]')[1]
+      .trigger('click');
+    Object.assign(getters, {
+      'leads/getLeads': antes.leads,
+      'leadConfig/getStages': antes.stages,
+      'leadConfig/getEtapaDocumentos': false,
+    });
+
+    const modal = wrapper.findComponent(ConfirmModal);
+    expect(modal.props('confirmDisabled')).toBe(false);
+    modal.vm.$emit('confirm');
+    await flushPromises();
+    expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
+      ids: [11],
+      fields: { lead_stage_id: 7 },
+    });
+    expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
+      ids: [10],
+      fields: { lead_stage_id: 8 },
+    });
+    expect(LeadsAPI.createNote).not.toHaveBeenCalled();
   });
 
   it('cancelar a confirmação de ganho não dispara o lote', async () => {

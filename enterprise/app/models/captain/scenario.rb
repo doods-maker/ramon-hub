@@ -70,6 +70,12 @@ class Captain::Scenario < ApplicationRecord
     }
   end
 
+  # ramon: Tool com Permissão "nunca" no Perfil da IA fica de fora (o modelo nem a vê no turno). Pública: o assistente de
+  # etapa também leva estas tools (Captain::Assistant#tools_das_skills_da_etapa).
+  def agent_tools(sem_tools = [])
+    resolved_tools.reject { |tool| sem_tools.include?(tool[:id]) }.map { |tool| resolve_tool_instance(tool) }
+  end
+
   private
 
   def agent_name
@@ -95,11 +101,6 @@ class Captain::Scenario < ApplicationRecord
   def dynamic_slug_max_length
     # handoff_to_#{scenario_<id>_<slug>_agent}
     MAX_AGENT_NAME_LENGTH - handoff_id_key.length - HANDOFF_KEY_SUFFIX.length - 2
-  end
-
-  # ramon: Tool com Permissão "nunca" no Perfil da IA fica de fora (o modelo nem a vê no turno).
-  def agent_tools(sem_tools = [])
-    resolved_tools.reject { |tool| sem_tools.include?(tool[:id]) }.map { |tool| resolve_tool_instance(tool) }
   end
 
   def resolved_instructions

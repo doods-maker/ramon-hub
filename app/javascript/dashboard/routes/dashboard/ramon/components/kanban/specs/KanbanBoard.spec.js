@@ -533,6 +533,40 @@ describe('KanbanBoard.vue', () => {
       );
     });
 
+    it('ganho com "Ir para Documentos" move para Documentos, sem nota', async () => {
+      LeadsAPI.createNote.mockClear();
+      const wrapper = mountBoard({
+        etapaDocumentos: true,
+        stages: [
+          ...STAGES,
+          { id: 7, name: 'Fechado', label: 'fase-fechado', is_won: true },
+          { id: 8, name: 'Documentos', label: 'fase-documentos', is_won: true },
+        ],
+        leads: [
+          {
+            id: 10,
+            lead_stage_id: 1,
+            position: 0,
+            thesis_passa_documentos: true,
+            docs_total: 2,
+          },
+        ],
+      });
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 7, newIndex: 0 });
+      await flushPromises();
+      wrapper
+        .findComponent(WonValueModal)
+        .vm.$emit('confirmValue', { value: null, paraDocumentos: true });
+      await flushPromises();
+      expect(dispatch).toHaveBeenCalledWith('leads/update', {
+        id: 10,
+        lead_stage_id: 8,
+      });
+      expect(LeadsAPI.createNote).not.toHaveBeenCalled();
+    });
+
     it('ganho sem pular Documentos não pede motivo nem cria nota', async () => {
       LeadsAPI.createNote.mockClear();
       const wrapper = mountBoard({ stages: COM_GANHOS });

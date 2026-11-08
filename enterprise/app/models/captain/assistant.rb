@@ -101,10 +101,19 @@ class Captain::Assistant < ApplicationRecord
   # agente estava gastando o turno numa tool que sempre falha em vez de
   # responder com o que sabe.
   # sem_tools (Perfil da IA) não se aplica: handoff e faq_lookup nunca são bloqueadas.
-  def agent_tools(_sem_tools = [])
+  def agent_tools(sem_tools = [])
     tools = [self.class.resolve_tool_class('handoff').new(self)]
     tools.unshift(self.class.resolve_tool_class('faq_lookup').new(self)) if responses.exists?
-    tools
+    tools + tools_das_skills_da_etapa(sem_tools)
+  end
+
+  # ramon: assistente de etapa (lead_stages.captain_assistant_id, hoje o de Documentos) leva as tools das próprias skills
+  # na mão. Com elas só no sub-agente da skill, o modelo passava para a equipe em vez de transferir (teste de 07/11:
+  # "esqueci a senha do gov.br" virou handoff sem o passo a passo). As Permissões "nunca" do Perfil da IA continuam valendo.
+  def tools_das_skills_da_etapa(sem_tools)
+    return [] unless LeadStage.exists?(captain_assistant_id: id)
+
+    scenarios.enabled.flat_map { |scenario| scenario.agent_tools(sem_tools) }
   end
 
   def prompt_context

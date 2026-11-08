@@ -194,10 +194,11 @@ const notesTick = ref(0);
 // Ganho que pula Documentos: o motivo é obrigatório e vira nota do lead.
 const wonPedeMotivo = ref(false);
 const wonMotivo = ref('');
+const wonFicar = ref(false); // padrão: "Ir para Documentos"
 const faltaMotivo = computed(
-  () => wonPedeMotivo.value && !wonMotivo.value.trim()
+  () => wonPedeMotivo.value && wonFicar.value && !wonMotivo.value.trim()
 );
-const { pedeMotivo, anotar } = usePulaDocumentos();
+const { pedeMotivo, anotar, documentos } = usePulaDocumentos();
 
 watch(
   () => props.lead,
@@ -361,6 +362,7 @@ const onStageChange = targetId => {
     wonValue.value = formatBrl(props.lead?.value);
     wonPedeMotivo.value = pedeMotivo(target, origem, props.lead);
     wonMotivo.value = '';
+    wonFicar.value = false;
     wonPrompt.value = true;
     return;
   }
@@ -376,8 +378,10 @@ const cancelLostStage = () => {
 // Move e, se pulou Documentos, grava o motivo nas notas (só depois do ganho gravado).
 const commitWon = async extra => {
   if (faltaMotivo.value) return;
-  const motivo = wonPedeMotivo.value ? wonMotivo.value.trim() : '';
-  const target = stageId.value;
+  // "Ir para Documentos" (o padrão): a coluna vira Documentos, sem nota.
+  const pula = wonPedeMotivo.value;
+  const motivo = pula && wonFicar.value ? wonMotivo.value.trim() : '';
+  const target = pula && !wonFicar.value ? documentos.value.id : stageId.value;
   const ok = await commitStage(target, extra);
   if (!ok || !motivo) return;
   const etapa = stages.value.find(s => s.id === target);
@@ -1116,7 +1120,11 @@ const discard = async () => {
                 :class="CAMPO"
                 @keyup.enter="confirmWonStage"
               />
-              <MotivoPulaDocumentos v-if="wonPedeMotivo" v-model="wonMotivo" />
+              <MotivoPulaDocumentos
+                v-if="wonPedeMotivo"
+                v-model="wonMotivo"
+                v-model:ficar="wonFicar"
+              />
               <div class="flex justify-end gap-2">
                 <Button
                   data-testid="stage-won-skip"

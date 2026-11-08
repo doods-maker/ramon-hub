@@ -10,6 +10,8 @@ class MessageTemplates::Template::OutOfOffice
   end
 
   def perform
+    return if lead_em_documentos?
+
     ActiveRecord::Base.transaction do
       conversation.messages.create!(out_of_office_message_params)
     end
@@ -22,6 +24,12 @@ class MessageTemplates::Template::OutOfOffice
 
   delegate :contact, :account, to: :conversation
   delegate :inbox, to: :message
+
+  # ramon: quem está juntando os documentos com o assistente da etapa Documentos não recebe o aviso genérico da caixa
+  # (teste ponta a ponta de 07/11). Os três caminhos (hook, handoff da IA e resolução de pendentes) passam por aqui.
+  def lead_em_documentos?
+    Ramon::EtapaDeGanho.conduzida?(account.leads.find_by(conversation_id: conversation.id)&.lead_stage)
+  end
 
   def out_of_office_message_params
     content = @conversation.inbox&.out_of_office_message
