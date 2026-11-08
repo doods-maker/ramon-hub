@@ -22,7 +22,7 @@ export const entraNoGanho = (destino, origem) =>
 // lead_config), a etapa existe, tese marcada "passa pela etapa Documentos" e o
 // lead tem checklist de documentos. A coluna escolhida vale, mas pede o motivo
 // (vai para as notas do lead). Chave desligada: nada muda.
-const DOCUMENTOS = 'fase-documentos';
+export const DOCUMENTOS = 'fase-documentos';
 export const pulaDocumentos = (destino, origem, lead, etapas, ligada) =>
   Boolean(ligada) &&
   entraNoGanho(destino, origem) &&

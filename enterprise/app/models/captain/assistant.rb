@@ -104,7 +104,7 @@ class Captain::Assistant < ApplicationRecord
   def agent_tools(sem_tools = [])
     tools = [self.class.resolve_tool_class('handoff').new(self)]
     tools.unshift(self.class.resolve_tool_class('faq_lookup').new(self)) if responses.exists?
-    tools + tools_das_skills_da_etapa(sem_tools)
+    (tools + tools_das_skills_da_etapa(sem_tools)).uniq(&:name) # nome repetido derruba a chamada ao modelo
   end
 
   # ramon: assistente de etapa (lead_stages.captain_assistant_id, hoje o de Documentos) leva as tools das próprias skills

@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
 import LeadsAPI from 'dashboard/api/leads';
-import { pulaDocumentos } from '../helpers/stage';
+import { pulaDocumentos, DOCUMENTOS } from '../helpers/stage';
 
 export const usePulaDocumentos = () => {
   const { t } = useI18n();
@@ -19,7 +19,7 @@ export const usePulaDocumentos = () => {
   // "Ir para Documentos" (o padrão do modal, teste de 07/11) troca a coluna
   // escolhida por esta.
   const documentos = computed(() =>
-    (etapas.value || []).find(e => e.label === 'fase-documentos')
+    (etapas.value || []).find(e => e.label === DOCUMENTOS)
   );
 
   // Depois do ganho gravado: falha não desfaz o ganho, só avisa. true = gravou.
