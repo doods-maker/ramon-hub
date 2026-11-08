@@ -63,7 +63,8 @@ for cab in X-Painel-Usuario X-Painel-Escreve X-Painel-Segredo; do
 done
 confere 'copy_headers X-Painel-Usuario X-Painel-Escreve$' "$PAINEL_BASE/Caddyfile" 1
 confere 'header_up X-Painel-Segredo {\$PAINEL_SEGREDO}$' "$PAINEL_BASE/Caddyfile" 1
-confere '^      - /etc/esteira/painel.env$' "$PAINEL_BASE/docker-compose.override.yml" 1
+confere '^      - path: /etc/esteira/painel.env$' "$PAINEL_BASE/docker-compose.override.yml" 1
+confere '^        required: false$' "$PAINEL_BASE/docker-compose.override.yml" 1
 confere "caddy validate" "$STUB_LOG" 3
 confere "--env-file $PAINEL_SEGREDO_ARQ .*caddy validate" "$STUB_LOG" 3
 echo "ok: Caddy apaga a identidade do navegador, copia a do portão e manda a senha"
@@ -90,7 +91,7 @@ printf 'services:\n  caddy:\n    ports: []\n\nvolumes:\n  x:\n' > "$PAINEL_BASE/
 if bash "$AQUI/instalar.sh" eduardo@example.com > /dev/null 2>&1; then falha "deveria recusar override que já tem caddy"; fi
 echo "ok: recusa override que já define o caddy"
 
-for conteudo in ausente 'PAINEL_SEGREDO=' 'OUTRA=1'; do
+for conteudo in ausente 'PAINEL_SEGREDO=' 'PAINEL_SEGREDO=""' "PAINEL_SEGREDO=''" 'PAINEL_SEGREDO= ' 'OUTRA=1'; do
   prepara
   : > "$STUB_LOG"
   if [ "$conteudo" = ausente ]; then rm -f "$PAINEL_SEGREDO_ARQ"; else printf '%s\n' "$conteudo" > "$PAINEL_SEGREDO_ARQ"; fi
@@ -101,4 +102,9 @@ for conteudo in ausente 'PAINEL_SEGREDO=' 'OUTRA=1'; do
   cmp -s "$PAINEL_BASE/chatwoot.env" "$TMP/env.original" || falha "env mudou sem a senha"
   [ ! -s "$STUB_LOG" ] || falha "chamou docker/systemctl sem a senha"
 done
-echo "ok: sem a senha da esteira, para antes de mexer em qualquer coisa"
+echo "ok: sem a senha da esteira (ou só aspas/espaço), para antes de mexer em qualquer coisa"
+
+prepara
+printf 'PAINEL_SEGREDO="abc123"\n' > "$PAINEL_SEGREDO_ARQ"
+bash "$AQUI/instalar.sh" eduardo@example.com > /dev/null || falha "senha entre aspas deveria valer"
+echo "ok: senha entre aspas vale"

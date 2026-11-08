@@ -28,6 +28,10 @@ página `Agentes` do hub, com a sessão de quem está logado.
 
 ## Consequências
 
+- Pela ponte, a origem do painel passa a conseguir disparar aprovações com a sessão do hub de quem decide e está logado.
+  A fronteira é a CSP do painel (`default-src 'self'`) e o código dele: um XSS no painel agora importa.
+- O `env_file` do Caddy usa a forma longa com `required: false` (compose >= 2.24): sem o arquivo da esteira, o compose
+  do hub continua subindo e o painel recusa escrita, porque a senha chega vazia.
 - Sem a aba Aprovações aberta, o hub não consulta nada: o pedido espera, como antes, até 12 horas.
 - O hub passa a mandar ao painel o título e as linhas já traduzidos (via `descreverPedido`) e a entrada cortada em 4000
   caracteres; o painel não precisa conhecer as ferramentas.

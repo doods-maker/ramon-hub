@@ -37,7 +37,8 @@ EMAIL="${1:?informe o e-mail do login no hub}"
 DECISORES="${2:-$EMAIL}"
 
 # A senha interna é da esteira; o Caddy a lê do mesmo arquivo (override.trecho) e a põe em cada pedido ao painel.
-if ! grep -q '^PAINEL_SEGREDO=.' "$SEGREDO" 2>/dev/null; then
+# Vazia, só espaço ou só aspas ("" / '') não conta como senha.
+if ! grep -Eq "^PAINEL_SEGREDO=([^\"'[:space:]]|\"[^\"[:space:]]|'[^'[:space:]])" "$SEGREDO" 2>/dev/null; then
   echo "!! $SEGREDO sem PAINEL_SEGREDO: rode antes o install.sh da esteira" >&2
   exit 1
 fi
