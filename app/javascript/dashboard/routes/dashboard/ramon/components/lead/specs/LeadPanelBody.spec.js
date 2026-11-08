@@ -771,7 +771,27 @@ describe('LeadPanelBody', () => {
   });
 
   describe('ganho que pula Documentos', () => {
-    it('pede o motivo (obrigatório) e grava como nota do lead', async () => {
+    // Teste ponta a ponta de 07/11: o padrão é ir para Documentos, sem motivo.
+    it('por padrão vai para Documentos, sem nota', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({
+        props: {
+          lead: { ...lead, thesis_passa_documentos: true, docs_total: 2 },
+        },
+        spies: { update },
+      });
+      await wrapper.find('[data-testid="panel-stage"]').setValue(2);
+      await wrapper.find('[data-testid="stage-won-save"]').trigger('click');
+      await flushPromises();
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        lead_stage_id: 7,
+        value: 48000,
+      });
+      expect(LeadsAPI.createNote).not.toHaveBeenCalled();
+    });
+
+    it('ficar no Fechado pede o motivo (obrigatório) e grava como nota do lead', async () => {
       const update = vi.fn();
       const wrapper = mountBody({
         props: {
@@ -781,6 +801,9 @@ describe('LeadPanelBody', () => {
       });
       await wrapper.find('[data-testid="panel-stage"]').setValue(2);
       const salvar = () => wrapper.find('[data-testid="stage-won-save"]');
+      await wrapper
+        .findComponent(MotivoPulaDocumentos)
+        .vm.$emit('update:ficar', true);
       expect(salvar().attributes('disabled')).toBeDefined();
       await wrapper
         .findComponent(MotivoPulaDocumentos)

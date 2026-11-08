@@ -48,9 +48,7 @@ module Ramon::Documentos::PassoAPasso
   # Conversa com a IA (pendente), lead em Documentos (chave ligada) e uma resposta da IA sairia sozinha agora (Pausa, fora
   # do horário em rascunho etc.: Ramon::PerfilIa).
   def sai_agora?(conversa)
-    lead = conversa.account.leads.find_by(conversation_id: conversa.id)
-    conversa.pending? && lead.present? && Ramon::EtapaDeGanho.conduzida?(lead.lead_stage) &&
-      Ramon::PerfilIa.de(conversa).logistica_sai_agora?
+    conversa.pending? && Ramon::EtapaDeGanho.conversa_conduzida?(conversa) && Ramon::PerfilIa.de(conversa).logistica_sai_agora?
   end
 
   # Janela do canal (WhatsApp: 24 h desde a última mensagem do cliente; upload do portal não conta). A janela grátis de

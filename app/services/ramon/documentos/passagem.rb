@@ -1,7 +1,7 @@
 # Checklist completo na etapa Documentos → Jurídico (spec Etapa Documentos §8; só com a chave ligada). Chamado pelo
 # PassagemJob: do gancho do lead (docs_completos_em preenchido em Documentos) ou da entrada em Documentos já completo.
-# 1. Sob o lock do lead, se ele ainda está em Documentos e completo: o encerramento aprovado sai pelo Envio (só com a conversa
-#    com a IA e na janela de 24 h; antes de andar, enquanto o assistente da conversa é o de Documentos) e o lead vai a Jurídico.
+# 1. Sob o lock do lead, se ele ainda está em Documentos e completo: o encerramento aprovado sai pelo Envio (na janela de 24 h,
+#    mesmo com a conversa já com uma pessoa: decisão do Eduardo, 07/11; respeita Pausa e rascunho do Perfil da IA) e o lead vai a Jurídico.
 # 2. A conversa sai da IA (bot_handoff!: aberta, com quem já a tinha; em Jurídico o Perfil da IA é :fechado).
 # 3. A ANÁLISE DO CASO no ADVBOX (Ramon::AdvboxDocsTaskService#analise_do_caso), uma por caso. Sem o processo do Ganho, os
 #    administradores são avisados e a tarefa sai quando o caso aparecer (retomar, no fim do AdvboxClosingService).
@@ -46,10 +46,11 @@ module Ramon::Documentos::Passagem
     registrar(lead, 'Checklist completo: o lead foi para o Jurídico e a conversa saiu da IA')
   end
 
+  # Sai mesmo com a conversa já com uma pessoa (decisão do Eduardo, 07/11); Pausa e rascunho do Perfil da IA continuam valendo.
   def encerrar(lead)
     conversa = lead.conversation
-    unless conversa && Ramon::Documentos::PassoAPasso.sai_agora?(conversa)
-      return registrar(lead, 'Passagem: o encerramento não saiu (a conversa não está com a IA, ou a IA está em rascunho agora)')
+    unless conversa && Ramon::PerfilIa.de(conversa).logistica_sai_agora?
+      return registrar(lead, 'Passagem: o encerramento não saiu (IA em Pausa ou em rascunho agora)')
     end
 
     case Ramon::Documentos::Envio.mandar(lead, :encerramento)

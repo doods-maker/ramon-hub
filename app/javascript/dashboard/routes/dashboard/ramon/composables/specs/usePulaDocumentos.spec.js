@@ -37,6 +37,10 @@ describe('usePulaDocumentos', () => {
     expect(pedeMotivo(fechado, novo, lead)).toBe(false);
   });
 
+  it('documentos é a etapa Documentos do funil', () => {
+    expect(usePulaDocumentos().documentos.value).toEqual(documentos);
+  });
+
   it('anotar grava a nota com etapa e motivo; falha avisa e devolve false', async () => {
     const { anotar } = usePulaDocumentos();
     LeadsAPI.createNote.mockResolvedValueOnce({});
@@ -53,17 +57,31 @@ describe('usePulaDocumentos', () => {
 });
 
 describe('MotivoPulaDocumentos.vue', () => {
-  it('rótulo envolve o campo e o v-model sobe o texto', async () => {
+  it('padrão: ir para Documentos, sem campo de motivo; ficar mostra o campo e o v-model sobe o texto', async () => {
     const motivo = ref('');
+    const ficar = ref(false);
     const wrapper = mount(MotivoPulaDocumentos, {
       props: {
         modelValue: motivo.value,
         'onUpdate:modelValue': v => {
           motivo.value = v;
         },
+        ficar: ficar.value,
+        'onUpdate:ficar': v => {
+          ficar.value = v;
+          wrapper.setProps({ ficar: v });
+        },
       },
       global: { mocks: { $t: k => k } },
     });
+    expect(
+      wrapper.find('[data-testid="pula-documentos-ir"]').element.checked
+    ).toBe(true);
+    expect(
+      wrapper.find('[data-testid="motivo-pula-documentos"]').exists()
+    ).toBe(false);
+    await wrapper.find('[data-testid="pula-documentos-ficar"]').setValue(true);
+    expect(ficar.value).toBe(true);
     const campo = wrapper.find(
       'label textarea[data-testid="motivo-pula-documentos"]'
     );

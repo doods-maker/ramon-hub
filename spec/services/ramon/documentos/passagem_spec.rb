@@ -65,6 +65,16 @@ RSpec.describe Ramon::Documentos::Passagem do
       expect(avisos).to be_empty
     end
 
+    # Teste ponta a ponta de 07/11: a IA tinha passado para a equipe e o encerramento não saiu. Decisão do Eduardo: sai mesmo assim.
+    it 'conversa já com uma pessoa (aberta, com responsável): o encerramento sai do mesmo jeito', :aggregate_failures do
+      conversa.update!(status: :open, assignee: admin)
+
+      described_class.call(lead)
+
+      expect(enviadas.pluck(:content)).to eq([encerramento])
+      expect(lead.reload.lead_stage).to eq(juridico)
+    end
+
     it 'rodar de novo não repete nada' do
       2.times { described_class.call(lead.reload) }
 

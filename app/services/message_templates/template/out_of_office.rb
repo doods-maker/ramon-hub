@@ -10,6 +10,10 @@ class MessageTemplates::Template::OutOfOffice
   end
 
   def perform
+    # ramon: quem está juntando os documentos com o assistente da etapa Documentos não recebe o aviso genérico da caixa
+    # (teste ponta a ponta de 07/11). Os três caminhos (hook, handoff da IA e resolução de pendentes) passam por aqui.
+    return if Ramon::EtapaDeGanho.conversa_conduzida?(conversation)
+
     ActiveRecord::Base.transaction do
       conversation.messages.create!(out_of_office_message_params)
     end

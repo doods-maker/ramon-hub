@@ -15,8 +15,8 @@ import {
 
 const props = defineProps({
   initialValue: { type: [Number, String], default: null },
-  // Ganho que pula Documentos (helpers/stage.js pulaDocumentos): o motivo é
-  // obrigatório e vai para as notas do lead.
+  // Ganho que pularia Documentos (helpers/stage.js pulaDocumentos): o padrão é
+  // ir para Documentos; ficar pede o motivo (vai para as notas do lead).
   pedeMotivo: { type: Boolean, default: false },
 });
 const emit = defineEmits(['confirmValue', 'cancelValue']);
@@ -33,9 +33,16 @@ const isInvalid = computed(
   () => value.value.trim() !== '' && parseBrlInput(value.value) === null
 );
 const motivo = ref('');
-const faltaMotivo = computed(() => props.pedeMotivo && !motivo.value.trim());
-const comMotivo = payload =>
-  props.pedeMotivo ? { ...payload, motivo: motivo.value.trim() } : payload;
+const ficar = ref(false);
+const faltaMotivo = computed(
+  () => props.pedeMotivo && ficar.value && !motivo.value.trim()
+);
+const comMotivo = payload => {
+  if (!props.pedeMotivo) return payload;
+  return ficar.value
+    ? { ...payload, motivo: motivo.value.trim() }
+    : { ...payload, paraDocumentos: true };
+};
 
 // Salvar envia o valor; Pular move sem valor; o clique fora cancela (reverte).
 const save = () => {
@@ -78,7 +85,12 @@ onKeyStroke('Escape', cancel);
       >
         {{ $t('RAMON.FUNIL.WON.INVALID') }}
       </p>
-      <MotivoPulaDocumentos v-if="pedeMotivo" v-model="motivo" class="mt-3" />
+      <MotivoPulaDocumentos
+        v-if="pedeMotivo"
+        v-model="motivo"
+        v-model:ficar="ficar"
+        class="mt-3"
+      />
       <div :class="RODAPE_JANELA">
         <Button
           data-testid="won-value-skip"

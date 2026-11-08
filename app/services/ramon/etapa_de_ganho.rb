@@ -17,6 +17,9 @@ module Ramon::EtapaDeGanho
   # Chave desligada: nenhuma é conduzida (são pós-venda como as outras, :fechado no Perfil da IA).
   def conduzida?(etapa) = etapa&.is_won == true && CONDUZIDAS.include?(etapa.label) && documentos_ligado?
 
+  # O lead da conversa está numa etapa conduzida (hoje, Documentos).
+  def conversa_conduzida?(conversa) = conduzida?(conversa.account.leads.find_by(conversation_id: conversa.id)&.lead_stage)
+
   # As conduzidas que a conta tem, na ordem do funil; chave desligada = nenhuma.
   def conduzidas(account) = documentos_ligado? ? account.lead_stages.where(is_won: true, label: CONDUZIDAS).to_a : []
 
