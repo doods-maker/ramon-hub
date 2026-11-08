@@ -1,9 +1,6 @@
 # >>> painel-agentes (ADR 0013): foreman-vision dentro do hub. Porta própria no mesmo domínio,
 # para o cookie de sessão do hub chegar ao portão sem mexer no DNS.
 chat.ramonantonio.adv.br:8443 {
-	forward_auth chatwoot-web:3000 {
-		uri /ramon_painel_agentes/portao
-	}
 	# O painel mostra saída de ferramenta, e o cookie do hub vale nesta porta: a política impede
 	# que um script injetado por transcript rode ou mande a sessão para fora.
 	header {
@@ -11,10 +8,23 @@ chat.ramonantonio.adv.br:8443 {
 		Referrer-Policy no-referrer
 		X-Content-Type-Options nosniff
 	}
-	reverse_proxy unix//run/esteira-vision-proxy/vision.sock {
-		# O painel recusa qualquer outro Host (proteção contra DNS rebinding).
-		header_up Host 127.0.0.1:4780
-		header_up -Cookie
+	# route mantém a ordem escrita (sem ele o Caddy põe request_header depois do forward_auth).
+	route {
+		# Identidade e senha só valem vindas daqui (ADR 0016): o que o navegador mandar com esses nomes cai antes de tudo.
+		request_header -X-Painel-Usuario
+		request_header -X-Painel-Escreve
+		request_header -X-Painel-Segredo
+		forward_auth chatwoot-web:3000 {
+			uri /ramon_painel_agentes/portao
+			copy_headers X-Painel-Usuario X-Painel-Escreve
+		}
+		reverse_proxy unix//run/esteira-vision-proxy/vision.sock {
+			# O painel recusa qualquer outro Host (proteção contra DNS rebinding).
+			header_up Host 127.0.0.1:4780
+			header_up -Cookie
+			# Senha interna: o painel só aceita escrita com ela (vem de /etc/esteira/painel.env).
+			header_up X-Painel-Segredo {$PAINEL_SEGREDO}
+		}
 	}
 }
 # <<< painel-agentes

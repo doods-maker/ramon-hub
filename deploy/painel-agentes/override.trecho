@@ -4,4 +4,7 @@
       - "8443:8443"
     volumes:
       - /run/esteira-vision-proxy:/run/esteira-vision-proxy
+    # PAINEL_SEGREDO (ADR 0016): lido direto do arquivo da esteira, sem cópia no hub.
+    env_file:
+      - /etc/esteira/painel.env
   # <<< painel-agentes
