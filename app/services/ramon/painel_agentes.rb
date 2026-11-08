@@ -1,5 +1,6 @@
 # Painel dos agentes: o foreman-vision da esteira, dentro do hub (ADR 0013). Lê transcripts
 # com dado de cliente, então só entra quem está em RAMON_PAINEL_AGENTES_EMAILS. Sem a env, ninguém entra.
+# Decidir aprovação e escrever no painel é de outra lista, RAMON_AGENTES_DECISORES_EMAILS (ADR 0016).
 module Ramon::PainelAgentes
   module_function
 
@@ -11,17 +12,26 @@ module Ramon::PainelAgentes
   end
 
   # O Caddy pergunta isto a cada requisição ao painel, com o cookie de sessão do hub.
-  def sessao_liberada?(cookie)
+  # Devolve a pessoa liberada, ou nil.
+  def usuario_da_sessao(cookie)
     dados = JSON.parse(cookie.to_s)
-    return false unless dados.is_a?(Hash) && dados['uid'].is_a?(String)
+    return unless dados.is_a?(Hash) && dados['uid'].is_a?(String)
 
     user = User.find_by(uid: dados['uid'])
-    user.present? && user.valid_token?(dados['access-token'].to_s, dados['client'].to_s) && liberado?(user)
+    user if user.present? && user.valid_token?(dados['access-token'].to_s, dados['client'].to_s) && liberado?(user)
   rescue JSON::ParserError
-    false
+    nil
   end
 
   def liberado?(user)
-    ENV.fetch('RAMON_PAINEL_AGENTES_EMAILS', '').split(',').map { |email| email.strip.downcase }.include?(user&.email&.downcase)
+    na_lista?('RAMON_PAINEL_AGENTES_EMAILS', user)
+  end
+
+  def decide?(user)
+    na_lista?('RAMON_AGENTES_DECISORES_EMAILS', user)
+  end
+
+  def na_lista?(env, user)
+    ENV.fetch(env, '').split(',').map { |email| email.strip.downcase }.include?(user&.email&.downcase)
   end
 end

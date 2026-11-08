@@ -4,17 +4,22 @@ RSpec.describe 'Aprovações dos agentes', type: :request do
   let(:account) { create(:account) }
   let(:eduardo) { create(:user, account: account, role: :administrator, email: 'eduardo@example.com') }
   let(:ramon) { create(:user, account: account, role: :administrator, email: 'ramon@example.com') }
+  let(:intruso) { create(:user, account: account, role: :administrator, email: 'intruso@example.com') }
   let(:url) { "/api/v1/accounts/#{account.id}/ramon_aprovacoes_agente" }
   let!(:pedido) do
     RamonAprovacaoAgente.abrir!(caso: 'Fulano de Tal #123', ferramenta: 'advbox_criar_tarefa', entrada: { 'descricao' => 'dado do cliente' })
   end
 
-  around { |exemplo| with_modified_env(RAMON_PAINEL_AGENTES_EMAILS: 'eduardo@example.com') { exemplo.run } }
+  around do |exemplo|
+    with_modified_env(RAMON_PAINEL_AGENTES_EMAILS: 'eduardo@example.com,ramon@example.com',
+                      RAMON_AGENTES_DECISORES_EMAILS: 'eduardo@example.com') { exemplo.run }
+  end
 
-  it 'lista os pendentes para quem está na lista' do
+  it 'lista os pendentes para quem está na lista, dizendo se pode decidir' do
     get url, headers: eduardo.create_new_auth_token, as: :json
-    expect(response.parsed_body.first).to include('id' => pedido.id, 'caso' => 'Fulano de Tal #123', 'ferramenta' => 'advbox_criar_tarefa',
-                                                  'entrada' => { 'descricao' => 'dado do cliente' })
+    expect(response.parsed_body['pode_decidir']).to be(true)
+    expect(response.parsed_body['pedidos'].first).to include('id' => pedido.id, 'caso' => 'Fulano de Tal #123', 'ferramenta' => 'advbox_criar_tarefa',
+                                                             'entrada' => { 'descricao' => 'dado do cliente' })
   end
 
   context 'with tarefa do ADVBOX' do
@@ -30,14 +35,14 @@ RSpec.describe 'Aprovações dos agentes', type: :request do
       allow(Ramon::AdvboxClient).to receive(:settings).and_return({ 'users' => [{ 'id' => 5, 'name' => 'Eduardo' }],
                                                                     'tasks' => [{ 'id' => 9, 'task' => 'Solicitar documentos' }] })
       get url, headers: eduardo.create_new_auth_token, as: :json
-      expect(response.parsed_body.last['nomes']).to eq('responsavel' => 'Eduardo', 'tipo' => 'Solicitar documentos')
+      expect(response.parsed_body['pedidos'].last['nomes']).to eq('responsavel' => 'Eduardo', 'tipo' => 'Solicitar documentos')
     end
 
     it 'com o ADVBOX fora, a lista continua sem os nomes' do
       allow(Ramon::AdvboxClient).to receive(:settings).and_raise(Ramon::AdvboxClient::UnavailableError)
       get url, headers: eduardo.create_new_auth_token, as: :json
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body.last['nomes']).to eq({})
+      expect(response.parsed_body['pedidos'].last['nomes']).to eq({})
     end
   end
 
@@ -52,8 +57,18 @@ RSpec.describe 'Aprovações dos agentes', type: :request do
   end
 
   it 'barra administrador fora da lista, para ver e para decidir' do
-    get url, headers: ramon.create_new_auth_token, as: :json
+    get url, headers: intruso.create_new_auth_token, as: :json
     expect(response).to have_http_status(:forbidden)
+
+    patch "#{url}/#{pedido.id}", params: { decisao: 'aprovada' }, headers: intruso.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:forbidden)
+    expect(pedido.reload.status).to eq('pendente')
+  end
+
+  it 'quem só vê recebe a lista, mas não decide' do
+    get url, headers: ramon.create_new_auth_token, as: :json
+    expect(response.parsed_body).to include('pode_decidir' => false)
+    expect(response.parsed_body['pedidos'].first['id']).to eq(pedido.id)
 
     patch "#{url}/#{pedido.id}", params: { decisao: 'aprovada' }, headers: ramon.create_new_auth_token, as: :json
     expect(response).to have_http_status(:forbidden)
@@ -79,7 +94,7 @@ RSpec.describe 'Aprovações dos agentes', type: :request do
   it 'pedido vencido sai da lista e é apagado no próximo pedido' do
     pedido.update!(created_at: 13.hours.ago)
     get url, headers: eduardo.create_new_auth_token, as: :json
-    expect(response.parsed_body).to eq([])
+    expect(response.parsed_body['pedidos']).to eq([])
 
     RamonAprovacaoAgente.abrir!(caso: '124', ferramenta: 'WebFetch', entrada: {})
     expect(RamonAprovacaoAgente.exists?(pedido.id)).to be(false)

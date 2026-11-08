@@ -1,15 +1,19 @@
 <script setup>
 // Painel dos agentes: o foreman-vision da esteira em tela cheia (ADR 0013).
 // Quem barra de verdade é o portão no Caddy; aqui só se decide o que mostrar.
+// As aprovações moram numa aba do painel; esta página é a ponte (ADR 0016).
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import AprovacoesAgentes from '../components/AprovacoesAgentes.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { usePainelAgentes } from '../composables/usePainelAgentes';
+import { usePonteAprovacoes } from '../composables/usePonteAprovacoes';
 
 defineOptions({ name: 'RamonPainelAgentes' });
 
 const { t } = useI18n();
 const { url, carregado } = usePainelAgentes();
+const painel = ref(null);
+usePonteAprovacoes(painel, url);
 </script>
 
 <template>
@@ -19,9 +23,9 @@ const { url, carregado } = usePainelAgentes();
       :title="t('RAMON.AGENTES.TITLE')"
       :subtitle="t('RAMON.AGENTES.SUBTITLE')"
     />
-    <AprovacoesAgentes v-if="url" />
     <iframe
       v-if="url"
+      ref="painel"
       :src="url"
       :title="t('RAMON.AGENTES.TITLE')"
       referrerpolicy="no-referrer"

@@ -4,4 +4,9 @@
       - "8443:8443"
     volumes:
       - /run/esteira-vision-proxy:/run/esteira-vision-proxy
+    # PAINEL_SEGREDO (ADR 0016): lido direto do arquivo da esteira, sem cópia no hub. Forma longa
+    # (compose >= 2.24): sem o arquivo, o compose do hub segue subindo e o painel recusa escrita (senha vazia).
+    env_file:
+      - path: /etc/esteira/painel.env
+        required: false
   # <<< painel-agentes
