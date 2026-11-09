@@ -21,7 +21,10 @@ module Ramon::Documentos::Passagem
     return unless Ramon::EtapaDeGanho.documentos_ligado?
 
     passar(lead)
-    analise(lead) if no_juridico?(lead.reload)
+    return unless no_juridico?(lead.reload)
+
+    Ramon::Colheita::ArquivoAtendimento.gravar(lead) # antes da ANÁLISE: a esteira não roda sem o arquivo
+    analise(lead.reload)
   end
 
   # O caso apareceu no ADVBOX depois da passagem (AdvboxClosingService): a tarefa que ficou para trás, sem novo aviso. Só com o

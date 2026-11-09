@@ -140,7 +140,9 @@ module Ramon::Colheita::Esquema # rubocop:disable Metrics/ModuleLength -- o mód
     modelo = BLOCOS.slice(*blocos_para(thesis_name)).merge(
       'confirmar' => ['caminho.do.campo dito de forma incerta'],
       'lacunas' => [{ 'campo' => 'caminho.do.campo', 'como_obter' => 'documento/fonte que resolve' }],
-      'checklist_ok' => [123]
+      'checklist_ok' => [123],
+      'fontes' => { 'bloco.campo' => 'dd/mm da mensagem de onde o campo saiu' },
+      'trechos' => [{ 'campo' => 'bloco.campo', 'texto' => 'fala literal e curta do cliente' }]
     )
     JSON.pretty_generate(modelo)
   end
