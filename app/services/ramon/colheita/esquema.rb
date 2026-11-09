@@ -7,7 +7,7 @@ module Ramon::Colheita::Esquema # rubocop:disable Metrics/ModuleLength -- o mód
   SIM_NAO = 'sim|nao|nao_sabe'.freeze
   TRATAMENTO = { 'tipo' => 'cirurgia|conservador|internacao|medicacao', 'onde' => nil, 'quando' => nil }.freeze
   ACIDENTE = {
-    'data' => nil, 'tipo' => 'trabalho|trajeto|doenca_trabalho|outra_natureza', 'descricao' => nil, 'lesao' => nil,
+    'data' => nil, 'tipo' => 'trabalho|trajeto|doenca_trabalho|outra_natureza', 'descricao' => nil, 'lesao' => { 'descricao' => nil, 'cid' => nil },
     'cat_emitida' => SIM_NAO, 'empregador_na_epoca' => nil
   }.freeze
   SEQUELA = {
@@ -48,7 +48,8 @@ module Ramon::Colheita::Esquema # rubocop:disable Metrics/ModuleLength -- o mód
       'escolaridade' => nil, 'pericia_desconsiderou' => nil, 'ligada_ao_trabalho' => SIM_NAO
     },
     'dependencia' => {
-      'precisa_ajuda' => 'sim|nao|parcial', 'atividades' => [], 'desde' => nil, 'quem_cuida' => nil,
+      'precisa_ajuda' => 'sim|nao|parcial', 'desde' => nil, 'quem_cuida' => nil,
+      'atividades' => ['alimentar|higiene|vestir|locomover|medicacao|supervisao'],
       'laudo_cuidador' => SIM_NAO
     },
     'assistencial' => {
@@ -92,7 +93,7 @@ module Ramon::Colheita::Esquema # rubocop:disable Metrics/ModuleLength -- o mód
       'salario' => { 'registrado' => nil, 'real' => nil, 'por_fora' => 'sim|nao' },
       'jornada' => { 'horario' => nil, 'dias_semana' => nil, 'horas_extras' => 'sim|nao', 'pagas_certo' => 'sim|nao' },
       'processo_anterior' => 'nao|sim_julgado|arquivado_sem_julgamento',
-      'provas_disponiveis' => [], 'testemunhas' => [{ 'nome' => nil, 'relacao' => nil }]
+      'provas_disponiveis' => ['mensagens|fotos|audios|ponto|contracheque|testemunhas'], 'testemunhas' => [{ 'nome' => nil, 'relacao' => nil }]
     },
     'queixas' => [{
       'hipotese' => 'salario_atrasado|fgts_sem_deposito|verbas_rescisorias|horas_extras|salario_por_fora|desvio_acumulo|' \
@@ -132,8 +133,7 @@ module Ramon::Colheita::Esquema # rubocop:disable Metrics/ModuleLength -- o mód
   end
 
   def self.blocos_para(thesis_name)
-    chave = tese(thesis_name)
-    NUCLEO + (TESES.find { |t, _, _| t == chave }&.last || [])
+    NUCLEO + (TESES.find { |_, regex, _| thesis_name.to_s.match?(regex) }&.last || [])
   end
 
   def self.modelo_json(thesis_name)

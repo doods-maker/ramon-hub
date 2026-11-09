@@ -41,6 +41,15 @@ RSpec.describe Ramon::Colheita::Esquema do
     expect(vinculo.dig('contrato', 'testemunhas', 0).keys).to eq(%w[nome relacao])
   end
 
+  it 'traz os campos que a spec acrescenta ao esquema aprovado do B36 e ao núcleo' do
+    b36 = JSON.parse(described_class.modelo_json('Auxílio-acidente (B36)'))
+    expect(b36.dig('acidente', 'lesao').keys).to eq(%w[descricao cid])
+    expect(b36.dig('acidente', 'tipo')).to include('doenca_trabalho')
+    expect(b36.dig('sequela', 'tratamentos', 0).keys).to eq(%w[tipo onde quando])
+    expect(b36.dig('beneficios', 0).keys).to include('der', 'prorrogacao_pedida')
+    expect(b36.dig('outras_teses_sinal', 0).keys).to eq(%w[tese motivo])
+  end
+
   it 'campos lista o 1º nível; bloco-lista entra inteiro; todo bloco do mapa existe' do
     expect(described_class.campos('fechamento')).to include('fechamento.objecoes')
     expect(described_class.campos('beneficios')).to eq(%w[beneficios])
