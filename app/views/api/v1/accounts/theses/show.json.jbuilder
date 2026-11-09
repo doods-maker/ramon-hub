@@ -13,6 +13,8 @@ json.palavras_chave @thesis.palavras_chave
 json.zapsign_template_id @thesis.zapsign_template_id
 json.opcoes_botoes @thesis.opcoes_botoes
 json.passa_documentos @thesis.passa_documentos
+json.validador_ids @thesis.validador_ids
+json.comissao_apto @thesis.comissao_apto
 
 json.items @thesis.thesis_items do |item|
   json.id item.id

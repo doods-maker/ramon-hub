@@ -60,6 +60,6 @@ class Api::V1::Accounts::ThesesController < Api::V1::Accounts::BaseController
   def permitted_params
     params.permit(:name, :description, :area, :active, :honorario_percentual, :honorario_n_mensalidades,
                   :honorario_minimo_qtd, :honorario_minimo_base, :honorario_na_tabela, :zapsign_template_id, :opcoes_botoes,
-                  :passa_documentos, palavras_chave: [])
+                  :passa_documentos, :comissao_apto, palavras_chave: [], validador_ids: [])
   end
 end

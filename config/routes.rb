@@ -437,6 +437,7 @@ Rails.application.routes.draw do
               post :reuniao
               get :roteiro, to: 'lead_roteiros#show'
               post :reabrir_roteiro, to: 'lead_roteiros#reabrir'
+              post :apto, to: 'lead_apto#create'
             end
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :funil_acoes, only: [] do

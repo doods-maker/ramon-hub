@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_08_100003) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_09_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1206,6 +1206,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_08_100003) do
     t.datetime "docs_completos_em"
     t.datetime "contrato_limpo_em"
     t.datetime "contrato_cancelado_em"
+    t.datetime "validacao_desde"
+    t.datetime "apto_em"
+    t.bigint "apto_por_id"
+    t.datetime "devolvido_em"
+    t.bigint "devolvido_por_id"
+    t.text "devolvido_motivo"
+    t.bigint "validador_id"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -2039,6 +2046,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_08_100003) do
     t.string "zapsign_template_id"
     t.string "opcoes_botoes", default: "desligado", null: false
     t.boolean "passa_documentos", default: false, null: false
+    t.bigint "validador_ids", default: [], null: false, array: true
+    t.decimal "comissao_apto", precision: 8, scale: 2
     t.index ["account_id", "name"], name: "index_theses_on_account_id_and_name", unique: true
   end
 
