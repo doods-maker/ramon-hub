@@ -125,6 +125,7 @@ RSpec.describe Ramon::ContratoApto do
       described_class.devolver!(lead, rafaela, 'Falta o laudo')
 
       expect(lead.reload).to have_attributes(devolvido_por_id: rafaela.id, devolvido_motivo: 'Falta o laudo', apto_em: nil)
+      expect(lead.lead_activities.find_by(kind: 'apto_devolvido')).to have_attributes(user_id: rafaela.id, to_value: 'Falta o laudo')
       expect(described_class.situacao(lead)).to eq('devolvido')
       expect(avisos_de(closer).count).to eq(1)
     end

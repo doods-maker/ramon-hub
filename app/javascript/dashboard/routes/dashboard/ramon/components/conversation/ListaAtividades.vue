@@ -58,6 +58,10 @@ const GRUPO = {
   dossie_entregue: 'campo',
   funil_auto: 'etapa',
   documentos: 'ganho',
+  apto_validado: 'ganho',
+  apto_por_prazo: 'ganho',
+  apto_devolvido: 'perda',
+  apto_reenviado: 'campo',
 };
 const grupoDe = activity => {
   if (activity.kind !== 'stage_changed') return GRUPO[activity.kind] || 'outro';

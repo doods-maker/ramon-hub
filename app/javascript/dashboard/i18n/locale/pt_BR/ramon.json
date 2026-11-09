@@ -1272,7 +1272,11 @@
           "DOSSIE_ENTREGUE": "marcou o dossiê como entregue ao jurídico",
           "FUNIL_AUTO": "IA do funil",
           "DOCUMENTOS": "Etapa Documentos",
-          "ROTEIRO": "roteiro da IA"
+          "ROTEIRO": "roteiro da IA",
+          "APTO_VALIDADO": "Apto para protocolo (jurídico)",
+          "APTO_POR_PRAZO": "Apto por prazo (jurídico não respondeu)",
+          "APTO_DEVOLVIDO": "Devolvido pelo jurídico",
+          "APTO_REENVIADO": "Reenviado ao jurídico"
         }
       },
       "LOADING": "Carregando lead…",

@@ -1272,7 +1272,11 @@
           "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team",
           "FUNIL_AUTO": "Funnel AI",
           "DOCUMENTOS": "Documents stage",
-          "ROTEIRO": "AI script"
+          "ROTEIRO": "AI script",
+          "APTO_VALIDADO": "Ready for filing (legal)",
+          "APTO_POR_PRAZO": "Ready for filing (legal deadline passed)",
+          "APTO_DEVOLVIDO": "Sent back by legal",
+          "APTO_REENVIADO": "Sent to legal again"
         }
       },
       "LOADING": "Loading lead…",

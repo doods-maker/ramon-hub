@@ -52,6 +52,7 @@ module Ramon::ContratoApto
   def validar!(lead, user)
     exigir!(lead, user, 'aguardando')
     lead.update!(apto_em: Time.current, apto_por_id: user.id)
+    registrar(lead, user, 'apto_validado')
     avisar_closer(lead, "Contrato apto para protocolo: #{lead.name}")
   end
 
@@ -60,6 +61,7 @@ module Ramon::ContratoApto
 
     exigir!(lead, user, 'aguardando')
     lead.update!(devolvido_em: Time.current, devolvido_por_id: user.id, devolvido_motivo: motivo.strip)
+    registrar(lead, user, 'apto_devolvido', motivo.strip)
     avisar_closer(lead, "Contrato devolvido pelo jurídico: #{lead.name} — #{motivo.strip}")
   end
 
@@ -69,6 +71,7 @@ module Ramon::ContratoApto
     raise Invalido, 'situacao' unless situacao(lead) == 'devolvido'
 
     lead.update!(validacao_desde: Time.current, devolvido_em: nil, devolvido_por_id: nil, devolvido_motivo: nil)
+    registrar(lead, user, 'apto_reenviado')
     avisar_validadores(lead)
   end
 
@@ -90,6 +93,7 @@ module Ramon::ContratoApto
       next unless vence && vence <= agora
 
       lead.update!(apto_em: vence, apto_por_id: nil)
+      registrar(lead, nil, 'apto_por_prazo')
       avisar_closer(lead, "Contrato apto por prazo (5 dias úteis sem resposta do jurídico): #{lead.name}")
     end
   end
@@ -106,6 +110,11 @@ module Ramon::ContratoApto
       dia += 1
       return dia unless dia.on_weekend? || Ramon::Agenda::Feriados.feriado?(dia)
     end
+  end
+
+  # Histórico do lead; a devolução também é a base da constância do Programa de Metas (devolvidos no trimestre).
+  def registrar(lead, user, kind, valor = nil)
+    lead.lead_activities.create!(account: lead.account, user: user, kind: kind, to_value: valor)
   end
 
   def avisar_validadores(lead) = avisar(lead, validadores(lead), "Contrato aguardando validação do jurídico: #{lead.name}")
