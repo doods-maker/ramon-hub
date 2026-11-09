@@ -400,6 +400,9 @@ Rails.application.routes.draw do
             patch 'metas/:meta_id', action: :editar_meta
             delete :metas, action: :apagar_metas
           end
+          resources :lead_aptos, only: [:index], controller: 'lead_apto' do
+            post :validar_lote, on: :collection
+          end
           resource :ramon_extrato, only: [:show], controller: 'ramon_extrato' do
             put :meta
             get :programas

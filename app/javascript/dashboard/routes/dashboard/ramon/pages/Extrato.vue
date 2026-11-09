@@ -59,7 +59,12 @@ const carregar = async () => {
     edicao.value = Object.fromEntries(
       data.pessoas.map(p => [
         p.user.id,
-        { papel: p.papel, meta: p.meta ?? '', fator: p.fator ?? 1 },
+        // fator vazio = vale o calculado; preenchido só se o gestor já corrigiu
+        {
+          papel: p.papel,
+          meta: p.meta ?? '',
+          fator: p.fator_base?.manual ? p.fator : '',
+        },
       ])
     );
   } catch {
@@ -77,7 +82,7 @@ const salvarMeta = async pessoa => {
       user_id: pessoa.user.id,
       papel,
       meta: Number(meta) || 0,
-      fator: Number(fator) || 1,
+      fator: fator === '' || fator === null ? null : Number(fator),
     });
     useAlert(t('RAMON.EXTRATO.META_SALVA'));
     await carregar();
@@ -353,7 +358,7 @@ onMounted(() => {
                     step="0.1"
                     data-testid="extrato-fator"
                     :class="CAMPO"
-                    class="w-20 font-mono tabular-nums"
+                    class="w-28 font-mono tabular-nums"
                   />
                 </label>
               </template>
@@ -375,6 +380,86 @@ onMounted(() => {
               </template>
             </span>
           </div>
+
+          <!-- A cenoura: quanto falta, a conta do fator, reuniões da IA, constância -->
+          <ul class="m-0 flex flex-col gap-1 p-0 text-xs text-n-slate-11">
+            <li v-if="p.faltam_meta > 0" data-testid="extrato-faltam">
+              {{ t('RAMON.EXTRATO.FALTAM_META', { count: p.faltam_meta }) }}
+            </li>
+            <li v-else-if="p.faltam_meta === 0" data-testid="extrato-faltam">
+              {{ t('RAMON.EXTRATO.META_BATIDA') }}
+            </li>
+            <li v-if="p.fator_base?.tipo" data-testid="extrato-fator-base">
+              {{
+                t(`RAMON.EXTRATO.FATOR_BASE.${p.fator_base.tipo}`, {
+                  num: p.fator_base.numerador,
+                  den: p.fator_base.denominador,
+                  taxa: Math.round((p.fator_base.taxa || 0) * 100),
+                  fator: p.fator_base.calculado ?? p.fator,
+                })
+              }}
+            </li>
+            <li
+              v-else-if="p.fator_base?.primeiro"
+              data-testid="extrato-fator-base"
+            >
+              {{ t('RAMON.EXTRATO.FATOR_BASE.primeiro') }}
+            </li>
+            <li v-if="p.fator_base?.manual" data-testid="extrato-fator-manual">
+              {{
+                t('RAMON.EXTRATO.FATOR_BASE.manual', {
+                  fator: p.fator,
+                  calculado: p.fator_base.calculado,
+                })
+              }}
+            </li>
+            <li v-if="p.reunioes_ia" data-testid="extrato-reunioes-ia">
+              {{ t('RAMON.EXTRATO.REUNIOES_IA', { count: p.reunioes_ia }) }}
+            </li>
+            <li v-if="p.proxima_faixa" data-testid="extrato-proxima-faixa">
+              {{
+                t(
+                  p.proxima_faixa.gas
+                    ? 'RAMON.EXTRATO.PROXIMO_GAS'
+                    : 'RAMON.EXTRATO.PROXIMA_FAIXA',
+                  {
+                    faltam: p.proxima_faixa.faltam,
+                    valor: brl(p.proxima_faixa.valor),
+                  }
+                )
+              }}
+            </li>
+            <li v-if="p.constancia" class="flex flex-wrap items-center gap-2">
+              {{ t('RAMON.EXTRATO.CONSTANCIA', { min: p.constancia.min_mes }) }}
+              <span
+                v-for="m in p.constancia.meses"
+                :key="m.mes"
+                data-testid="extrato-constancia-mes"
+                :class="[CHIP, m.ok ? TOM.teal : TOM.amber]"
+              >
+                {{ m.mes }} · {{ m.contagem }}
+              </span>
+              <span
+                v-if="
+                  p.constancia.taxa !== null && p.constancia.taxa !== undefined
+                "
+                data-testid="extrato-constancia-taxa"
+                :class="[
+                  CHIP,
+                  p.constancia.taxa <= p.constancia.max_problemas
+                    ? TOM.teal
+                    : TOM.amber,
+                ]"
+              >
+                {{
+                  t('RAMON.EXTRATO.CONSTANCIA_TAXA', {
+                    taxa: Math.round(p.constancia.taxa * 100),
+                    max: Math.round(p.constancia.max_problemas * 100),
+                  })
+                }}
+              </span>
+            </li>
+          </ul>
 
           <dl
             class="m-0 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4"

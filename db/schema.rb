@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_09_130000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_09_140000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1213,6 +1213,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_09_130000) do
     t.bigint "devolvido_por_id"
     t.text "devolvido_motivo"
     t.bigint "validador_id"
+    t.boolean "reuniao_pela_ia", default: false, null: false
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1566,6 +1567,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_09_130000) do
     t.index ["user_id"], name: "index_ramon_extratos_fechados_on_user_id"
   end
 
+  create_table "ramon_fatores_trimestre", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "papel", null: false
+    t.date "inicio", null: false
+    t.decimal "fator", precision: 3, scale: 2, null: false
+    t.jsonb "base", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "user_id", "papel", "inicio"], name: "index_ramon_fatores_trimestre_unico", unique: true
+    t.index ["account_id"], name: "index_ramon_fatores_trimestre_on_account_id"
+    t.index ["user_id"], name: "index_ramon_fatores_trimestre_on_user_id"
+  end
+
   create_table "ramon_fluxo_execucoes", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "fluxo_id", null: false
@@ -1771,7 +1786,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_09_130000) do
     t.boolean "rampa", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.decimal "fator", precision: 3, scale: 2, default: "1.0", null: false
+    t.decimal "fator", precision: 3, scale: 2
     t.index ["account_id", "user_id", "mes"], name: "index_ramon_metas_comerciais_on_account_id_and_user_id_and_mes", unique: true
     t.index ["account_id"], name: "index_ramon_metas_comerciais_on_account_id"
     t.index ["user_id"], name: "index_ramon_metas_comerciais_on_user_id"
@@ -2220,6 +2235,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_09_130000) do
   add_foreign_key "ramon_pastas_prontas", "accounts", on_delete: :cascade
   add_foreign_key "ramon_pastas_prontas", "users", column: "responsavel_id", on_delete: :nullify
   add_foreign_key "ramon_pecas", "accounts"
+  add_foreign_key "ramon_fatores_trimestre", "accounts"
+  add_foreign_key "ramon_fatores_trimestre", "users"
   add_foreign_key "ramon_programas_metas", "accounts"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"

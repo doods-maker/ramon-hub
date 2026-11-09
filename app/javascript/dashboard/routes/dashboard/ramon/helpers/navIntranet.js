@@ -56,6 +56,7 @@ const SECOES = [
           aba('ramon_protocolos', 'PROTOCOLOS', {
             acende: ['ramon_protocolo'],
           }),
+          aba('ramon_validacao_apto', 'VALIDACAO_APTO'),
         ],
       },
     ],

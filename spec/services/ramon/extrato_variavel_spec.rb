@@ -216,4 +216,128 @@ RSpec.describe Ramon::ExtratoVariavel do
       end
     end
   end
+
+  describe 'quem agendou (só a reunião marcada pela IA deixa de pagar o SDR)' do
+    it 'reunião registrada sobre tarefa sem criador (IA) fica fora e aparece separada', :aggregate_failures do
+      pela_ia = create(:lead, account: account, lead_stage: stage, sdr: sdr)
+      pela_ia.lead_tasks.create!(account: account, user: nil, title: 'Reunião', kind: 'meeting', due_at: em(novembro, 9))
+      pelo_sdr = create(:lead, account: account, lead_stage: stage, sdr: sdr)
+      pelo_sdr.lead_tasks.create!(account: account, user: sdr, title: 'Reunião', kind: 'meeting', due_at: em(novembro, 9))
+
+      travel_to(em(novembro)) { [pela_ia, pelo_sdr].each { |lead| lead.registrar_reuniao!('qualificada', closer) } }
+
+      expect(pela_ia.reload.reuniao_pela_ia).to be(true)
+      expect(extrato_de(sdr)).to include(contagem: 1, reunioes_ia: 1)
+    end
+  end
+
+  describe 'fator automático do trimestre (modelo A)' do
+    let(:fevereiro) { Date.new(2027, 2, 1) }
+
+    def no_shows(qtd, mes: dezembro)
+      qtd.times do
+        lead = create(:lead, account: account, lead_stage: stage, sdr: sdr)
+        lead.lead_activities.create!(account: account, kind: 'meeting_no_show', to_value: 'Reunião', created_at: em(mes, 5))
+      end
+    end
+
+    def enviados(qtd, mes: dezembro)
+      Array.new(qtd) do |i|
+        create(:lead, account: account, lead_stage: stage, closer: closer, thesis: tese).tap do |lead|
+          lead.update_columns(contrato_limpo_em: em(mes, 3), apto_em: em(mes, 10) + i.minutes, apto_por_id: sdr.id) # rubocop:disable Rails/SkipsModelValidations
+        end
+      end
+    end
+
+    it 'SDR: comparecimento do trimestre anterior abaixo de 65% = 0,8 (10 realizadas, 6 faltas = 62,5%)', :aggregate_failures do
+      reunioes(10, mes: dezembro)
+      no_shows(6)
+      reunioes(50, mes: fevereiro)
+
+      linha = travel_to(em(fevereiro, 15)) { extrato_de(sdr, fevereiro) }
+      expect(linha).to include(fator: 0.8, variavel: 320.0)
+      expect(linha[:fator_base]).to include(tipo: 'comparecimento', numerador: 10, denominador: 16, manual: false)
+    end
+
+    it 'SDR: acima de 80% = 1,1 (10 realizadas, 1 falta = 90,9%)' do
+      reunioes(10, mes: dezembro)
+      no_shows(1)
+
+      expect(travel_to(em(fevereiro, 15)) { extrato_de(sdr, fevereiro) }[:fator]).to eq(1.1)
+    end
+
+    it 'Closer: devolvidos ou cancelados em até 90 dias acima de 15% = 0,8; até 5% = 1,1', :aggregate_failures do
+      casos = enviados(20)
+      casos.first(2).each { |lead| lead.lead_activities.create!(account: account, kind: 'apto_devolvido', created_at: em(dezembro, 6)) }
+      casos.last(2).each { |lead| lead.update_columns(contrato_cancelado_em: em(Date.new(2027, 1, 1), 20)) } # rubocop:disable Rails/SkipsModelValidations
+
+      expect(travel_to(em(fevereiro, 15)) { extrato_de(closer, fevereiro) }).to include(fator: 0.8)
+    end
+
+    it 'Closer: 1 problema em 20 (5%) = 1,1' do
+      enviados(20).first.lead_activities.create!(account: account, kind: 'apto_devolvido', to_value: 'x', created_at: em(dezembro, 6))
+
+      expect(travel_to(em(fevereiro, 15)) { extrato_de(closer, fevereiro) }[:fator]).to eq(1.1)
+    end
+
+    it '1º trimestre da pessoa é 1,0 mesmo com números ruins' do
+      reunioes(10)
+      no_shows(9, mes: novembro)
+
+      expect(extrato_de(sdr, dezembro)[:fator]).to eq(1.0)
+    end
+
+    it 'o fator digitado pelo gestor no trimestre vale no lugar do calculado', :aggregate_failures do
+      reunioes(10, mes: dezembro)
+      no_shows(6)
+      MetaComercial.create!(account: account, user: sdr, papel: 'sdr', mes: fevereiro, meta: 50, fator: 1.0)
+
+      linha = travel_to(em(fevereiro, 15)) { extrato_de(sdr, fevereiro) }
+      expect(linha).to include(fator: 1.0)
+      expect(linha[:fator_base]).to include(manual: true, calculado: 0.8)
+    end
+
+    it 'Closer: cancelamento depois do 1º dia do trimestre novo não entra (o número não depende do dia da leitura)' do
+      casos = enviados(20)
+      casos.last(4).each { |lead| lead.update_columns(contrato_cancelado_em: em(fevereiro, 20)) } # rubocop:disable Rails/SkipsModelValidations
+
+      expect(travel_to(em(Date.new(2027, 3, 1), 15)) { extrato_de(closer, fevereiro) }[:fator]).to eq(1.1)
+    end
+
+    it 'calculado uma vez no trimestre, não muda depois (extrato estável)' do
+      reunioes(10, mes: dezembro)
+      no_shows(6)
+      travel_to(em(fevereiro, 15)) { extrato_de(sdr, fevereiro) }
+      reunioes(40, mes: Date.new(2027, 1, 1))
+
+      expect(travel_to(em(Date.new(2027, 3, 1), 15)) { extrato_de(sdr, Date.new(2027, 3, 1)) }[:fator]).to eq(0.8)
+    end
+  end
+
+  describe 'quanto falta (a cenoura do cartão)' do
+    it 'modelo A: quanto falta para a meta do mês' do
+      reunioes(30)
+
+      expect(extrato_de(sdr)[:faltam_meta]).to eq(20)
+    end
+
+    it 'modelo B: próxima faixa do Programa e a constância até aqui', :aggregate_failures do
+      hibrido!
+      programa!
+      aptos(30, mes: dezembro)
+
+      linha = travel_to(em(dezembro, 20)) { extrato_de(closer, dezembro) }
+      expect(linha[:proxima_faixa]).to eq(min: 35, valor: 450.0, faltam: 5)
+      expect(linha[:constancia]).to include(min_mes: 25, meses: [{ mes: '2026-12', contagem: 30, ok: true }],
+                                            max_problemas: 0.05, taxa: 0.0)
+    end
+
+    it 'modelo B: passada a última faixa, quanto falta para o gás' do
+      hibrido!
+      programa!
+      aptos(36, mes: dezembro)
+
+      expect(travel_to(em(dezembro, 20)) { extrato_de(closer, dezembro) }[:proxima_faixa]).to eq(min: 41, valor: 25.0, faltam: 5, gas: true)
+    end
+  end
 end

@@ -40,7 +40,7 @@ class Ramon::ExtratoVariavel
 
   def sdr_ids = @sdr_ids ||= Ramon::Papeis.membro_ids(account, Ramon::Papeis::SDR)
 
-  # Papel e fator vigentes = a última meta lançada até este mês; sem nenhuma, o time.
+  # Papel vigente = a última meta lançada até este mês; sem nenhuma, o time.
   def vigente(user_id) = historico[user_id]&.last
 
   def papel_de(user_id)
@@ -62,11 +62,24 @@ class Ramon::ExtratoVariavel
   def modelo_a(user, papel)
     grade = GRADES.fetch(papel)
     alvo = alvo_do_mes(user.id, grade)
-    fator = (vigente(user.id)&.fator || 1).to_d
-    unidades = eventos_a(user, papel).each_with_index.map do |(lead, data, evento), i|
+    fator = Ramon::FatorTrimestre.de(account, user, papel, mes, metas: historico[user.id])
+    unidades = unidades_a(user, papel, alvo, grade)
+    { meta: alvo, fator: fator[:fator], fator_base: fator[:base], contagem: unidades.size, unidades: unidades,
+      soma: soma(unidades) * fator[:fator].to_d }.merge(faltam_meta: [alvo - unidades.size, 0].max, **extras_sdr(user, papel))
+  end
+
+  # valor pela posição no mês: até a meta um, acima outro
+  def unidades_a(user, papel, alvo, grade)
+    eventos_a(user, papel).each_with_index.map do |(lead, data, evento), i|
       unidade(lead, data, evento, i < alvo ? grade[:ate_a_meta] : grade[:acima])
     end
-    { meta: alvo, fator: fator.to_f, contagem: unidades.size, unidades: unidades, soma: soma(unidades) * fator }
+  end
+
+  # Reuniões marcadas pela IA não pagam o SDR; o cartão mostra quantas foram (decisão 09/11/2026).
+  def extras_sdr(user, papel)
+    return {} unless papel == Ramon::Papeis::SDR
+
+    { reunioes_ia: reunioes_qualificadas(user).where(reuniao_pela_ia: true).count }
   end
 
   # meta lançada NESTE mês; sem ela, a padrão da grade
@@ -84,7 +97,31 @@ class Ramon::ExtratoVariavel
     unidades = aptos_com_evento(user).map { |lead, data, evento| unidade(lead, data, evento, lead.thesis&.comissao_apto || 0) }
     bonus = primeiro_mes?(user.id) ? [] : bonus_do_programa(user, unidades.size)
     { meta: nil, fator: 1.0, contagem: unidades.size, unidades: unidades, soma: soma(unidades), bonus: bonus,
-      sem_valor: aptos(user).count { |lead, _| lead.thesis&.comissao_apto.nil? } }
+      sem_valor: aptos(user).count { |lead, _| lead.thesis&.comissao_apto.nil? } }.merge(progresso_hibrido(user, unidades.size))
+  end
+
+  # Quanto falta: a próxima faixa do Programa do mês e a constância do trimestre até este mês.
+  def progresso_hibrido(user, contagem)
+    programa = ProgramaMetas.do_mes(account, mes)
+    return {} unless programa
+
+    regra = programa.regras['constancia']
+    meses = (programa.inicio..mes.end_of_month).map(&:beginning_of_month).uniq
+    constancia = regra && { min_mes: regra['min_mes'].to_i, meses: meses.map { |m| mes_da_constancia(user, m, regra['min_mes'].to_i) },
+                            max_problemas: regra['max_problemas'].to_f, taxa: taxa_ate_agora(user, programa) }
+    { proxima_faixa: programa.proxima_faixa(contagem), constancia: constancia }
+  end
+
+  # devolvidos ou cancelados depois de aptos ÷ enviados, do início do trimestre até o fim deste mês (nil sem enviados)
+  def taxa_ate_agora(user, programa)
+    trimestre = periodo_de(programa.inicio).first...periodo.last
+    enviados = leads.where(closer_id: user.id, contrato_limpo_em: trimestre).count
+    enviados.zero? ? nil : problemas(user, trimestre).fdiv(enviados).round(4)
+  end
+
+  def mes_da_constancia(user, mes_do_trimestre, minimo)
+    contagem = aptos(user, periodo_de(mes_do_trimestre)).size
+    { mes: mes_do_trimestre.strftime('%Y-%m'), contagem: contagem, ok: contagem >= minimo }
   end
 
   def aptos_com_evento(user)
@@ -127,9 +164,13 @@ class Ramon::ExtratoVariavel
     (devolvidos | cancelados).size
   end
 
+  def reunioes_qualificadas(user)
+    leads.where(sdr_id: user.id, reuniao_resultado: 'qualificada', reuniao_registrada_em: periodo)
+  end
+
   def reunioes(user)
-    leads.includes(:thesis).where(sdr_id: user.id, reuniao_resultado: 'qualificada', reuniao_registrada_em: periodo)
-         .order(:reuniao_registrada_em).map { |lead| [lead, lead.reuniao_registrada_em] }
+    reunioes_qualificadas(user).where(reuniao_pela_ia: false).includes(:thesis)
+                               .order(:reuniao_registrada_em).map { |lead| [lead, lead.reuniao_registrada_em] }
   end
 
   def aptos(user, intervalo = periodo)

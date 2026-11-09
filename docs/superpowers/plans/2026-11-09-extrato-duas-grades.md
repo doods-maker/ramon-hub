@@ -54,3 +54,13 @@ Fica para depois (anotado): lista "Aguardando validação" em lote; responsável
 8. Apaga `ExtratoDescontos` e as specs da grade antiga.
 
 Fica para depois: cálculo automático do fator do trimestre (o 1º trimestre é 1,0; antes de 01/02/2027).
+
+## PR 3 — Sobras (decisões do Eduardo em 09/11/2026, noite)
+
+- Lista "Aguardando validação" (`ValidacaoApto.vue`, `GET lead_aptos` + `POST lead_aptos/validar_lote`).
+- Tese sem advogado fixo: o responsável do processo no ADVBOX vira o designado ao entrar na fila (`Ramon::ResponsavelAdvbox`).
+- Quem agendou: `leads.reuniao_pela_ia` (tarefa da reunião sem criador); só a marcada pela IA deixa de pagar o SDR.
+- Fator automático (`Ramon::FatorTrimestre` + `FatorQualidade`): calculado no 1º dia do trimestre com o que se sabe e
+  guardado; o gestor corrige digitando o fator (vazio = o calculado); 1º trimestre da pessoa = 1,0.
+- Quanto falta no cartão do Extrato: meta do mês, conta do fator, reuniões da IA, próxima faixa e constância até aqui.
+- Feriados municipais: não entram (decisão do Eduardo).

@@ -83,6 +83,27 @@ RSpec.describe Ramon::ContratoApto do
       expect(lead.reload).to have_attributes(validacao_desde: nil, apto_em: nil)
     end
 
+    it 'tese sem advogado fixo: o responsável do processo no ADVBOX vira o validador ao entrar na fila', :aggregate_failures do
+      sem_fixo = create(:thesis, account: account, name: 'Isenção de IR (teste)')
+      lead = limpo(thesis: sem_fixo, custom_attributes: { 'advbox' => { 'lawsuits_id' => 77 } })
+      allow(Ramon::AdvboxClient).to receive(:lawsuit).with(77).and_return('id' => 77, 'responsible_id' => 5)
+      allow(Ramon::AdvboxClient).to receive(:settings).and_return('users' => [{ 'id' => 5, 'email' => outra.email.upcase }])
+
+      described_class.rodar!(sexta + 1.hour)
+
+      expect(lead.reload.validador_id).to eq(outra.id)
+      expect(avisos_de(outra).count).to eq(1)
+    end
+
+    it 'ADVBOX fora do ar não trava a fila: ficam os administradores' do
+      lead = limpo(thesis: create(:thesis, account: account, name: 'Tese ADVBOX fora'), custom_attributes: { 'advbox' => { 'lawsuits_id' => 77 } })
+      allow(Ramon::AdvboxClient).to receive(:lawsuit).and_raise(Ramon::AdvboxClient::UnavailableError, 'fora')
+
+      described_class.rodar!(sexta + 1.hour)
+
+      expect(described_class.validadores(lead.reload)).to eq([admin.id])
+    end
+
     it 'não avisa de novo quem já está na fila' do
       limpo
       described_class.rodar!(sexta + 1.hour)
@@ -166,6 +187,27 @@ RSpec.describe Ramon::ContratoApto do
       described_class.designar!(lead, admin, outra)
 
       expect(described_class.validadores(lead.reload)).to eq([outra.id])
+    end
+  end
+
+  describe '.fila / .validar_lote!' do
+    it 'a fila de cada advogado tem só os casos dele; o admin vê todos', :aggregate_failures do
+      meu = aguardando
+      de_outra = aguardando(validador_id: outra.id)
+
+      expect(described_class.fila(account, rafaela)).to eq([meu])
+      expect(described_class.fila(account, admin)).to contain_exactly(meu, de_outra)
+    end
+
+    it 'valida em lote só o que a pessoa pode validar e diz o que ficou de fora', :aggregate_failures do
+      meu = aguardando
+      de_outra = aguardando(validador_id: outra.id)
+
+      resultado = described_class.validar_lote!(account, rafaela, [meu.id, de_outra.id])
+
+      expect(resultado).to eq(validados: [meu.id], recusados: [de_outra.id])
+      expect(described_class.situacao(meu.reload)).to eq('apto')
+      expect(described_class.situacao(de_outra.reload)).to eq('aguardando')
     end
   end
 

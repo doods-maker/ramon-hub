@@ -17,7 +17,7 @@ class Api::V1::Accounts::RamonExtratoController < Api::V1::Accounts::BaseControl
 
     user = Current.account.users.find(params[:user_id])
     registro = MetaComercial.find_or_initialize_by(account: Current.account, user: user, mes: mes)
-    registro.update!(papel: params[:papel], meta: params[:meta].to_i, fator: params[:fator].presence || 1)
+    registro.update!(papel: params[:papel], meta: params[:meta].to_i, fator: params[:fator].presence) # vazio = o calculado
     render json: registro.slice(:user_id, :papel, :meta, :fator)
   end
 

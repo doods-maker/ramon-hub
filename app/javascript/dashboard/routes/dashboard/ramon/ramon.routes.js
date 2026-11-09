@@ -167,6 +167,13 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    // Advogados e admin: o backend devolve só os casos que a pessoa pode validar.
+    path: frontendURL('accounts/:accountId/ramon/validacao-apto'),
+    name: 'ramon_validacao_apto',
+    component: () => import('./pages/ValidacaoApto.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     // Agente também entra: o backend só devolve o próprio extrato.
     path: frontendURL('accounts/:accountId/ramon/extrato'),
     name: 'ramon_extrato',

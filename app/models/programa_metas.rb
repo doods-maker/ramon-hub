@@ -30,6 +30,21 @@ class ProgramaMetas < ApplicationRecord
     [faixa(contagem), gas(contagem)].compact
   end
 
+  # O "quanto falta" do cartão: a próxima faixa acima da contagem; passada a última, o começo do gás (gas: true).
+  def proxima_faixa(contagem)
+    faixa = Array(regras['faixas']).select { |f| f['min'].to_i > contagem }.min_by { |f| f['min'].to_i }
+    return { min: faixa['min'].to_i, valor: faixa['valor'].to_f, faltam: faixa['min'].to_i - contagem } if faixa
+
+    inicio_do_gas(contagem)
+  end
+
+  def inicio_do_gas(contagem)
+    inicio = regras.dig('gas', 'acima_de').to_i + 1
+    return unless regras['gas'] && contagem < inicio
+
+    { min: inicio, valor: regras['gas']['valor'].to_f, faltam: inicio - contagem, gas: true }
+  end
+
   private
 
   def faixa(contagem)
