@@ -176,7 +176,7 @@
       }
     },
     "EQUIPE": {
-      "NOVA_1A1": "New chat",
+      "NOVA_CONVERSA": "New chat",
       "BUSCAR_COLEGA": "Search name",
       "AVISO_ADMIN": "Administrators can read the conversations.",
       "ERRO": "Something went wrong — try again.",

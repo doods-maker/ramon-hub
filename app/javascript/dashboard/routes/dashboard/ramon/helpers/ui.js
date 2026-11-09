@@ -57,6 +57,9 @@ export const TOM = {
   amber: 'bg-n-amber-9/15 text-n-amber-11',
   ruby: 'bg-n-ruby-9/10 text-n-ruby-11',
   iris: 'bg-n-iris-9/15 text-n-iris-11',
+  // Verde do WhatsApp: só no que imita o WhatsApp (não lida, Nova conversa).
+  verde:
+    'bg-[rgb(var(--ramon-nao-lida)/0.16)] text-[rgb(var(--ramon-nao-lida-texto))]',
 };
 // Navegação do painel do lead: só ícone (nome no title/aria-label), itens
 // distribuídos por igual no topo do painel. Ativo = pílula translúcida azul.

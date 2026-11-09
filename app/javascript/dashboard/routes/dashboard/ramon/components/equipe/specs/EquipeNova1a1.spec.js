@@ -39,8 +39,9 @@ const abrirMenu = async wrapper => {
   await wrapper.find('[data-testid="equipe-nova-1a1"]').trigger('click');
 };
 
-// Itens do DropdownMenu (a raiz dele tem z-50).
-const itens = wrapper => wrapper.findAll('.z-50 button').map(b => b.text());
+const botoes = wrapper =>
+  wrapper.findAll('[data-testid="equipe-colegas"] button');
+const itens = wrapper => botoes(wrapper).map(b => b.text());
 
 describe('EquipeNova1a1.vue', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -63,9 +64,7 @@ describe('EquipeNova1a1.vue', () => {
     EquipeAPI.conversa.mockResolvedValue({ data: { id: 99 } });
     const wrapper = montar();
     await abrirMenu(wrapper);
-    const brenda = wrapper
-      .findAll('.z-50 button')
-      .find(b => b.text() === 'Brenda Antunes');
+    const brenda = botoes(wrapper).find(b => b.text() === 'Brenda Antunes');
     await brenda.trigger('click');
     await flushPromises();
     expect(EquipeAPI.conversa).toHaveBeenCalledWith(20);
@@ -74,5 +73,18 @@ describe('EquipeNova1a1.vue', () => {
       params: { accountId: 2, inbox_id: 4, conversation_id: 99 },
     });
     expect(itens(wrapper)).toEqual([]);
+  });
+
+  it('Esc fecha o menu e o botão diz se está aberto', async () => {
+    const wrapper = montar();
+    const botao = wrapper.find('[data-testid="equipe-nova-1a1"]');
+    expect(botao.attributes('aria-expanded')).toBe('false');
+    await abrirMenu(wrapper);
+    expect(botao.attributes('aria-expanded')).toBe('true');
+    await wrapper
+      .find('input[type="search"]')
+      .trigger('keydown', { key: 'Escape' });
+    expect(itens(wrapper)).toEqual([]);
+    expect(botao.attributes('aria-expanded')).toBe('false');
   });
 });

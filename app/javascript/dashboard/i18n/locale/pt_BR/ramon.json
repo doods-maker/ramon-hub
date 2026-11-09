@@ -176,7 +176,7 @@
       }
     },
     "EQUIPE": {
-      "NOVA_1A1": "Nova conversa",
+      "NOVA_CONVERSA": "Nova conversa",
       "BUSCAR_COLEGA": "Pesquisar nome",
       "AVISO_ADMIN": "Administradores podem ler as conversas.",
       "ERRO": "Algo deu errado — tente de novo.",
