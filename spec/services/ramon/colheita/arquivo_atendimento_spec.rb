@@ -41,7 +41,14 @@ RSpec.describe Ramon::Colheita::ArquivoAtendimento do
     expect(described_class.gravar(lead.reload)).to eq(:gravado)
 
     expect(Ramon::DriveClient).to have_received(:upload)
-      .with(hash_including(name: "00 Atendimento (#{Time.current.strftime('%Y-%m-%d')}).md")).once
+      .with(hash_including(name: "00 Atendimento (#{Time.current.in_time_zone('America/Sao_Paulo').strftime('%Y-%m-%d')}).md")).once
+  end
+
+  it 'Drive fora ao achar a pasta: :falhou sem gastar a extração', :aggregate_failures do
+    allow(Ramon::DriveClient).to receive(:conteudo_da_pasta).and_raise(Errno::ECONNRESET)
+
+    expect(described_class.gravar(lead)).to eq(:falhou)
+    expect(extracao).not_to have_received(:perform)
   end
 
   it 'Drive não configurado: :sem_drive, registra e não levanta', :aggregate_failures do

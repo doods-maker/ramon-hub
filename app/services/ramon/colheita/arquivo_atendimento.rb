@@ -11,9 +11,10 @@ module Ramon::Colheita::ArquivoAtendimento
     return registrar_sem_drive(lead) unless Ramon::DriveClient.configured?
     return :ja_gravado if ja_gravado?(lead)
 
-    reextrair(lead)
     pasta = Ramon::DriveExportService.new(lead).pasta_tese_id
-    id = Ramon::DriveClient.upload(name: nome_livre(pasta), io: StringIO.new(Ramon::Colheita::Atendimento.markdown(lead)),
+    nome = nome_livre(pasta) # antes da extração: Drive fora falha rápido, sem gastar LLM
+    reextrair(lead)
+    id = Ramon::DriveClient.upload(name: nome, io: StringIO.new(Ramon::Colheita::Atendimento.markdown(lead)),
                                    content_type: 'text/markdown', parent_id: pasta)
     marcar(lead, id)
     Ramon::Documentos::Entrada.registrar(lead, '00 Atendimento.md gravado na pasta da tese')
@@ -50,12 +51,12 @@ module Ramon::Colheita::ArquivoAtendimento
     existentes = Ramon::DriveClient.conteudo_da_pasta(pasta).pluck(:name)
     return NOME unless existentes.include?(NOME)
 
-    "00 Atendimento (#{Time.current.strftime('%Y-%m-%d')}).md"
+    "00 Atendimento (#{Time.current.in_time_zone('America/Sao_Paulo').strftime('%Y-%m-%d')}).md"
   end
 
   def marcar(lead, file_id)
     lead.reload
-    marca = { 'file_id' => file_id, 'gravado_em' => Time.current.iso8601 }
+    marca = { 'file_id' => file_id, 'gravado_em' => Time.current.iso8601(6) }
     lead.update!(custom_attributes: (lead.custom_attributes || {}).merge('atendimento_md' => marca))
   end
 end

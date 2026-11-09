@@ -27,7 +27,7 @@ class Ramon::ColheitaExtractionService
     - A IA não calcula nada (renda per capita, prazos, carência, somas): só registra o que foi dito.
     - Caminhos em "confirmar" e "lacunas": "bloco.campo"; listas com índice, ex.: "saude.doencas[0].cid".
     - "dependencia.quem_cuida": só o parentesco, sem nome.
-    - "ir.valor_mensal" sem valor dito: 5001 se a renda passou de R$ 5.000, 5000 se não.
+    - "ir.valor_mensal" sem valor dito: 5001 se a renda passou de R$ 5.000, 5000 se não; nesse caso liste ir.valor_mensal em confirmar.
     - "segurado" refere-se à data em que parou de contribuir (B31/B32) ou ao parto (maternidade).
     - "vinculo.avaliacao": uma linha por requisito.
     - Testemunhas: só com o que o lead disse na conversa; nunca sugira nomes.

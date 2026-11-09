@@ -84,7 +84,7 @@ RSpec.describe Ramon::Documentos::Passagem do
       described_class.call(lead)
     end
 
-    it 'falha ao gravar o arquivo (Drive fora) não impede a ANÁLISE DO CASO', :aggregate_failures do
+    it 'falha ao gravar o arquivo (extração levanta) não impede a ANÁLISE DO CASO', :aggregate_failures do
       allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
       allow(Ramon::ColheitaExtractionService).to receive(:new).and_raise(Errno::ECONNRESET)
 
