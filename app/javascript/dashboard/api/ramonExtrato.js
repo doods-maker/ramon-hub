@@ -13,6 +13,16 @@ class RamonExtratoAPI extends ApiClient {
   salvarMeta(payload) {
     return axios.put(`${this.url}/meta`, payload);
   }
+
+  // Programas de Metas do híbrido (gestor)
+  programas() {
+    return axios.get(`${this.url}/programas`);
+  }
+
+  // { id?, inicio, fim, regras: { faixas, gas, constancia } }
+  salvarPrograma(payload) {
+    return axios.post(`${this.url}/programa`, payload);
+  }
 }
 
 export default new RamonExtratoAPI();

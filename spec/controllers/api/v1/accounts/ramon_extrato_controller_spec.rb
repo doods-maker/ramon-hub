@@ -26,16 +26,40 @@ RSpec.describe 'Ramon Extrato API', type: :request do
     expect(response.parsed_body['pessoas'].map { |p| p['user']['id'] }).to eq([sdr.id])
   end
 
-  it 'gestor lança a meta do mês (cria e atualiza)', :aggregate_failures do
+  it 'gestor lança a meta do mês com papel e fator (cria e atualiza)', :aggregate_failures do
     travel_to(Time.zone.parse('2026-11-15 12:00:00 UTC')) do
-      put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 25, rampa: true },
+      put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 25 },
                          headers: admin.create_new_auth_token, as: :json
-      put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 30, rampa: true },
+      put "#{url}/meta", params: { mes: '2026-11', user_id: closer.id, papel: 'hibrido', meta: 0 },
+                         headers: admin.create_new_auth_token, as: :json
+      put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 30, fator: 0.8 },
                          headers: admin.create_new_auth_token, as: :json
     end
 
     expect(response).to have_http_status(:success)
-    expect(MetaComercial.where(user: sdr).pluck(:mes, :meta, :rampa)).to eq([[Date.new(2026, 11, 1), 30, true]])
+    expect(MetaComercial.where(user: sdr).pluck(:mes, :meta, :fator)).to eq([[Date.new(2026, 11, 1), 30, 0.8]])
+    expect(MetaComercial.find_by(user: closer).papel).to eq('hibrido')
+  end
+
+  it 'gestor cria e edita o Programa de Metas; agente não vê', :aggregate_failures do
+    regras = { faixas: [{ min: 25, valor: 300 }], gas: { acima_de: 40, valor: 25 } }
+    travel_to(Time.zone.parse('2026-11-15 12:00:00 UTC')) do
+      post "#{url}/programa", params: { inicio: '2026-12-01', fim: '2027-02-28', regras: regras },
+                              headers: admin.create_new_auth_token, as: :json
+      id = response.parsed_body['id']
+      post "#{url}/programa", params: { id: id, inicio: '2026-12-01', fim: '2027-02-28', regras: regras.merge(faixas: [{ min: 30, valor: 300 }]) },
+                              headers: admin.create_new_auth_token, as: :json
+
+      get "#{url}/programas", headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body.map { |p| p.dig('regras', 'faixas', 0, 'min') }).to eq([30])
+
+      post "#{url}/programa", params: { inicio: '2027-02-01', fim: '2027-04-30', regras: regras },
+                              headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity) # sobrepõe o trimestre dez–fev
+
+      get "#{url}/programas", headers: sdr.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
   end
 
   it 'agente não lança meta' do

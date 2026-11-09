@@ -119,11 +119,8 @@ module LeadComercial
     conversation.update!(assignee_id: sdr_id)
   end
 
-  # Saiu de Fechado depois de limpo (regulamento §5.2): apaga o carimbo (se
-  # voltar a fechar, carimba de novo na data nova) e registra quando — base do
-  # desconto na apuração seguinte se a unidade já estava num extrato fechado
-  # (Ramon::ExtratoDescontos). Mês fechado não muda. after_save: o won_at só
-  # zera no track_stage_cycle do Lead, que roda depois dos before_save daqui.
+  # Saiu de Fechado depois de limpo: registra quando (constância do Programa e fator de qualidade). after_save: o won_at
+  # só zera no track_stage_cycle do Lead, que roda depois dos before_save daqui.
   # Contrato apto (Ramon::ContratoApto): depois de apto a comissão é devida, o apto fica e só o cancelamento é
   # registrado; antes, o caso sai da fila do jurídico (se voltar a fechar, recomeça do carimbo novo).
   def cancelar_contrato_limpo

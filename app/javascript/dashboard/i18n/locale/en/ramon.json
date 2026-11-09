@@ -2199,9 +2199,9 @@
         "sem_resposta": "Leads unanswered for 1h+ (now)",
         "registro_completo": "Complete record on the same day",
         "qualificado_agendada": "Qualified → scheduled",
-        "show": "Show rate",
+        "show": "Attendance",
         "nao_qualificada": "\"Not qualified\" meetings",
-        "conversao": "Qualified meeting → contract",
+        "conversao": "Closing (qualified meeting → contract)",
         "assinado_na_reuniao": "Signed during the meeting",
         "vou_pensar_48h": "\"Will think it over\" followed up in 48h",
         "docs_7d": "Documents complete in 7 days",
@@ -2216,10 +2216,10 @@
         "CONTRATOS": "Contracts",
         "primeira_resposta": "1st response",
         "sem_resposta": "Unanswered 1h+",
-        "show": "Show",
+        "show": "Attend.",
         "nao_qualificada": "Not qualif.",
         "registro_completo": "Record",
-        "conversao": "Conversion",
+        "conversao": "Closing",
         "assinado_na_reuniao": "In meeting",
         "docs_7d": "Docs 7d",
         "cancelamento_7d": "Cancel. 7d",
@@ -2253,7 +2253,7 @@
     },
     "EXTRATO": {
       "TITLE": "Variable pay statement",
-      "SUBTITLE": "Units, target bonus and monthly total per person",
+      "SUBTITLE": "Units, paid rest day, program bonus and monthly total per person — two pay plans (split and hybrid)",
       "MES": "Month",
       "EXPORTAR": "Export CSV",
       "LOAD_ERROR": "Could not load the statement.",
@@ -2261,30 +2261,29 @@
       "VAZIO": "No statement for you this month.",
       "VAZIO_GESTOR": "Nobody on the team yet: create the \"sdr\" and \"closer\" teams in Settings → Teams.",
       "META": "Monthly target",
-      "RAMPA": "Ramp-up (months 1–2)",
       "SALVAR": "Save target",
       "META_SALVA": "Target saved",
       "META_ERRO": "Could not save the target",
-      "UNIDADES": "Units",
-      "BONUS": "Target bonus",
-      "DEGRAUS": "({count} step) | ({count} step) | ({count} steps)",
-      "OBS": "Note",
-      "GARANTIA": "Ramp-up minimum applied",
+      "BONUS": "Program bonus",
       "TOTAL": "Monthly total",
       "SEM_UNIDADES": "No events this month.",
       "PAPEL": {
-        "sdr": "SDR",
-        "closer": "Closer"
+        "sdr": "SDR (split)",
+        "closer": "Closer (split)",
+        "hibrido": "Hybrid"
       },
       "CONTAGEM": {
         "sdr": "Qualified meetings",
-        "closer": "Clean contracts"
+        "closer": "Ready contracts",
+        "hibrido": "Ready contracts"
       },
       "EVENTO": {
         "reuniao_qualificada": "Qualified meeting",
-        "contrato_limpo": "Clean contract",
-        "desconto": "Deduction: contract cancelled after payment",
-        "desconto_bonus": "Deduction: bonus/step undone by the cancellation"
+        "contrato_apto": "Ready contract",
+        "contrato_apto_prazo": "Ready contract by deadline (legal did not answer)",
+        "contrato_limpo": "Clean contract (old plan)",
+        "desconto": "Discount: contract cancelled after payment (old plan)",
+        "desconto_bonus": "Discount: bonus undone by cancellation (old plan)"
       },
       "COL": {
         "DATA": "Date",
@@ -2293,7 +2292,38 @@
         "VALOR": "Amount"
       },
       "FECHADO": "Closed on {data}",
-      "DESCONTOS": "Deductions"
+      "PAPEL_ROTULO": "Pay plan",
+      "FATOR": "Quarter factor",
+      "FATOR_AJUDA": "Quality multiplier for plan A (0.8 · 1.0 · 1.1). The first quarter is 1.0.",
+      "VARIAVEL": "Variable",
+      "DSR": "Paid rest day (DSR)",
+      "NENHUM": "—",
+      "SEM_VALOR": "{count} contract from a thesis without commission | {count} contract from a thesis without commission | {count} contracts from a thesis without commission",
+      "BONUS_TIPO": {
+        "faixa": "Monthly bonus",
+        "gas": "Above-target boost",
+        "constancia": "Quarter consistency"
+      },
+      "PROGRAMA": {
+        "TITULO": "Hybrid goals program",
+        "AJUDA": "One per quarter. Monthly bonus = highest tier reached; boost = amount per ready contract above the number; consistency is paid the month after the quarter ends. Amounts already include DSR.",
+        "VIGENCIA": "{inicio} to {fim}",
+        "EDITAR": "Edit",
+        "INICIO": "Start",
+        "FIM": "End",
+        "FAIXA1_MIN": "Tier 1: from (contracts)",
+        "FAIXA1_VALOR": "Tier 1: bonus (R$)",
+        "FAIXA2_MIN": "Tier 2: from (contracts)",
+        "FAIXA2_VALOR": "Tier 2: bonus (R$)",
+        "GAS_ACIMA": "Boost: above (contracts)",
+        "GAS_VALOR": "Boost: per contract (R$)",
+        "CONST_MIN": "Consistency: minimum per month",
+        "CONST_MAX": "Consistency: max sent back/cancelled (%)",
+        "CONST_VALOR": "Consistency: bonus (R$)",
+        "SALVAR": "Save program",
+        "SALVO": "Program saved",
+        "ERRO": "Could not save the program"
+      }
     },
     "CONFERENCIA": {
       "TITLE": "Phase review",
