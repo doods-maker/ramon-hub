@@ -122,7 +122,7 @@ class Ramon::ExtratoVariavel
 
   def problemas(user, trimestre)
     dele = leads.where(closer_id: user.id)
-    devolvidos = LeadActivity.where(lead_id: dele.select(:id), kind: 'apto_devolvido', created_at: trimestre).distinct.pluck(:lead_id)
+    devolvidos = LeadActivity.where(lead_id: dele.select(:id), kind: 'apto_devolvido', created_at: trimestre).pluck(:lead_id)
     cancelados = dele.where.not(apto_em: nil).where(contrato_cancelado_em: trimestre).pluck(:id)
     (devolvidos | cancelados).size
   end
