@@ -19,9 +19,45 @@ class Ramon::Pseudonymizer
   RG_LABELED = /\bRG\b[^\d\n]{0,8}\d[\d.\s-]{4,12}\d/i
   RG_PUNCT = /\b\d{1,2}\.\d{3}\.\d{3}(?:-?\d)?\b(?!,\d)/
   NAME_STOPWORDS = %w[dos das de da do e].freeze
+  # Senha (gov.br e afins) nunca vai a LLM, nem no caminho sem pseudonimização
+  # (Message#content_for_llm chama sem_senha). Na linha que fala em "senha", só a
+  # palavra com cara de senha vira [senha] ("esqueci a senha do gov.br" fica
+  # legível para a IA que atende); se a linha termina esperando o valor
+  # ("Senha:"), a próxima linha não vazia some inteira.
+  # ponytail: senha só de letras ("cachorro") na mesma linha passa, e senha fora de
+  # linha com "senha" também; a mandada sozinha logo depois do pedido é pega em
+  # Message#senha_solta?. Upgrade: detector de entropia.
+  SENHA = /senha/i
+  SENHA_MASCARA = '[senha]'.freeze
+  SENHA_ESPERA_VALOR = /[:=-]\s*\z/
+  # Palavra de 6+ caracteres com número ou símbolo ("Tx9#kLm2"); "kkkkkk" e "obrigadão" não.
+  SENHA_FORMATO = /\A(?=\S*[^[:alpha:]\s])\S{6,}\z/
+  SENHA_NAO_E = /senha|gov\.br|inss|https?:|www\./i
+
+  def self.senha_provavel?(palavra)
+    palavra.match?(SENHA_FORMATO) && !palavra.match?(SENHA_NAO_E)
+  end
+
+  def self.sem_senha(text)
+    proxima = false
+    text.to_s.split("\n", -1).map do |linha|
+      if proxima
+        next linha if linha.strip.empty?
+
+        proxima = false
+        next SENHA_MASCARA
+      end
+
+      i = linha.index(SENHA)
+      next linha if i.nil?
+
+      proxima = linha.match?(SENHA_ESPERA_VALOR)
+      linha[0, i] + linha[i..].gsub(/\S+/) { |palavra| senha_provavel?(palavra) ? SENHA_MASCARA : palavra }
+    end.join("\n")
+  end
 
   def self.mask(text, names: [])
-    masked = text.to_s.dup
+    masked = sem_senha(text)
     name_tokens(names).each { |token| masked.gsub!(/\b#{Regexp.escape(token)}\b/i, '[nome]') }
     masked.gsub!(EMAIL, '[email]')
     masked.gsub!(CEP, '[cep]')

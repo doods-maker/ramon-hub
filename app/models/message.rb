@@ -273,7 +273,17 @@ class Message < ApplicationRecord
 
   # Returns message content suitable for LLM consumption
   # Falls back to audio transcription or attachment placeholder when content is nil
+  # Ramon: senha (gov.br e afins) nunca sai daqui — todo transcript para LLM passa por este método.
   def content_for_llm
+    return Ramon::Pseudonymizer::SENHA_MASCARA if senha_solta?
+
+    texto = raw_content_for_llm
+    texto && Ramon::Pseudonymizer.sem_senha(texto)
+  end
+
+  private
+
+  def raw_content_for_llm
     return content if content.present?
 
     audio_transcription = attachments
@@ -286,7 +296,15 @@ class Message < ApplicationRecord
     '[Attachment]' if attachments.any?
   end
 
-  private
+  # Senha mandada sozinha ("Tx9#kLm2") logo depois de uma mensagem que fala em senha.
+  # Só consulta a anterior quando a mensagem já tem cara de senha (raro).
+  def senha_solta?
+    return false unless incoming? && created_at && Ramon::Pseudonymizer.senha_provavel?(content.to_s.strip)
+
+    anterior = conversation.messages.where(message_type: [:incoming, :outgoing], private: false)
+                           .where(created_at: ...created_at).order(created_at: :desc).pick(:content)
+    anterior.to_s.match?(Ramon::Pseudonymizer::SENHA)
+  end
 
   def prevent_message_flooding
     # Added this to cover the validation specs in messages
