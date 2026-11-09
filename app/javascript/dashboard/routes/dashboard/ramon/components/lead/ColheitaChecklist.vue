@@ -137,12 +137,12 @@ const chargeLacunas = async () => {
 
 <template>
   <div
-    v-if="lead?.thesis_id && colheitaItems.length"
+    v-if="lead?.thesis_id"
     class="flex flex-col gap-2 mb-4"
     :class="SECAO"
     data-testid="colheita-checklist"
   >
-    <div class="flex items-center justify-between">
+    <div v-if="colheitaItems.length" class="flex items-center justify-between">
       <span :class="TITULO">{{ $t('RAMON.COLHEITA.TITLE') }}</span>
       <span
         class="font-mono text-xs text-n-slate-10"

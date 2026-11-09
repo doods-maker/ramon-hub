@@ -133,8 +133,10 @@ class Ramon::ZapsignContractService
     @contact&.custom_attributes&.dig(chave).presence
   end
 
+  # Com representante a colheita descreve o beneficiário, não quem assina: a equipe preenche à mão.
   def colheita_cliente
-    @lead.custom_attributes&.dig('colheita', 'dados', 'cliente') || {}
+    cliente = @lead.custom_attributes&.dig('colheita', 'dados', 'cliente') || {}
+    cliente.dig('representante', 'nome').present? ? {} : cliente
   end
 
   def estado_civil

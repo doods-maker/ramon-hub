@@ -130,12 +130,18 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
 
     attachment.update!(meta: { transcribed_text: transcribed_text })
     message.reload.send_update_event
-    # ramon: transcrição pronta → extração estruturada da colheita da reunião
-    Ramon::ColheitaExtractionJob.perform_later(message.id)
+    # ramon: transcrição pronta → extração da colheita da reunião, só no auxílio-acidente (B36);
+    # as outras teses extraem pelo observador do funil ou pelo botão.
+    Ramon::ColheitaExtractionJob.perform_later(message.id) if colheita_b36?
 
     return unless ChatwootApp.advanced_search_allowed?
 
     message.reindex
+  end
+
+  def colheita_b36?
+    lead = Lead.find_by(conversation_id: message.conversation_id)
+    Ramon::Colheita::Esquema.tese(lead&.thesis&.name) == :b36
   end
 
   def extension_from_content_type(content_type)

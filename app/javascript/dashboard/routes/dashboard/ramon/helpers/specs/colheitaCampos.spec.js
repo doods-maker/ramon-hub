@@ -25,6 +25,20 @@ describe('colheitaCampos', () => {
     expect(colheitaCampos(dados, ['acidente.data'])[0].confirmar).toBe(true);
   });
 
+  it('chip confirmar acende por prefixo de caminho, sem falso positivo', () => {
+    const doencas = { saude: { doencas: [{ cid: 'M54' }] } };
+    expect(colheitaCampos(doencas, ['saude.doencas[0].cid'])[0].confirmar).toBe(
+      true
+    );
+    const outro = { acidente: { data_x: '2025-03-14' } };
+    expect(colheitaCampos(outro, ['acidente.data'])[0].confirmar).toBe(false);
+  });
+
+  it('valor de escolha troca _ por espaço', () => {
+    const dados = { incapacidade: { motivo: 'sem_justa_causa' } };
+    expect(colheitaCampos(dados, [])[0].valor).toBe('sem justa causa');
+  });
+
   it('benefício vira uma linha só com espécie, datas e situação', () => {
     const dados = {
       beneficios: [
@@ -55,6 +69,63 @@ describe('colheitaCampos', () => {
     expect(colheitaCampos(dados, []).map(c => c.valor)).toEqual([
       'não',
       'cirurgia, fisioterapia',
+    ]);
+  });
+
+  it('formata objeto aninhado e lista de objetos sem perder campos', () => {
+    const dados = {
+      cliente: {
+        representante: { nome: 'Ana', parentesco: 'filha', motivo: null },
+      },
+      saude: {
+        doencas: [
+          { nome: 'lombalgia', cid: 'M54.5', diagnostico_em: '2023-02-10' },
+        ],
+      },
+      outras_teses_sinal: [{ tese: 'B36', motivo: 'acidente no trajeto' }],
+    };
+    expect(colheitaCampos(dados, [])).toEqual([
+      {
+        chave: 'cliente.representante',
+        valor: 'nome: Ana · parentesco: filha',
+        confirmar: false,
+      },
+      {
+        chave: 'outras_teses_sinal',
+        valor: 'tese: B36 · motivo: acidente no trajeto',
+        confirmar: false,
+      },
+      {
+        chave: 'saude.doencas',
+        valor: 'nome: lombalgia · cid: M54.5 · diagnostico em: 10/02/2023',
+        confirmar: false,
+      },
+    ]);
+  });
+
+  it('mantém colheita antiga do B36 com tratamentos em lista de texto', () => {
+    expect(
+      colheitaCampos(
+        { sequela: { tratamentos: ['fisioterapia', 'cirurgia'] } },
+        []
+      )
+    ).toEqual([
+      {
+        chave: 'sequela.tratamentos',
+        valor: 'fisioterapia, cirurgia',
+        confirmar: false,
+      },
+    ]);
+  });
+
+  it('benefício mostra a DER e blocos desconhecidos vêm no fim', () => {
+    const dados = {
+      zzz: { a: 'x' },
+      beneficios: [{ especie: 'B31', der: '2025-01-02' }],
+    };
+    expect(colheitaCampos(dados, []).map(c => c.valor)).toEqual([
+      'B31 · DER 02/01/2025',
+      'x',
     ]);
   });
 

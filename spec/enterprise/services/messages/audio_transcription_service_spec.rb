@@ -96,9 +96,15 @@ RSpec.describe Messages::AudioTranscriptionService, type: :service do
   describe '#update_transcription' do
     let(:service) { described_class.new(attachment) }
 
-    it 'enfileira a extração da colheita quando a transcrição é gravada' do
+    it 'enfileira a extração da colheita quando o lead é de auxílio-acidente' do
+      create(:lead, account: account, conversation: conversation, thesis: account.theses.find_by!(name: 'Auxílio-acidente (B36)'))
       expect { service.send(:update_transcription, 'oi, sofri um acidente') }
         .to have_enqueued_job(Ramon::ColheitaExtractionJob).with(message.id)
+    end
+
+    it 'não enfileira a extração para lead de outra tese (B31)' do
+      create(:lead, account: account, conversation: conversation, thesis: account.theses.find_by!('name LIKE ?', '%B31%'))
+      expect { service.send(:update_transcription, 'oi') }.not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
     end
 
     it 'não enfileira nada com transcrição em branco' do

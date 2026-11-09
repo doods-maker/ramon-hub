@@ -104,11 +104,30 @@ RSpec.describe Ramon::ColheitaExtractionService do
     end
   end
 
-  it 'não chama o LLM quando a tese do lead não é auxílio-acidente' do
-    other = account.theses.where.not(id: thesis.id).first
-    lead.update!(thesis: other)
-    expect(Ramon::LlmClient).not_to receive(:complete)
-    described_class.new(lead).perform
+  describe 'tese B31' do
+    let(:b31) { account.theses.find_by!(name: 'Auxílio por incapacidade temporária (auxílio-doença / B31)') }
+
+    before { lead.update!(thesis: b31) }
+
+    it 'extrai com o modelo de incapacidade no prompt' do
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result({ incapacidade: { parou_em: '2024-05-15' } }.to_json))
+      described_class.new(lead).perform
+      expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(system: include('"incapacidade"')))
+      expect(lead.reload.custom_attributes.dig('colheita', 'dados', 'incapacidade', 'parou_em')).to eq('2024-05-15')
+    end
+
+    it 'não preenche dcb_em (relógio do auxílio-acidente) fora do B36' do
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(colheita_json))
+      described_class.new(lead).perform
+      expect(lead.reload.dcb_em).to be_nil
+    end
+
+    it 'rejeita JSON só com bloco de outra tese' do
+      lead.update!(custom_attributes: { 'colheita' => { 'dados' => { 'cliente' => { 'profissao' => 'pedreiro' } } } })
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result({ contrato: { funcao: 'x' } }.to_json))
+      described_class.new(lead).perform
+      expect(lead.reload.custom_attributes.dig('colheita', 'dados', 'cliente', 'profissao')).to eq('pedreiro')
+    end
   end
 
   it 'não chama o LLM quando o lead não tem conversa' do
@@ -197,6 +216,23 @@ RSpec.describe Ramon::ColheitaExtractionService do
       contact.reload
       expect(contact.cpf).to eq('52998224725')
       expect(contact.data_nascimento).to eq(Date.new(1985, 3, 10))
+    end
+
+    it 'com representante, cpf/nascimento do beneficiário não vão para o contato' do
+      json = colheita_json_cliente('cpf' => '529.982.247-25', 'nascimento' => '1985-03-10',
+                                   'representante' => { 'nome' => 'Ana', 'parentesco' => 'filha' })
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(json))
+      described_class.new(lead).perform
+      contact.reload
+      expect(contact.cpf).to be_nil
+      expect(contact.data_nascimento).to be_nil
+    end
+
+    it 'bloco fora da tese não chega ao banco' do
+      base = JSON.parse(colheita_json).merge('maternidade' => { 'parto_em' => '2025-01-01' })
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(base.to_json))
+      described_class.new(lead).perform
+      expect(lead.reload.custom_attributes.dig('colheita', 'dados')).not_to have_key('maternidade')
     end
 
     it 'não sobrescreve cpf/nascimento já preenchidos por humano' do

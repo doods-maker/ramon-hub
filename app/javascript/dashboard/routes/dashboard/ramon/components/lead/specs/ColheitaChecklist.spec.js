@@ -27,12 +27,14 @@ const thesis = {
   ],
 };
 
+const semItens = { id: 2, name: 'Incapacidade (B31)', items: [] };
+
 const build = (updateSpy = vi.fn()) =>
   createStore({
     modules: {
       theses: {
         namespaced: true,
-        getters: { getTheses: () => [thesis] },
+        getters: { getTheses: () => [thesis, semItens] },
         actions: { show: vi.fn() },
       },
       leads: { namespaced: true, actions: { update: updateSpy } },
@@ -191,6 +193,22 @@ describe('ColheitaChecklist.vue', () => {
     const wrapper = mountChecklist({ ...baseLead, conversation_id: null });
     expect(wrapper.find('[data-testid="colheita-extract"]').exists()).toBe(
       false
+    );
+  });
+
+  it('shows the harvest of a thesis with no colheita items', () => {
+    const lead = {
+      ...baseLead,
+      thesis_id: 2,
+      custom_attributes: {
+        colheita: { dados: { incapacidade: { parou_em: '2025-03-14' } } },
+      },
+    };
+    const wrapper = mountChecklist(lead);
+    expect(wrapper.find('[data-testid="colheita-dados"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="colheita-count"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="colheita-extract"]').exists()).toBe(
+      true
     );
   });
 

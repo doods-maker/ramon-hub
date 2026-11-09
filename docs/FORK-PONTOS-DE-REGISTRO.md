@@ -410,6 +410,11 @@ ritmo, horário, textos aprovados e modelo em `config/ramon/documentos_cobranca.
 | `app/services/message_templates/template/out_of_office.rb` | `perform` não cria o aviso de fora do horário com o lead na etapa Documentos (chave ligada) | os três caminhos (hook, handoff da IA, resolução de pendentes) passam por aqui | documentos pós-teste 07/11 |
 | `enterprise/app/models/captain/scenario.rb` | `agent_tools` saiu de `private` (o assistente de etapa leva as tools das skills) | ver a linha do `assistant.rb` acima | documentos pós-teste 07/11 |
 
+## Colheita por tese (09/11/2026)
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `enterprise/app/services/messages/audio_transcription_service.rb` | `update_transcription` só enfileira `Ramon::ColheitaExtractionJob` se o lead da conversa é de auxílio-acidente (`Esquema.tese == :b36`); novo `colheita_b36?` | as outras teses extraem pelo observador do funil (chave `colheita`) ou pelo botão, não a cada áudio | colheita por tese |
 ## Senha gov.br fora da IA (09/11/2026)
 
 Lógica em `Ramon::SenhaForaDaIa` (`app/services/ramon/senha_fora_da_ia.rb`) e `Ramon::Pseudonymizer.sem_senha` (`lib/ramon/`).

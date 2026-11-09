@@ -47,7 +47,7 @@ class Ramon::FunilObservador
   # A colheita não depende da decisão do LLM (nem de ela existir), mas não roda em lead que o Aplicar acabou de ganhar/perder.
   # Como temperatura: sem FunilAcao (ruído no chip e no resumo) e só com a peça on — em ensaio não faz nada.
   # Em job próprio (com retry): um TransientError aqui faria o observador repetir e pagar a decisão de novo.
-  # Tese sem colheita: o serviço não faz nada (extractable?).
+  # Sem tese ou sem conversa: o serviço não faz nada (extractable?).
   def colher
     return unless Ramon::FunilAutomatico.modo(account, 'colheita') == 'on'
     return if @lead.reload.won_at.present? || @lead.lost_at.present?

@@ -1380,7 +1380,9 @@
           "profissao": "Occupation",
           "endereco": "Address",
           "whatsapp": "WhatsApp",
-          "renda_aproximada": "Approximate income"
+          "renda_aproximada": "Approximate income",
+          "nacionalidade": "Nationality",
+          "representante": "Representative"
         },
         "qualificacao": {
           "aposentado": "Retired",
@@ -1393,7 +1395,8 @@
           "tipo": "Accident type",
           "descricao": "What happened",
           "cat_emitida": "CAT issued",
-          "empregador_na_epoca": "Employer at the time"
+          "empregador_na_epoca": "Employer at the time",
+          "lesao": "Injury"
         },
         "sequela": {
           "descricao": "Sequela",
@@ -1410,6 +1413,97 @@
           "motivo_nao_assinatura": "Why not signed",
           "objecoes": "Objections",
           "sensibilidades": "Sensitivities"
+        },
+        "outras_teses_sinal": "Other thesis in sight",
+        "segurado": {
+          "regime_na_data": "Scheme at the date",
+          "servidor_rpps": "Civil servant (RPPS)",
+          "ultima_contribuicao": "Last contribution",
+          "mais_de_120": "More than 120 contributions",
+          "desemprego_comprovado": "Unemployment proven"
+        },
+        "saude": {
+          "doencas": "Conditions",
+          "tratamentos": "Treatments",
+          "laudo_disponivel": "Medical report available"
+        },
+        "incapacidade": {
+          "funcao_exigencias": "Job and demands",
+          "parou_em": "Stopped working on",
+          "afastado_hoje": "Status today",
+          "limitacoes_atuais": "Current limitations",
+          "evolucao": "Progress",
+          "prognostico": "Prognosis",
+          "escolaridade": "Education",
+          "pericia_desconsiderou": "What the expert exam ignored",
+          "ligada_ao_trabalho": "Work-related"
+        },
+        "dependencia": {
+          "precisa_ajuda": "Needs help",
+          "desde": "Since",
+          "quem_cuida": "Caregiver",
+          "atividades": "Activities needing help",
+          "laudo_cuidador": "Caregiver report"
+        },
+        "assistencial": {
+          "cadunico": "CadUnico",
+          "impedimento": "Impairment",
+          "moradores": "Household members",
+          "renda_total_declarada": "Declared total income",
+          "rendas_excluidas": "Excluded income",
+          "gastos_saude": "Health expenses",
+          "moradia": "Housing"
+        },
+        "maternidade": {
+          "fato": "Triggering event",
+          "data_fato": "Event date",
+          "semanas": "Weeks of pregnancy",
+          "ja_recebeu": "Already received",
+          "trabalho_na_data": "Work at the date",
+          "facultativa_dona_casa": "Voluntary insured homemaker",
+          "rural": "Rural activity",
+          "demitida_gestante": "Dismissed while pregnant"
+        },
+        "ir": {
+          "fonte": "Income source",
+          "tipo_renda": "Income type",
+          "valor_mensal": "Monthly amount",
+          "outras_fontes": "Other sources",
+          "doenca_lista": "Listed condition",
+          "situacao_doenca": "Condition status",
+          "ja_pediu": "Already requested exemption"
+        },
+        "contrato": {
+          "empregador": "Employer",
+          "funcao": "Role",
+          "carteira": "Work card",
+          "admissao": "Hired on",
+          "ainda_trabalha": "Still working",
+          "saida_em": "Left on",
+          "tipo_saida": "Type of exit",
+          "salario": "Salary",
+          "jornada": "Working hours",
+          "processo_anterior": "Previous lawsuit",
+          "provas_disponiveis": "Available evidence",
+          "testemunhas": "Witnesses"
+        },
+        "queixas": "Complaint",
+        "vinculo": {
+          "pf_ou_pj": "Individual or company",
+          "pessoalidade": "Personal service",
+          "habitualidade": "Regularity",
+          "domestico": "Domestic",
+          "pagamento": "Payment",
+          "subordinacao": "Subordination",
+          "avaliacao": "Evaluation"
+        },
+        "responsabilidade": {
+          "culpa_fatos": "Employer fault",
+          "atividade_risco": "Risky activity",
+          "nexo_doenca": "Condition link",
+          "aso": "Occupational health exam",
+          "dispensado_apos_alta": "Dismissed after discharge",
+          "gastos": "Expenses"
         }
       },
       "LACUNAS_TITLE": "Still missing (AI)",
