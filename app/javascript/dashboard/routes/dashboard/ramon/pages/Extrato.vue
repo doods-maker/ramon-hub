@@ -489,7 +489,7 @@ onMounted(() => {
         v-if="isAdmin"
         data-testid="extrato-programa"
         :class="CARTAO"
-        class="flex flex-col gap-3"
+        class="flex flex-col gap-4"
       >
         <h3 class="m-0 text-base font-semibold text-n-slate-12">
           {{ t('RAMON.EXTRATO.PROGRAMA.TITULO') }}
@@ -519,7 +519,7 @@ onMounted(() => {
             />
           </li>
         </ul>
-        <div class="flex flex-wrap items-end gap-3 text-sm">
+        <div class="flex flex-wrap items-end gap-4 text-sm">
           <label :class="ROTULO">
             {{ t('RAMON.EXTRATO.PROGRAMA.INICIO') }}
             <input
@@ -539,7 +539,7 @@ onMounted(() => {
             />
           </label>
         </div>
-        <div class="grid gap-3 text-sm sm:grid-cols-3">
+        <div class="grid gap-4 text-sm sm:grid-cols-3">
           <label
             v-for="[campo, rotulo, testid] in CAMPOS_PROGRAMA"
             :key="campo"

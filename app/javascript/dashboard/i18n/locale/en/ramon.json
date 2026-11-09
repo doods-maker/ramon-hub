@@ -2279,7 +2279,11 @@
       },
       "EVENTO": {
         "reuniao_qualificada": "Qualified meeting",
-        "contrato_apto": "Ready contract"
+        "contrato_apto": "Ready contract",
+        "contrato_apto_prazo": "Ready contract by deadline (legal did not answer)",
+        "contrato_limpo": "Clean contract (old plan)",
+        "desconto": "Discount: contract cancelled after payment (old plan)",
+        "desconto_bonus": "Discount: bonus undone by cancellation (old plan)"
       },
       "COL": {
         "DATA": "Date",

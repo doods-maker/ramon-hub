@@ -19,6 +19,8 @@ class Ramon::ExtratoVariavel
   REUNIAO = 'reuniao_qualificada'.freeze
   APTO = 'contrato_apto'.freeze
 
+  APTO_POR_PRAZO = 'contrato_apto_prazo'.freeze
+
   pattr_initialize [:account!, :mes!]
 
   def pessoas
@@ -33,72 +35,66 @@ class Ramon::ExtratoVariavel
          .sort_by { |user, papel| [MetaComercial::PAPEIS.index(papel), user.name.to_s] }
   end
 
-  def ids_do_time
-    MetaComercial::PAPEIS.flat_map { |papel| Ramon::Papeis.membro_ids(account, papel) }
-  end
+  # o híbrido fica no time `closer` (não há time `hibrido`)
+  def ids_do_time = sdr_ids | Ramon::Papeis.membro_ids(account, Ramon::Papeis::CLOSER)
+
+  def sdr_ids = @sdr_ids ||= Ramon::Papeis.membro_ids(account, Ramon::Papeis::SDR)
+
+  # Papel e fator vigentes = a última meta lançada até este mês; sem nenhuma, o time.
+  def vigente(user_id) = historico[user_id]&.last
 
   def papel_de(user_id)
-    metas[user_id]&.papel || ultima_meta(user_id)&.papel ||
-      (Ramon::Papeis.membro_ids(account, Ramon::Papeis::SDR).include?(user_id) ? Ramon::Papeis::SDR : Ramon::Papeis::CLOSER)
+    vigente(user_id)&.papel || (sdr_ids.include?(user_id) ? Ramon::Papeis::SDR : Ramon::Papeis::CLOSER)
   end
 
-  def ultima_meta(user_id)
-    MetaComercial.where(account: account, user_id: user_id).where(mes: ...mes).order(:mes).last
-  end
+  # 1º mês da pessoa = o mês da 1ª meta lançada para ela (o gestor lança na admissão)
+  def primeiro_mes?(user_id) = historico[user_id]&.first&.mes == mes
 
   def linha(user, papel)
-    meta = metas[user.id]
-    base = papel == Ramon::Papeis::HIBRIDO ? hibrido(user) : modelo_a(user, papel, meta)
-    variavel = base.delete(:soma).round(2)
+    base = papel == Ramon::Papeis::HIBRIDO ? hibrido(user) : modelo_a(user, papel)
+    variavel = base[:soma].round(2)
     dsr = (variavel * razao_dsr).round(2)
-    bonus = base.delete(:bonus) || []
+    bonus = base[:bonus] || []
     { user: { id: user.id, name: user.name }, papel: papel, variavel: variavel.to_f, dsr: dsr.to_f, bonus: bonus,
-      total: (variavel + dsr + bonus.sum { |b| b[:valor] }).round(2).to_f }.merge(base)
+      total: (variavel + dsr + bonus.sum { |b| b[:valor].to_d }).round(2).to_f }.merge(base.except(:soma, :bonus))
   end
 
-  def modelo_a(user, papel, meta)
+  def modelo_a(user, papel)
     grade = GRADES.fetch(papel)
-    alvo = meta&.meta.to_i.positive? ? meta.meta : grade[:meta]
-    fator = (meta&.fator || 1).to_d
-    unidades = unidades_a(user, papel).each_with_index.map do |(lead, data, evento), i|
+    alvo = alvo_do_mes(user.id, grade)
+    fator = (vigente(user.id)&.fator || 1).to_d
+    unidades = eventos_a(user, papel).each_with_index.map do |(lead, data, evento), i|
       unidade(lead, data, evento, i < alvo ? grade[:ate_a_meta] : grade[:acima])
     end
     { meta: alvo, fator: fator.to_f, contagem: unidades.size, unidades: unidades, soma: soma(unidades) * fator }
   end
 
-  def unidades_a(user, papel)
-    return reunioes(user).map { |lead, data| [lead, data, REUNIAO] } if papel == Ramon::Papeis::SDR
-
-    aptos(user).map { |lead, data| [lead, data, APTO] }
+  # meta lançada NESTE mês; sem ela, a padrão da grade
+  def alvo_do_mes(user_id, grade)
+    lancada = metas[user_id]&.meta.to_i
+    lancada.positive? ? lancada : grade[:meta]
   end
 
+  def eventos_a(user, papel)
+    papel == Ramon::Papeis::SDR ? reunioes(user).map { |lead, data| [lead, data, REUNIAO] } : aptos_com_evento(user)
+  end
+
+  # Modelo B. Mês de admissão: só comissão (o Programa começa no 1º mês cheio).
   def hibrido(user)
-    unidades = aptos(user).map { |lead, data| unidade(lead, data, APTO, comissao(lead)) }
-    { meta: nil, fator: 1.0, contagem: unidades.size, unidades: unidades, soma: soma(unidades),
-      sem_valor: aptos(user).count { |lead, _| comissao(lead).nil? }, bonus: bonus_do_programa(user, unidades.size) }
+    unidades = aptos_com_evento(user).map { |lead, data, evento| unidade(lead, data, evento, lead.thesis&.comissao_apto || 0) }
+    bonus = primeiro_mes?(user.id) ? [] : bonus_do_programa(user, unidades.size)
+    { meta: nil, fator: 1.0, contagem: unidades.size, unidades: unidades, soma: soma(unidades), bonus: bonus,
+      sem_valor: aptos(user).count { |lead, _| lead.thesis&.comissao_apto.nil? } }
   end
 
-  # nil = tese sem comissão no híbrido (não paga; o extrato conta quantos)
-  def comissao(lead) = lead.thesis&.comissao_apto&.to_f
+  def aptos_com_evento(user)
+    aptos(user).map { |lead, data| [lead, data, lead.apto_por_id ? APTO : APTO_POR_PRAZO] }
+  end
 
   def soma(unidades) = unidades.sum { |u| u[:valor].to_d }
 
   def bonus_do_programa(user, contagem)
-    regras = ProgramaMetas.do_mes(account, mes)&.regras || {}
-    [faixa(regras, contagem), gas(regras, contagem), constancia(user)].compact
-  end
-
-  # faixa mais alta atingida no mês (não somam)
-  def faixa(regras, contagem)
-    atingida = Array(regras['faixas']).select { |f| contagem >= f['min'].to_i }.max_by { |f| f['min'].to_i }
-    atingida && { tipo: 'faixa', valor: atingida['valor'].to_f }
-  end
-
-  def gas(regras, contagem)
-    acima = contagem - regras.dig('gas', 'acima_de').to_i
-    return unless regras['gas'] && acima.positive?
-
-    { tipo: 'gas', valor: (acima * regras['gas']['valor'].to_d).to_f }
+    Array(ProgramaMetas.do_mes(account, mes)&.bonus_do_mes(contagem)) + [constancia(user)].compact
   end
 
   # Constância do trimestre que terminou no mês anterior: mínimo de aptos em CADA mês e no máximo X% de problemas
@@ -106,6 +102,7 @@ class Ramon::ExtratoVariavel
   def constancia(user)
     programa = ProgramaMetas.encerrado_antes_de(account, mes)
     regra = programa&.regras&.dig('constancia')
+    return if primeiro_mes?(user.id)
     return unless regra && minimo_todo_mes?(user, programa, regra['min_mes'].to_i)
 
     return if taxa_de_problemas(user, periodo_de(programa.inicio).first...periodo_de(programa.fim).last) > regra['max_problemas'].to_f
@@ -131,7 +128,7 @@ class Ramon::ExtratoVariavel
   end
 
   def reunioes(user)
-    leads.where(sdr_id: user.id, reuniao_resultado: 'qualificada', reuniao_registrada_em: periodo)
+    leads.includes(:thesis).where(sdr_id: user.id, reuniao_resultado: 'qualificada', reuniao_registrada_em: periodo)
          .order(:reuniao_registrada_em).map { |lead| [lead, lead.reuniao_registrada_em] }
   end
 
@@ -142,7 +139,7 @@ class Ramon::ExtratoVariavel
   end
 
   def unidade(lead, data, evento, valor)
-    { data: data.iso8601, lead_id: lead.id, lead_nome: lead.name, tese: lead.thesis&.name, evento: evento, valor: valor }
+    { data: data.iso8601, lead_id: lead.id, lead_nome: lead.name, tese: lead.thesis&.name, evento: evento, valor: valor.to_f }
   end
 
   # domingos e feriados ÷ dias de seg a sáb (feriados de Ramon::Agenda::Feriados)
@@ -159,7 +156,12 @@ class Ramon::ExtratoVariavel
   end
 
   def metas
-    @metas ||= MetaComercial.where(account: account, mes: mes).index_by(&:user_id)
+    @metas ||= historico.transform_values(&:last).select { |_, meta| meta.mes == mes }
+  end
+
+  # metas lançadas até este mês, por pessoa, em ordem
+  def historico
+    @historico ||= MetaComercial.where(account: account, mes: ..mes).order(:mes).group_by(&:user_id)
   end
 
   def periodo = periodo_de(mes)

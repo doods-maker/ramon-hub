@@ -28,10 +28,12 @@ RSpec.describe Ramon::ExtratoVariavel do
     end
   end
 
-  def aptos(qtd, mes: novembro, thesis: tese)
+  # validado pelo jurídico (apto_por_id); por_prazo: true = apto sozinho pelos 5 dias úteis
+  def aptos(qtd, mes: novembro, thesis: tese, por_prazo: false)
     qtd.times do |i|
       create(:lead, account: account, lead_stage: stage, closer: closer, thesis: thesis).tap do |lead|
-        lead.update_columns(contrato_limpo_em: em(mes, 3), apto_em: em(mes) + i.minutes) # rubocop:disable Rails/SkipsModelValidations
+        lead.update_columns(contrato_limpo_em: em(mes, 3), apto_em: em(mes) + i.minutes, # rubocop:disable Rails/SkipsModelValidations
+                            apto_por_id: por_prazo ? nil : sdr.id)
       end
     end
   end
@@ -40,7 +42,8 @@ RSpec.describe Ramon::ExtratoVariavel do
     described_class.new(account: account, mes: mes).pessoas.find { |p| p[:user][:id] == user.id }
   end
 
-  def hibrido!(mes = dezembro) = MetaComercial.create!(account: account, user: closer, papel: 'hibrido', mes: mes, meta: 0)
+  # admissão em novembro (o mês da 1ª meta não tem Programa)
+  def hibrido!(mes = novembro) = MetaComercial.create!(account: account, user: closer, papel: 'hibrido', mes: mes, meta: 0)
 
   def programa!
     ProgramaMetas.create!(account: account, inicio: dezembro, fim: Date.new(2027, 2, 28),
@@ -89,6 +92,19 @@ RSpec.describe Ramon::ExtratoVariavel do
       expect(extrato_de(closer)).to include(fator: 1.1, variavel: 660.0)
     end
 
+    it 'o fator lançado vale nos meses seguintes até o gestor lançar outro' do
+      MetaComercial.create!(account: account, user: closer, papel: 'closer', mes: novembro, meta: 20, fator: 1.1)
+      aptos(20, mes: dezembro)
+
+      expect(extrato_de(closer, dezembro)).to include(fator: 1.1, variavel: 660.0)
+    end
+
+    it 'o apto por prazo aparece como evento próprio e paga igual', :aggregate_failures do
+      aptos(1, por_prazo: true)
+
+      expect(extrato_de(closer)[:unidades]).to contain_exactly(include(evento: 'contrato_apto_prazo', valor: 30.0))
+    end
+
     it 'conta no mês pelo fuso de São Paulo (01/12 00:30 BRT já é dezembro)' do
       create(:lead, account: account, lead_stage: stage, sdr: sdr, reuniao_resultado: 'qualificada',
                     reuniao_registrada_em: Time.zone.parse('2026-12-01 03:30:00 UTC'))
@@ -109,15 +125,41 @@ RSpec.describe Ramon::ExtratoVariavel do
       expect(linha[:total]).to eq(1697.12) # 1.025 + 197,12 + 450 + 25
     end
 
-    it 'faixa de baixo com 25 a 34; abaixo de 25 nada', :aggregate_failures do
+    it '20, 35 e 50 aptos: só comissão; faixa de cima; faixa de cima + gás de 10 contratos', :aggregate_failures do
+      hibrido!
+      programa!
+      janeiro = Date.new(2027, 1, 1)
+      fevereiro = Date.new(2027, 2, 1)
+      aptos(20, mes: dezembro)
+      aptos(35, mes: janeiro)
+      aptos(50, mes: fevereiro)
+
+      expect(extrato_de(closer, dezembro)).to include(variavel: 500.0, bonus: [])
+      expect(extrato_de(closer, janeiro)[:bonus]).to contain_exactly(include(tipo: 'faixa', valor: 450))
+      expect(extrato_de(closer, fevereiro)[:bonus]).to contain_exactly(include(tipo: 'faixa', valor: 450), include(tipo: 'gas', valor: 250))
+    end
+
+    it '50 aptos em dezembro: R$ 1.250 + DSR 5/26 + R$ 450 + R$ 250 de gás' do
+      hibrido!
+      programa!
+      aptos(50, mes: dezembro)
+
+      expect(extrato_de(closer, dezembro)).to include(variavel: 1250.0, dsr: 240.38, total: 2190.38)
+    end
+
+    it 'faixa de baixo com 25 a 34' do
       hibrido!
       programa!
       aptos(25, mes: dezembro)
-      expect(extrato_de(closer, dezembro)[:bonus]).to contain_exactly(include(tipo: 'faixa', valor: 300))
 
-      MetaComercial.where(user: closer).delete_all
+      expect(extrato_de(closer, dezembro)[:bonus]).to contain_exactly(include(tipo: 'faixa', valor: 300))
+    end
+
+    it 'admitido no meio do trimestre: o 1º mês é só comissão' do
       hibrido!(Date.new(2027, 1, 1))
-      aptos(24, mes: Date.new(2027, 1, 1))
+      programa!
+      aptos(30, mes: Date.new(2027, 1, 1))
+
       expect(extrato_de(closer, Date.new(2027, 1, 1))[:bonus]).to be_empty
     end
 
@@ -137,7 +179,7 @@ RSpec.describe Ramon::ExtratoVariavel do
     end
 
     it 'o papel lançado vale nos meses seguintes até o gestor lançar outro' do
-      hibrido!
+      hibrido!(dezembro)
       aptos(1, mes: Date.new(2027, 1, 1))
 
       expect(extrato_de(closer, Date.new(2027, 1, 1))[:papel]).to eq('hibrido')

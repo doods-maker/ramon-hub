@@ -34,13 +34,18 @@ class Api::V1::Accounts::RamonExtratoController < Api::V1::Accounts::BaseControl
       return render json: { error: 'mes_fechado' }, status: :unprocessable_entity
     end
 
-    registro.update!(inicio: params[:inicio], fim: params[:fim], regras: params.require(:regras).permit!.to_h)
+    registro.update!(inicio: params[:inicio], fim: params[:fim], regras: regras_permitidas)
     render json: programa_json(registro)
   end
 
   private
 
   def programa_json(programa) = programa.slice(:id, :inicio, :fim, :regras)
+
+  # Só o formato do Programa (ProgramaMetas): faixas, gás e constância.
+  def regras_permitidas
+    params.require(:regras).permit(faixas: [:min, :valor], gas: [:acima_de, :valor], constancia: [:min_mes, :max_problemas, :valor]).to_h
+  end
 
   # ?mes=AAAA-MM; padrão = mês corrente no fuso do escritório.
   def mes

@@ -53,6 +53,10 @@ RSpec.describe 'Ramon Extrato API', type: :request do
       get "#{url}/programas", headers: admin.create_new_auth_token, as: :json
       expect(response.parsed_body.map { |p| p.dig('regras', 'faixas', 0, 'min') }).to eq([30])
 
+      post "#{url}/programa", params: { inicio: '2027-02-01', fim: '2027-04-30', regras: regras },
+                              headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity) # sobrepõe o trimestre dez–fev
+
       get "#{url}/programas", headers: sdr.create_new_auth_token, as: :json
       expect(response).to have_http_status(:unauthorized)
     end

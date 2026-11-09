@@ -12,6 +12,7 @@ class ProgramaMetas < ApplicationRecord
 
   validates :inicio, :fim, presence: true
   validate :fim_depois_do_inicio
+  validate :sem_sobreposicao
 
   # Programa que vale no mês (o mês inteiro dentro da vigência).
   def self.do_mes(account, mes)
@@ -24,7 +25,29 @@ class ProgramaMetas < ApplicationRecord
     where(account: account, fim: anterior..anterior.end_of_month).order(:fim).last
   end
 
+  # Bônus do mês pela contagem de contratos aptos: a faixa mais alta atingida (não somam) e o gás acima de N.
+  def bonus_do_mes(contagem)
+    [faixa(contagem), gas(contagem)].compact
+  end
+
   private
+
+  def faixa(contagem)
+    atingida = Array(regras['faixas']).select { |f| contagem >= f['min'].to_i }.max_by { |f| f['min'].to_i }
+    atingida && { tipo: 'faixa', valor: atingida['valor'].to_f }
+  end
+
+  def gas(contagem)
+    acima = contagem - regras.dig('gas', 'acima_de').to_i
+    regras['gas'] && acima.positive? ? { tipo: 'gas', valor: (acima * regras['gas']['valor'].to_d).to_f } : nil
+  end
+
+  def sem_sobreposicao
+    return unless inicio && fim
+
+    outros = self.class.where(account_id: account_id).where.not(id: id).where(inicio: ..fim, fim: inicio..)
+    errors.add(:inicio, :taken) if outros.exists?
+  end
 
   def fim_depois_do_inicio
     errors.add(:fim, :invalid) if inicio && fim && fim < inicio

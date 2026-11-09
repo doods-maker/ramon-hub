@@ -2279,7 +2279,11 @@
       },
       "EVENTO": {
         "reuniao_qualificada": "Reunião qualificada",
-        "contrato_apto": "Contrato apto"
+        "contrato_apto": "Contrato apto",
+        "contrato_apto_prazo": "Contrato apto por prazo (jurídico não respondeu)",
+        "contrato_limpo": "Contrato limpo (grade antiga)",
+        "desconto": "Desconto: contrato cancelado após pagamento (grade antiga)",
+        "desconto_bonus": "Desconto: bônus desfeito pelo cancelamento (grade antiga)"
       },
       "COL": {
         "DATA": "Data",
