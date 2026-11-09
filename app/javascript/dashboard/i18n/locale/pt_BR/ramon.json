@@ -2199,9 +2199,9 @@
         "sem_resposta": "Leads sem resposta há +1h (agora)",
         "registro_completo": "Registro completo no mesmo dia",
         "qualificado_agendada": "Qualificado → agendada",
-        "show": "Comparecimento (show)",
+        "show": "Comparecimento",
         "nao_qualificada": "Reuniões \"não qualificada\"",
-        "conversao": "Reunião qualificada → contrato",
+        "conversao": "Fechamento (reunião qualificada → contrato)",
         "assinado_na_reuniao": "Assinados na própria reunião",
         "vou_pensar_48h": "\"Vou pensar\" retomado em 48h",
         "docs_7d": "Docs completos em 7 dias",
@@ -2216,10 +2216,10 @@
         "CONTRATOS": "Contratos",
         "primeira_resposta": "1ª resposta",
         "sem_resposta": "Sem resp. +1h",
-        "show": "Show",
+        "show": "Comparec.",
         "nao_qualificada": "Não qualif.",
         "registro_completo": "Registro",
-        "conversao": "Conversão",
+        "conversao": "Fechamento",
         "assinado_na_reuniao": "Na reunião",
         "docs_7d": "Docs 7d",
         "cancelamento_7d": "Cancel. 7d",
@@ -2253,7 +2253,7 @@
     },
     "EXTRATO": {
       "TITLE": "Extrato da variável",
-      "SUBTITLE": "Unidades, bônus de meta e total do mês por pessoa — regulamento de remuneração v2",
+      "SUBTITLE": "Unidades, DSR, bônus do Programa e total do mês por pessoa — duas grades (separado e híbrido)",
       "MES": "Mês",
       "EXPORTAR": "Exportar CSV",
       "LOAD_ERROR": "Não foi possível carregar o extrato.",
@@ -2261,30 +2261,25 @@
       "VAZIO": "Nenhum extrato seu neste mês.",
       "VAZIO_GESTOR": "Ninguém no time ainda: crie os times \"sdr\" e \"closer\" em Configurações → Times e coloque as pessoas.",
       "META": "Meta do mês",
-      "RAMPA": "Rampa (meses 1–2)",
       "SALVAR": "Salvar meta",
       "META_SALVA": "Meta salva",
       "META_ERRO": "Não foi possível salvar a meta",
-      "UNIDADES": "Unidades",
-      "BONUS": "Bônus de meta",
-      "DEGRAUS": "({count} degrau) | ({count} degrau) | ({count} degraus)",
-      "OBS": "Observação",
-      "GARANTIA": "Garantia mínima da rampa aplicada",
+      "BONUS": "Bônus do Programa",
       "TOTAL": "Total do mês",
       "SEM_UNIDADES": "Nenhum evento neste mês.",
       "PAPEL": {
-        "sdr": "SDR",
-        "closer": "Closer"
+        "sdr": "SDR (separado)",
+        "closer": "Closer (separado)",
+        "hibrido": "Híbrido"
       },
       "CONTAGEM": {
         "sdr": "Reuniões qualificadas",
-        "closer": "Contratos limpos"
+        "closer": "Contratos aptos",
+        "hibrido": "Contratos aptos"
       },
       "EVENTO": {
         "reuniao_qualificada": "Reunião qualificada",
-        "contrato_limpo": "Contrato limpo",
-        "desconto": "Desconto: contrato cancelado após pagamento",
-        "desconto_bonus": "Desconto: bônus/degrau desfeito pelo cancelamento"
+        "contrato_apto": "Contrato apto"
       },
       "COL": {
         "DATA": "Data",
@@ -2293,7 +2288,38 @@
         "VALOR": "Valor"
       },
       "FECHADO": "Fechado em {data}",
-      "DESCONTOS": "Descontos"
+      "PAPEL_ROTULO": "Grade",
+      "FATOR": "Fator do trimestre",
+      "FATOR_AJUDA": "Multiplicador de qualidade do modelo A (0,8 · 1,0 · 1,1). O 1º trimestre é 1,0.",
+      "VARIAVEL": "Variável",
+      "DSR": "DSR",
+      "NENHUM": "—",
+      "SEM_VALOR": "{count} contrato de tese sem comissão | {count} contrato de tese sem comissão | {count} contratos de tese sem comissão",
+      "BONUS_TIPO": {
+        "faixa": "Bônus do mês",
+        "gas": "Gás acima da meta",
+        "constancia": "Constância do trimestre"
+      },
+      "PROGRAMA": {
+        "TITULO": "Programa de Metas do híbrido",
+        "AJUDA": "Um por trimestre. Bônus do mês = a faixa mais alta atingida; gás = valor por contrato apto acima do número; constância paga no mês seguinte ao fim do trimestre. Valores já com DSR.",
+        "VIGENCIA": "{inicio} a {fim}",
+        "EDITAR": "Editar",
+        "INICIO": "Início",
+        "FIM": "Fim",
+        "FAIXA1_MIN": "Faixa 1: a partir de (contratos)",
+        "FAIXA1_VALOR": "Faixa 1: bônus (R$)",
+        "FAIXA2_MIN": "Faixa 2: a partir de (contratos)",
+        "FAIXA2_VALOR": "Faixa 2: bônus (R$)",
+        "GAS_ACIMA": "Gás: acima de (contratos)",
+        "GAS_VALOR": "Gás: por contrato (R$)",
+        "CONST_MIN": "Constância: mínimo por mês",
+        "CONST_MAX": "Constância: máximo de devolvidos/cancelados (%)",
+        "CONST_VALOR": "Constância: bônus (R$)",
+        "SALVAR": "Salvar Programa",
+        "SALVO": "Programa salvo",
+        "ERRO": "Não foi possível salvar o Programa"
+      }
     },
     "CONFERENCIA": {
       "TITLE": "Conferência de fases",

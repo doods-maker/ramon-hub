@@ -1,7 +1,10 @@
 <script setup>
-// Extrato mensal da variável (playbook §13, item 6; regulamento v2 §6): o gestor
-// vê todo mundo, lança a meta do mês e exporta em CSV; SDR/Closer veem só o seu.
-import { computed, onMounted, ref, watch } from 'vue';
+// Extrato mensal da variável (playbook §13, item 6): o gestor vê todo mundo,
+// lança papel/meta/fator do mês e o Programa de Metas do híbrido, e exporta em
+// CSV; SDR/Closer veem só o seu. Duas grades (09/11/2026): sdr/closer = modelo
+// A (valor até a meta e acima, × fator), hibrido = modelo B (comissão da tese +
+// Programa). DSR em linha própria; bônus do Programa sem DSR por cima.
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -25,8 +28,11 @@ const mes = ref(
 const loading = ref(true);
 const error = ref(false);
 const pessoas = ref([]);
-// meta/rampa editáveis por pessoa (gestor), indexadas pelo user id
+// papel/meta/fator editáveis por pessoa (gestor), indexados pelo user id
 const edicao = ref({});
+const PAPEIS = ['sdr', 'closer', 'hibrido'];
+// mês fechado antes de 09/11/2026 guardou o bônus como número (grade antiga)
+const bonusDe = p => (Array.isArray(p.bonus) ? p.bonus : []);
 
 const brl = valor =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
@@ -51,7 +57,10 @@ const carregar = async () => {
     const { data } = await RamonExtratoAPI.get(mes.value);
     pessoas.value = data.pessoas;
     edicao.value = Object.fromEntries(
-      data.pessoas.map(p => [p.user.id, { meta: p.meta ?? '', rampa: p.rampa }])
+      data.pessoas.map(p => [
+        p.user.id,
+        { papel: p.papel, meta: p.meta ?? '', fator: p.fator ?? 1 },
+      ])
     );
   } catch {
     error.value = true;
@@ -61,14 +70,14 @@ const carregar = async () => {
 };
 
 const salvarMeta = async pessoa => {
-  const { meta, rampa } = edicao.value[pessoa.user.id];
+  const { papel, meta, fator } = edicao.value[pessoa.user.id];
   try {
     await RamonExtratoAPI.salvarMeta({
       mes: mes.value,
       user_id: pessoa.user.id,
-      papel: pessoa.papel,
+      papel,
       meta: Number(meta) || 0,
-      rampa,
+      fator: Number(fator) || 1,
     });
     useAlert(t('RAMON.EXTRATO.META_SALVA'));
     await carregar();
@@ -90,14 +99,24 @@ const exportarCsv = () => {
         String(u.valor).replace('.', ','),
       ]);
     });
-    linhas.push([
-      p.user.name,
-      p.papel,
-      '',
-      '',
-      t('RAMON.EXTRATO.TOTAL'),
-      String(p.total).replace('.', ','),
-    ]);
+    const resumo = [
+      [t('RAMON.EXTRATO.DSR'), p.dsr],
+      ...bonusDe(p).map(b => [
+        t(`RAMON.EXTRATO.BONUS_TIPO.${b.tipo}`),
+        b.valor,
+      ]),
+      [t('RAMON.EXTRATO.TOTAL'), p.total],
+    ];
+    resumo.forEach(([rotulo, valor]) => {
+      linhas.push([
+        p.user.name,
+        p.papel,
+        '',
+        '',
+        rotulo,
+        String(valor ?? 0).replace('.', ','),
+      ]);
+    });
   });
   const csv = linhas
     .map(l => l.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
@@ -113,8 +132,110 @@ const exportarCsv = () => {
   URL.revokeObjectURL(link.href);
 };
 
+// Programa de Metas do híbrido (um por trimestre; kit contratacao, doc 09)
+const programas = ref([]);
+const VAZIO = {
+  id: null,
+  inicio: '',
+  fim: '',
+  faixa1Min: '',
+  faixa1Valor: '',
+  faixa2Min: '',
+  faixa2Valor: '',
+  gasAcima: '',
+  gasValor: '',
+  constMin: '',
+  constMax: '',
+  constValor: '',
+};
+const CAMPOS_PROGRAMA = [
+  ['faixa1Min', 'FAIXA1_MIN', 'faixa1-min'],
+  ['faixa1Valor', 'FAIXA1_VALOR', 'faixa1-valor'],
+  ['faixa2Min', 'FAIXA2_MIN', 'faixa2-min'],
+  ['faixa2Valor', 'FAIXA2_VALOR', 'faixa2-valor'],
+  ['gasAcima', 'GAS_ACIMA', 'gas-acima'],
+  ['gasValor', 'GAS_VALOR', 'gas-valor'],
+  ['constMin', 'CONST_MIN', 'const-min'],
+  ['constMax', 'CONST_MAX', 'const-max'],
+  ['constValor', 'CONST_VALOR', 'const-valor'],
+];
+const programa = reactive({ ...VAZIO });
+const num = v => (v === '' || v === null || v === undefined ? null : Number(v));
+
+const carregarProgramas = async () => {
+  if (!isAdmin.value) return;
+  try {
+    const { data } = await RamonExtratoAPI.programas();
+    programas.value = data;
+  } catch {
+    programas.value = [];
+  }
+};
+
+const editarPrograma = item => {
+  const { faixas = [], gas, constancia } = item.regras;
+  Object.assign(programa, {
+    ...VAZIO,
+    id: item.id,
+    inicio: item.inicio,
+    fim: item.fim,
+    faixa1Min: faixas[0]?.min ?? '',
+    faixa1Valor: faixas[0]?.valor ?? '',
+    faixa2Min: faixas[1]?.min ?? '',
+    faixa2Valor: faixas[1]?.valor ?? '',
+    gasAcima: gas?.acima_de ?? '',
+    gasValor: gas?.valor ?? '',
+    constMin: constancia?.min_mes ?? '',
+    constMax: constancia ? constancia.max_problemas * 100 : '',
+    constValor: constancia?.valor ?? '',
+  });
+};
+
+const regrasDoForm = () => {
+  const faixas = [
+    [programa.faixa1Min, programa.faixa1Valor],
+    [programa.faixa2Min, programa.faixa2Valor],
+  ]
+    .filter(([min, valor]) => num(min) !== null && num(valor) !== null)
+    .map(([min, valor]) => ({ min: num(min), valor: num(valor) }));
+  const regras = { faixas };
+  if (num(programa.gasAcima) !== null && num(programa.gasValor) !== null) {
+    regras.gas = {
+      acima_de: num(programa.gasAcima),
+      valor: num(programa.gasValor),
+    };
+  }
+  if (num(programa.constMin) !== null && num(programa.constValor) !== null) {
+    regras.constancia = {
+      min_mes: num(programa.constMin),
+      max_problemas: (num(programa.constMax) || 0) / 100,
+      valor: num(programa.constValor),
+    };
+  }
+  return regras;
+};
+
+const salvarPrograma = async () => {
+  try {
+    await RamonExtratoAPI.salvarPrograma({
+      ...(programa.id ? { id: programa.id } : {}),
+      inicio: programa.inicio,
+      fim: programa.fim,
+      regras: regrasDoForm(),
+    });
+    useAlert(t('RAMON.EXTRATO.PROGRAMA.SALVO'));
+    Object.assign(programa, VAZIO);
+    await Promise.all([carregarProgramas(), carregar()]);
+  } catch {
+    useAlert(t('RAMON.EXTRATO.PROGRAMA.ERRO'));
+  }
+};
+
 watch(mes, carregar);
-onMounted(carregar);
+onMounted(() => {
+  carregar();
+  carregarProgramas();
+});
 </script>
 
 <template>
@@ -198,22 +319,44 @@ onMounted(carregar);
           <div class="flex flex-wrap items-end gap-3 text-sm">
             <template v-if="podeEditar">
               <label :class="ROTULO">
-                {{ t('RAMON.EXTRATO.META') }}
-                <input
-                  v-model="edicao[p.user.id].meta"
-                  type="number"
-                  min="0"
-                  data-testid="extrato-meta"
+                {{ t('RAMON.EXTRATO.PAPEL_ROTULO') }}
+                <select
+                  v-model="edicao[p.user.id].papel"
+                  data-testid="extrato-papel"
                   :class="CAMPO"
-                  class="w-24 font-mono tabular-nums"
-                />
+                  class="w-32"
+                >
+                  <option v-for="papel in PAPEIS" :key="papel" :value="papel">
+                    {{ t(`RAMON.EXTRATO.PAPEL.${papel}`) }}
+                  </option>
+                </select>
               </label>
-              <label
-                class="flex h-8 items-center gap-1.5 text-xs text-n-slate-11"
-              >
-                <input v-model="edicao[p.user.id].rampa" type="checkbox" />
-                {{ t('RAMON.EXTRATO.RAMPA') }}
-              </label>
+              <template v-if="edicao[p.user.id].papel !== 'hibrido'">
+                <label :class="ROTULO">
+                  {{ t('RAMON.EXTRATO.META') }}
+                  <input
+                    v-model="edicao[p.user.id].meta"
+                    type="number"
+                    min="0"
+                    data-testid="extrato-meta"
+                    :class="CAMPO"
+                    class="w-24 font-mono tabular-nums"
+                  />
+                </label>
+                <label :class="ROTULO" :title="t('RAMON.EXTRATO.FATOR_AJUDA')">
+                  {{ t('RAMON.EXTRATO.FATOR') }}
+                  <input
+                    v-model="edicao[p.user.id].fator"
+                    type="number"
+                    min="0.1"
+                    max="2"
+                    step="0.1"
+                    data-testid="extrato-fator"
+                    :class="CAMPO"
+                    class="w-20 font-mono tabular-nums"
+                  />
+                </label>
+              </template>
               <Button
                 data-testid="extrato-salvar-meta"
                 sm
@@ -226,8 +369,9 @@ onMounted(carregar);
               <span class="font-mono tabular-nums text-n-slate-12">
                 {{ p.meta ?? '—' }}
               </span>
-              <template v-if="p.rampa">
-                · {{ t('RAMON.EXTRATO.RAMPA') }}
+              <template v-if="p.fator && p.fator !== 1">
+                · {{ t('RAMON.EXTRATO.FATOR') }}
+                <span class="font-mono tabular-nums">{{ p.fator }}</span>
               </template>
             </span>
           </div>
@@ -246,43 +390,48 @@ onMounted(carregar);
             </div>
             <div class="flex flex-col justify-between">
               <dt :class="TITULO">
-                {{ t('RAMON.EXTRATO.UNIDADES') }}
+                {{ t('RAMON.EXTRATO.VARIAVEL') }}
               </dt>
               <dd class="m-0 mt-1 font-mono tabular-nums text-n-slate-12">
-                {{ brl(p.subtotal) }}
+                {{ brl(p.variavel ?? p.subtotal) }}
+              </dd>
+            </div>
+            <div class="flex flex-col justify-between">
+              <dt :class="TITULO">
+                {{ t('RAMON.EXTRATO.DSR') }}
+              </dt>
+              <dd
+                data-testid="extrato-dsr"
+                class="m-0 mt-1 font-mono tabular-nums text-n-slate-12"
+              >
+                {{ brl(p.dsr) }}
               </dd>
             </div>
             <div class="flex flex-col justify-between">
               <dt :class="TITULO">
                 {{ t('RAMON.EXTRATO.BONUS') }}
               </dt>
-              <dd class="m-0 mt-1 text-n-slate-12">
-                <span class="font-mono tabular-nums">{{ brl(p.bonus) }}</span>
-                <span v-if="p.degraus" class="ms-1 text-xs text-n-slate-10">
-                  {{ t('RAMON.EXTRATO.DEGRAUS', { count: p.degraus }) }}
-                </span>
-              </dd>
-            </div>
-            <div class="flex flex-col justify-between">
-              <dt :class="TITULO">
-                {{ t('RAMON.EXTRATO.OBS') }}
-              </dt>
               <dd class="m-0 mt-1 text-xs text-n-slate-11">
-                <template v-if="p.garantia_aplicada">
-                  {{ t('RAMON.EXTRATO.GARANTIA') }}
-                </template>
                 <span
-                  v-if="p.descontos < 0"
-                  data-testid="extrato-descontos"
-                  class="block text-n-ruby-11"
+                  v-for="b in bonusDe(p)"
+                  :key="b.tipo"
+                  data-testid="extrato-bonus"
+                  class="block"
                 >
-                  {{ t('RAMON.EXTRATO.DESCONTOS') }}
+                  {{ t(`RAMON.EXTRATO.BONUS_TIPO.${b.tipo}`) }}
                   <span class="whitespace-nowrap font-mono tabular-nums">
-                    {{ brl(p.descontos) }}
+                    {{ brl(b.valor) }}
                   </span>
                 </span>
-                <template v-if="!p.garantia_aplicada && !(p.descontos < 0)">
-                  —
+                <span
+                  v-if="p.sem_valor"
+                  data-testid="extrato-sem-valor"
+                  class="block text-n-amber-11"
+                >
+                  {{ t('RAMON.EXTRATO.SEM_VALOR', { count: p.sem_valor }) }}
+                </span>
+                <template v-if="!bonusDe(p).length && !p.sem_valor">
+                  {{ t('RAMON.EXTRATO.NENHUM') }}
                 </template>
               </dd>
             </div>
@@ -335,6 +484,88 @@ onMounted(carregar);
           </p>
         </section>
       </div>
+
+      <section
+        v-if="isAdmin"
+        data-testid="extrato-programa"
+        :class="CARTAO"
+        class="flex flex-col gap-3"
+      >
+        <h3 class="m-0 text-base font-semibold text-n-slate-12">
+          {{ t('RAMON.EXTRATO.PROGRAMA.TITULO') }}
+        </h3>
+        <p class="m-0 text-xs text-n-slate-10">
+          {{ t('RAMON.EXTRATO.PROGRAMA.AJUDA') }}
+        </p>
+        <ul v-if="programas.length" class="m-0 flex flex-col gap-1 p-0">
+          <li
+            v-for="item in programas"
+            :key="item.id"
+            class="flex items-center gap-2 text-sm text-n-slate-12"
+          >
+            <span class="font-mono tabular-nums">
+              {{
+                t('RAMON.EXTRATO.PROGRAMA.VIGENCIA', {
+                  inicio: dataBr(`${item.inicio}T12:00:00`),
+                  fim: dataBr(`${item.fim}T12:00:00`),
+                })
+              }}
+            </span>
+            <Button
+              link
+              xs
+              :label="t('RAMON.EXTRATO.PROGRAMA.EDITAR')"
+              @click="editarPrograma(item)"
+            />
+          </li>
+        </ul>
+        <div class="flex flex-wrap items-end gap-3 text-sm">
+          <label :class="ROTULO">
+            {{ t('RAMON.EXTRATO.PROGRAMA.INICIO') }}
+            <input
+              v-model="programa.inicio"
+              type="date"
+              data-testid="programa-inicio"
+              :class="CAMPO"
+            />
+          </label>
+          <label :class="ROTULO">
+            {{ t('RAMON.EXTRATO.PROGRAMA.FIM') }}
+            <input
+              v-model="programa.fim"
+              type="date"
+              data-testid="programa-fim"
+              :class="CAMPO"
+            />
+          </label>
+        </div>
+        <div class="grid gap-3 text-sm sm:grid-cols-3">
+          <label
+            v-for="[campo, rotulo, testid] in CAMPOS_PROGRAMA"
+            :key="campo"
+            :class="ROTULO"
+          >
+            {{ t(`RAMON.EXTRATO.PROGRAMA.${rotulo}`) }}
+            <input
+              v-model="programa[campo]"
+              type="number"
+              min="0"
+              :data-testid="`programa-${testid}`"
+              :class="CAMPO"
+              class="font-mono tabular-nums"
+            />
+          </label>
+        </div>
+        <div>
+          <Button
+            data-testid="programa-salvar"
+            sm
+            :disabled="!programa.inicio || !programa.fim"
+            :label="t('RAMON.EXTRATO.PROGRAMA.SALVAR')"
+            @click="salvarPrograma"
+          />
+        </div>
+      </section>
     </div>
   </div>
 </template>
