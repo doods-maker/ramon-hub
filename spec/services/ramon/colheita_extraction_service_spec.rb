@@ -40,6 +40,23 @@ RSpec.describe Ramon::ColheitaExtractionService do
     expect(colheita['mascarada']).to be(false)
   end
 
+  it 'grava fontes e trechos ao lado de lacunas, fora de dados, e o transcript leva o carimbo de data' do
+    json = JSON.parse(colheita_json).merge(
+      'fontes' => { 'acidente.data' => '14/08', 'acidente.tipo' => 5 },
+      'trechos' => [{ 'campo' => 'acidente.descricao', 'texto' => 'a prensa desceu na minha mão' }] * 4
+    ).to_json
+    expect(Ramon::LlmClient).to receive(:complete) do |user:, **|
+      expect(user).to include('[').and include('Cliente: ')
+      llm_result(json)
+    end
+    described_class.new(lead).perform
+    colheita = lead.reload.custom_attributes['colheita']
+    expect(colheita['fontes']).to eq('acidente.data' => '14/08')
+    expect(colheita['trechos'].size).to eq(3)
+    expect(colheita['trechos'].first).to eq('campo' => 'acidente.descricao', 'texto' => 'a prensa desceu na minha mão')
+    expect(colheita['dados'].keys).not_to include('fontes', 'trechos')
+  end
+
   it 'preenche dcb_em com a DCB do auxílio-doença cessado quando estava vazio' do
     allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(colheita_json))
     described_class.new(lead).perform

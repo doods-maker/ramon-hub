@@ -32,6 +32,8 @@ class Ramon::ColheitaExtractionService
     - "vinculo.avaliacao": uma linha por requisito.
     - Testemunhas: só com o que o lead disse na conversa; nunca sugira nomes.
     - "checklist_ok": ids (números) dos itens do checklist listados na entrada que a conversa JÁ responde com clareza; na dúvida, NÃO inclua o item.
+    - "fontes": para cada campo preenchido, a data dd/mm da mensagem de onde ele saiu (o carimbo da linha), no formato {"bloco.campo": "dd/mm"}.
+    - "trechos": no máximo 3, literais e curtos (até 300 caracteres), só onde o relato decide — como o acidente/doença aconteceu, a limitação concreta, a queixa principal.
     Português do Brasil.
   PROMPT
 
@@ -99,18 +101,7 @@ class Ramon::ColheitaExtractionService
   end
 
   def conversation_transcript
-    messages = @lead.conversation.messages.where(message_type: [:incoming, :outgoing], private: false)
-                    .order(:created_at).last(MAX_MESSAGES)
-    lines = messages.filter_map do |m|
-      text = m.content_for_llm
-      next if text.blank?
-      next if text == '[Attachment]'
-
-      "#{m.incoming? ? 'Cliente' : 'Atendimento'}: #{text}"
-    end
-    return nil if lines.empty?
-
-    "Conversa (WhatsApp/chat):\n#{lines.join("\n")}"
+    Ramon::Transcricao.de(@lead.conversation, limite: MAX_MESSAGES, com_hora: true)
   end
 
   # Mesmo parse tolerante do Leads::KitService: aceita cercas ```json e texto em volta.
@@ -137,7 +128,7 @@ class Ramon::ColheitaExtractionService
   # do dcb_em avaliaria dado obsoleto, sobrescrevendo valor humano).
   def write_back(dados)
     @lead.reload
-    dados = dados.slice(*Ramon::Colheita::Esquema.blocos_para(@lead.thesis.name), 'lacunas', 'confirmar', 'checklist_ok')
+    dados = dados.slice(*Ramon::Colheita::Esquema.blocos_para(@lead.thesis.name), 'lacunas', 'confirmar', 'checklist_ok', 'fontes', 'trechos')
     fill_contact_blanks(dados['cliente'])
     attrs = { custom_attributes: merged_custom_attributes(dados) }
     dcb = extracted_dcb(dados)
@@ -191,12 +182,28 @@ class Ramon::ColheitaExtractionService
 
   def colheita_payload(dados)
     {
-      'dados' => dados.except('lacunas', 'confirmar', 'checklist_ok'),
+      'dados' => dados.except('lacunas', 'confirmar', 'checklist_ok', 'fontes', 'trechos'),
       'lacunas' => lacuna_list(dados['lacunas']),
       'confirmar' => Array(dados['confirmar']).map(&:to_s).reject(&:empty?),
+      'fontes' => fonte_map(dados['fontes']),
+      'trechos' => trecho_list(dados['trechos']),
       'extraida_em' => Time.zone.now.iso8601,
       'mascarada' => !sensitive_ok?
     }
+  end
+
+  def fonte_map(value)
+    return {} unless value.is_a?(Hash)
+
+    value.select { |campo, data| campo.is_a?(String) && data.is_a?(String) }
+  end
+
+  def trecho_list(value)
+    Array(value).filter_map do |item|
+      next unless item.is_a?(Hash) && item['texto'].present?
+
+      { 'campo' => item['campo'].to_s, 'texto' => item['texto'].to_s.truncate(300) }
+    end.first(3)
   end
 
   def lacuna_list(value)

@@ -41,6 +41,11 @@ RSpec.describe Ramon::Colheita::Esquema do
     expect(vinculo.dig('contrato', 'testemunhas', 0).keys).to eq(%w[nome relacao])
   end
 
+  it 'o modelo do prompt pede fontes e trechos' do
+    modelo = JSON.parse(described_class.modelo_json('Tese inventada'))
+    expect(modelo.keys).to include('fontes', 'trechos')
+  end
+
   it 'traz os campos que a spec acrescenta ao esquema aprovado do B36 e ao núcleo' do
     b36 = JSON.parse(described_class.modelo_json('Auxílio-acidente (B36)'))
     expect(b36.dig('acidente', 'lesao').keys).to eq(%w[descricao cid])
