@@ -20,6 +20,15 @@ const sdr = {
   papel: 'sdr',
   meta: 50,
   fator: 0.8,
+  fator_base: {
+    manual: false,
+    tipo: 'comparecimento',
+    numerador: 10,
+    denominador: 16,
+    taxa: 0.625,
+  },
+  faltam_meta: 48,
+  reunioes_ia: 3,
   contagem: 2,
   variavel: 12.8,
   dsr: 3.9,
@@ -48,6 +57,14 @@ const hibrido = {
     { tipo: 'gas', valor: 25 },
   ],
   sem_valor: 1,
+  proxima_faixa: { min: 45, valor: 500, faltam: 4 },
+  constancia: {
+    min_mes: 25,
+    meses: [
+      { mes: '2026-12', contagem: 41, ok: true },
+      { mes: '2027-01', contagem: 20, ok: false },
+    ],
+  },
   total: 1697.12,
   unidades: [],
 };
@@ -126,6 +143,43 @@ describe('Extrato.vue (duas grades)', () => {
           faixas: [{ min: 25, valor: 300 }],
         }),
       })
+    );
+  });
+
+  it('mostra quanto falta, a conta do fator, as reuniões da IA e a constância', async () => {
+    const wrapper = montar();
+    await flushPromises();
+    const [cartaoSdr, cartaoHibrido] = wrapper.findAll(
+      '[data-testid="extrato-pessoa"]'
+    );
+
+    expect(cartaoSdr.find('[data-testid="extrato-faltam"]').text()).toContain(
+      '"count":48'
+    );
+    expect(
+      cartaoSdr.find('[data-testid="extrato-fator-base"]').text()
+    ).toContain('"num":10');
+    expect(
+      cartaoSdr.find('[data-testid="extrato-reunioes-ia"]').text()
+    ).toContain('"count":3');
+    expect(
+      cartaoHibrido.find('[data-testid="extrato-proxima-faixa"]').text()
+    ).toContain('"faltam":4');
+    expect(
+      cartaoHibrido.findAll('[data-testid="extrato-constancia-mes"]')
+    ).toHaveLength(2);
+  });
+
+  it('fator vazio salva vazio (vale o calculado)', async () => {
+    const wrapper = montar();
+    await flushPromises();
+    const cartao = wrapper.findAll('[data-testid="extrato-pessoa"]')[0];
+
+    await cartao.find('[data-testid="extrato-fator"]').setValue('');
+    await cartao.find('[data-testid="extrato-salvar-meta"]').trigger('click');
+
+    expect(api.salvarMeta).toHaveBeenCalledWith(
+      expect.objectContaining({ user_id: 1, fator: null })
     );
   });
 

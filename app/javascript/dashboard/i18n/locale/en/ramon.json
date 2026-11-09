@@ -2294,7 +2294,7 @@
       "FECHADO": "Closed on {data}",
       "PAPEL_ROTULO": "Pay plan",
       "FATOR": "Quarter factor",
-      "FATOR_AJUDA": "Quality multiplier for plan A (0.8 · 1.0 · 1.1). The first quarter is 1.0.",
+      "FATOR_AJUDA": "Calculated from the previous quarter (0.8 · 1.0 · 1.1). Fill only to correct it; empty = calculated.",
       "VARIAVEL": "Variable",
       "DSR": "Paid rest day (DSR)",
       "NENHUM": "—",
@@ -2323,6 +2323,18 @@
         "SALVAR": "Save program",
         "SALVO": "Program saved",
         "ERRO": "Could not save the program"
+      },
+      "FATOR_CALCULADO": "calculated: {fator}",
+      "FALTAM_META": "{count} left to the monthly target | {count} left to the monthly target | {count} left to the monthly target",
+      "META_BATIDA": "Monthly target reached: from now on each unit is worth more",
+      "REUNIOES_IA": "{count} meeting booked by the AI (does not pay the SDR) | {count} meeting booked by the AI (does not pay the SDR) | {count} meetings booked by the AI (do not pay the SDR)",
+      "PROXIMA_FAIXA": "{faltam} ready contracts left for the {valor} bonus",
+      "CONSTANCIA": "Quarter consistency (at least {min} per month):",
+      "FATOR_BASE": {
+        "comparecimento": "Factor {fator}: last quarter attendance {taxa}% ({num} held of {den})",
+        "problemas": "Factor {fator}: {taxa}% sent back or cancelled last quarter ({num} of {den} sent)",
+        "primeiro": "Factor 1.0: first quarter",
+        "manual": "Factor {fator}: corrected by the manager"
       }
     },
     "CONFERENCIA": {

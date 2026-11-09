@@ -2294,7 +2294,7 @@
       "FECHADO": "Fechado em {data}",
       "PAPEL_ROTULO": "Grade",
       "FATOR": "Fator do trimestre",
-      "FATOR_AJUDA": "Multiplicador de qualidade do modelo A (0,8 · 1,0 · 1,1). O 1º trimestre é 1,0.",
+      "FATOR_AJUDA": "Calculado sozinho pelo trimestre anterior (0,8 · 1,0 · 1,1). Preencha só para corrigir; vazio = o calculado.",
       "VARIAVEL": "Variável",
       "DSR": "DSR",
       "NENHUM": "—",
@@ -2323,6 +2323,18 @@
         "SALVAR": "Salvar Programa",
         "SALVO": "Programa salvo",
         "ERRO": "Não foi possível salvar o Programa"
+      },
+      "FATOR_CALCULADO": "calculado: {fator}",
+      "FALTAM_META": "Falta {count} para a meta do mês | Falta {count} para a meta do mês | Faltam {count} para a meta do mês",
+      "META_BATIDA": "Meta do mês batida: daqui pra frente cada unidade vale mais",
+      "REUNIOES_IA": "{count} reunião marcada pela IA (não paga o SDR) | {count} reunião marcada pela IA (não paga o SDR) | {count} reuniões marcadas pela IA (não pagam o SDR)",
+      "PROXIMA_FAIXA": "Faltam {faltam} contratos aptos para o bônus de {valor}",
+      "CONSTANCIA": "Constância do trimestre (mínimo {min} por mês):",
+      "FATOR_BASE": {
+        "comparecimento": "Fator {fator}: comparecimento do trimestre anterior {taxa}% ({num} realizadas de {den})",
+        "problemas": "Fator {fator}: {taxa}% de devolvidos ou cancelados no trimestre anterior ({num} de {den} enviados)",
+        "primeiro": "Fator 1,0: primeiro trimestre",
+        "manual": "Fator {fator}: corrigido pelo gestor"
       }
     },
     "CONFERENCIA": {

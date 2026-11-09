@@ -30,6 +30,12 @@ class ProgramaMetas < ApplicationRecord
     [faixa(contagem), gas(contagem)].compact
   end
 
+  # A próxima faixa acima da contagem (o "quanto falta" do cartão); nil se já passou da última.
+  def proxima_faixa(contagem)
+    faixa = Array(regras['faixas']).select { |f| f['min'].to_i > contagem }.min_by { |f| f['min'].to_i }
+    faixa && { min: faixa['min'].to_i, valor: faixa['valor'].to_f, faltam: faixa['min'].to_i - contagem }
+  end
+
   private
 
   def faixa(contagem)
