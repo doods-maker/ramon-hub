@@ -11,7 +11,7 @@ RSpec.describe Ramon::PeticaoLerPastaJob do
   end
 
   it 'esgotadas as tentativas, grava estado erro' do
-    allow(Ramon::Peticionamento::ImportarPasta).to receive(:call).and_raise(Google::Apis::ServerError, 'x')
+    allow(Ramon::Peticionamento::ImportarPasta).to receive(:call).and_raise(StandardError, 'x')
     begin
       perform_enqueued_jobs(only: described_class) { described_class.perform_later(peticao.id) }
     rescue StandardError
@@ -21,7 +21,7 @@ RSpec.describe Ramon::PeticaoLerPastaJob do
   end
 
   it 'tentativas esgotadas com a leitura já resolvida não regravam erro' do
-    allow(Ramon::Peticionamento::ImportarPasta).to receive(:call).and_raise(Google::Apis::ServerError, 'x')
+    allow(Ramon::Peticionamento::ImportarPasta).to receive(:call).and_raise(StandardError, 'x')
     peticao.update!(leitura: { 'estado' => 'lida' })
     begin
       perform_enqueued_jobs(only: described_class) { described_class.perform_later(peticao.id) }
