@@ -143,6 +143,18 @@ RSpec.describe Ramon::ZapsignContractService do
     end
   end
 
+  it 'com representante, não usa estado civil/profissão/endereço da colheita' do
+    lead.update!(custom_attributes: { 'colheita' => { 'dados' => { 'cliente' => {
+                   'estado_civil' => 'casado', 'profissao' => 'montador', 'endereco' => 'Rua X, 1',
+                   'representante' => { 'nome' => 'Ana', 'parentesco' => 'filha' }
+                 } } } })
+
+    preview = described_class.new(lead.reload).preview
+
+    expect(preview['dados']).not_to include('rua' => 'Rua X, 1')
+    expect(preview['dados'].values).not_to include('casado', 'montador')
+  end
+
   it 'sem endereço no contato cai na colheita (rua inteira) e na cidade do contato' do
     contact.update!(additional_attributes: { 'city' => 'Laguna' })
 

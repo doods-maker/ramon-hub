@@ -218,6 +218,23 @@ RSpec.describe Ramon::ColheitaExtractionService do
       expect(contact.data_nascimento).to eq(Date.new(1985, 3, 10))
     end
 
+    it 'com representante, cpf/nascimento do beneficiário não vão para o contato' do
+      json = colheita_json_cliente('cpf' => '529.982.247-25', 'nascimento' => '1985-03-10',
+                                   'representante' => { 'nome' => 'Ana', 'parentesco' => 'filha' })
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(json))
+      described_class.new(lead).perform
+      contact.reload
+      expect(contact.cpf).to be_nil
+      expect(contact.data_nascimento).to be_nil
+    end
+
+    it 'bloco fora da tese não chega ao banco' do
+      base = JSON.parse(colheita_json).merge('maternidade' => { 'parto_em' => '2025-01-01' })
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(base.to_json))
+      described_class.new(lead).perform
+      expect(lead.reload.custom_attributes.dig('colheita', 'dados')).not_to have_key('maternidade')
+    end
+
     it 'não sobrescreve cpf/nascimento já preenchidos por humano' do
       contact.update!(cpf: '52998224725', data_nascimento: Date.new(1990, 1, 1))
       json = colheita_json_cliente('cpf' => '111.111.111-11', 'nascimento' => '1985-03-10')

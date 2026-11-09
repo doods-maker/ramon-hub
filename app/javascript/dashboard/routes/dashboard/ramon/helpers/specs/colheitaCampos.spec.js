@@ -25,6 +25,20 @@ describe('colheitaCampos', () => {
     expect(colheitaCampos(dados, ['acidente.data'])[0].confirmar).toBe(true);
   });
 
+  it('chip confirmar acende por prefixo de caminho, sem falso positivo', () => {
+    const doencas = { saude: { doencas: [{ cid: 'M54' }] } };
+    expect(
+      colheitaCampos(doencas, ['saude.doencas[0].cid'])[0].confirmar
+    ).toBe(true);
+    const outro = { acidente: { data_x: '2025-03-14' } };
+    expect(colheitaCampos(outro, ['acidente.data'])[0].confirmar).toBe(false);
+  });
+
+  it('valor de escolha troca _ por espaço', () => {
+    const dados = { incapacidade: { motivo: 'sem_justa_causa' } };
+    expect(colheitaCampos(dados, [])[0].valor).toBe('sem justa causa');
+  });
+
   it('benefício vira uma linha só com espécie, datas e situação', () => {
     const dados = {
       beneficios: [
@@ -73,17 +87,17 @@ describe('colheitaCampos', () => {
     expect(colheitaCampos(dados, [])).toEqual([
       {
         chave: 'cliente.representante',
-        valor: 'Ana · filha',
+        valor: 'nome: Ana · parentesco: filha',
         confirmar: false,
       },
       {
         chave: 'outras_teses_sinal',
-        valor: 'B36 · acidente no trajeto',
+        valor: 'tese: B36 · motivo: acidente no trajeto',
         confirmar: false,
       },
       {
         chave: 'saude.doencas',
-        valor: 'lombalgia · M54.5 · 10/02/2023',
+        valor: 'nome: lombalgia · cid: M54.5 · diagnostico em: 10/02/2023',
         confirmar: false,
       },
     ]);

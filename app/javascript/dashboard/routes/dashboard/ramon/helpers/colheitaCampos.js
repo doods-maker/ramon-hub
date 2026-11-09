@@ -28,6 +28,7 @@ const ORDEM = [
 ];
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
+const humaniza = s => s.replace(/_/g, ' ');
 const data = v => v.replace(ISO, '$3/$2/$1');
 
 const vazio = v =>
@@ -43,9 +44,13 @@ const texto = v => {
     return partes.join(v.some(isObj) ? '; ' : ', ');
   }
   if (isObj(v)) {
-    return Object.values(v).map(texto).filter(Boolean).join(' · ');
+    return Object.entries(v)
+      .map(([k, x]) => [k, texto(x)])
+      .filter(([, t]) => t)
+      .map(([k, t]) => `${humaniza(k)}: ${t}`)
+      .join(' · ');
   }
-  return vazio(v) ? '' : data(String(v));
+  return vazio(v) ? '' : humaniza(data(String(v)));
 };
 
 const beneficio = b =>
@@ -60,7 +65,11 @@ const beneficio = b =>
     .join(' · ');
 
 export const colheitaCampos = (dados, confirmar) => {
-  const incertos = new Set(confirmar || []);
+  const lista = confirmar || [];
+  const incerto = chave =>
+    lista.some(
+      c => c === chave || c.startsWith(`${chave}.`) || c.startsWith(`${chave}[`)
+    );
   const nomes = Object.keys(dados || {});
   const secoes = [
     ...ORDEM.filter(n => nomes.includes(n)),
@@ -76,7 +85,7 @@ export const colheitaCampos = (dados, confirmar) => {
         .map(valor => ({
           chave: secao,
           valor,
-          confirmar: incertos.has(secao),
+          confirmar: incerto(secao),
         }));
     }
     return Object.entries(bloco || {})
@@ -84,7 +93,7 @@ export const colheitaCampos = (dados, confirmar) => {
       .filter(([, valor]) => valor)
       .map(([campo, valor]) => {
         const chave = `${secao}.${campo}`;
-        return { chave, valor, confirmar: incertos.has(chave) };
+        return { chave, valor, confirmar: incerto(chave) };
       });
   });
 };

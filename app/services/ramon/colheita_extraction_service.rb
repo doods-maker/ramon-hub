@@ -17,12 +17,19 @@ class Ramon::ColheitaExtractionService
   PROMPT_REGRAS = <<~PROMPT.freeze
     Regras invioláveis:
     - NUNCA invente um dado. Campo não mencionado na conversa = null (ou lista vazia) + entrada em "lacunas".
-    - Datas no formato YYYY-MM-DD. Valor com "|" no modelo ("a|b|c") = escolha UMA das opções; lista com um item assim (["a|b|c"]) = lista cujos itens são cada um uma dessas opções.
+    - Datas no formato YYYY-MM-DD; se só mês/ano foi dito, use o dia 15 e liste o campo em "confirmar". Valor com "|" no modelo ("a|b|c") = escolha UMA das opções; lista com um item assim (["a|b|c"]) = lista cujos itens são cada um uma dessas opções.
     - Valor dito de forma incerta na fala: preencha e liste o caminho do campo em "confirmar".
     - Tokens de máscara ([cpf], [rg], [telefone], [endereco], [email], [cep], [nome]) significam dado protegido: deixe o campo null e registre em "lacunas" com como_obter "confirmar no cadastro/documento".
     - "profissao" é a atividade habitual; "sequela.limitacao_concreta" é como a sequela reduz esse trabalho, em fatos.
     - "cliente" é a pessoa titular do benefício; se quem conversa é outra pessoa (familiar, curador), ela vai em "cliente.representante".
-    - "outras_teses_sinal": só preencha quando a conversa der motivo concreto para outra tese; senão lista vazia.
+    - "cliente.representante" e "outras_teses_sinal" ficam vazios (null / lista vazia) quando não se aplicam, sem entrada em "lacunas".
+    - "outras_teses_sinal": só preencha quando a conversa der motivo concreto para outra tese.
+    - A IA não calcula nada (renda per capita, prazos, carência, somas): só registra o que foi dito.
+    - Caminhos em "confirmar" e "lacunas": "bloco.campo"; listas com índice, ex.: "saude.doencas[0].cid".
+    - "dependencia.quem_cuida": só o parentesco, sem nome.
+    - "ir.valor_mensal" sem valor dito: 5001 se a renda passou de R$ 5.000, 5000 se não.
+    - "segurado" refere-se à data em que parou de contribuir (B31/B32) ou ao parto (maternidade).
+    - "vinculo.avaliacao": uma linha por requisito.
     - Testemunhas: só com o que o lead disse na conversa; nunca sugira nomes.
     - "checklist_ok": ids (números) dos itens do checklist listados na entrada que a conversa JÁ responde com clareza; na dúvida, NÃO inclua o item.
     Português do Brasil.
@@ -130,6 +137,7 @@ class Ramon::ColheitaExtractionService
   # do dcb_em avaliaria dado obsoleto, sobrescrevendo valor humano).
   def write_back(dados)
     @lead.reload
+    dados = dados.slice(*Ramon::Colheita::Esquema.blocos_para(@lead.thesis.name), 'lacunas', 'confirmar', 'checklist_ok')
     fill_contact_blanks(dados['cliente'])
     attrs = { custom_attributes: merged_custom_attributes(dados) }
     dcb = extracted_dcb(dados)
@@ -143,6 +151,8 @@ class Ramon::ColheitaExtractionService
   def fill_contact_blanks(cliente)
     contact = @lead.contact
     return if contact.blank? || !cliente.is_a?(Hash)
+    # Com representante, quem conversa não é o autor: CPF/nascimento da colheita são do beneficiário.
+    return if cliente.dig('representante', 'nome').present?
 
     updates = contact_updates(contact, cliente)
     return if updates.empty?
