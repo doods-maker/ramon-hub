@@ -6,7 +6,6 @@ class Ramon::Peticionamento::ImportarPasta
   CPF = /(?<!\d)(?:\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})(?!\d)/
   MAX_ARQUIVO = 30.megabytes
   MAX_PASTA = 100.megabytes
-  Drive = Ramon::DriveClient
 
   def self.call(peticao) = new(peticao).call
 
@@ -19,11 +18,11 @@ class Ramon::Peticionamento::ImportarPasta
     return unless lendo?
 
     @releitura = releitura?
-    regras = Ramon::Peticionamento::RegrasDaPasta.call(Drive.conteudo_da_pasta(@peticao.drive_pasta_id))
+    regras = Ramon::Peticionamento::RegrasDaPasta.call(Ramon::DriveClient.conteudo_da_pasta(@peticao.drive_pasta_id))
     recusas = regras.recusas + recusas_de_tamanho(regras.arquivos)
     return gravar_recusa(recusas, regras.avisos) if recusas.any?
 
-    baixados = regras.arquivos.map { |a| [a, Drive.download(a[:id]).first] }
+    baixados = regras.arquivos.map { |a| [a, Ramon::DriveClient.download(a[:id]).first] }
     ler(regras.avisos, baixados.first.last) if trocar_pacote(baixados)
   end
 
@@ -130,7 +129,7 @@ class Ramon::Peticionamento::ImportarPasta
   end
 
   def cpf_da_pasta
-    Drive.nomes_acima(@peticao.drive_pasta_id).each do |nome|
+    Ramon::DriveClient.nomes_acima(@peticao.drive_pasta_id).each do |nome|
       achado = CPF.match(nome)
       return achado[0].delete('^0-9') if achado
     end
