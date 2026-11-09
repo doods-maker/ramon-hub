@@ -1621,7 +1621,10 @@
         "COLHEITA": "Colheita da reunião"
       },
       "DELETE": "Remover tese",
-      "ITEM_DELETE": "Remover item"
+      "ITEM_DELETE": "Remover item",
+      "VALIDADORES": "Advogados que validam o apto",
+      "COMISSAO_APTO": "Comissão do híbrido por contrato apto (R$)",
+      "COMISSAO_APTO_AJUDA": "Vazio = a tese não paga comissão ao híbrido."
     },
     "COPILOT": {
       "SUMMARIZE": "Resumir a conversa",
@@ -2130,6 +2133,24 @@
       "RESULTADO": {
         "qualificada": "Qualificada",
         "nao_qualificada": "Não qualificada"
+      }
+    },
+    "APTO": {
+      "TITULO": "Apto para protocolo (jurídico)",
+      "ERRO": "Não foi possível salvar a validação.",
+      "PRAZO": "apto sozinho em {data}",
+      "VALIDAR": "Apto para protocolo",
+      "DEVOLVER": "Devolver",
+      "DEVOLVER_CONFIRMAR": "Devolver com motivo",
+      "MOTIVO": "O que precisa corrigir?",
+      "REENVIAR": "Corrigido, reenviar ao jurídico",
+      "DESIGNAR": "Advogado que valida este caso",
+      "DESIGNAR_TESE": "Advogados da tese",
+      "SITUACAO": {
+        "aguardando": "Aguardando validação do jurídico",
+        "devolvido": "Devolvido pelo jurídico",
+        "apto": "Apto para protocolo",
+        "apto_por_prazo": "Apto (prazo do jurídico venceu)"
       }
     },
     "CONTRATO": {

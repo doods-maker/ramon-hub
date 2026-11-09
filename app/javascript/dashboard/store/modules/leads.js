@@ -167,6 +167,12 @@ export const actions = {
     await dispatch('leadTasks/fetchForLead', id, { root: true });
     return response.data;
   },
+  // Contrato apto: o backend devolve o lead com a situação nova.
+  apto: async ({ commit }, { id, ...dados }) => {
+    const response = await LeadsAPI.apto(id, dados);
+    commit(types.EDIT_LEAD, response.data);
+    return response.data;
+  },
   // Devolve o lead já na etapa nova; a tarefa de reunião recarrega no painel.
   agendarReuniao: async (
     { commit, dispatch },

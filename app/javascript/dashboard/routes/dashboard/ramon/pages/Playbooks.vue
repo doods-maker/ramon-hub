@@ -35,6 +35,7 @@ const OPCOES_BOTOES = ['desligado', 'ligado', 'teste_ab'];
 
 const store = useStore();
 const getters = useStoreGetters();
+const agentes = computed(() => getters['agents/getAgents']?.value || []);
 const { t } = useI18n();
 const route = useRoute();
 
@@ -62,6 +63,8 @@ const detail = reactive({
   zapsignTemplateId: '',
   opcoesBotoes: 'desligado',
   passaDocumentos: false,
+  validadorIds: [],
+  comissaoApto: '',
 });
 
 const syncDetail = () => {
@@ -80,6 +83,8 @@ const syncDetail = () => {
   detail.zapsignTemplateId = thesis.zapsign_template_id || '';
   detail.opcoesBotoes = thesis.opcoes_botoes || 'desligado';
   detail.passaDocumentos = !!thesis.passa_documentos;
+  detail.validadorIds = [...(thesis.validador_ids || [])];
+  detail.comissaoApto = thesis.comissao_apto ?? '';
 };
 
 // Observa só o ID: resposta de PATCH mutando o record no store não pode
@@ -174,6 +179,8 @@ const saveDetail = () => {
       zapsign_template_id: detail.zapsignTemplateId || null,
       opcoes_botoes: detail.opcoesBotoes,
       passa_documentos: detail.passaDocumentos,
+      validador_ids: detail.validadorIds,
+      comissao_apto: detail.comissaoApto === '' ? null : detail.comissaoApto,
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
@@ -361,6 +368,8 @@ onMounted(() => {
   store.dispatch('theses/get').then(abrirDaQuery);
   // etapas e motivos de perda das saídas do roteiro
   store.dispatch('leadConfig/get');
+  // advogados que validam o apto da tese
+  if (!agentes.value.length) store.dispatch('agents/get');
   carregarModelos();
   carregarPassos();
 });
@@ -716,6 +725,43 @@ onMounted(() => {
                   @change="saveDetail"
                 />
                 {{ $t('RAMON.PLAYBOOKS.PASSA_DOCUMENTOS') }}
+              </label>
+            </div>
+
+            <!-- Contrato apto: quem valida (POP RCP-01) e a comissão do híbrido por contrato apto -->
+            <div class="grid gap-3 md:grid-cols-2" data-testid="playbooks-apto">
+              <fieldset :class="ROTULO">
+                <legend>{{ $t('RAMON.PLAYBOOKS.VALIDADORES') }}</legend>
+                <label
+                  v-for="agente in agentes"
+                  :key="agente.id"
+                  class="flex items-center gap-2"
+                >
+                  <input
+                    v-model="detail.validadorIds"
+                    type="checkbox"
+                    :value="agente.id"
+                    :data-testid="`playbooks-validador-${agente.id}`"
+                    @change="saveDetail"
+                  />
+                  {{ agente.name }}
+                </label>
+              </fieldset>
+              <label
+                :class="ROTULO"
+                :title="$t('RAMON.PLAYBOOKS.COMISSAO_APTO_AJUDA')"
+              >
+                {{ $t('RAMON.PLAYBOOKS.COMISSAO_APTO') }}
+                <input
+                  v-model="detail.comissaoApto"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  data-testid="playbooks-comissao-apto"
+                  class="font-mono"
+                  :class="CAMPO"
+                  @change="saveDetail"
+                />
               </label>
             </div>
 

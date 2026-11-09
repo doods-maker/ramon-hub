@@ -1621,7 +1621,10 @@
         "COLHEITA": "Meeting harvest"
       },
       "DELETE": "Delete thesis",
-      "ITEM_DELETE": "Delete item"
+      "ITEM_DELETE": "Delete item",
+      "VALIDADORES": "Lawyers who review \"ready for filing\"",
+      "COMISSAO_APTO": "Hybrid commission per ready contract (R$)",
+      "COMISSAO_APTO_AJUDA": "Empty = this thesis does not pay the hybrid commission."
     },
     "COPILOT": {
       "SUMMARIZE": "Summarize conversation",
@@ -2130,6 +2133,24 @@
       "RESULTADO": {
         "qualificada": "Qualified",
         "nao_qualificada": "Not qualified"
+      }
+    },
+    "APTO": {
+      "TITULO": "Ready for filing (legal review)",
+      "ERRO": "Could not save the legal review.",
+      "PRAZO": "auto-approved on {data}",
+      "VALIDAR": "Ready for filing",
+      "DEVOLVER": "Send back",
+      "DEVOLVER_CONFIRMAR": "Send back with reason",
+      "MOTIVO": "What needs fixing?",
+      "REENVIAR": "Fixed — send to legal again",
+      "DESIGNAR": "Lawyer who reviews this case",
+      "DESIGNAR_TESE": "Lawyers of the thesis",
+      "SITUACAO": {
+        "aguardando": "Waiting for legal review",
+        "devolvido": "Sent back by legal",
+        "apto": "Ready for filing",
+        "apto_por_prazo": "Ready for filing (deadline passed)"
       }
     },
     "CONTRATO": {
