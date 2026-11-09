@@ -1380,7 +1380,9 @@
           "profissao": "Profissão",
           "endereco": "Endereço",
           "whatsapp": "WhatsApp",
-          "renda_aproximada": "Renda aproximada"
+          "renda_aproximada": "Renda aproximada",
+          "nacionalidade": "Nacionalidade",
+          "representante": "Representante"
         },
         "qualificacao": {
           "aposentado": "Aposentado",
@@ -1393,7 +1395,8 @@
           "tipo": "Tipo de acidente",
           "descricao": "Como foi",
           "cat_emitida": "CAT emitida",
-          "empregador_na_epoca": "Empregador na época"
+          "empregador_na_epoca": "Empregador na época",
+          "lesao": "Lesão"
         },
         "sequela": {
           "descricao": "Sequela",
@@ -1410,6 +1413,97 @@
           "motivo_nao_assinatura": "Por que não assinou",
           "objecoes": "Objeções",
           "sensibilidades": "Sensibilidades"
+        },
+        "outras_teses_sinal": "Outra tese em vista",
+        "segurado": {
+          "regime_na_data": "Regime na data",
+          "servidor_rpps": "Servidor (RPPS)",
+          "ultima_contribuicao": "Última contribuição",
+          "mais_de_120": "Mais de 120 contribuições",
+          "desemprego_comprovado": "Desemprego comprovado"
+        },
+        "saude": {
+          "doencas": "Doenças",
+          "tratamentos": "Tratamentos",
+          "laudo_disponivel": "Laudo disponível"
+        },
+        "incapacidade": {
+          "funcao_exigencias": "Função e exigências",
+          "parou_em": "Parou de trabalhar em",
+          "afastado_hoje": "Situação hoje",
+          "limitacoes_atuais": "Limitações atuais",
+          "evolucao": "Evolução",
+          "prognostico": "Prognóstico",
+          "escolaridade": "Escolaridade",
+          "pericia_desconsiderou": "O que a perícia desconsiderou",
+          "ligada_ao_trabalho": "Ligada ao trabalho"
+        },
+        "dependencia": {
+          "precisa_ajuda": "Precisa de ajuda",
+          "desde": "Desde quando",
+          "quem_cuida": "Quem cuida",
+          "atividades": "Atividades com ajuda",
+          "laudo_cuidador": "Laudo do cuidador"
+        },
+        "assistencial": {
+          "cadunico": "CadÚnico",
+          "impedimento": "Impedimento",
+          "moradores": "Moradores",
+          "renda_total_declarada": "Renda total declarada",
+          "rendas_excluidas": "Rendas excluídas",
+          "gastos_saude": "Gastos com saúde",
+          "moradia": "Moradia"
+        },
+        "maternidade": {
+          "fato": "Fato gerador",
+          "data_fato": "Data do fato",
+          "semanas": "Semanas de gestação",
+          "ja_recebeu": "Já recebeu",
+          "trabalho_na_data": "Trabalho na data",
+          "facultativa_dona_casa": "Facultativa dona de casa",
+          "rural": "Atividade rural",
+          "demitida_gestante": "Demitida grávida"
+        },
+        "ir": {
+          "fonte": "Fonte da renda",
+          "tipo_renda": "Tipo de renda",
+          "valor_mensal": "Valor mensal",
+          "outras_fontes": "Outras fontes",
+          "doenca_lista": "Doença da lista",
+          "situacao_doenca": "Situação da doença",
+          "ja_pediu": "Já pediu a isenção"
+        },
+        "contrato": {
+          "empregador": "Empregador",
+          "funcao": "Função",
+          "carteira": "Carteira",
+          "admissao": "Admissão",
+          "ainda_trabalha": "Ainda trabalha",
+          "saida_em": "Saída em",
+          "tipo_saida": "Tipo de saída",
+          "salario": "Salário",
+          "jornada": "Jornada",
+          "processo_anterior": "Processo anterior",
+          "provas_disponiveis": "Provas disponíveis",
+          "testemunhas": "Testemunhas"
+        },
+        "queixas": "Queixa",
+        "vinculo": {
+          "pf_ou_pj": "Pessoa física ou PJ",
+          "pessoalidade": "Pessoalidade",
+          "habitualidade": "Habitualidade",
+          "domestico": "Doméstico",
+          "pagamento": "Pagamento",
+          "subordinacao": "Subordinação",
+          "avaliacao": "Avaliação"
+        },
+        "responsabilidade": {
+          "culpa_fatos": "Culpa do empregador",
+          "atividade_risco": "Atividade de risco",
+          "nexo_doenca": "Nexo da doença",
+          "aso": "ASO",
+          "dispensado_apos_alta": "Dispensado após alta",
+          "gastos": "Gastos"
         }
       },
       "LACUNAS_TITLE": "O que falta (IA)",

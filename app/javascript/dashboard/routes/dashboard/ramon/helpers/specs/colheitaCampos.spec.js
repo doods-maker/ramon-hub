@@ -58,6 +58,63 @@ describe('colheitaCampos', () => {
     ]);
   });
 
+  it('formata objeto aninhado e lista de objetos sem perder campos', () => {
+    const dados = {
+      cliente: {
+        representante: { nome: 'Ana', parentesco: 'filha', motivo: null },
+      },
+      saude: {
+        doencas: [
+          { nome: 'lombalgia', cid: 'M54.5', diagnostico_em: '2023-02-10' },
+        ],
+      },
+      outras_teses_sinal: [{ tese: 'B36', motivo: 'acidente no trajeto' }],
+    };
+    expect(colheitaCampos(dados, [])).toEqual([
+      {
+        chave: 'cliente.representante',
+        valor: 'Ana · filha',
+        confirmar: false,
+      },
+      {
+        chave: 'outras_teses_sinal',
+        valor: 'B36 · acidente no trajeto',
+        confirmar: false,
+      },
+      {
+        chave: 'saude.doencas',
+        valor: 'lombalgia · M54.5 · 10/02/2023',
+        confirmar: false,
+      },
+    ]);
+  });
+
+  it('mantém colheita antiga do B36 com tratamentos em lista de texto', () => {
+    expect(
+      colheitaCampos(
+        { sequela: { tratamentos: ['fisioterapia', 'cirurgia'] } },
+        []
+      )
+    ).toEqual([
+      {
+        chave: 'sequela.tratamentos',
+        valor: 'fisioterapia, cirurgia',
+        confirmar: false,
+      },
+    ]);
+  });
+
+  it('benefício mostra a DER e blocos desconhecidos vêm no fim', () => {
+    const dados = {
+      zzz: { a: 'x' },
+      beneficios: [{ especie: 'B31', der: '2025-01-02' }],
+    };
+    expect(colheitaCampos(dados, []).map(c => c.valor)).toEqual([
+      'B31 · DER 02/01/2025',
+      'x',
+    ]);
+  });
+
   it('sem dados devolve lista vazia', () => {
     expect(colheitaCampos(null, null)).toEqual([]);
   });
