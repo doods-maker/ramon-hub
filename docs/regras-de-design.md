@@ -18,7 +18,7 @@ Decisões nossas que vencem a regra genérica estão marcadas com **Hub:**.
 ## Cor
 - [ ] Uma cor de destaque só (azul `n-blue-9`) para ação; o resto neutro.
 - [ ] Erro nunca só pela cor: borda vermelha **e** texto dizendo o que corrigir.
-- [ ] Significado fixo: ruby = perigo/risco, amber = atenção, teal = ganho. Botão de excluir é vermelho; "manter" é neutro.
+- [ ] Significado fixo: ruby = perigo/risco, amber = atenção, teal = ganho. Botão de excluir é vermelho; "manter" é neutro. **Hub:** verde do WhatsApp (`TOM.verde`) só no que imita o WhatsApp: bolha enviada, contador de não lidas e o botão "Nova conversa" da Equipe (09/11/2026).
 - [ ] Texto sobre botão colorido com 4,5:1 (azul + branco = 5,2:1).
 - [ ] Área grande com tom suave; cor forte só em detalhe. **Hub:** fundo colorido sempre translúcido (`TOM`, `AVISO`).
 - [ ] Link com cor **e** sublinhado.
