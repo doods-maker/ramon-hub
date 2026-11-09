@@ -45,9 +45,9 @@ module Ramon::FatorTrimestre
     anterior = periodo(inicio << 3, inicio)
     return [1.0, { primeiro: true }] if primeiro_trimestre?(account, user, inicio)
 
-    num, den, tipo = papel == Ramon::Papeis::SDR ? comparecimento(account, user, anterior) : problemas(account, user, anterior)
+    num, den, tipo, extra = papel == Ramon::Papeis::SDR ? comparecimento(account, user, anterior) : problemas(account, user, anterior)
     taxa = den.zero? ? nil : num.fdiv(den).round(4)
-    [faixa(tipo, taxa), { tipo: tipo, numerador: num, denominador: den, taxa: taxa, trimestre_base: (inicio << 3).iso8601 }]
+    [faixa(tipo, taxa), { tipo: tipo, numerador: num, denominador: den, taxa: taxa, trimestre_base: (inicio << 3).iso8601, **extra }]
   end
 
   def faixa(tipo, taxa)
@@ -64,12 +64,13 @@ module Ramon::FatorTrimestre
     end
   end
 
-  # [realizadas, realizadas + faltas]
+  # [realizadas, realizadas + faltas, tipo, à parte]. As marcadas pela IA contam (decisão do Eduardo 09/11) e vão à parte na base.
   def comparecimento(account, user, periodo)
     dele = account.leads.where(sdr_id: user.id)
-    realizadas = dele.where(reuniao_registrada_em: periodo).count
-    faltas = LeadActivity.where(lead_id: dele.select(:id), kind: 'meeting_no_show', created_at: periodo).count
-    [realizadas, realizadas + faltas, 'comparecimento']
+    realizadas = dele.where(reuniao_registrada_em: periodo)
+    faltas = LeadActivity.where(lead_id: dele.select(:id), kind: 'meeting_no_show', created_at: periodo)
+    da_ia = { realizadas_ia: realizadas.where(reuniao_pela_ia: true).count, faltas_ia: faltas.where(from_value: 'ia').count }
+    [realizadas.count, realizadas.count + faltas.count, 'comparecimento', da_ia]
   end
 
   # [problemas, enviados]: devolvidos no período ∪ aptos do período cancelados até 90 dias depois
@@ -79,7 +80,7 @@ module Ramon::FatorTrimestre
     devolvidos = LeadActivity.where(lead_id: dele.select(:id), kind: 'apto_devolvido', created_at: periodo).pluck(:lead_id)
     cancelados = dele.where(apto_em: periodo, contrato_cancelado_em: ...periodo.last) # só o que se sabia no 1º dia
                      .where("contrato_cancelado_em <= apto_em + INTERVAL '90 days'").pluck(:id)
-    [(devolvidos | cancelados).size, enviados, 'problemas']
+    [(devolvidos | cancelados).size, enviados, 'problemas', {}]
   end
 
   # entrou no time (sdr/closer) ou teve a 1ª meta dentro deste trimestre

@@ -2137,7 +2137,9 @@
       "RESULTADO": {
         "qualificada": "Qualificada",
         "nao_qualificada": "Não qualificada"
-      }
+      },
+      "PELA_IA": "Marcada pela IA",
+      "PELA_IA_AJUDA": "Reunião marcada pela IA: não paga o SDR, mas conta no comparecimento dele."
     },
     "APTO": {
       "TITULO": "Apto para protocolo (jurídico)",
@@ -2333,7 +2335,8 @@
         "comparecimento": "Fator {fator}: comparecimento do trimestre anterior {taxa}% ({num} realizadas de {den})",
         "problemas": "Fator {fator}: {taxa}% de devolvidos ou cancelados no trimestre anterior ({num} de {den} enviados)",
         "primeiro": "Fator 1,0: primeiro trimestre",
-        "manual": "Fator {fator}: corrigido pelo gestor (o calculado é {calculado})"
+        "manual": "Fator {fator}: corrigido pelo gestor (o calculado é {calculado})",
+        "da_ia": "Da IA: {realizadas} realizadas e {faltas} faltas (contam no comparecimento)"
       },
       "PROXIMO_GAS": "Faltam {faltam} contratos aptos para o gás: {valor} a mais por contrato",
       "CONSTANCIA_TAXA": "{taxa}% devolvidos/cancelados (máx. {max}%)"

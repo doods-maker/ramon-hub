@@ -2137,7 +2137,9 @@
       "RESULTADO": {
         "qualificada": "Qualified",
         "nao_qualificada": "Not qualified"
-      }
+      },
+      "PELA_IA": "Booked by the AI",
+      "PELA_IA_AJUDA": "Meeting booked by the AI: does not pay the SDR, but counts in their attendance."
     },
     "APTO": {
       "TITULO": "Ready for filing (legal review)",
@@ -2333,7 +2335,8 @@
         "comparecimento": "Factor {fator}: last quarter attendance {taxa}% ({num} held of {den})",
         "problemas": "Factor {fator}: {taxa}% sent back or cancelled last quarter ({num} of {den} sent)",
         "primeiro": "Factor 1.0: first quarter",
-        "manual": "Factor {fator}: corrected by the manager (calculated: {calculado})"
+        "manual": "Factor {fator}: corrected by the manager (calculated: {calculado})",
+        "da_ia": "From the AI: {realizadas} held and {faltas} no-shows (count in attendance)"
       },
       "PROXIMO_GAS": "{faltam} ready contracts left for the boost: {valor} more per contract",
       "CONSTANCIA_TAXA": "{taxa}% sent back/cancelled (max {max}%)"

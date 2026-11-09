@@ -26,6 +26,8 @@ const sdr = {
     numerador: 10,
     denominador: 16,
     taxa: 0.625,
+    realizadas_ia: 2,
+    faltas_ia: 1,
   },
   faltam_meta: 48,
   reunioes_ia: 3,
@@ -161,6 +163,9 @@ describe('Extrato.vue (duas grades)', () => {
     expect(
       cartaoSdr.find('[data-testid="extrato-fator-base"]').text()
     ).toContain('"num":10');
+    expect(cartaoSdr.find('[data-testid="extrato-fator-ia"]').text()).toContain(
+      '"realizadas":2'
+    );
     expect(
       cartaoSdr.find('[data-testid="extrato-reunioes-ia"]').text()
     ).toContain('"count":3');

@@ -9,7 +9,7 @@ import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { SECAO } from '../../helpers/ui';
+import { CHIP, SECAO, TOM } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -105,6 +105,15 @@ const variante = ativo =>
         class="font-mono text-xs text-n-slate-10"
       >
         {{ $t('RAMON.REUNIAO.REGISTRADA_EM', { data: registradaEm }) }}
+      </span>
+      <!-- marcada pela IA: não paga o SDR, mas conta no comparecimento (decisão 09/11/2026) -->
+      <span
+        v-if="lead.reuniao_pela_ia"
+        data-testid="reuniao-pela-ia"
+        :class="[CHIP, TOM.iris]"
+        :title="$t('RAMON.REUNIAO.PELA_IA_AJUDA')"
+      >
+        {{ $t('RAMON.REUNIAO.PELA_IA') }}
       </span>
     </div>
     <p

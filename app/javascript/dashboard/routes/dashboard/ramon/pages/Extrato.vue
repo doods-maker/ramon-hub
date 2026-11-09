@@ -400,6 +400,17 @@ onMounted(() => {
               }}
             </li>
             <li
+              v-if="p.fator_base?.realizadas_ia || p.fator_base?.faltas_ia"
+              data-testid="extrato-fator-ia"
+            >
+              {{
+                t('RAMON.EXTRATO.FATOR_BASE.da_ia', {
+                  realizadas: p.fator_base.realizadas_ia || 0,
+                  faltas: p.fator_base.faltas_ia || 0,
+                })
+              }}
+            </li>
+            <li
               v-else-if="p.fator_base?.primeiro"
               data-testid="extrato-fator-base"
             >

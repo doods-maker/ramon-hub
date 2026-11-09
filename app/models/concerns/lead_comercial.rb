@@ -55,6 +55,7 @@ module LeadComercial
     {
       reuniao_resultado: reuniao_resultado,
       reuniao_registrada_em: reuniao_registrada_em&.iso8601,
+      reuniao_pela_ia: reuniao_pela_ia,
       docs_completos_em: docs_completos_em&.iso8601,
       contrato_limpo_em: contrato_limpo_em&.iso8601,
       # selo do contrato ZapSign no card do funil (o índice é slim, sem o jsonb)
