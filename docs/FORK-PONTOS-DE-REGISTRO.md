@@ -414,7 +414,7 @@ ritmo, horário, textos aprovados e modelo em `config/ramon/documentos_cobranca.
 
 | Arquivo | Mudança | Por quê | Onde |
 |---|---|---|---|
-| `enterprise/app/services/messages/audio_transcription_service.rb` | `update_transcription` só enfileira `Ramon::ColheitaExtractionJob` se o lead da conversa é de auxílio-acidente (`Esquema.tese == :b36`); novo `colheita_b36?` | as outras teses extraem pelo observador do funil (chave `colheita`) ou pelo botão, não a cada áudio | colheita por tese |
+| `enterprise/app/services/messages/audio_transcription_service.rb` | `update_transcription` enfileira `Ramon::ColheitaExtractionJob` a cada áudio transcrito, em qualquer tese (o service filtra lead sem tese/conversa) | ficha atualizada a cada áudio (decisão do Eduardo 09/11) | colheita por tese |
 ## Senha gov.br fora da IA (09/11/2026)
 
 Lógica em `Ramon::SenhaForaDaIa` (`app/services/ramon/senha_fora_da_ia.rb`) e `Ramon::Pseudonymizer.sem_senha` (`lib/ramon/`).
