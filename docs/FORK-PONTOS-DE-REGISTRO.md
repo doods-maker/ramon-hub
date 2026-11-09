@@ -409,3 +409,12 @@ ritmo, horário, textos aprovados e modelo em `config/ramon/documentos_cobranca.
 | `enterprise/app/models/captain/assistant.rb` | `agent_tools` + tools das skills quando uma etapa aponta para o assistente (`lead_stages.captain_assistant_id`); `Captain::Scenario#agent_tools` virou público | o assistente de Documentos manda o passo a passo em vez de passar para a equipe | documentos pós-teste 07/11 |
 | `app/services/message_templates/template/out_of_office.rb` | `perform` não cria o aviso de fora do horário com o lead na etapa Documentos (chave ligada) | os três caminhos (hook, handoff da IA, resolução de pendentes) passam por aqui | documentos pós-teste 07/11 |
 | `enterprise/app/models/captain/scenario.rb` | `agent_tools` saiu de `private` (o assistente de etapa leva as tools das skills) | ver a linha do `assistant.rb` acima | documentos pós-teste 07/11 |
+
+## Senha gov.br fora da IA (09/11/2026)
+
+Lógica em `Ramon::SenhaForaDaIa` (`app/services/ramon/senha_fora_da_ia.rb`) e `Ramon::Pseudonymizer.sem_senha` (`lib/ramon/`).
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `app/models/message.rb` | `content_for_llm` novo delega a `Ramon::SenhaForaDaIa.para_llm`; o corpo original virou `ramon_content_for_llm_original` (sem outra mudança) | todo transcript para LLM (copiloto, colheita, resumo, Captain BaseTaskService) passa aqui | senha fora da IA #334 |
+| `enterprise/app/services/captain/open_ai_message_builder_service.rb` | `generate_content` e a transcrição de áudio passam pelo filtro de senha | a IA que atende monta o histórico com `content` cru, sem `content_for_llm` | senha fora da IA #334 |

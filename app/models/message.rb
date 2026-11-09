@@ -271,9 +271,14 @@ class Message < ApplicationRecord
     Messages::SearchDataPresenter.new(self).search_data
   end
 
+  # Ramon: senha (gov.br e afins) nunca vai para a IA → Ramon::SenhaForaDaIa
+  def content_for_llm
+    Ramon::SenhaForaDaIa.para_llm(self, ramon_content_for_llm_original)
+  end
+
   # Returns message content suitable for LLM consumption
   # Falls back to audio transcription or attachment placeholder when content is nil
-  def content_for_llm
+  def ramon_content_for_llm_original
     return content if content.present?
 
     audio_transcription = attachments

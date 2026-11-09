@@ -21,6 +21,15 @@ RSpec.describe Ramon::AgenteContextoService do
     expect(payload[:lead]).to be_nil
   end
 
+  it 'não leva a senha gov.br ao agente' do
+    create(:message, account: account, conversation: conversation, inbox: inbox, message_type: :incoming,
+                     content: 'senha gov: Tx9#kLm2')
+
+    textos = described_class.new(conversation).perform[:conversa][:mensagens].map { |m| m[:texto] }
+
+    expect(textos).to eq(['senha gov: [senha]'])
+  end
+
   # O sender Captain::Assistant vive em enterprise/: insert_all evita instanciá-lo (roda no CI FOSS).
   it 'descarta rascunho do Copiloto mas mantém nota do AgentBot' do
     # rubocop:disable Rails/SkipsModelValidations

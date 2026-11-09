@@ -674,6 +674,33 @@ RSpec.describe Message do
     end
   end
 
+  describe '#content_for_llm (senha fora da IA)' do
+    let(:conversation) { create(:conversation) }
+
+    def mensagem(content, tipo: :incoming, quando: Time.current)
+      create(:message, conversation: conversation, message_type: tipo, content: content, created_at: quando)
+    end
+
+    it 'esconde a senha mandada sozinha logo depois do pedido' do
+      mensagem('Me manda a senha do gov.br, por favor', tipo: :outgoing, quando: 2.minutes.ago)
+      expect(mensagem('Tx9#kLm2').content_for_llm).to eq('[senha]')
+    end
+
+    it 'mantém resposta comum depois do pedido de senha' do
+      mensagem('Qual a sua senha do gov.br?', tipo: :outgoing, quando: 2.minutes.ago)
+      expect(mensagem('não lembro, vou recuperar').content_for_llm).to eq('não lembro, vou recuperar')
+    end
+
+    it 'mantém palavra solta com número quando a conversa não fala de senha' do
+      mensagem('Qual o número do benefício?', tipo: :outgoing, quando: 2.minutes.ago)
+      expect(mensagem('NB6123456789').content_for_llm).to eq('NB6123456789')
+    end
+
+    it 'tira a senha da linha mesmo sem pseudonimização' do
+      expect(mensagem('minha senha é Tx9#kLm2').content_for_llm).to eq('minha senha é [senha]')
+    end
+  end
+
   describe '#outgoing_content' do
     let(:conversation) { create(:conversation) }
     let(:message) { create(:message, conversation: conversation, content_type: 'text', content: 'Regular message') }
