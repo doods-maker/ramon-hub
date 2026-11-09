@@ -259,6 +259,26 @@ RSpec.describe Ramon::ExtratoVariavel do
       expect(linha[:fator_base]).to include(tipo: 'comparecimento', numerador: 10, denominador: 16, manual: false)
     end
 
+    it 'a conta do fator marca quantas realizadas e faltas vieram de reunião marcada pela IA (e elas contam)', :aggregate_failures do
+      reunioes(10, mes: dezembro)
+      account.leads.where(sdr_id: sdr.id).limit(2).update_all(reuniao_pela_ia: true) # rubocop:disable Rails/SkipsModelValidations
+      no_shows(6)
+      LeadActivity.where(kind: 'meeting_no_show').limit(1).update_all(from_value: 'ia') # rubocop:disable Rails/SkipsModelValidations
+
+      linha = travel_to(em(fevereiro, 15)) { extrato_de(sdr, fevereiro) }
+      expect(linha[:fator]).to eq(0.8)
+      expect(linha[:fator_base]).to include(numerador: 10, denominador: 16, realizadas_ia: 2, faltas_ia: 1)
+    end
+
+    it 'falta em reunião marcada pela IA (tarefa sem criador) fica marcada como da IA no histórico' do
+      lead = create(:lead, account: account, lead_stage: stage, sdr: sdr)
+      tarefa = lead.lead_tasks.create!(account: account, user: nil, title: 'Reunião', kind: 'meeting', due_at: em(dezembro))
+
+      tarefa.complete!(closer, no_show: true)
+
+      expect(lead.lead_activities.find_by(kind: 'meeting_no_show').from_value).to eq('ia')
+    end
+
     it 'SDR: acima de 80% = 1,1 (10 realizadas, 1 falta = 90,9%)' do
       reunioes(10, mes: dezembro)
       no_shows(1)

@@ -38,12 +38,14 @@ class LeadTask < ApplicationRecord
 
   # no_show: reunião em que o cliente não veio — conclui sem resultado de
   # reunião (o prêmio do SDR só conta a qualificada) e registra o no-show.
+  # from_value 'ia' = a reunião foi marcada pela IA (tarefa sem criador): a conta do fator do SDR mostra à parte.
   def complete!(completing_user, no_show: false)
     update!(completed_at: Time.current)
     lead.lead_activities.create!(account: account, user: completing_user, kind: 'task_completed', to_value: title)
     return unless no_show && kind == 'meeting'
 
-    lead.lead_activities.create!(account: account, user: completing_user, kind: 'meeting_no_show', to_value: title)
+    lead.lead_activities.create!(account: account, user: completing_user, kind: 'meeting_no_show', to_value: title,
+                                 from_value: user_id.nil? ? 'ia' : nil)
   end
 
   private
