@@ -12,7 +12,7 @@ class Captain::OpenAiMessageBuilderService
 
   def generate_content
     parts = []
-    parts << text_part(@message.content) if @message.content.present?
+    parts << text_part(Ramon::SenhaForaDaIa.para_llm(@message, @message.content)) if @message.content.present? # Ramon: senha fora
     parts.concat(attachment_parts(@message.attachments)) if @message.attachments.any?
 
     return 'Message without content' if parts.blank?
@@ -36,7 +36,7 @@ class Captain::OpenAiMessageBuilderService
     image_content = image_parts(image_attachments)
 
     transcription = extract_audio_transcriptions(attachments)
-    transcription_part = text_part(transcription) if transcription.present?
+    transcription_part = text_part(Ramon::Pseudonymizer.sem_senha(transcription)) if transcription.present? # Ramon: senha fora
 
     attachment_part = text_part('User has shared an attachment') if attachments.where.not(file_type: %i[image audio]).exists?
 

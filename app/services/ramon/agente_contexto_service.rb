@@ -45,7 +45,7 @@ class Ramon::AgenteContextoService
   def mensagem(msg)
     {
       id: msg.id, em: msg.created_at.iso8601, de: papel(msg), autor: msg.sender.try(:name),
-      texto: msg.content.to_s,
+      texto: Ramon::SenhaForaDaIa.para_llm(msg, msg.content.to_s),
       anexos: msg.attachments.map { |a| a.file.attached? ? a.file.filename.to_s : a.file_type }
     }
   end

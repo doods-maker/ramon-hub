@@ -415,3 +415,11 @@ ritmo, horário, textos aprovados e modelo em `config/ramon/documentos_cobranca.
 | Arquivo | Mudança | Por quê | Onde |
 |---|---|---|---|
 | `enterprise/app/services/messages/audio_transcription_service.rb` | `update_transcription` só enfileira `Ramon::ColheitaExtractionJob` se o lead da conversa é de auxílio-acidente (`Esquema.tese == :b36`); novo `colheita_b36?` | as outras teses extraem pelo observador do funil (chave `colheita`) ou pelo botão, não a cada áudio | colheita por tese |
+## Senha gov.br fora da IA (09/11/2026)
+
+Lógica em `Ramon::SenhaForaDaIa` (`app/services/ramon/senha_fora_da_ia.rb`) e `Ramon::Pseudonymizer.sem_senha` (`lib/ramon/`).
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `app/models/message.rb` | `content_for_llm` novo delega a `Ramon::SenhaForaDaIa.para_llm`; o corpo original virou `ramon_content_for_llm_original` (sem outra mudança) | todo transcript para LLM (copiloto, colheita, resumo, Captain BaseTaskService) passa aqui | senha fora da IA #334 |
+| `enterprise/app/services/captain/open_ai_message_builder_service.rb` | `generate_content` e a transcrição de áudio passam pelo filtro de senha | a IA que atende monta o histórico com `content` cru, sem `content_for_llm` | senha fora da IA #334 |
