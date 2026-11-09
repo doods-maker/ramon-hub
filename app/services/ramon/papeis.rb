@@ -6,6 +6,8 @@ module Ramon::Papeis
 
   SDR = 'sdr'.freeze
   CLOSER = 'closer'.freeze
+  # Modelo B (uma pessoa faz fechamento + documentação): fica no time `closer`; o papel sai da meta lançada no Extrato.
+  HIBRIDO = 'hibrido'.freeze
   JURIDICO = 'advogados'.freeze # time nativo já existente
   COLUNA = { SDR => :sdr_id, CLOSER => :closer_id }.freeze
 

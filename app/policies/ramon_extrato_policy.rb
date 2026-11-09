@@ -7,4 +7,12 @@ class RamonExtratoPolicy < ApplicationPolicy
   def meta?
     @account_user.administrator?
   end
+
+  def programas?
+    @account_user.administrator?
+  end
+
+  def programa?
+    @account_user.administrator?
+  end
 end

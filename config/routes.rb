@@ -402,6 +402,8 @@ Rails.application.routes.draw do
           end
           resource :ramon_extrato, only: [:show], controller: 'ramon_extrato' do
             put :meta
+            get :programas
+            post :programa
           end
           resource :ramon_painel_time, only: [:show], controller: 'ramon_painel_time'
           resources :ramon_registro_acoes, only: [:index], controller: 'ramon_registro_acoes'
