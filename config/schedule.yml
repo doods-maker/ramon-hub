@@ -160,6 +160,12 @@ ramon_contrato_limpo_job:
   class: 'Ramon::ContratoLimpoJob'
   queue: scheduled_jobs
 
+# executed hourly at minute 15 — contrato limpo entra na fila do jurídico; 5 dias úteis sem resposta = apto
+ramon_contrato_apto_job:
+  cron: '15 * * * *'
+  class: 'Ramon::ContratoAptoJob'
+  queue: scheduled_jobs
+
 # executed daily at 0320 UTC = 00:20 America/Sao_Paulo (UTC-3)
 # fecha o extrato da variável do mês anterior no 3º dia útil (regulamento §6)
 ramon_extrato_fechamento_job:

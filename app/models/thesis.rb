@@ -6,6 +6,10 @@ class Thesis < ApplicationRecord
 
   # Modelo do ZapSign do modo "sozinha até o contrato" (F3); vazio na tela = sem modelo.
   normalizes :zapsign_template_id, with: ->(v) { v.presence }
+  # Contrato apto (Ramon::ContratoApto): advogados que validam o apto desta tese (POP RCP-01) e a comissão do híbrido
+  # por contrato apto (nil = tese sem valor: não paga).
+  normalizes :validador_ids, with: ->(v) { Array(v).compact_blank.map(&:to_i).uniq }
+  validates :comissao_apto, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   validates :name, presence: true, uniqueness: { scope: :account_id }
   validates :honorario_percentual,

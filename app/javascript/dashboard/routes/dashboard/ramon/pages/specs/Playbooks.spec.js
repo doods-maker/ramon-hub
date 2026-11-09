@@ -79,6 +79,10 @@ const buildStore = () =>
           getUIFlags: () => ({ isFetching: false }),
         },
       },
+      agents: {
+        namespaced: true,
+        getters: { getAgents: () => [{ id: 9, name: 'Dra. Rafaela' }] },
+      },
     },
   });
 
@@ -159,6 +163,19 @@ describe('Playbooks.vue', () => {
     expect(store.dispatch).toHaveBeenLastCalledWith(
       'theses/update',
       expect.objectContaining({ id: 1, passa_documentos: true })
+    );
+  });
+
+  it('salva quem valida o apto e a comissão do híbrido da tese', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
+    await wrapper.find('[data-testid="playbooks-validador-9"]').setValue(true);
+    await wrapper
+      .find('[data-testid="playbooks-comissao-apto"]')
+      .setValue('25');
+    expect(store.dispatch).toHaveBeenLastCalledWith(
+      'theses/update',
+      expect.objectContaining({ id: 1, validador_ids: [9], comissao_apto: 25 })
     );
   });
 

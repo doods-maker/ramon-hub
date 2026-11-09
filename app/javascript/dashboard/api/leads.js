@@ -167,6 +167,16 @@ class LeadsAPI extends ApiClient {
     });
   }
 
+  // Contrato apto (Ramon::ContratoApto): acao = validar | devolver (motivo) |
+  // reenviar | designar (userId; null = volta para os advogados da tese)
+  apto(leadId, { acao, motivo, userId }) {
+    return axios.post(`${this.url}/${leadId}/apto`, {
+      acao,
+      ...(motivo ? { motivo } : {}),
+      ...(acao === 'designar' ? { user_id: userId } : {}),
+    });
+  }
+
   // Reunião marcada pelo painel (etapa, Closer,
   // rascunho de confirmação nas notas, lembretes internos). Nada vai ao cliente.
   // force: marca mesmo com outra reunião aberta (sem ele o backend dá 409)

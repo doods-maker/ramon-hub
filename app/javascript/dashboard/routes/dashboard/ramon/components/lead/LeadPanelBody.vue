@@ -15,6 +15,7 @@ import { usePulaDocumentos } from '../../composables/usePulaDocumentos';
 import MotivoPulaDocumentos from '../MotivoPulaDocumentos.vue';
 import LeadNotes from './LeadNotes.vue';
 import LeadReuniao from './LeadReuniao.vue';
+import LeadApto from './LeadApto.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import ColheitaChecklist from './ColheitaChecklist.vue';
@@ -1355,6 +1356,7 @@ const discard = async () => {
             </template>
           </button>
           <LeadReuniao v-if="showReuniao" :lead="lead" />
+          <LeadApto :lead="lead" />
         </div>
 
         <!-- Temperatura (só na conversa; heurística local) -->

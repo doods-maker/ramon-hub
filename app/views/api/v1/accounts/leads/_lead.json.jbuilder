@@ -50,6 +50,8 @@ json.won_at lead.won_at
 json.lost_at lead.lost_at
 # Operação SDR+Closer (reunião qualificada + contrato limpo) — mesmo shape do broadcast.
 json.merge! lead.comercial_event_data
+# Contrato apto: os botões do painel (validar/devolver) só para quem pode; fora do slim (depende de quem pede).
+json.apto_pode_validar Ramon::ContratoApto.pode_validar?(lead, Current.user) unless local_assigns[:slim]
 json.dcb_em lead.dcb_em
 json.benefit_monthly_value lead.benefit_monthly_value
 json.stalled lead.stalled?

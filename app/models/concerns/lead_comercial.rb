@@ -25,7 +25,7 @@ module LeadComercial
     # ClassLength). contact_id fica no destroy para a tela saber de quem era.
     # contrato_cancelado_em é update_columns (sem callback): o cancelamento
     # aparece como won_at → nil na mesma linha da troca de etapa.
-    audited only: %w[lead_stage_id value sdr_id closer_id won_at lost_reason contact_id],
+    audited only: %w[lead_stage_id value sdr_id closer_id won_at lost_reason contact_id apto_em devolvido_em devolvido_motivo validador_id],
             on: [:update, :destroy], associated_with: :account
     # Perdido exige motivo (regra 06/10), de qualquer pessoa, admin inclusive. Ponto
     # único: tela, API, lote e IA passam por aqui; o controller devolve 422.
@@ -60,7 +60,7 @@ module LeadComercial
       zapsign_assinado_em: custom_attributes&.dig('zapsign', 'assinado_em'),
       # o painel recarrega o roteiro quando muda (o broadcast não leva o jsonb)
       roteiro_versao: roteiro_versao
-    }
+    }.merge(Ramon::ContratoApto.dados(self))
   end
 
   # Assinatura do estado do roteiro da tese (F2): muda a cada resposta registrada ou roteiro reaberto.
@@ -124,8 +124,13 @@ module LeadComercial
   # desconto na apuração seguinte se a unidade já estava num extrato fechado
   # (Ramon::ExtratoDescontos). Mês fechado não muda. after_save: o won_at só
   # zera no track_stage_cycle do Lead, que roda depois dos before_save daqui.
+  # Contrato apto (Ramon::ContratoApto): depois de apto a comissão é devida, o apto fica e só o cancelamento é
+  # registrado; antes, o caso sai da fila do jurídico (se voltar a fechar, recomeça do carimbo novo).
   def cancelar_contrato_limpo
-    update_columns(contrato_cancelado_em: Time.current, contrato_limpo_em: nil) # rubocop:disable Rails/SkipsModelValidations
+    return update_columns(contrato_cancelado_em: Time.current) if apto_em.present? # rubocop:disable Rails/SkipsModelValidations
+
+    update_columns(contrato_cancelado_em: Time.current, contrato_limpo_em: nil, validacao_desde: nil, # rubocop:disable Rails/SkipsModelValidations
+                   devolvido_em: nil, devolvido_por_id: nil, devolvido_motivo: nil)
   end
 
   # Saiu de Fechado (Painel do time, KPI "cancelamento em 7 dias"): o won_at
