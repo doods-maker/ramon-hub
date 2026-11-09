@@ -102,9 +102,10 @@ RSpec.describe Messages::AudioTranscriptionService, type: :service do
         .to have_enqueued_job(Ramon::ColheitaExtractionJob).with(message.id)
     end
 
-    it 'não enfileira a extração para lead de outra tese (B31)' do
+    it 'enfileira a extração também para lead de outra tese (B31)' do
       create(:lead, account: account, conversation: conversation, thesis: account.theses.find_by!('name LIKE ?', '%B31%'))
-      expect { service.send(:update_transcription, 'oi') }.not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+      expect { service.send(:update_transcription, 'oi') }
+        .to have_enqueued_job(Ramon::ColheitaExtractionJob).with(message.id)
     end
 
     it 'não enfileira nada com transcrição em branco' do
