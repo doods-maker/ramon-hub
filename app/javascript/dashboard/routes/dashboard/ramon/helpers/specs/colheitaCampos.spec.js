@@ -27,9 +27,9 @@ describe('colheitaCampos', () => {
 
   it('chip confirmar acende por prefixo de caminho, sem falso positivo', () => {
     const doencas = { saude: { doencas: [{ cid: 'M54' }] } };
-    expect(
-      colheitaCampos(doencas, ['saude.doencas[0].cid'])[0].confirmar
-    ).toBe(true);
+    expect(colheitaCampos(doencas, ['saude.doencas[0].cid'])[0].confirmar).toBe(
+      true
+    );
     const outro = { acidente: { data_x: '2025-03-14' } };
     expect(colheitaCampos(outro, ['acidente.data'])[0].confirmar).toBe(false);
   });
