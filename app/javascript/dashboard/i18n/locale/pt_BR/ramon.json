@@ -2786,7 +2786,8 @@
       "REGISTRO_ACOES": "Registro de ações",
       "MARKETING": "Marketing",
       "TRAFEGO": "Tráfego",
-      "CUSTOS_METAS": "Custos e metas"
+      "CUSTOS_METAS": "Custos e metas",
+      "VALIDACAO_APTO": "Validação do jurídico"
     },
     "RAIL": {
       "INTERNOS": "Internos",
@@ -2917,6 +2918,16 @@
         "CUSTO_AREA": "Custo da área (R$)",
         "CAC": "CAC (R$)"
       }
+    },
+    "VALIDACAO_APTO": {
+      "TITLE": "Aguardando validação do jurídico",
+      "SUBTITLE": "Contratos limpos que você valida como aptos para protocolo. Sem resposta em 5 dias úteis, o caso fica apto sozinho.",
+      "VAZIA": "Nenhum contrato aguardando a sua validação.",
+      "VALIDAR_LOTE": "Validar marcado | Validar marcado | Validar {count} marcados",
+      "VALIDADOS": "{count} contrato validado | {count} contrato validado | {count} contratos validados",
+      "CLOSER": "Closer: {nome}",
+      "ERRO": "Não foi possível carregar ou salvar a validação.",
+      "RETRY": "Tentar novamente"
     }
   },
   "CAPTAIN_RAMON": {

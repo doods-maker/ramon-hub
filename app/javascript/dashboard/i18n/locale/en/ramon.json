@@ -2786,7 +2786,8 @@
       "REGISTRO_ACOES": "Action log",
       "MARKETING": "Marketing",
       "TRAFEGO": "Traffic",
-      "CUSTOS_METAS": "Costs and targets"
+      "CUSTOS_METAS": "Costs and targets",
+      "VALIDACAO_APTO": "Legal review"
     },
     "RAIL": {
       "INTERNOS": "Internal",
@@ -2917,6 +2918,16 @@
         "CUSTO_AREA": "Area cost (R$)",
         "CAC": "CAC (R$)"
       }
+    },
+    "VALIDACAO_APTO": {
+      "TITLE": "Waiting for legal review",
+      "SUBTITLE": "Clean contracts you review as ready for filing. With no answer in 5 business days, the case becomes ready on its own.",
+      "VAZIA": "No contract waiting for your review.",
+      "VALIDAR_LOTE": "Approve selected | Approve selected | Approve {count} selected",
+      "VALIDADOS": "{count} contract approved | {count} contract approved | {count} contracts approved",
+      "CLOSER": "Closer: {nome}",
+      "ERRO": "Could not load or save the review.",
+      "RETRY": "Try again"
     }
   },
   "CAPTAIN_RAMON": {

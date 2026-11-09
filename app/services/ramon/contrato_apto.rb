@@ -4,9 +4,9 @@
 # dia, como prazo) o caso fica apto sozinho, na hora do prazo (apto_por_id nil). Depois de apto a comissão é devida:
 # cancelar o contrato não tira o apto.
 # Só entram na fila os contratos limpos a partir de VALE_DESDE: o estoque anterior não vira "apto por prazo" no 1º deploy.
-# Quem valida: o advogado designado no lead (tese sem advogado fixo, ex.: IR) → os advogados da tese (Playbooks) →
-# os administradores. O admin sempre pode validar.
-# ponytail: responsável do processo no ADVBOX como validador fica de fora (o processo nasce com usuário fixo).
+# Quem valida: o advogado designado no lead → os advogados da tese (Playbooks) → os administradores. O admin sempre pode
+# validar. Tese sem advogado fixo (ex.: IR): ao entrar na fila, o responsável do processo no ADVBOX (usuário do hub com o
+# mesmo e-mail) vira o designado; o admin troca no painel do lead.
 module Ramon::ContratoApto
   DIAS_UTEIS = 5
   ZONA = 'America/Sao_Paulo'.freeze
@@ -27,6 +27,22 @@ module Ramon::ContratoApto
 
   def pode_validar?(lead, user)
     user.present? && (admin?(lead, user) || validadores(lead).include?(user.id))
+  end
+
+  # Lista "Aguardando validação": aguardando ou devolvidos que a pessoa pode validar (o admin vê todos).
+  # ponytail: filtra em Ruby; SQL se a fila passar de algumas dezenas.
+  def fila(account, user)
+    account.leads.includes(:thesis, :closer).where(apto_em: nil).where.not(validacao_desde: nil)
+           .where(contrato_limpo_em: VALE_DESDE..).order(:validacao_desde)
+           .select { |lead| pode_validar?(lead, user) }
+  end
+
+  # Valida de uma vez os aguardando que a pessoa pode validar; o resto volta em recusados (sem erro).
+  def validar_lote!(account, user, ids)
+    leads = account.leads.where(id: ids).to_a
+    feitos = leads.select { |lead| situacao(lead) == 'aguardando' && pode_validar?(lead, user) }
+    feitos.each { |lead| validar!(lead, user) }
+    { validados: feitos.map(&:id), recusados: ids.map(&:to_i) - feitos.map(&:id) }
   end
 
   # aguardando | devolvido | apto | apto_por_prazo | nil (ainda não chegou ao jurídico)
@@ -89,7 +105,7 @@ module Ramon::ContratoApto
   def rodar!(agora = Time.current)
     sem_apto = Lead.where(apto_em: nil).where(contrato_limpo_em: VALE_DESDE..)
     sem_apto.where(validacao_desde: nil).find_each do |lead|
-      lead.update!(validacao_desde: lead.contrato_limpo_em)
+      lead.update!(validacao_desde: lead.contrato_limpo_em, validador_id: lead.validador_id || responsavel_advbox(lead))
       avisar_validadores(lead)
     end
     sem_apto.where(devolvido_em: nil).where.not(validacao_desde: nil).find_each do |lead|
@@ -107,6 +123,9 @@ module Ramon::ContratoApto
     raise Invalido, 'situacao' unless situacao(lead) == esperada
   end
 
+  # só para tese sem advogado fixo
+  def responsavel_advbox(lead) = (Ramon::ResponsavelAdvbox.usuario_id(lead) if lead.thesis&.validador_ids.blank?)
+
   def admin?(lead, user) = user.present? && Ramon::Papeis.gestor_ids(lead.account).include?(user.id)
 
   def proximo_dia_util(dia)
@@ -117,9 +136,7 @@ module Ramon::ContratoApto
   end
 
   # Histórico do lead; a devolução também é a base da constância do Programa de Metas (devolvidos no trimestre).
-  def registrar(lead, user, kind, valor = nil)
-    lead.lead_activities.create!(account: lead.account, user: user, kind: kind, to_value: valor)
-  end
+  def registrar(lead, user, kind, valor = nil) = lead.lead_activities.create!(account: lead.account, user: user, kind: kind, to_value: valor)
 
   def avisar_validadores(lead) = avisar(lead, validadores(lead), "Contrato aguardando validação do jurídico: #{lead.name}")
 

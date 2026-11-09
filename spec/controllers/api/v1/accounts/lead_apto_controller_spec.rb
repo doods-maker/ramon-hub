@@ -8,9 +8,10 @@ RSpec.describe Api::V1::Accounts::LeadAptoController, type: :request do
   let(:outra) { create(:user, account: account, role: :agent) }
   let(:closer) { create(:user, account: account, role: :agent) }
   let(:tese) { create(:thesis, account: account, name: 'Tese do endpoint', validador_ids: [advogada.id]) }
+  let(:limpo_em) { Ramon::ContratoApto::VALE_DESDE + 1.day } # só contrato limpo a partir do corte entra na fila
   let(:lead) do
     create(:lead, account: account, lead_stage: won_stage, thesis: tese, closer: closer).tap do |l|
-      l.update_columns(contrato_limpo_em: 1.day.ago, validacao_desde: 1.day.ago) # rubocop:disable Rails/SkipsModelValidations
+      l.update_columns(contrato_limpo_em: limpo_em, validacao_desde: limpo_em) # rubocop:disable Rails/SkipsModelValidations
     end
   end
 
@@ -61,5 +62,17 @@ RSpec.describe Api::V1::Accounts::LeadAptoController, type: :request do
     apto(admin, acao: 'designar', user_id: 0)
     expect(response).to have_http_status(:unprocessable_entity)
     expect(lead.reload.validador_id).to eq(outra.id)
+  end
+
+  it 'lista Aguardando validação e valida em lote', :aggregate_failures do
+    lead
+    get "/api/v1/accounts/#{account.id}/lead_aptos", headers: advogada.create_new_auth_token, as: :json
+    expect(response.parsed_body).to contain_exactly(include('id' => lead.id, 'apto_situacao' => 'aguardando', 'tese' => 'Tese do endpoint'))
+
+    get "/api/v1/accounts/#{account.id}/lead_aptos", headers: outra.create_new_auth_token, as: :json
+    expect(response.parsed_body).to eq([])
+
+    post "/api/v1/accounts/#{account.id}/lead_aptos/validar_lote", params: { ids: [lead.id] }, headers: advogada.create_new_auth_token, as: :json
+    expect(response.parsed_body).to eq('validados' => [lead.id], 'recusados' => [])
   end
 end

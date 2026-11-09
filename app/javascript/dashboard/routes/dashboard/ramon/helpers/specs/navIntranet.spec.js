@@ -23,6 +23,7 @@ describe('secoesIntranet', () => {
               'ramon_conferencia_fases',
               'ramon_calculos',
               'ramon_protocolos',
+              'ramon_validacao_apto',
             ],
           ],
         ],
