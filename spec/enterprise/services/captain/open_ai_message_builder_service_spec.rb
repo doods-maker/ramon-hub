@@ -12,6 +12,14 @@ RSpec.describe Captain::OpenAiMessageBuilderService do
       end
     end
 
+    context 'when message has a gov.br password (Ramon)' do
+      let(:message) { create(:message, content: 'minha senha é Tx9#kLm2') }
+
+      it 'never sends the password to the LLM' do
+        expect(service.generate_content).to eq('minha senha é [senha]')
+      end
+    end
+
     context 'when message has no content and no attachments' do
       let(:message) { create(:message, content: nil) }
 

@@ -56,6 +56,15 @@ RSpec.describe Ramon::Pseudonymizer do
       expect(out).to eq("Senha gov.br:\n\n[senha]\nCNIS em anexo")
     end
 
+    it 'pega a senha escrita antes da palavra' do
+      expect(described_class.mask('Tx9#kLm2 é minha senha')).to eq('[senha] é minha senha')
+    end
+
+    it 'não confunde pontuação de fim de palavra com símbolo de senha' do
+      text = 'não lembro a senha, vou recuperar. obrigado!'
+      expect(described_class.mask(text)).to eq(text)
+    end
+
     it 'mantém o pedido de ajuda legível para a IA que atende' do
       text = "esqueci a senha do gov.br, entro em meu.inss.gov.br?\nPode me mandar a senha"
       expect(described_class.mask(text)).to eq(text)
@@ -63,9 +72,9 @@ RSpec.describe Ramon::Pseudonymizer do
   end
 
   describe '.sem_senha' do
-    it 'tira a senha sem mascarar nome, CPF ou telefone (caminho sem pseudonimização)' do
-      out = described_class.sem_senha('Maria, CPF 123.456.789-01, senha Tx9#kLm2')
-      expect(out).to eq('Maria, CPF 123.456.789-01, senha [senha]')
+    it 'tira a senha sem mascarar nome nem CPF de outra linha (caminho sem pseudonimização)' do
+      out = described_class.sem_senha("Maria Souza, CPF 123.456.789-01\nsenha Tx9#kLm2")
+      expect(out).to eq("Maria Souza, CPF 123.456.789-01\nsenha [senha]")
     end
   end
 end

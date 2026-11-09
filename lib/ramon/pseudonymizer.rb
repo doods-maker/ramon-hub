@@ -20,13 +20,13 @@ class Ramon::Pseudonymizer
   RG_PUNCT = /\b\d{1,2}\.\d{3}\.\d{3}(?:-?\d)?\b(?!,\d)/
   NAME_STOPWORDS = %w[dos das de da do e].freeze
   # Senha (gov.br e afins) nunca vai a LLM, nem no caminho sem pseudonimização
-  # (Message#content_for_llm chama sem_senha). Na linha que fala em "senha", só a
+  # (Ramon::SenhaForaDaIa chama sem_senha). Na linha que fala em "senha", só a
   # palavra com cara de senha vira [senha] ("esqueci a senha do gov.br" fica
   # legível para a IA que atende); se a linha termina esperando o valor
   # ("Senha:"), a próxima linha não vazia some inteira.
   # ponytail: senha só de letras ("cachorro") na mesma linha passa, e senha fora de
   # linha com "senha" também; a mandada sozinha logo depois do pedido é pega em
-  # Message#senha_solta?. Upgrade: detector de entropia.
+  # Ramon::SenhaForaDaIa.solta?. Upgrade: detector de entropia.
   SENHA = /senha/i
   SENHA_MASCARA = '[senha]'.freeze
   SENHA_ESPERA_VALOR = /[:=-]\s*\z/
@@ -34,8 +34,10 @@ class Ramon::Pseudonymizer
   SENHA_FORMATO = /\A(?=\S*[^[:alpha:]\s])\S{6,}\z/
   SENHA_NAO_E = /senha|gov\.br|inss|https?:|www\./i
 
+  # Pontuação de borda não conta como símbolo: "recuperar." e "obrigado!" não são senha.
   def self.senha_provavel?(palavra)
-    palavra.match?(SENHA_FORMATO) && !palavra.match?(SENHA_NAO_E)
+    miolo = palavra.gsub(/\A[[:punct:]]+|[[:punct:]]+\z/, '')
+    miolo.match?(SENHA_FORMATO) && !palavra.match?(SENHA_NAO_E)
   end
 
   def self.sem_senha(text)
@@ -48,11 +50,10 @@ class Ramon::Pseudonymizer
         next SENHA_MASCARA
       end
 
-      i = linha.index(SENHA)
-      next linha if i.nil?
+      next linha unless linha.match?(SENHA)
 
       proxima = linha.match?(SENHA_ESPERA_VALOR)
-      linha[0, i] + linha[i..].gsub(/\S+/) { |palavra| senha_provavel?(palavra) ? SENHA_MASCARA : palavra }
+      linha.gsub(/\S+/) { |palavra| senha_provavel?(palavra) ? SENHA_MASCARA : palavra }
     end.join("\n")
   end
 
