@@ -64,6 +64,8 @@ const hibrido = {
       { mes: '2026-12', contagem: 41, ok: true },
       { mes: '2027-01', contagem: 20, ok: false },
     ],
+    max_problemas: 0.05,
+    taxa: 0.02,
   },
   total: 1697.12,
   unidades: [],
@@ -168,6 +170,9 @@ describe('Extrato.vue (duas grades)', () => {
     expect(
       cartaoHibrido.findAll('[data-testid="extrato-constancia-mes"]')
     ).toHaveLength(2);
+    expect(
+      cartaoHibrido.find('[data-testid="extrato-constancia-taxa"]').text()
+    ).toContain('"taxa":2');
   });
 
   it('fator vazio salva vazio (vale o calculado)', async () => {

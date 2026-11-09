@@ -3,9 +3,10 @@
 #   SDR:    comparecimento = realizadas ÷ (realizadas + faltas)     < 65% → 0,8 · 65–80% → 1,0 · > 80% → 1,1
 #   Closer: devolvidos pelo jurídico ou cancelados até 90 dias depois de aptos ÷ enviados à validação
 #                                                                     > 15% → 0,8 · 5–15% → 1,0 · ≤ 5% → 1,1
-# O 1º trimestre da pessoa (entrou no time ou teve a 1ª meta dentro dele) é 1,0. Calculado na 1ª leitura com o trimestre
-# já começado e guardado (FatorQualidade): o extrato não muda depois. O gestor corrige digitando o fator na meta de um
-# mês do trimestre (vale o mais recente do trimestre).
+# O 1º trimestre da pessoa (entrou no time ou teve a 1ª meta dentro dele) é 1,0. Conta só o que aconteceu até o 1º dia do
+# trimestre novo (cancelamento depois disso não entra), então o número é o mesmo seja qual for o dia em que é lido; é
+# guardado na 1ª leitura (FatorQualidade). O gestor corrige digitando o fator na meta de um mês do trimestre: vale daquele
+# mês em diante (o mais recente até o mês) e o cartão continua mostrando o calculado.
 module Ramon::FatorTrimestre
   INICIOS = [2, 5, 8, 11].freeze
   ZONA = 'America/Sao_Paulo'.freeze
@@ -15,16 +16,24 @@ module Ramon::FatorTrimestre
   # @return [Hash] { fator: Float, base: Hash } — base: tipo, numerador, denominador, taxa, trimestre_base, manual, primeiro
   def de(account, user, papel, mes, metas: nil)
     inicio = inicio_do_trimestre(mes)
+    calculado = hoje < inicio ? { fator: 1.0, base: {} } : guardado(account, user, papel, inicio)
     manual = Array(metas).reverse.find { |m| m.mes >= inicio && m.fator }
-    return { fator: manual.fator.to_f, base: { manual: true } } if manual
-    return { fator: 1.0, base: { manual: false, futuro: true } } if hoje < inicio
+    return { fator: calculado[:fator], base: calculado[:base].merge(manual: false) } unless manual
 
-    guardado = FatorQualidade.find_or_create_by!(account: account, user: user, papel: papel, inicio: inicio) do |r|
-      r.fator, r.base = calcular(account, user, papel, inicio)
-    end
-    { fator: guardado.fator.to_f, base: guardado.base.symbolize_keys.merge(manual: false) }
+    { fator: manual.fator.to_f, base: calculado[:base].merge(manual: true, calculado: calculado[:fator]) }
+  end
+
+  def guardado(account, user, papel, inicio)
+    chave = { account: account, user: user, papel: papel, inicio: inicio }
+    registro = FatorQualidade.find_by(chave) || criar(chave, calcular(account, user, papel, inicio))
+    { fator: registro.fator.to_f, base: registro.base.symbolize_keys }
+  end
+
+  # outra leitura criou ao mesmo tempo: vale a dela
+  def criar(chave, (fator, base))
+    FatorQualidade.create!(chave.merge(fator: fator, base: base))
   rescue ActiveRecord::RecordNotUnique
-    retry
+    FatorQualidade.find_by!(chave)
   end
 
   def inicio_do_trimestre(mes)
@@ -43,9 +52,16 @@ module Ramon::FatorTrimestre
 
   def faixa(tipo, taxa)
     return 1.0 if taxa.nil?
-    return (taxa < 0.65 ? 0.8 : (taxa > 0.80 ? 1.1 : 1.0)) if tipo == 'comparecimento' # rubocop:disable Style/NestedTernaryOperator
 
-    taxa > 0.15 ? 0.8 : (taxa > 0.05 ? 1.0 : 1.1) # rubocop:disable Style/NestedTernaryOperator
+    if tipo == 'comparecimento'
+      return 0.8 if taxa < 0.65
+
+      taxa > 0.80 ? 1.1 : 1.0
+    else
+      return 0.8 if taxa > 0.15
+
+      taxa > 0.05 ? 1.0 : 1.1
+    end
   end
 
   # [realizadas, realizadas + faltas]
@@ -61,7 +77,7 @@ module Ramon::FatorTrimestre
     dele = account.leads.where(closer_id: user.id)
     enviados = dele.where(contrato_limpo_em: periodo).count
     devolvidos = LeadActivity.where(lead_id: dele.select(:id), kind: 'apto_devolvido', created_at: periodo).pluck(:lead_id)
-    cancelados = dele.where(apto_em: periodo).where.not(contrato_cancelado_em: nil)
+    cancelados = dele.where(apto_em: periodo, contrato_cancelado_em: ...periodo.last) # só o que se sabia no 1º dia
                      .where("contrato_cancelado_em <= apto_em + INTERVAL '90 days'").pluck(:id)
     [(devolvidos | cancelados).size, enviados, 'problemas']
   end

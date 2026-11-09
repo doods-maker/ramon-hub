@@ -41,7 +41,7 @@ module Ramon::ContratoApto
   def validar_lote!(account, user, ids)
     leads = account.leads.where(id: ids).to_a
     feitos = leads.select { |lead| situacao(lead) == 'aguardando' && pode_validar?(lead, user) }
-    feitos.each { |lead| validar!(lead, user) }
+    Lead.transaction { feitos.each { |lead| validar!(lead, user) } }
     { validados: feitos.map(&:id), recusados: ids.map(&:to_i) - feitos.map(&:id) }
   end
 
@@ -128,10 +128,12 @@ module Ramon::ContratoApto
 
   def admin?(lead, user) = user.present? && Ramon::Papeis.gestor_ids(lead.account).include?(user.id)
 
+  def dia_util?(dia) = !dia.on_weekend? && !Ramon::Agenda::Feriados.feriado?(dia)
+
   def proximo_dia_util(dia)
     loop do
       dia += 1
-      return dia unless dia.on_weekend? || Ramon::Agenda::Feriados.feriado?(dia)
+      return dia if dia_util?(dia)
     end
   end
 

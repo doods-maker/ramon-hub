@@ -1,4 +1,5 @@
 import { mount, flushPromises } from '@vue/test-utils';
+import { createStore } from 'vuex';
 import ValidacaoApto from '../ValidacaoApto.vue';
 
 vi.mock('vue-i18n', () => ({
@@ -24,6 +25,8 @@ const fila = [
     closer: 'Caio',
     apto_situacao: 'aguardando',
     apto_prazo: '2026-11-23T23:59:59-03:00',
+    dias_restantes: 3,
+    sem_validador: true,
   },
   {
     id: 2,
@@ -35,9 +38,21 @@ const fila = [
   },
 ];
 
-const montar = () =>
+const montar = (role = 'agent') =>
   mount(ValidacaoApto, {
     global: {
+      plugins: [
+        createStore({
+          getters: { getCurrentRole: () => role },
+          modules: {
+            agents: {
+              namespaced: true,
+              getters: { getAgents: () => [{ id: 9, name: 'Dra. Rafaela' }] },
+              actions: { get: vi.fn() },
+            },
+          },
+        }),
+      ],
       mocks: { $t: k => k },
       stubs: {
         RamonPageHeader: true,
@@ -97,6 +112,34 @@ describe('ValidacaoApto.vue', () => {
     expect(leads.apto).toHaveBeenCalledWith(1, {
       acao: 'devolver',
       motivo: 'Sem CAT',
+    });
+  });
+
+  it('mostra os dias úteis que faltam e marca o caso sem advogado', async () => {
+    const wrapper = montar();
+    await flushPromises();
+    const linha = wrapper.findAll('[data-testid="validacao-linha"]')[0];
+
+    expect(linha.text()).toContain('"count":3');
+    expect(linha.find('[data-testid="validacao-sem-validador"]').exists()).toBe(
+      true
+    );
+    // só o admin designa
+    expect(linha.find('[data-testid="validacao-designar"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('admin designa o advogado direto na lista', async () => {
+    const wrapper = montar('administrator');
+    await flushPromises();
+
+    await wrapper.find('[data-testid="validacao-designar"]').setValue('9');
+    await flushPromises();
+
+    expect(leads.apto).toHaveBeenCalledWith(1, {
+      acao: 'designar',
+      userId: 9,
     });
   });
 

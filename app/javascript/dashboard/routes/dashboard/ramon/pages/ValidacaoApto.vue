@@ -2,18 +2,24 @@
 // Aguardando validação (Ramon::ContratoApto): os contratos limpos que o advogado
 // da tese (ou o admin) precisa validar. Valida em lote os marcados; devolve um a
 // um, com motivo. Sem resposta em 5 dias úteis o backend dá o apto sozinho.
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import { useStore } from 'dashboard/composables/store';
 import LeadAptosAPI from 'dashboard/api/leadAptos';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
-import { CARTAO, CHIP, ROTULO, TEXTAREA, TITULO, TOM } from '../helpers/ui';
+import { CAMPO, CARTAO, CHIP, ROTULO, TEXTAREA, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonValidacaoApto' });
 
 const { t } = useI18n();
+const store = useStore();
+const isAdmin = computed(
+  () => store.getters.getCurrentRole === 'administrator'
+);
+const agentes = computed(() => store.getters['agents/getAgents'] || []);
 const loading = ref(true);
 const error = ref(false);
 const fila = ref([]);
@@ -53,6 +59,17 @@ const validarLote = async () => {
   }
 };
 
+// admin escolhe o advogado do caso (tese sem advogado fixo, ex.: IR)
+const designar = async (id, event) => {
+  const userId = Number(event.target.value) || null;
+  try {
+    await LeadsAPI.apto(id, { acao: 'designar', userId });
+    await carregar();
+  } catch {
+    useAlert(t('RAMON.VALIDACAO_APTO.ERRO'));
+  }
+};
+
 const devolver = async id => {
   salvando.value = true;
   try {
@@ -67,7 +84,10 @@ const devolver = async id => {
   }
 };
 
-onMounted(carregar);
+onMounted(() => {
+  carregar();
+  if (isAdmin.value && !agentes.value.length) store.dispatch('agents/get');
+});
 </script>
 
 <template>
@@ -126,13 +146,13 @@ onMounted(carregar);
                 :aria-label="caso.name"
               />
               <router-link
-                class="text-sm font-medium text-n-slate-12"
+                class="text-sm font-medium text-n-blue-11 underline"
                 :to="{ name: 'ramon_lead_dossie', params: { leadId: caso.id } }"
               >
                 {{ caso.name }}
               </router-link>
               <span :class="[CHIP, TOM.slate]">{{ caso.tese }}</span>
-              <span :class="TITULO">
+              <span class="text-xs text-n-slate-11">
                 {{
                   t('RAMON.VALIDACAO_APTO.CLOSER', { nome: caso.closer || '—' })
                 }}
@@ -149,9 +169,40 @@ onMounted(carregar);
                 <template v-if="caso.apto_prazo">
                   ·
                   {{ t('RAMON.APTO.PRAZO', { data: dataBr(caso.apto_prazo) }) }}
+                  ·
+                  {{
+                    t('RAMON.VALIDACAO_APTO.DIAS_RESTANTES', {
+                      count: caso.dias_restantes,
+                    })
+                  }}
                 </template>
               </span>
             </div>
+            <p
+              v-if="caso.sem_validador"
+              data-testid="validacao-sem-validador"
+              class="m-0 text-xs text-n-amber-11"
+            >
+              {{ t('RAMON.VALIDACAO_APTO.SEM_VALIDADOR') }}
+            </p>
+            <label v-if="isAdmin" :class="ROTULO" class="max-w-xs">
+              {{ t('RAMON.APTO.DESIGNAR') }}
+              <select
+                data-testid="validacao-designar"
+                :class="CAMPO"
+                :value="caso.validador_id || ''"
+                @change="designar(caso.id, $event)"
+              >
+                <option value="">{{ t('RAMON.APTO.DESIGNAR_TESE') }}</option>
+                <option
+                  v-for="agente in agentes"
+                  :key="agente.id"
+                  :value="agente.id"
+                >
+                  {{ agente.name }}
+                </option>
+              </select>
+            </label>
             <p v-if="caso.devolvido_motivo" class="m-0 text-xs text-n-amber-11">
               {{ caso.devolvido_motivo }}
             </p>

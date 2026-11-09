@@ -2324,7 +2324,6 @@
         "SALVO": "Programa salvo",
         "ERRO": "Não foi possível salvar o Programa"
       },
-      "FATOR_CALCULADO": "calculado: {fator}",
       "FALTAM_META": "Falta {count} para a meta do mês | Falta {count} para a meta do mês | Faltam {count} para a meta do mês",
       "META_BATIDA": "Meta do mês batida: daqui pra frente cada unidade vale mais",
       "REUNIOES_IA": "{count} reunião marcada pela IA (não paga o SDR) | {count} reunião marcada pela IA (não paga o SDR) | {count} reuniões marcadas pela IA (não pagam o SDR)",
@@ -2334,8 +2333,10 @@
         "comparecimento": "Fator {fator}: comparecimento do trimestre anterior {taxa}% ({num} realizadas de {den})",
         "problemas": "Fator {fator}: {taxa}% de devolvidos ou cancelados no trimestre anterior ({num} de {den} enviados)",
         "primeiro": "Fator 1,0: primeiro trimestre",
-        "manual": "Fator {fator}: corrigido pelo gestor"
-      }
+        "manual": "Fator {fator}: corrigido pelo gestor (o calculado é {calculado})"
+      },
+      "PROXIMO_GAS": "Faltam {faltam} contratos aptos para o gás: {valor} a mais por contrato",
+      "CONSTANCIA_TAXA": "{taxa}% devolvidos/cancelados (máx. {max}%)"
     },
     "CONFERENCIA": {
       "TITLE": "Conferência de fases",
@@ -2939,7 +2940,9 @@
       "VALIDADOS": "{count} contrato validado | {count} contrato validado | {count} contratos validados",
       "CLOSER": "Closer: {nome}",
       "ERRO": "Não foi possível carregar ou salvar a validação.",
-      "RETRY": "Tentar novamente"
+      "RETRY": "Tentar novamente",
+      "DIAS_RESTANTES": "vence hoje | falta {count} dia útil | faltam {count} dias úteis",
+      "SEM_VALIDADOR": "Tese sem advogado fixo e sem responsável no ADVBOX: designe quem valida."
     }
   },
   "CAPTAIN_RAMON": {

@@ -357,9 +357,6 @@ onMounted(() => {
                     max="2"
                     step="0.1"
                     data-testid="extrato-fator"
-                    :placeholder="
-                      t('RAMON.EXTRATO.FATOR_CALCULADO', { fator: p.fator })
-                    "
                     :class="CAMPO"
                     class="w-28 font-mono tabular-nums"
                   />
@@ -398,7 +395,7 @@ onMounted(() => {
                   num: p.fator_base.numerador,
                   den: p.fator_base.denominador,
                   taxa: Math.round((p.fator_base.taxa || 0) * 100),
-                  fator: p.fator,
+                  fator: p.fator_base.calculado ?? p.fator,
                 })
               }}
             </li>
@@ -408,21 +405,28 @@ onMounted(() => {
             >
               {{ t('RAMON.EXTRATO.FATOR_BASE.primeiro') }}
             </li>
-            <li
-              v-else-if="p.fator_base?.manual"
-              data-testid="extrato-fator-base"
-            >
-              {{ t('RAMON.EXTRATO.FATOR_BASE.manual', { fator: p.fator }) }}
+            <li v-if="p.fator_base?.manual" data-testid="extrato-fator-manual">
+              {{
+                t('RAMON.EXTRATO.FATOR_BASE.manual', {
+                  fator: p.fator,
+                  calculado: p.fator_base.calculado,
+                })
+              }}
             </li>
             <li v-if="p.reunioes_ia" data-testid="extrato-reunioes-ia">
               {{ t('RAMON.EXTRATO.REUNIOES_IA', { count: p.reunioes_ia }) }}
             </li>
             <li v-if="p.proxima_faixa" data-testid="extrato-proxima-faixa">
               {{
-                t('RAMON.EXTRATO.PROXIMA_FAIXA', {
-                  faltam: p.proxima_faixa.faltam,
-                  valor: brl(p.proxima_faixa.valor),
-                })
+                t(
+                  p.proxima_faixa.gas
+                    ? 'RAMON.EXTRATO.PROXIMO_GAS'
+                    : 'RAMON.EXTRATO.PROXIMA_FAIXA',
+                  {
+                    faltam: p.proxima_faixa.faltam,
+                    valor: brl(p.proxima_faixa.valor),
+                  }
+                )
               }}
             </li>
             <li v-if="p.constancia" class="flex flex-wrap items-center gap-2">
@@ -434,6 +438,25 @@ onMounted(() => {
                 :class="[CHIP, m.ok ? TOM.teal : TOM.amber]"
               >
                 {{ m.mes }} · {{ m.contagem }}
+              </span>
+              <span
+                v-if="
+                  p.constancia.taxa !== null && p.constancia.taxa !== undefined
+                "
+                data-testid="extrato-constancia-taxa"
+                :class="[
+                  CHIP,
+                  p.constancia.taxa <= p.constancia.max_problemas
+                    ? TOM.teal
+                    : TOM.amber,
+                ]"
+              >
+                {{
+                  t('RAMON.EXTRATO.CONSTANCIA_TAXA', {
+                    taxa: Math.round(p.constancia.taxa * 100),
+                    max: Math.round(p.constancia.max_problemas * 100),
+                  })
+                }}
               </span>
             </li>
           </ul>

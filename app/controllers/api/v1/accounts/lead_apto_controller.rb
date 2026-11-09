@@ -43,7 +43,15 @@ class Api::V1::Accounts::LeadAptoController < Api::V1::Accounts::BaseController
 
   def item(lead)
     { id: lead.id, name: lead.name, tese: lead.thesis&.name, closer: lead.closer&.name, contrato_limpo_em: lead.contrato_limpo_em&.iso8601,
-      validador_id: lead.validador_id }.merge(Ramon::ContratoApto.dados(lead))
+      validador_id: lead.validador_id, sem_validador: lead.validador_id.nil? && lead.thesis&.validador_ids.blank?,
+      dias_restantes: dias_restantes(lead) }.merge(Ramon::ContratoApto.dados(lead))
+  end
+
+  # dias úteis que faltam até o prazo (0 = vence hoje); nil fora da fila
+  def dias_restantes(lead)
+    fim = Ramon::ContratoApto.prazo(lead)&.to_date
+    hoje = Time.current.in_time_zone(Ramon::ContratoApto::ZONA).to_date
+    fim && ((hoje + 1)..fim).count { |dia| Ramon::ContratoApto.dia_util?(dia) }
   end
 
   def erro(codigo)

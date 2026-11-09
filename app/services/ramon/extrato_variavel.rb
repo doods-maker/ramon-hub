@@ -107,8 +107,16 @@ class Ramon::ExtratoVariavel
 
     regra = programa.regras['constancia']
     meses = (programa.inicio..mes.end_of_month).map(&:beginning_of_month).uniq
-    constancia = regra && { min_mes: regra['min_mes'].to_i, meses: meses.map { |m| mes_da_constancia(user, m, regra['min_mes'].to_i) } }
+    constancia = regra && { min_mes: regra['min_mes'].to_i, meses: meses.map { |m| mes_da_constancia(user, m, regra['min_mes'].to_i) },
+                            max_problemas: regra['max_problemas'].to_f, taxa: taxa_ate_agora(user, programa) }
     { proxima_faixa: programa.proxima_faixa(contagem), constancia: constancia }
+  end
+
+  # devolvidos ou cancelados depois de aptos ÷ enviados, do início do trimestre até o fim deste mês (nil sem enviados)
+  def taxa_ate_agora(user, programa)
+    trimestre = periodo_de(programa.inicio).first...periodo.last
+    enviados = leads.where(closer_id: user.id, contrato_limpo_em: trimestre).count
+    enviados.zero? ? nil : problemas(user, trimestre).fdiv(enviados).round(4)
   end
 
   def mes_da_constancia(user, mes_do_trimestre, minimo)

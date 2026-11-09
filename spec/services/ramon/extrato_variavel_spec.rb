@@ -294,7 +294,14 @@ RSpec.describe Ramon::ExtratoVariavel do
 
       linha = travel_to(em(fevereiro, 15)) { extrato_de(sdr, fevereiro) }
       expect(linha).to include(fator: 1.0)
-      expect(linha[:fator_base]).to include(manual: true)
+      expect(linha[:fator_base]).to include(manual: true, calculado: 0.8)
+    end
+
+    it 'Closer: cancelamento depois do 1º dia do trimestre novo não entra (o número não depende do dia da leitura)' do
+      casos = enviados(20)
+      casos.last(4).each { |lead| lead.update_columns(contrato_cancelado_em: em(fevereiro, 20)) } # rubocop:disable Rails/SkipsModelValidations
+
+      expect(travel_to(em(Date.new(2027, 3, 1), 15)) { extrato_de(closer, fevereiro) }[:fator]).to eq(1.1)
     end
 
     it 'calculado uma vez no trimestre, não muda depois (extrato estável)' do
@@ -321,7 +328,16 @@ RSpec.describe Ramon::ExtratoVariavel do
 
       linha = travel_to(em(dezembro, 20)) { extrato_de(closer, dezembro) }
       expect(linha[:proxima_faixa]).to eq(min: 35, valor: 450.0, faltam: 5)
-      expect(linha[:constancia]).to include(min_mes: 25, meses: [{ mes: '2026-12', contagem: 30, ok: true }])
+      expect(linha[:constancia]).to include(min_mes: 25, meses: [{ mes: '2026-12', contagem: 30, ok: true }],
+                                            max_problemas: 0.05, taxa: 0.0)
+    end
+
+    it 'modelo B: passada a última faixa, quanto falta para o gás' do
+      hibrido!
+      programa!
+      aptos(36, mes: dezembro)
+
+      expect(travel_to(em(dezembro, 20)) { extrato_de(closer, dezembro) }[:proxima_faixa]).to eq(min: 41, valor: 25.0, faltam: 5, gas: true)
     end
   end
 end

@@ -18,6 +18,6 @@ module Ramon::ResponsavelAdvbox
   def responsavel_id(processo)
     resposta = Ramon::AdvboxClient.lawsuit(processo)
     resposta = resposta['data'] if resposta.is_a?(Hash) && resposta['data'].is_a?(Hash)
-    resposta.to_h['responsible_id']
+    resposta['responsible_id'] if resposta.is_a?(Hash) # formato inesperado = sem responsável (não trava a fila)
   end
 end
