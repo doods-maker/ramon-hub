@@ -75,6 +75,25 @@ RSpec.describe Ramon::Documentos::Passagem do
       expect(lead.reload.lead_stage).to eq(juridico)
     end
 
+    it 'grava o 00 Atendimento.md antes de criar a ANÁLISE DO CASO' do
+      servico = instance_double(Ramon::AdvboxDocsTaskService)
+      allow(Ramon::AdvboxDocsTaskService).to receive(:new).and_return(servico)
+      expect(Ramon::Colheita::ArquivoAtendimento).to receive(:gravar).with(lead).ordered.and_return(:gravado)
+      expect(servico).to receive(:analise_do_caso).ordered.and_return(:criada)
+
+      described_class.call(lead)
+    end
+
+    it 'falha ao gravar o arquivo (Drive fora) não impede a ANÁLISE DO CASO', :aggregate_failures do
+      allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
+      allow(Ramon::DriveExportService).to receive(:new).and_raise(Errno::ECONNRESET)
+
+      described_class.call(lead)
+
+      expect(historico).to include(a_string_including('00 Atendimento.md não foi gravado'))
+      expect(Ramon::AdvboxClient).to have_received(:create_post).once
+    end
+
     it 'rodar de novo não repete nada' do
       2.times { described_class.call(lead.reload) }
 
