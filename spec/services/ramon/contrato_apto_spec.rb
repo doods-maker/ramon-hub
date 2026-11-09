@@ -53,7 +53,8 @@ RSpec.describe Ramon::ContratoApto do
 
   describe '.prazo' do
     it 'é de 5 dias úteis, sem fim de semana nem feriado' do
-      expect(described_class.prazo(aguardando)).to eq(Time.find_zone('America/Sao_Paulo').local(2026, 11, 23, 10))
+      # conta do dia seguinte: seg 16, ter 17, qua 18, qui 19, (sex 20 feriado), seg 23 — vence no fim do dia
+      expect(described_class.prazo(aguardando)).to eq(Time.find_zone('America/Sao_Paulo').local(2026, 11, 23, 23, 59, 59))
     end
 
     it 'só existe enquanto aguarda validação' do
@@ -72,6 +73,14 @@ RSpec.describe Ramon::ContratoApto do
       expect(avisos_de(rafaela).count).to eq(1)
       expect(avisos_de(tamires).count).to eq(1)
       expect(avisos_de(outra).count).to eq(0)
+    end
+
+    it 'contrato limpo de antes da regra não entra na fila (o estoque não vira apto por prazo no deploy)' do
+      lead = limpo(carimbo: Time.find_zone('America/Sao_Paulo').local(2026, 10, 20, 10))
+
+      described_class.rodar!(sexta)
+
+      expect(lead.reload).to have_attributes(validacao_desde: nil, apto_em: nil)
     end
 
     it 'não avisa de novo quem já está na fila' do

@@ -29,7 +29,7 @@ RSpec.describe Api::V1::Accounts::LeadAptoController, type: :request do
     apto(advogada, acao: 'validar')
 
     expect(response).to have_http_status(:success)
-    expect(response.parsed_body).to include('apto_situacao' => 'apto', 'apto_pode_validar' => false)
+    expect(response.parsed_body).to include('apto_situacao' => 'apto', 'apto_prazo' => nil)
     expect(lead.reload.apto_por_id).to eq(advogada.id)
   end
 
@@ -57,5 +57,9 @@ RSpec.describe Api::V1::Accounts::LeadAptoController, type: :request do
 
     apto(admin, acao: 'designar', user_id: outra.id)
     expect(response.parsed_body).to include('validador_id' => outra.id)
+
+    apto(admin, acao: 'designar', user_id: 0)
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(lead.reload.validador_id).to eq(outra.id)
   end
 end

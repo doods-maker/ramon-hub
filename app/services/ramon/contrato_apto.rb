@@ -1,7 +1,9 @@
 # Contrato apto (regulamento de remuneração §3; decisão do Eduardo 09/11/2026; plano 2026-11-09-extrato-duas-grades):
 # contrato limpo (assinado + documentos mínimos + 7 dias, Ramon::ContratoLimpoJob) → aguarda o jurídico → apto ou
-# devolvido com motivo. Sem resposta em 5 dias úteis (seg–sex, sem feriados) o caso fica apto sozinho, na hora do prazo
-# (apto_por_id nil). Depois de apto a comissão é devida: cancelar o contrato não tira o apto.
+# devolvido com motivo. Sem resposta em 5 dias úteis (seg–sex, sem feriados; conta do dia seguinte e vence no FIM do 5º
+# dia, como prazo) o caso fica apto sozinho, na hora do prazo (apto_por_id nil). Depois de apto a comissão é devida:
+# cancelar o contrato não tira o apto.
+# Só entram na fila os contratos limpos a partir de VALE_DESDE: o estoque anterior não vira "apto por prazo" no 1º deploy.
 # Quem valida: o advogado designado no lead (tese sem advogado fixo, ex.: IR) → os advogados da tese (Playbooks) →
 # os administradores. O admin sempre pode validar.
 # ponytail: responsável do processo no ADVBOX como validador fica de fora (o processo nasce com usuário fixo).
@@ -9,6 +11,7 @@ module Ramon::ContratoApto
   DIAS_UTEIS = 5
   ZONA = 'America/Sao_Paulo'.freeze
   AVISO = 'ramon_fluxo_aviso'.freeze
+  VALE_DESDE = Time.find_zone(ZONA).local(2026, 11, 10).freeze
 
   class Proibido < StandardError; end
   class Invalido < StandardError; end
@@ -43,10 +46,9 @@ module Ramon::ContratoApto
   def prazo(lead)
     return unless situacao(lead) == 'aguardando'
 
-    inicio = lead.validacao_desde.in_time_zone(ZONA)
-    dia = inicio.to_date
+    dia = lead.validacao_desde.in_time_zone(ZONA).to_date
     DIAS_UTEIS.times { dia = proximo_dia_util(dia) }
-    inicio.change(year: dia.year, month: dia.month, day: dia.day)
+    Time.find_zone(ZONA).local(dia.year, dia.month, dia.day, 23, 59, 59) # sem fração: o banco guarda microssegundos
   end
 
   def validar!(lead, user)
@@ -57,12 +59,13 @@ module Ramon::ContratoApto
   end
 
   def devolver!(lead, user, motivo)
-    raise Invalido, 'motivo' if motivo.to_s.strip.empty?
+    motivo = motivo.to_s.strip
+    raise Invalido, 'motivo' if motivo.empty?
 
     exigir!(lead, user, 'aguardando')
-    lead.update!(devolvido_em: Time.current, devolvido_por_id: user.id, devolvido_motivo: motivo.strip)
-    registrar(lead, user, 'apto_devolvido', motivo.strip)
-    avisar_closer(lead, "Contrato devolvido pelo jurídico: #{lead.name} — #{motivo.strip}")
+    lead.update!(devolvido_em: Time.current, devolvido_por_id: user.id, devolvido_motivo: motivo)
+    registrar(lead, user, 'apto_devolvido', motivo)
+    avisar_closer(lead, "Contrato devolvido pelo jurídico: #{lead.name} — #{motivo}")
   end
 
   # O Closer do lead (ou o admin) corrigiu: volta para o jurídico com relógio novo.
@@ -84,11 +87,12 @@ module Ramon::ContratoApto
 
   # Job horário: contrato limpo entra na fila (relógio = carimbo) e o prazo vencido vira apto.
   def rodar!(agora = Time.current)
-    Lead.where(validacao_desde: nil, apto_em: nil).where.not(contrato_limpo_em: nil).find_each do |lead|
+    sem_apto = Lead.where(apto_em: nil).where(contrato_limpo_em: VALE_DESDE..)
+    sem_apto.where(validacao_desde: nil).find_each do |lead|
       lead.update!(validacao_desde: lead.contrato_limpo_em)
       avisar_validadores(lead)
     end
-    Lead.where(apto_em: nil, devolvido_em: nil).where.not(validacao_desde: nil).where.not(contrato_limpo_em: nil).find_each do |lead|
+    sem_apto.where(devolvido_em: nil).where.not(validacao_desde: nil).find_each do |lead|
       vence = prazo(lead)
       next unless vence && vence <= agora
 

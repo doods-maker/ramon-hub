@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { SECAO } from '../../helpers/ui';
+import { CAMPO, ROTULO, SECAO, TEXTAREA } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -101,18 +101,20 @@ const designar = event => {
         @click="devolvendo = true"
       />
     </div>
-    <div v-if="devolvendo" class="mt-2">
-      <textarea
-        v-model="motivo"
-        data-testid="apto-motivo"
-        rows="2"
-        class="w-full text-sm"
-        :placeholder="$t('RAMON.APTO.MOTIVO')"
-      />
+    <div v-if="devolvendo" class="mt-2 flex flex-col gap-2">
+      <label :class="ROTULO">
+        {{ $t('RAMON.APTO.MOTIVO') }}
+        <textarea
+          v-model="motivo"
+          data-testid="apto-motivo"
+          rows="2"
+          :class="TEXTAREA"
+        />
+      </label>
       <Button
         data-testid="apto-devolver-confirmar"
         size="sm"
-        color="ruby"
+        color="amber"
         :disabled="saving || !motivo.trim()"
         :label="$t('RAMON.APTO.DEVOLVER_CONFIRMAR')"
         @click="agir('devolver', { motivo: motivo.trim() })"
@@ -130,11 +132,11 @@ const designar = event => {
       @click="agir('reenviar')"
     />
 
-    <label v-if="admin" class="block mt-2 text-xs text-n-slate-10">
+    <label v-if="admin" class="mt-2" :class="ROTULO">
       {{ $t('RAMON.APTO.DESIGNAR') }}
       <select
         data-testid="apto-designar"
-        class="block w-full mt-1 text-sm"
+        :class="CAMPO"
         :value="lead.validador_id || ''"
         :disabled="saving"
         @change="designar"
