@@ -13,6 +13,15 @@ export const SECOES_EDITAVEIS = [
   'documentos',
 ];
 
+// Seções que são listas de itens: só estas chaves de cada item são texto livre
+// (nome, título, data e regra vêm do motor e alimentam o PDF/recálculo).
+export const ITENS_EDITAVEIS = {
+  cenarios: ['lead', 'bom'],
+  melhorias: ['t', 'p'],
+};
+// Na versão curta (já tem direito) estas seções não vão no PDF: não editar.
+const SO_NA_COMPLETA = ['cenarios', 'sugestao', 'conferir'];
+
 const folhas = (no, caminho, saida) => {
   if (typeof no === 'string') saida.push({ caminho, valor: no });
   else if (Array.isArray(no))
@@ -26,13 +35,13 @@ export const camposEditaveis = dados => {
   SECOES_EDITAVEIS.forEach(secao => {
     const no = dados?.[secao];
     if (no === undefined || no === null) return;
+    if (dados.versao === 'curta' && SO_NA_COMPLETA.includes(secao)) return;
     const achados = [];
-    if (secao === 'cenarios' && Array.isArray(no)) {
-      // ponytail: dos cenários só lead e bom; nome/título vêm do motor
-      no.forEach((c, i) => {
-        folhas(c?.lead, [secao, i, 'lead'], achados);
-        folhas(c?.bom, [secao, i, 'bom'], achados);
-      });
+    const chaves = ITENS_EDITAVEIS[secao];
+    if (chaves && Array.isArray(no)) {
+      no.forEach((item, i) =>
+        chaves.forEach(k => folhas(item?.[k], [secao, i, k], achados))
+      );
     } else {
       folhas(no, [secao], achados);
     }

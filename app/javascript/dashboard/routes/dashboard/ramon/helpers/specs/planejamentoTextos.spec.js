@@ -63,6 +63,38 @@ describe('planejamentoTextos', () => {
     ]);
   });
 
+  it('melhorias: só t e p; data e regra vêm do motor', () => {
+    const d = {
+      melhorias: [
+        { t: 'Agora', p: 'x', data: '10/11/2026', regra: 'regra da idade' },
+      ],
+    };
+    expect(camposEditaveis(d).map(c => c.caminho.join('.'))).toEqual([
+      'melhorias.0.t',
+      'melhorias.0.p',
+    ]);
+    expect(() =>
+      definirTexto(d, ['melhorias', 0, 'data'], '01/01/2027')
+    ).toThrow();
+  });
+
+  it('versão curta: cenários, sugestão e conferir não vão no PDF, não editam', () => {
+    const d = {
+      ...dados(),
+      versao: 'curta',
+      conferir: ['c'],
+      melhorias: [{ t: 'Agora', p: 'x' }],
+    };
+    expect(camposEditaveis(d).map(c => c.secao)).toEqual([
+      'pode',
+      'pode',
+      'melhorias',
+      'melhorias',
+      'documentos',
+      'documentos',
+    ]);
+  });
+
   it('seção que é texto solto também é editável', () => {
     const d = { observacoes_internas: 'só advogado' };
     expect(camposEditaveis(d)).toEqual([

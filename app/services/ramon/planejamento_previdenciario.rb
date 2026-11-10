@@ -9,9 +9,9 @@ class Ramon::PlanejamentoPrevidenciario
   ERRO = 'erro'.freeze
   NUMEROS_MUDARAM = 'os números mudaram desde o cálculo — calcule de novo'.freeze
   # Espelho de SECOES_EDITAVEIS em app/javascript/dashboard/routes/dashboard/ramon/helpers/planejamentoTextos.js
-  # (mudou lá, muda aqui). Dos cenários, só lead e bom são editáveis.
+  # (mudou lá, muda aqui), assim como ITENS_EDITAVEIS: nas listas de itens, só essas chaves são texto livre.
   SECOES_EDITAVEIS = %w[pendencias observacoes_internas pode nao_pode sugestao cenarios melhorias passos conferir documentos].freeze
-  CENARIO_EDITAVEL = %w[lead bom].freeze
+  ITENS_EDITAVEIS = { 'cenarios' => %w[lead bom], 'melhorias' => %w[t p] }.freeze
 
   class << self
     # cnis = lead.cnis; perfil = Hash string-keyed vindo da tela.
@@ -107,16 +107,18 @@ class Ramon::PlanejamentoPrevidenciario
   def sem_textos(dados_motor)
     dados_motor.to_h do |secao, valor|
       next [secao, valor] unless SECOES_EDITAVEIS.include?(secao)
-      next [secao, valor.map { |c| cenario_sem_textos(c) }] if secao == 'cenarios' && valor.is_a?(Array)
+
+      chaves = ITENS_EDITAVEIS[secao]
+      next [secao, valor.map { |item| item_sem_textos(item, chaves) }] if chaves && valor.is_a?(Array)
 
       [secao, mascarar(valor)]
     end
   end
 
-  def cenario_sem_textos(cenario)
-    return cenario unless cenario.is_a?(Hash)
+  def item_sem_textos(item, chaves)
+    return item unless item.is_a?(Hash)
 
-    cenario.to_h { |k, v| [k, CENARIO_EDITAVEL.include?(k) ? mascarar(v) : v] }
+    item.to_h { |k, v| [k, chaves.include?(k) ? mascarar(v) : v] }
   end
 
   def mascarar(valor)

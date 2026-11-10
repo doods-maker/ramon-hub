@@ -87,13 +87,15 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
         'cenarios' => [{ 'nome' => 'Mínimo', 'v' => 1518, 'rmi' => 2234.62, 'sugestao' => true, 'lead' => 'lead editado',
                          'bom' => ['texto editado'] }],
         'parar' => { 'data' => '10/03/2040', 'rmi' => 1518 },
-        'pendencias' => [{ 't' => 'Mês sem salário', 'imp' => 'pode tirar tempo', 'p' => 'pendência editada' }] }
+        'pendencias' => [{ 't' => 'Mês sem salário', 'imp' => 'pode tirar tempo', 'p' => 'pendência editada' }],
+        'melhorias' => [{ 't' => 'Agora editado', 'p' => 'descrição editada', 'data' => '09/11/2026', 'rmi' => 2234.62 }] }
     end
     # O que o motor devolve no recálculo: mesmos números (Float onde o front mandou Integer) e os textos originais.
     let(:recalculado) do
       dados.merge('cenarios' => [dados['cenarios'][0].merge('v' => 1518.0, 'lead' => 'lead do motor', 'bom' => ['texto do motor'])],
                   'parar' => { 'data' => '10/03/2040', 'rmi' => 1518.0 },
-                  'pendencias' => [dados['pendencias'][0].merge('p' => 'pendência do motor')])
+                  'pendencias' => [dados['pendencias'][0].merge('p' => 'pendência do motor')],
+                  'melhorias' => [dados['melhorias'][0].merge('t' => 'Aposentar agora', 'p' => 'descrição do motor')])
     end
     let(:calculo) do
       Calculo.create!(account: account, lead: lead, tipo: 'planejamento', segurado_nome: 'Ana Souza',
@@ -214,7 +216,8 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
         'texto fora das seções editáveis' => ->(r) { r.merge('aposentadoria' => r['aposentadoria'].merge('frase' => 'outra')) },
         'chave a mais' => ->(r) { r.merge('versao' => 'curta') },
         'item a mais numa seção editável' => ->(r) { r.merge('pendencias' => r['pendencias'] + r['pendencias']) },
-        'texto virou número numa seção editável' => ->(r) { r.merge('pendencias' => [r['pendencias'][0].merge('p' => 1)]) }
+        'texto virou número numa seção editável' => ->(r) { r.merge('pendencias' => [r['pendencias'][0].merge('p' => 1)]) },
+        'data de uma melhoria (texto do motor)' => ->(r) { r.merge('melhorias' => [r['melhorias'][0].merge('data' => '01/01/2030')]) }
       }.each do |o_que, mudar|
         it "#{o_que} diferente: erro e não gera PDF" do
           stub_recalculo(mudar.call(recalculado))
@@ -226,7 +229,7 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
         end
       end
 
-      it 'só textos editáveis diferentes (pendência, lead e bom do cenário) e 1518 × 1518.0: gera' do
+      it 'só textos editáveis diferentes (pendência, lead/bom do cenário, t/p da melhoria) e 1518 × 1518.0: gera' do
         stub_recalculo
         stub_pdf
         described_class.new(calculo).gerar!
