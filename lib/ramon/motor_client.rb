@@ -39,12 +39,6 @@ class Ramon::MotorClient
     post_json('/maternidade', payload, read_timeout: 30)
   end
 
-  # Planejamento de aposentadoria (fatia 3 do motor): roda o painel várias
-  # vezes por cenário/ano — read_timeout maior que os demais endpoints.
-  def self.planejamento(payload)
-    post_json('/planejamento', payload, read_timeout: 60)
-  end
-
   # Liquidação de sentença (F3 do motor): parcelas devidas + atualização +
   # honorários. Payload JSON (rmi/dib obrigatórios; ver LiquidacaoIn no motor).
   def self.liquidacao(payload)
@@ -57,10 +51,14 @@ class Ramon::MotorClient
     post_json('/liquidacao/pdf', payload, read_timeout: 30, raw: true)
   end
 
-  # Mesma conta do planejamento em PDF consultivo. read_timeout 60 pelo mesmo
-  # motivo de .planejamento (roda o painel várias vezes).
-  def self.planejamento_pdf(payload)
-    post_json('/planejamento/pdf', payload, read_timeout: 60, raw: true)
+  # Planejamento previdenciário (raio-x). Chamada síncrona do formulário: 12 s.
+  def self.planejamento_previdenciario(payload)
+    post_json('/planejamento/previdenciario', payload, read_timeout: 12)
+  end
+
+  # PDF a partir do `dados` devolvido acima. Playwright é lento: só roda no job.
+  def self.planejamento_previdenciario_pdf(dados)
+    post_json('/planejamento/previdenciario/pdf', { dados: dados }, read_timeout: 60, raw: true)
   end
 
   def self.post_json(path, payload, read_timeout: READ_TIMEOUT, raw: false)
@@ -127,6 +125,9 @@ class Ramon::MotorClient
   def self.handle(response, raw: false)
     return (raw ? response.body : response.parsed_response) if response.success?
     raise ValidationError, detail_de(response) if response.code == 422
+    if response.code == 404
+      raise UnavailableError, "motor de cálculos desatualizado: #{response.request.path.path} não existe — atualizar o motor na VPS"
+    end
 
     raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
   end
