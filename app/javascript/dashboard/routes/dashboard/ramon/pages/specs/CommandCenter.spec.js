@@ -209,7 +209,7 @@ const mountPage = async (data = payload(), queue = esteira()) => {
   const wrapper = mount(CommandCenter, {
     global: {
       mocks: { $t: k => k },
-      stubs: { NightCopilot: true, AtendimentosHoje: true },
+      stubs: { NightCopilot: true, AtendimentosHoje: true, MeuDiaAdvbox: true },
     },
   });
   await flushPromises();
@@ -239,6 +239,33 @@ describe('CommandCenter.vue', () => {
     expect(recepcao.findComponent({ name: 'AtendimentosHoje' }).exists()).toBe(
       true
     );
+  });
+
+  it('time advogados: Hoje = agenda do ADVBOX + esteira, sem o painel comercial', async () => {
+    roleRef.value = 'agent';
+    teamsRef.value = [{ id: 3, name: 'advogados', is_member: true }];
+    const advogada = await mountPage();
+    expect(
+      advogada.findComponent({ name: 'MeuDiaAdvbox' }).props('comAgenda')
+    ).toBe(true);
+    ['kpi-strip', 'daily-goal', 'start-day'].forEach(id =>
+      expect(advogada.find(`[data-testid="${id}"]`).exists()).toBe(false)
+    );
+  });
+
+  it('fora do jurídico: painel comercial + só o bloco da esteira (sem agenda)', async () => {
+    const admin = await mountPage();
+    expect(
+      admin.findComponent({ name: 'MeuDiaAdvbox' }).props('comAgenda')
+    ).toBe(false);
+    expect(admin.find('[data-testid="kpi-strip"]').exists()).toBe(true);
+
+    teamsRef.value = [{ id: 3, name: 'advogados', is_member: true }];
+    const adminAdvogado = await mountPage();
+    expect(
+      adminAdvogado.findComponent({ name: 'MeuDiaAdvbox' }).props('comAgenda')
+    ).toBe(true);
+    expect(adminAdvogado.find('[data-testid="kpi-strip"]').exists()).toBe(true);
   });
 
   it('renders the greeting, daily goal and start-day CTA', async () => {

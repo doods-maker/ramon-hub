@@ -7,6 +7,11 @@ class Ramon::AgendaHojeService
   # se errar, a Gabriela corrige o nome no campo antes de avisar.
   PARTE_CONTRARIA = 25_705
 
+  # O cliente da tarefa, sem a parte contrária (Ramon::MeuDiaAdvbox usa igual).
+  def self.cliente_de(tarefa)
+    Array(tarefa.dig('lawsuit', 'customers')).find { |c| c['customers_origins_id'] != PARTE_CONTRARIA }
+  end
+
   def initialize(account)
     @account = account
   end
@@ -32,7 +37,7 @@ class Ramon::AgendaHojeService
   end
 
   def linha(tarefa)
-    cliente = Array(tarefa.dig('lawsuit', 'customers')).find { |c| c['customers_origins_id'] != PARTE_CONTRARIA }
+    cliente = self.class.cliente_de(tarefa)
     responsavel = Array(tarefa['users']).first || {}
     {
       advbox_post_id: tarefa['id'], cliente_nome: cliente&.dig('name'), advbox_customer_id: cliente&.dig('customer_id'),

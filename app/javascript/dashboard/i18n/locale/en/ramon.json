@@ -289,6 +289,17 @@
       "DOSSIE": "Open 30s Dossier (D)",
       "SIMULATE": "Simulate benefit (S)"
     },
+    "MEU_DIA": {
+      "ESTEIRA": "Pipeline drafts to review",
+      "PECA_PRONTA": "Draft ready",
+      "PAROU": "Stopped",
+      "HOJE": "Today in ADVBOX",
+      "SEMANA": "Next 7 days",
+      "SEM_HOJE": "No ADVBOX tasks today.",
+      "SEM_SEMANA": "No open tasks in the next 7 days.",
+      "PRAZO": "Due {dia}",
+      "ADVBOX_FORA": "ADVBOX did not answer. Try again in a few minutes."
+    },
     "COMMAND": {
       "TITLE": "Command Center",
       "RELOAD": "Reload",

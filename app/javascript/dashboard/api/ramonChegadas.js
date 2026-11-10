@@ -13,6 +13,10 @@ class RamonChegadasAPI extends ApiClient {
   agenda() {
     return axios.get(`${this.url}/agenda`);
   }
+
+  meuDia() {
+    return axios.get(`${this.url}/meu_dia`);
+  }
 }
 
 export default new RamonChegadasAPI();

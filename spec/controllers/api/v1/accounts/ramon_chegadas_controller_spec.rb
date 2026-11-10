@@ -109,4 +109,19 @@ RSpec.describe 'Ramon Chegadas API', type: :request do
     get "#{url}/agenda", headers: gabriela.create_new_auth_token, as: :json
     expect(response).to have_http_status(:service_unavailable)
   end
+
+  describe 'meu_dia' do
+    it 'qualquer agente vê as próprias tarefas do ADVBOX' do
+      allow(Ramon::MeuDiaAdvbox).to receive(:new).with(account, brenda)
+                                                 .and_return(instance_double(Ramon::MeuDiaAdvbox, perform: { hoje: [{ advbox_post_id: 1 }] }))
+      get "#{url}/meu_dia", headers: brenda.create_new_auth_token, as: :json
+      expect(response.parsed_body['payload']).to include('hoje' => [{ 'advbox_post_id' => 1 }])
+    end
+
+    it 'devolve 503 com ADVBOX fora' do
+      allow(Ramon::AdvboxClient).to receive(:settings).and_raise(Ramon::AdvboxClient::UnavailableError)
+      get "#{url}/meu_dia", headers: brenda.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:service_unavailable)
+    end
+  end
 end

@@ -7,6 +7,10 @@ class RamonChegadaPolicy < ApplicationPolicy
     index?
   end
 
+  def meu_dia?
+    index?
+  end
+
   def create?
     @account_user.administrator? || Chegada.recepcao?(@account, @user)
   end
