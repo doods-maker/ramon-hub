@@ -54,6 +54,15 @@ class Ramon::DriveClient
                           upload_source: io, content_type: content_type, fields: 'id').id
     end
 
+    # Mesmo nome (arquivo, não pasta) na pasta: troca o conteúdo e mantém o id; senão sobe novo.
+    def substituir(name:, io:, content_type:, parent_id:)
+      existente = conteudo_da_pasta(parent_id).find { |f| !f[:pasta] && f[:name] == name }
+      return upload(name: name, io: io, content_type: content_type, parent_id: parent_id) unless existente
+
+      service.update_file(existente[:id], upload_source: io, content_type: content_type, supports_all_drives: true)
+      existente[:id]
+    end
+
     def shortcut(target_id:, name:, parent_id:)
       service.create_file({ name: name, mime_type: SHORTCUT_MIME, parents: [parent_id],
                             shortcut_details: { target_id: target_id } }, fields: 'id').id

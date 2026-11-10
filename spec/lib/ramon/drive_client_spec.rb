@@ -71,4 +71,27 @@ RSpec.describe Ramon::DriveClient do
     expect(api).not_to receive(:list_files)
     expect(described_class.search('ab')).to eq([])
   end
+
+  describe '.substituir' do
+    let(:nome) { 'Memória de cálculo - Ana.xlsx' }
+    let(:args) { { name: nome, io: StringIO.new('x'), content_type: 'application/pdf', parent_id: 'p1' } }
+
+    it 'troca o conteúdo do arquivo de mesmo nome' do
+      allow(described_class).to receive(:conteudo_da_pasta).with('p1').and_return([{ id: 'f9', name: nome, pasta: false }])
+      expect(api).to receive(:update_file).with('f9', upload_source: anything, content_type: 'application/pdf', supports_all_drives: true)
+      expect(described_class.substituir(**args)).to eq('f9')
+    end
+
+    it 'sobe novo quando não há arquivo com o nome' do
+      allow(described_class).to receive(:conteudo_da_pasta).with('p1').and_return([{ id: 'x', name: 'outro', pasta: false }])
+      expect(described_class).to receive(:upload).with(**args).and_return('n1')
+      expect(described_class.substituir(**args)).to eq('n1')
+    end
+
+    it 'ignora pasta com o mesmo nome' do
+      allow(described_class).to receive(:conteudo_da_pasta).with('p1').and_return([{ id: 'd1', name: nome, pasta: true }])
+      expect(described_class).to receive(:upload).with(**args).and_return('n2')
+      expect(described_class.substituir(**args)).to eq('n2')
+    end
+  end
 end
