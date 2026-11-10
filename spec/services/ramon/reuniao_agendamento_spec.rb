@@ -273,7 +273,7 @@ RSpec.describe Ramon::ReuniaoAgendamento do
                        'resumo' => 'Primeiro Atendimento em 15/07/2026 11:00', 'primeiro_nome' => 'João',
                        'titulo_tarefa' => 'Primeiro Atendimento')
       )
-      expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_na_agenda', lead.lead_tasks.last, hash_including('assumido' => false))
+      expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_na_agenda', lead.lead_tasks.last, hash_including('assumido' => false), nil)
     end
 
     it 'remarcar leva o resumo de antes; cancelar leva as tarefas' do
