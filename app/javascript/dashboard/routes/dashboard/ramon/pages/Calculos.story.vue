@@ -320,55 +320,42 @@ const MATERNIDADE = {
 };
 
 const PLANEJAMENTO = {
-  data_calculo: '2026-10-05',
-  cenarios: [
-    {
-      nome: 'conservador',
-      salario: '1518.00',
-      aliquota: 20,
-      observacao: 'Contribuição sobre o salário mínimo.',
-      resultados: [
-        {
-          regra: 'idade',
-          titulo: 'Aposentadoria por idade',
-          fecha_em: '2036-04-18',
-          rmi_projetada: '1518.00',
-          meses_contribuindo: 114,
-          desembolso_total: '34610.40',
-          payback_meses: 23,
-        },
-      ],
-      regras_excluidas: [
-        { regra: 'pontos', motivo: 'não atinge a pontuação mínima' },
-      ],
-      avisos: [],
-    },
-    {
-      nome: 'otimizado',
-      salario: '4200.00',
-      aliquota: 20,
-      observacao: 'Contribuição que maximiza a RMI no menor prazo.',
-      resultados: [
-        {
-          regra: 'pedagio_100',
-          titulo: 'Tempo — pedágio 100%',
-          fecha_em: '2029-11-30',
-          rmi_projetada: '3812.40',
-          meses_contribuindo: 38,
-          desembolso_total: '31920.00',
-          payback_meses: 9,
-        },
-      ],
-      regras_excluidas: [],
-      avisos: ['Exige manter o recolhimento sem falhas até a data.'],
-    },
-  ],
-  decisoes_pendentes: [
-    {
-      tipo: 'cenario_manter',
-      pergunta: 'O segurado consegue manter R$ 840,00/mês de contribuição?',
-    },
-  ],
+  dados: {
+    nome: 'Marina Souza Costa',
+    formato_textos: 'aprovado',
+    calculo_data: '05/10/2026',
+    aposentadoria: { data: '18/04/2036', regra: 'aposentadoria por idade' },
+    cenarios: [
+      {
+        nome: 'Mínimo',
+        v: 1518,
+        rmi: 1518,
+        custo: 166.98,
+        lead: 'O mínimo garante a aposentadoria por idade.',
+      },
+      {
+        nome: 'Teto',
+        v: 8157.41,
+        rmi: 3812.4,
+        custo: 897.31,
+        sugestao: true,
+        lead: 'O teto rende a maior renda.',
+      },
+    ],
+    sugestao: { curta: 'Seguir pelo teto até 2036.', titulo: 'Nossa sugestão' },
+    parar: { data: '18/04/2038', rmi: 1518 },
+    pode: [
+      {
+        t: 'Escolher quanto contribuir',
+        p: 'Qualquer valor entre o mínimo e o teto.',
+      },
+    ],
+  },
+  forma_sugerida: {
+    forma: 'carne_20',
+    salario_atual: 3000,
+    motivo: 'últimas competências com recolhimento próprio',
+  },
   avisos: ['Projeção com as regras vigentes em 10/2026.'],
 };
 
@@ -559,7 +546,8 @@ const maternidade = roteiro(
 const planejamento = roteiro(
   true,
   aba('planejamento'),
-  clique('planejamento-planejar')
+  clique('planejamento-comecar'),
+  clique('planejamento-calcular')
 );
 const historico = roteiro(false, clique('calculos-historico-toggle'));
 const cnis = roteiro(true, clique('sim-cnis-ajustes-toggle'));
