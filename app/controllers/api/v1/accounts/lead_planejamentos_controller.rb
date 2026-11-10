@@ -5,14 +5,12 @@ class Api::V1::Accounts::LeadPlanejamentosController < Api::V1::Accounts::BaseCo
   include RegistraCalculo
 
   SEM_CNIS = 'Anexe o CNIS para montar o planejamento.'.freeze
-  TIPOS = { 'pdf' => 'application/pdf', 'memoria' => Ramon::PlanejamentoPrevidenciario::XLSX }.freeze
 
   before_action -> { authorize(@lead, :show?) }
   before_action :fetch_calculo, only: [:geracao, :arquivo]
+  before_action :exigir_cnis, only: [:create, :gerar]
 
   def create
-    return render json: { error: SEM_CNIS }, status: :unprocessable_entity if @lead.cnis.blank?
-
     responder do
       corpo = Ramon::PlanejamentoPrevidenciario.payload(@lead.cnis, permitted[:perfil] || {}, segurado_nome: nome_do_segurado)
       render json: Ramon::MotorClient.planejamento_previdenciario(corpo).except('memoria_xlsx_b64')
@@ -23,7 +21,7 @@ class Api::V1::Accounts::LeadPlanejamentosController < Api::V1::Accounts::BaseCo
     calculo = registrar_calculo('planejamento', valor: rmi_da_sugestao)
     return render json: { error: 'não deu para registrar o planejamento — tente de novo' }, status: :service_unavailable if calculo.nil?
 
-    calculo.update!(snapshot: calculo.snapshot.merge('geracao' => { 'estado' => 'gerando' }))
+    Ramon::PlanejamentoPrevidenciario.new(calculo).marcar_gerando!
     Ramon::PlanejamentoGerarJob.perform_later(calculo.id)
     render json: { calculo_id: calculo.id }, status: :accepted
   end
@@ -34,16 +32,19 @@ class Api::V1::Accounts::LeadPlanejamentosController < Api::V1::Accounts::BaseCo
 
   def arquivo
     tipo = params[:tipo].to_s
-    return render json: { error: 'tipo inválido' }, status: :unprocessable_entity unless TIPOS.key?(tipo)
+    return render json: { error: 'tipo inválido' }, status: :unprocessable_entity unless Ramon::PlanejamentoPrevidenciario::TIPOS.key?(tipo)
 
-    bytes = Ramon::PlanejamentoPrevidenciario.arquivo(@calculo, tipo)
-    return render json: { error: 'arquivo expirou — gere de novo' }, status: :not_found if bytes.nil?
+    baixado = Ramon::PlanejamentoPrevidenciario.new(@calculo).download(tipo)
+    return render json: { error: 'arquivo expirou — gere de novo' }, status: :not_found if baixado.nil?
 
-    nomes = Ramon::PlanejamentoPrevidenciario.nomes(@calculo.snapshot.dig('params', 'dados'), hoje: @calculo.created_at.to_date)
-    send_data bytes, filename: nomes[tipo.to_sym], type: TIPOS[tipo], disposition: 'attachment'
+    send_data baixado[:bytes], filename: baixado[:nome], type: baixado[:mime], disposition: 'attachment'
   end
 
   private
+
+  def exigir_cnis
+    render json: { error: SEM_CNIS }, status: :unprocessable_entity if @lead.cnis.blank?
+  end
 
   def fetch_calculo
     @calculo = @lead.calculos.where(tipo: 'planejamento').find(params[:calculo_id])

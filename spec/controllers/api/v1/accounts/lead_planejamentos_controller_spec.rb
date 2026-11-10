@@ -90,15 +90,24 @@ RSpec.describe 'Lead Planejamentos API', type: :request do
     before { lead.update!(cnis: cnis) }
 
     it 'grava o dados editado inteiro no histórico e enfileira o job' do
-      expect { planejar({ perfil: { forma: 'pro_labore' }, dados: dados }, admin.create_new_auth_token, '/gerar') }
-        .to have_enqueued_job(Ramon::PlanejamentoGerarJob)
+      planejar({ perfil: { forma: 'pro_labore' }, dados: dados }, admin.create_new_auth_token, '/gerar')
       calculo = Calculo.last
+      expect(Ramon::PlanejamentoGerarJob).to have_been_enqueued.with(calculo.id)
       expect(response).to have_http_status(:accepted)
       expect(response.parsed_body).to eq('calculo_id' => calculo.id)
       expect(calculo.snapshot['params']['dados']).to eq(dados)
       expect(calculo.snapshot['params']['perfil']).to eq('forma' => 'pro_labore')
       expect(calculo.snapshot['geracao']).to eq('estado' => 'gerando')
       expect(calculo.snapshot['valor']).to eq(2234.62)
+    end
+
+    it 'sem CNIS devolve 422 pedindo o CNIS e não grava nem enfileira' do
+      lead.update!(cnis: nil)
+      expect { planejar({ perfil: {}, dados: dados }, admin.create_new_auth_token, '/gerar') }
+        .not_to change(Calculo, :count)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to eq('Anexe o CNIS para montar o planejamento.')
+      expect(Ramon::PlanejamentoGerarJob).not_to have_been_enqueued
     end
 
     it 'sem registro do histórico devolve 503' do
@@ -138,6 +147,15 @@ RSpec.describe 'Lead Planejamentos API', type: :request do
       expect(response.body).to eq('%PDF-fake')
       expect(response.headers['Content-Disposition']).to include('Planejamento previdenci')
       expect(response.headers['Content-Type']).to include('application/pdf')
+    end
+
+    it 'arquivo de textos em rascunho sai com o prefixo RASCUNHO' do
+      calculo.update!(snapshot: calculo.snapshot.deep_merge('params' => { 'dados' => { 'formato_textos' => 'rascunho' } }))
+      Redis::Alfred.setex(Ramon::PlanejamentoPrevidenciario.chave(calculo, 'memoria'), Base64.strict_encode64('PK'), 1.hour)
+      pegar('/arquivo', calculo_id: calculo.id, tipo: 'memoria')
+      expect(response).to have_http_status(:ok)
+      expect(response.headers['Content-Disposition']).to include('RASCUNHO - Mem')
+      expect(response.headers['Content-Type']).to include('spreadsheetml')
     end
 
     it 'arquivo expirado dá 404' do

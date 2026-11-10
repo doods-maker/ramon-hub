@@ -52,6 +52,15 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
       expect(nomes[:memoria]).to eq('Memória de cálculo - AnaSouza B c.xlsx')
     end
 
+    it 'textos em rascunho: PDF e memória com o prefixo RASCUNHO, pasta igual' do
+      nomes = described_class.nomes({ 'nome' => 'Ana Souza', 'formato_textos' => 'rascunho' }, hoje: Date.new(2026, 11, 9))
+      expect(nomes).to eq(
+        pasta: 'Planejamento previdenciário – 11.26',
+        pdf: 'RASCUNHO - Planejamento previdenciário - Ana Souza.pdf',
+        memoria: 'RASCUNHO - Memória de cálculo - Ana Souza.xlsx'
+      )
+    end
+
     it 'sem nome: arquivos saem como "Sem nome"' do
       nomes = described_class.nomes({ 'nome' => ' / ' }, hoje: Date.new(2026, 11, 9))
       expect(nomes.values_at(:pdf, :memoria)).to eq(['Planejamento previdenciário - Sem nome.pdf', 'Memória de cálculo - Sem nome.xlsx'])
@@ -66,10 +75,18 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
     let(:lead) { create(:lead, account: account, contact: create(:contact, account: account, name: 'Ana Souza')) }
     let(:xlsx) { 'PK xlsx ficticio' }
     let(:dados) do
-      { 'nome' => 'Ana Souza', 'turma' => '', 'calculo_data' => '09/11/2026',
-        'aposentadoria' => { 'data' => '10/03/2043', 'frase' => 'texto editado' },
-        'cenarios' => [{ 'rmi' => 2234.62, 'sugestao' => true, 'bom' => ['texto editado'] }],
-        'parar' => { 'rmi' => 1518.0 }, 'pendencias' => [] }
+      { 'nome' => 'Ana Souza', 'turma' => '', 'calculo_data' => '09/11/2026', 'formato_textos' => 'aprovado',
+        'aposentadoria' => { 'data' => '10/03/2043', 'frase' => 'texto do motor' },
+        'cenarios' => [{ 'nome' => 'Mínimo', 'v' => 1518, 'rmi' => 2234.62, 'sugestao' => true, 'lead' => 'lead editado',
+                         'bom' => ['texto editado'] }],
+        'parar' => { 'data' => '10/03/2040', 'rmi' => 1518 },
+        'pendencias' => [{ 't' => 'Mês sem salário', 'imp' => 'pode tirar tempo', 'p' => 'pendência editada' }] }
+    end
+    # O que o motor devolve no recálculo: mesmos números (Float onde o front mandou Integer) e os textos originais.
+    let(:recalculado) do
+      dados.merge('cenarios' => [dados['cenarios'][0].merge('v' => 1518.0, 'lead' => 'lead do motor', 'bom' => ['texto do motor'])],
+                  'parar' => { 'data' => '10/03/2040', 'rmi' => 1518.0 },
+                  'pendencias' => [dados['pendencias'][0].merge('p' => 'pendência do motor')])
     end
     let(:calculo) do
       Calculo.create!(account: account, lead: lead, tipo: 'planejamento', segurado_nome: 'Ana Souza',
@@ -84,8 +101,8 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
       allow(Ramon::DriveExportService).to receive(:new).and_return(instance_double(Ramon::DriveExportService, pasta_cliente_id: 'cli1'))
     end
 
-    def stub_recalculo(cenarios: [{ 'rmi' => 2234.62, 'sugestao' => true, 'bom' => ['texto do motor'] }])
-      corpo = { dados: dados.merge('cenarios' => cenarios), memoria_xlsx_b64: Base64.strict_encode64(xlsx), forma_sugerida: {}, avisos: [] }
+    def stub_recalculo(dados_motor = recalculado)
+      corpo = { dados: dados_motor, memoria_xlsx_b64: Base64.strict_encode64(xlsx), forma_sugerida: {}, avisos: [] }
       stub_request(:post, url_recalculo).to_return(status: 200, body: corpo.to_json, headers: { 'Content-Type' => 'application/json' })
     end
 
@@ -180,13 +197,54 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
       expect(geracao['erro']).to match(/\Amotor de cálculos desatualizado/)
     end
 
-    it 'números do recálculo diferentes do dados editado: erro e não gera PDF' do
-      stub_recalculo(cenarios: [{ 'rmi' => 9999.0, 'sugestao' => true, 'bom' => ['texto do motor'] }])
+    describe 'trava: o recálculo tem de ser o dados da tela, fora os textos editáveis' do
+      {
+        'rmi de um cenário' => ->(r) { r.merge('cenarios' => [r['cenarios'][0].merge('rmi' => 9999.0)]) },
+        'cenarios[0].v' => ->(r) { r.merge('cenarios' => [r['cenarios'][0].merge('v' => 2000.0)]) },
+        'nome do cenário (texto do motor)' => ->(r) { r.merge('cenarios' => [r['cenarios'][0].merge('nome' => 'Teto')]) },
+        'parar.data' => ->(r) { r.merge('parar' => r['parar'].merge('data' => '10/04/2040')) },
+        'formato_textos' => ->(r) { r.merge('formato_textos' => 'rascunho') },
+        'texto fora das seções editáveis' => ->(r) { r.merge('aposentadoria' => r['aposentadoria'].merge('frase' => 'outra')) },
+        'chave a mais' => ->(r) { r.merge('versao' => 'curta') },
+        'item a mais numa seção editável' => ->(r) { r.merge('pendencias' => r['pendencias'] + r['pendencias']) },
+        'texto virou número numa seção editável' => ->(r) { r.merge('pendencias' => [r['pendencias'][0].merge('p' => 1)]) }
+      }.each do |o_que, mudar|
+        it "#{o_que} diferente: erro e não gera PDF" do
+          stub_recalculo(mudar.call(recalculado))
+          stub_pdf
+          described_class.new(calculo).gerar!
+
+          expect(geracao).to eq('estado' => 'erro', 'erro' => 'os números mudaram desde o cálculo — calcule de novo')
+          expect(a_request(:post, url_pdf)).not_to have_been_made
+        end
+      end
+
+      it 'só textos editáveis diferentes (pendência, lead e bom do cenário) e 1518 × 1518.0: gera' do
+        stub_recalculo
+        stub_pdf
+        described_class.new(calculo).gerar!
+
+        expect(geracao['estado']).to eq('pronto')
+      end
+    end
+
+    it 'textos em rascunho: arquivos no Drive com o prefixo RASCUNHO' do
+      dados['formato_textos'] = 'rascunho'
+      stub_recalculo
       stub_pdf
       described_class.new(calculo).gerar!
 
-      expect(geracao).to eq('estado' => 'erro', 'erro' => 'os números mudaram desde o cálculo — calcule de novo')
-      expect(a_request(:post, url_pdf)).not_to have_been_made
+      expect(Ramon::DriveClient).to have_received(:substituir).with(hash_including(name: 'RASCUNHO - Planejamento previdenciário - Ana Souza.pdf'))
+      expect(Ramon::DriveClient).to have_received(:substituir).with(hash_including(name: 'RASCUNHO - Memória de cálculo - Ana Souza.xlsx'))
+    end
+
+    it 'erro do Drive longo sai cortado em 200 caracteres' do
+      allow(Ramon::DriveClient).to receive(:substituir).and_raise(Google::Apis::ServerError, 'x' * 500)
+      stub_recalculo
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      expect(geracao['drive_erro'].length).to eq('não salvou no Drive: '.length + 200)
     end
 
     it 'erro inesperado vira "não deu para gerar" com a classe' do

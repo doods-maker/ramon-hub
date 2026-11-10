@@ -6,8 +6,9 @@ module RegistraCalculo
 
   private
 
-  # Chamar DEPOIS do render, como o persistir_especiais do painel: histórico é
-  # registro, nunca pode derrubar o cálculo que o advogado já está vendo.
+  # Nunca levanta: histórico é registro e não pode derrubar o cálculo que o
+  # advogado já está vendo — os proxies chamam DEPOIS do render; quem precisa do
+  # registro (o gerar do planejamento) chama antes e trata o nil.
   # Devolve o registro (ou nil). `valor` = número principal do resultado (mostrado na linha do histórico).
   def registrar_calculo(tipo, valor: nil)
     return nil if sem_historico?
