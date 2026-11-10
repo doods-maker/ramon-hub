@@ -46,5 +46,154 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
       nomes = described_class.nomes({ 'nome' => 'Ana Souza', 'turma' => 'Elites 3' }, hoje: Date.new(2026, 11, 9))
       expect(nomes[:pdf]).to eq('Raio-X Elites - Ana Souza.pdf')
     end
+
+    it 'tira a barra invertida e os outros caracteres proibidos no Drive' do
+      nomes = described_class.nomes({ 'nome' => 'Ana\\Souza: "B" <c>|*?' }, hoje: Date.new(2026, 11, 9))
+      expect(nomes[:memoria]).to eq('Memória de cálculo - AnaSouza B c.xlsx')
+    end
+
+    it 'sem nome: arquivos saem como "Sem nome"' do
+      nomes = described_class.nomes({ 'nome' => ' / ' }, hoje: Date.new(2026, 11, 9))
+      expect(nomes.values_at(:pdf, :memoria)).to eq(['Planejamento previdenciário - Sem nome.pdf', 'Memória de cálculo - Sem nome.xlsx'])
+    end
+  end
+
+  describe '#gerar!' do
+    let(:motor_url) { 'http://motor:8000' }
+    let(:url_recalculo) { "#{motor_url}/planejamento/previdenciario" }
+    let(:url_pdf) { "#{motor_url}/planejamento/previdenciario/pdf" }
+    let(:account) { create(:account) }
+    let(:lead) { create(:lead, account: account, contact: create(:contact, account: account, name: 'Ana Souza')) }
+    let(:xlsx) { 'PK xlsx ficticio' }
+    let(:dados) do
+      { 'nome' => 'Ana Souza', 'turma' => '', 'calculo_data' => '09/11/2026',
+        'aposentadoria' => { 'data' => '10/03/2043', 'frase' => 'texto editado' },
+        'cenarios' => [{ 'rmi' => 2234.62, 'sugestao' => true, 'bom' => ['texto editado'] }],
+        'parar' => { 'rmi' => 1518.0 }, 'pendencias' => [] }
+    end
+    let(:calculo) do
+      Calculo.create!(account: account, lead: lead, tipo: 'planejamento', segurado_nome: 'Ana Souza',
+                      snapshot: { 'params' => { 'perfil' => { 'forma' => 'pro_labore' }, 'dados' => dados },
+                                  'cnis' => cnis, 'geracao' => { 'estado' => 'gerando' } })
+    end
+
+    around { |ex| travel_to(Time.zone.local(2026, 11, 9, 10)) { with_modified_env(MOTOR_CALCULOS_URL: motor_url) { ex.run } } }
+
+    before do
+      allow(Ramon::DriveClient).to receive_messages(configured?: true, ensure_folder: 'sub1', substituir: 'arq1')
+      allow(Ramon::DriveExportService).to receive(:new).and_return(instance_double(Ramon::DriveExportService, pasta_cliente_id: 'cli1'))
+    end
+
+    def stub_recalculo(cenarios: [{ 'rmi' => 2234.62, 'sugestao' => true, 'bom' => ['texto do motor'] }])
+      corpo = { dados: dados.merge('cenarios' => cenarios), memoria_xlsx_b64: Base64.strict_encode64(xlsx), forma_sugerida: {}, avisos: [] }
+      stub_request(:post, url_recalculo).to_return(status: 200, body: corpo.to_json, headers: { 'Content-Type' => 'application/json' })
+    end
+
+    def stub_pdf
+      stub_request(:post, url_pdf).to_return(status: 200, body: '%PDF-1.7 ficticio', headers: { 'Content-Type' => 'application/pdf' })
+    end
+
+    def geracao = calculo.reload.snapshot['geracao']
+
+    it 'lead com contato: guarda PDF e memória e salva os dois na subpasta do mês' do
+      stub_recalculo
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      expect(Ramon::DriveClient).to have_received(:ensure_folder).with('Planejamento previdenciário – 11.26', 'cli1')
+      expect(Ramon::DriveClient).to have_received(:substituir)
+        .with(hash_including(name: 'Planejamento previdenciário - Ana Souza.pdf', content_type: 'application/pdf', parent_id: 'sub1'))
+      expect(Ramon::DriveClient).to have_received(:substituir)
+        .with(hash_including(name: 'Memória de cálculo - Ana Souza.xlsx', content_type: described_class::XLSX, parent_id: 'sub1'))
+      expect(geracao).to eq('estado' => 'pronto', 'drive' => { 'pasta_url' => 'https://drive.google.com/drive/folders/sub1' })
+      expect(described_class.arquivo(calculo, 'pdf')).to start_with('%PDF')
+      expect(described_class.arquivo(calculo, 'memoria')).to eq(xlsx)
+    end
+
+    it 'recalcula com o perfil salvo, o nome e a data do cálculo' do
+      stub_recalculo
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      corpo = hash_including('data_calculo' => '2026-11-09', 'perfil' => { 'forma' => 'pro_labore', 'segurado_nome' => 'Ana Souza' })
+      expect(a_request(:post, url_recalculo).with(body: corpo)).to have_been_made
+    end
+
+    it 'manda ao /pdf exatamente o dados editado' do
+      stub_recalculo
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      expect(a_request(:post, url_pdf).with(body: { dados: dados }.to_json)).to have_been_made
+    end
+
+    it 'rascunho sem contato: só download, Drive nem é chamado' do
+      lead.update!(contact: nil)
+      stub_recalculo
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      expect(Ramon::DriveClient).not_to have_received(:ensure_folder)
+      expect(geracao).to eq('estado' => 'pronto', 'drive' => nil, 'drive_motivo' => 'sem_cliente')
+      expect(described_class.arquivo(calculo, 'pdf')).to start_with('%PDF')
+    end
+
+    it 'Drive desligado: só download' do
+      allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+      stub_recalculo
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      expect(Ramon::DriveClient).not_to have_received(:substituir)
+      expect(geracao).to eq('estado' => 'pronto', 'drive' => nil, 'drive_motivo' => 'drive_desligado')
+    end
+
+    it 'Drive falha: arquivos continuam para baixar' do
+      allow(Ramon::DriveClient).to receive(:substituir).and_raise(Google::Apis::ServerError, 'backendError')
+      stub_recalculo
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      expect(geracao['estado']).to eq('pronto')
+      expect(geracao['drive']).to be_nil
+      expect(geracao['drive_erro']).to match(/\Anão salvou no Drive: .*backendError/)
+      expect(described_class.arquivo(calculo, 'pdf')).to start_with('%PDF')
+    end
+
+    it '422 do motor no PDF vira erro com a mensagem do motor' do
+      stub_recalculo
+      stub_request(:post, url_pdf).to_return(status: 422, body: { detail: 'o PDF não pôde ser gerado: marcador {data_apx}' }.to_json,
+                                             headers: { 'Content-Type' => 'application/json' })
+      described_class.new(calculo).gerar!
+
+      expect(geracao['estado']).to eq('erro')
+      expect(geracao['erro']).to match(/marcador \{data_apx\}/)
+      expect(described_class.arquivo(calculo, 'pdf')).to be_nil
+    end
+
+    it '404 do motor vira "motor de cálculos desatualizado"' do
+      stub_request(:post, url_recalculo).to_return(status: 404, body: { detail: 'Not Found' }.to_json,
+                                                   headers: { 'Content-Type' => 'application/json' })
+      described_class.new(calculo).gerar!
+
+      expect(geracao['estado']).to eq('erro')
+      expect(geracao['erro']).to match(/\Amotor de cálculos desatualizado/)
+    end
+
+    it 'números do recálculo diferentes do dados editado: erro e não gera PDF' do
+      stub_recalculo(cenarios: [{ 'rmi' => 9999.0, 'sugestao' => true, 'bom' => ['texto do motor'] }])
+      stub_pdf
+      described_class.new(calculo).gerar!
+
+      expect(geracao).to eq('estado' => 'erro', 'erro' => 'os números mudaram desde o cálculo — calcule de novo')
+      expect(a_request(:post, url_pdf)).not_to have_been_made
+    end
+
+    it 'erro inesperado vira "não deu para gerar" com a classe' do
+      calculo.update!(snapshot: calculo.snapshot.deep_merge('params' => { 'dados' => { 'calculo_data' => 'ontem' } }))
+      described_class.new(calculo).gerar!
+
+      expect(geracao).to eq('estado' => 'erro', 'erro' => 'não deu para gerar: Date::Error')
+    end
   end
 end
