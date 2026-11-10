@@ -463,7 +463,9 @@ Rails.application.routes.draw do
             resource :pensao, only: [:create], controller: 'lead_pensoes'
             resource :maternidade, only: [:create], controller: 'lead_maternidades'
             resource :planejamento, only: [:create], controller: 'lead_planejamentos' do
-              post :pdf
+              post :gerar
+              get :geracao
+              get :arquivo
             end
             resource :colheita, only: [:create], controller: 'lead_colheitas'
             resource :cnis, only: [:show, :create, :update, :destroy], controller: 'lead_cnis'
