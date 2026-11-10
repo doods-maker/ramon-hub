@@ -229,7 +229,7 @@ RSpec.describe Ramon::ContratoApto do
       expect(lead.reload).to have_attributes(apto_em: be_present, contrato_cancelado_em: be_present)
     end
 
-    it 'voltou a fechar: o cancelamento deixa de valer (arrasto por engano não pesa no Closer)' do
+    it 'voltou a fechar logo depois (arrasto por engano): o cancelamento deixa de valer' do
       lead = aguardando
       described_class.validar!(lead, rafaela)
       lead.reload.update!(lead_stage: open_stage)
@@ -237,6 +237,17 @@ RSpec.describe Ramon::ContratoApto do
       lead.reload.update!(lead_stage: won_stage)
 
       expect(lead.reload).to have_attributes(apto_em: be_present, contrato_cancelado_em: nil)
+    end
+
+    it 'voltou a fechar dias depois: o cancelamento fica (já pode ter entrado na apuração)' do
+      lead = aguardando
+      described_class.validar!(lead, rafaela)
+      lead.reload.update!(lead_stage: open_stage)
+      lead.update_columns(contrato_cancelado_em: 2.days.ago) # rubocop:disable Rails/SkipsModelValidations
+
+      lead.reload.update!(lead_stage: won_stage)
+
+      expect(lead.reload.contrato_cancelado_em).to be_present
     end
   end
 end

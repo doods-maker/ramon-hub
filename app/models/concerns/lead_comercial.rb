@@ -14,9 +14,6 @@ module LeadComercial
     before_save :stamp_docs_completos, if: -> { new_record? || will_save_change_to_custom_attributes? || will_save_change_to_thesis_id? }
     after_save :cancelar_contrato_limpo, if: -> { saved_change_to_won_at? && won_at.nil? && contrato_limpo_em.present? }
     after_save :registrar_contrato_cancelado, if: -> { saved_change_to_won_at? && won_at.nil? }
-    # Voltou a fechar: o cancelamento deixa de valer (arrasto por engano não pesa na constância nem no fator do Closer).
-    after_save -> { update_columns(contrato_cancelado_em: nil) }, # rubocop:disable Rails/SkipsModelValidations
-               if: -> { saved_change_to_won_at? && won_at.present? && contrato_cancelado_em.present? }
     after_commit :verificar_registro_completo, on: [:create, :update], if: -> { saved_change_to_thesis_id? || saved_change_to_contact_id? }
     after_commit :assign_conversation_to_sdr, on: [:create, :update],
                                               if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
@@ -34,9 +31,6 @@ module LeadComercial
     # único: tela, API, lote e IA passam por aqui; o controller devolve 422.
     before_validation :motivo_da_perda_automatico, if: :sem_motivo_da_perda?
     validate :exigir_motivo_da_perda, if: :sem_motivo_da_perda?
-    # Depois do apto a comissão do contrato sai da tese do lead (Ramon::ExtratoVariavel): só o gestor troca. Ponto
-    # único, como o motivo da perda: tela, API, roteiro e IA passam por aqui.
-    validate :tese_travada_pelo_apto, if: -> { persisted? && will_save_change_to_thesis_id? && apto_em_in_database.present? }
   end
 
   # Closer registra a reunião (regulamento §2): qualificada ou não. A 1ª data
@@ -96,9 +90,9 @@ module LeadComercial
     self.lost_reason = "Automação: #{autor.try(:fluxo).try(:nome) || autor.try(:name) || 'sistema'}"
   end
 
-  def exigir_motivo_da_perda = errors.add(:base, 'Escolha o motivo da perda para marcar o lead como perdido.')
-
-  def tese_travada_pelo_apto = Current.account_user&.administrator? || errors.add(:base, 'Contrato já apto: só o gestor troca a tese.')
+  def exigir_motivo_da_perda
+    errors.add(:base, 'Escolha o motivo da perda para marcar o lead como perdido.')
+  end
 
   # só anda pra frente
   def etapa_reuniao_realizada

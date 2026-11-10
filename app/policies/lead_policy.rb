@@ -50,7 +50,7 @@ class LeadPolicy < ApplicationPolicy
   # Vendedor (time sdr/closer) vê o funil todo, mas só altera o lead dele; o lead ainda sem dono naquele papel segue
   # aberto a quem é do papel (decisão 10/11/2026). Quem não é vendedor altera o que vê.
   def update?
-    show? && !(record.is_a?(Lead) && vendedor_de_outro?)
+    show? && !(record.is_a?(Lead) && lead_de_outro_vendedor?)
   end
 
   def portal_link?
@@ -84,7 +84,7 @@ class LeadPolicy < ApplicationPolicy
 
   private
 
-  def vendedor_de_outro?
+  def lead_de_outro_vendedor?
     return false if @account_user.administrator?
 
     colunas = Ramon::Papeis::COLUNA.select { |papel, _| Ramon::Papeis.membro?(@account, @user, papel) }.values

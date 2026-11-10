@@ -16,7 +16,7 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
   end
 
   def create
-    authorize(@lead, :show?)
+    authorize(@lead, :update?)
     return render json: { error: 'arquivo (PDF do CNIS) é obrigatório' }, status: :unprocessable_entity if params[:arquivo].blank?
     return render json: { error: SEXO_OBRIGATORIO }, status: :unprocessable_entity unless SEXOS.include?(params[:sexo])
 
@@ -30,7 +30,7 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
   # entrada.segurado (o parse do PDF não depende dele) e todo cálculo lê o
   # segurado de lá — basta corrigir o valor guardado.
   def update
-    authorize(@lead, :show?)
+    authorize(@lead, :update?)
     return head :not_found if @lead.cnis.blank?
     return render json: { error: SEXO_OBRIGATORIO }, status: :unprocessable_entity unless SEXOS.include?(params[:sexo])
 
@@ -41,7 +41,7 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
   end
 
   def destroy
-    authorize(@lead, :show?)
+    authorize(@lead, :update?)
     @lead.update!(cnis: nil)
     head :no_content
   end
