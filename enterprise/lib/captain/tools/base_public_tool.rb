@@ -40,6 +40,12 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   # as consultas rodam; o resto devolve o que faria, sem executar nada.
   SOURCE_TESTE = 'teste'.freeze
 
+  # ramon: tool de escritório (agenda, funil, AdvBox por nome/CPF livre) só roda para a equipe. No atendimento, a IA
+  # fala com o CLIENTE e ele pediria dado de terceiro; a tool que se declara so_equipe? recusa ali, anexada ou não.
+  SO_EQUIPE = 'Essa consulta e so da equipe do escritorio e nao roda no atendimento ao cliente. Siga sem ela.'.freeze
+
+  def self.so_equipe? = false
+
   def self.teste?(tool_context)
     tool_context&.state&.dig(:source).to_s == SOURCE_TESTE
   end
@@ -56,7 +62,11 @@ class Captain::Tools::BasePublicTool < Agents::Tool
 
   def execute(tool_context, **params)
     inicio = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    resultado = escreve_em_teste?(tool_context) ? self.class.simulacao(id_catalogo, params) : super
+    resultado = if self.class.so_equipe? && atendimento?(tool_context&.state) then SO_EQUIPE
+                elsif escreve_em_teste?(tool_context) then self.class.simulacao(id_catalogo, params)
+                else
+                  super
+                end
     registrar_execucao(tool_context, params, resultado, 'ok', inicio)
     resultado
   rescue StandardError => e
@@ -67,6 +77,10 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   end
 
   private
+
+  # Atendimento ao cliente = a IA respondendo na conversa (ResponseBuilderJob: conversa no state e sem source).
+  # Copiloto, agente, Testar e fluxos trazem source (ou nao tem conversa).
+  def atendimento?(state) = state&.dig(:conversation, :id).present? && state[:source].blank?
 
   # RubyLLM::Tool#name devolve "captain-tools-checar_prescricao"; o catalogo
   # (config/agents/tools.yml) e as telas usam o id.

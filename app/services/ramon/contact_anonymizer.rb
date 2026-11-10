@@ -3,6 +3,14 @@
 # preservando conversas e estatísticas (anonimização, não apagamento físico).
 # Usado pelo delete da UI (ContactsController#destroy); fluxos internos que
 # exigem destroy físico (ex.: merge de contatos duplicados) seguem intocados.
+#
+# Alcança também o que o titular deixou fora do contato: os leads dele (nome,
+# CNIS, dados de contrato, link mágico, notas, reuniões, cálculos, triagens),
+# os anexos das conversas e o telefone em contact_inboxes.source_id.
+# Caso de cliente (lead ganho ou caso de cálculo vindo do ADVBOX) NÃO é
+# redigido: não há regra escrita sobre o dever de guarda, então dele só morre o
+# link mágico, e os anexos das conversas ficam (são os documentos do caso).
+# Drive, ADVBOX e a conta do Painel do Cliente ficam fora (decisão do dono).
 class Ramon::ContactAnonymizer
   # A trilha (audits) é somente-inclusão e fica: o Registro de ações continua
   # mostrando quem editou/anonimizou e quando. Os VALORES antigos de PII em
@@ -35,6 +43,8 @@ class Ramon::ContactAnonymizer
     redact_messages
     redact_notes
     @contact.avatar.purge if @contact.avatar.attached?
+    anonymize_leads
+    purge_attachments
     anonymize_contact
     redact_audits
     @contact
@@ -65,9 +75,56 @@ class Ramon::ContactAnonymizer
       note.update_columns(content: masked) if masked != note.content
     end
   end
+
+  def anonymize_leads
+    leads.each do |lead|
+      next lead.update_columns(portal_token: nil) if caso_de_cliente?(lead)
+
+      redact_lead_records(lead)
+      lead.update_columns(name: "Titular anonimizado ##{@contact.id}", cnis: nil, custom_attributes: {},
+                          portal_token: nil, devolvido_motivo: nil)
+    end
+  end
+
+  # Notas e reuniões: mascaradas como as mensagens (o registro fica). Cálculo (CNIS inteiro no snapshot) e sugestão
+  # do copiloto (rascunho de mensagem) não têm o que preservar: saem. Triagem fica só com status e contagem de tokens.
+  def redact_lead_records(lead)
+    lead.lead_notes.each { |nota| nota.update_columns(body: mask(nota.body)) }
+    lead.reunioes.each { |reuniao| redact_reuniao(reuniao) }
+    lead.calculos.delete_all
+    lead.copilot_suggestions.delete_all
+    lead.lead_triages.update_all(source_text: nil, result: nil, kit: nil)
+    lead.lead_activities.where(kind: 'note_added').update_all(to_value: nil)
+  end
+
+  def redact_reuniao(reuniao)
+    reuniao.audio.purge if reuniao.audio.attached?
+    reuniao.update_columns(titulo: mask(reuniao.titulo), transcricao: mask(reuniao.transcricao), ata: mask(reuniao.ata))
+  end
+
+  # O telefone também mora no source_id (WhatsApp); trocado, mensagem nova do mesmo número não cai no titular anonimizado.
+  def anonymize_contact_inboxes
+    @contact.contact_inboxes.each { |ci| ci.update_columns(source_id: "anonimizado-#{ci.id}") }
+  end
   # rubocop:enable Rails/SkipsModelValidations
 
+  def leads
+    @leads ||= @contact.leads.to_a
+  end
+
+  def caso_de_cliente?(lead) = lead.won_at.present? || lead.source == Lead::FONTE_CALCULO
+
+  def mask(texto) = texto.presence && Ramon::Pseudonymizer.mask(texto, names: name_tokens)
+
+  # Anexos das conversas (RG, laudo, áudio transcrito): o arquivo sai do storage junto com a linha.
+  def purge_attachments
+    return if leads.any? { |lead| caso_de_cliente?(lead) }
+
+    Attachment.where(message_id: Message.where(conversation_id: @contact.conversations.select(:id)).select(:id)).find_each(&:destroy!)
+  end
+
   def anonymize_contact
+    anonymize_contact_inboxes
     @contact.update!(
       audit_comment: @comentario,
       name: "Titular anonimizado ##{@contact.id}",

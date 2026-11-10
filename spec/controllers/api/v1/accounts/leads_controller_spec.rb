@@ -527,6 +527,11 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to eq([recente.id])
     end
 
+    it 'data inválida em created_after/created_before responde 422, não 500' do
+      get "/api/v1/accounts/#{account.id}/leads", params: { created_after: 'ontem' }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
     it 'filtra por stalled numa etapa com stalled_after_days' do
       parado = account.leads.create!(name: 'Parado', lead_stage: qualif)
       parado.update_column(:stage_entered_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations

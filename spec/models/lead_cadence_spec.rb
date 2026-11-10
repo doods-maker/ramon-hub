@@ -54,6 +54,21 @@ RSpec.describe Lead do
     end
   end
 
+  describe '#open_tasks_count' do
+    it 'conta só as abertas, e sem consulta quando as tarefas já vêm pré-carregadas (índice do Kanban)', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: active_stage)
+      create(:lead_task, account: account, lead: lead, due_at: 2.days.from_now)
+      create(:lead_task, account: account, lead: lead, due_at: 2.days.from_now, completed_at: Time.current)
+
+      expect(lead.open_tasks_count).to eq(1)
+      carregado = described_class.includes(:lead_tasks).find(lead.id)
+      consultas = 0
+      contar = ->(*, payload) { consultas += 1 unless payload[:name] == 'SCHEMA' }
+      ActiveSupport::Notifications.subscribed(contar, 'sql.active_record') { expect(carregado.open_tasks_count).to eq(1) }
+      expect(consultas).to eq(0)
+    end
+  end
+
   describe '#push_event_data' do
     it 'includes the cadence keys and open task count' do
       lead = create(:lead, account: account, lead_stage: active_stage)

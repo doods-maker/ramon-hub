@@ -442,7 +442,7 @@ require 'rails_helper'
 
 RSpec.describe Ramon::AgendaHojeService do
   let(:account) { create(:account) }
-  let!(:brenda) { create(:user, account: account, email: 'brendantunes_@hotmail.com') }
+  let!(:brenda) { create(:user, account: account, email: 'pessoa@example.com') }
 
   before do
     allow(Ramon::AdvboxClient).to receive(:posts).and_return(
@@ -455,7 +455,7 @@ RSpec.describe Ramon::AgendaHojeService do
       ]
     )
     allow(Ramon::AdvboxClient).to receive(:settings)
-      .and_return('users' => [{ 'id' => 260_009, 'email' => 'BRENDANTUNES_@HOTMAIL.COM' }])
+      .and_return('users' => [{ 'id' => 260_009, 'email' => 'PESSOA@EXAMPLE.COM' }])
   end
 
   it 'lista só ATENDIMENTO, pula a parte contrária e casa o responsável por e-mail' do

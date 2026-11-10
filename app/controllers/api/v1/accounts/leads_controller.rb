@@ -17,6 +17,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   before_action :current_account
   before_action :fetch_lead, except: [:index, :create, :for_conversation, :encaminhar_comercial]
   before_action :check_authorization
+  rescue_from(Date::Error) { render json: { error: 'DATA_INVALIDA' }, status: :unprocessable_entity } # created_after/before
 
   def index
     @leads = filtered_leads
