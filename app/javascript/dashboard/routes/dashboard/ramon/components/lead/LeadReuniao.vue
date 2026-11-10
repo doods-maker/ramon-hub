@@ -44,7 +44,7 @@ const marcar = async resultado => {
     });
     vouPensar.value = false;
   } catch (e) {
-    useAlert(t('RAMON.REUNIAO.ERRO'));
+    useAlert(e?.response?.data?.message || t('RAMON.REUNIAO.ERRO'));
   } finally {
     saving.value = false;
   }

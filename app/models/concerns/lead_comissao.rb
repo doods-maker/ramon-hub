@@ -22,6 +22,21 @@ module LeadComissao
     errors.add(:base, 'Contrato já apto: só o gestor troca a tese.')
   end
 
+  # Prêmio do SDR (decisão 10/11/2026): só existe resultado de reunião que esteve na agenda. Corrigir um resultado já
+  # registrado não exige (a tarefa já foi concluída); o gestor registra sem ela.
+  def exigir_reuniao_marcada!(task)
+    return if task || reuniao_registrada_em.present? || Current.account_user&.administrator?
+
+    errors.add(:base, 'Marque a reunião na agenda antes de registrar o resultado.')
+    raise ActiveRecord::RecordInvalid, self
+  end
+
+  # Da IA/automação = a tarefa nasceu sem criador OU o histórico do lead tem reunião marcada sem pessoa. O histórico
+  # ninguém apaga: cancelar a reunião da IA e remarcar à mão não transforma a reunião em reunião do SDR.
+  def reuniao_da_ia?(task)
+    (task.present? && task.user_id.nil?) || lead_activities.exists?(kind: 'meeting_scheduled', user_id: nil)
+  end
+
   # A atividade `contrato_cancelado` (LeadComercial) continua no histórico do lead.
   def desfazer_cancelamento_por_engano
     update_columns(contrato_cancelado_em: nil) if contrato_cancelado_em > PRAZO_DO_ENGANO.ago # rubocop:disable Rails/SkipsModelValidations

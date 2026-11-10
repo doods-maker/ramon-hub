@@ -39,12 +39,13 @@ module LeadComercial
   # reunião (a informada, senão a aberta mais antiga até hoje) é concluída.
   # vou_pensar: o cliente vai pensar — marca à parte (atividade), NUNCA um 3º
   # resultado: a qualificação é o que paga o SDR e não muda por isso.
-  # reuniao_pela_ia: a tarefa da reunião nasceu sem criador (IA/automação) — não paga o SDR (decisão 09/11/2026); vale a
-  # do 1º registro, como a data.
+  # reuniao_pela_ia: reunião que a IA/automação marcou não paga o SDR (decisão 09/11/2026); vale a do 1º registro, como
+  # a data. As travas contra manipulação (reunião na agenda, origem pelo histórico) estão no LeadComissao.
   def registrar_reuniao!(resultado, user, task: nil, vou_pensar: false)
     task ||= reuniao_em_aberto
+    exigir_reuniao_marcada!(task)
     attrs = { reuniao_resultado: resultado, reuniao_registrada_em: reuniao_registrada_em || Time.current }
-    attrs[:reuniao_pela_ia] = task.present? && task.user_id.nil? if reuniao_registrada_em.nil?
+    attrs[:reuniao_pela_ia] = reuniao_da_ia?(task) if reuniao_registrada_em.nil?
     attrs[:closer] = user if closer_id.blank?
     update!(attrs.merge(etapa_reuniao_realizada))
     registrar_atividades_da_reuniao(resultado, user, vou_pensar)

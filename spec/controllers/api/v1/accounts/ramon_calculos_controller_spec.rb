@@ -11,6 +11,14 @@ RSpec.describe 'Ramon Calculos API', type: :request do
   describe 'GET /advbox_customers' do
     let(:url) { "/api/v1/accounts/#{account.id}/ramon_calculos/advbox_customers" }
 
+    before { create(:team_member, team: create(:team, account: account, name: 'advogados'), user: agent) }
+
+    it 'só o jurídico (e o admin) busca na base do AdvBox' do
+      fora = create(:user, account: account, role: :agent)
+      get url, params: { q: 'Maria Souza' }, headers: fora.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
+
     it 'exige login' do
       get url, params: { q: 'Silva' }
       expect(response).to have_http_status(:unauthorized)

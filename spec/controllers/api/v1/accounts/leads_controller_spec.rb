@@ -877,8 +877,38 @@ RSpec.describe 'Leads API', type: :request do
            params: { resultado: resultado }, headers: user.create_new_auth_token, as: :json
     end
 
+    def na_agenda(user: closer) = create(:lead_task, account: account, lead: lead, user: user, kind: 'meeting', due_at: 1.hour.ago)
+
+    it 'sem reunião na agenda o Closer não registra resultado (422); o gestor registra', :aggregate_failures do
+      lead.update!(closer: closer)
+      registrar(closer)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.reuniao_resultado).to be_nil
+
+      registrar(admin)
+      expect(lead.reload.reuniao_resultado).to eq('qualificada')
+    end
+
+    it 'reunião que a IA marcou segue da IA mesmo cancelada e remarcada à mão (não paga o SDR)', :aggregate_failures do
+      lead.update!(closer: closer)
+      lead.lead_activities.create!(account: account, user: nil, kind: 'meeting_scheduled', to_value: 'Reunião')
+      na_agenda(user: outro)
+      registrar(closer)
+
+      expect(lead.reload).to have_attributes(reuniao_resultado: 'qualificada', reuniao_pela_ia: true)
+    end
+
+    it 'reunião marcada por gente, sem IA no histórico, não é da IA' do
+      lead.update!(closer: closer)
+      na_agenda(user: outro)
+      registrar(closer)
+
+      expect(lead.reload.reuniao_pela_ia).to be(false)
+    end
+
     it 'Closer do lead marca: grava, anda pra Reunião realizada e registra a atividade', :aggregate_failures do
       lead.update!(closer: closer)
+      na_agenda
       registrar(closer)
 
       expect(response).to have_http_status(:success)
@@ -891,6 +921,7 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'membro do time closer marca lead sem Closer e vira o Closer dele' do
       create(:team_member, team: create(:team, account: account, name: 'closer'), user: closer)
+      na_agenda
       registrar(closer, 'nao_qualificada')
 
       expect(lead.reload.closer).to eq(closer)
@@ -911,6 +942,7 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'vou_pensar grava a marca à parte, sem mexer no resultado', :aggregate_failures do
       lead.update!(closer: closer)
+      na_agenda
       post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao",
            params: { resultado: 'qualificada', vou_pensar: true }, headers: closer.create_new_auth_token, as: :json
 
