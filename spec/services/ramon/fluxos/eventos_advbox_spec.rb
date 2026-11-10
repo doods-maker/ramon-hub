@@ -56,6 +56,13 @@ RSpec.describe Ramon::Fluxos::EventosAdvbox do
       expect(comum.execucoes.sole.contexto['gatilho'])
         .to eq('regra' => 'marco', 'texto' => 'SENTENCA PROFERIDA', 'primeiro_nome' => 'Maria', 'hoje' => '07/10/2026')
     end
+
+    it '{hoje} é o dia em São Paulo: evento às 21h30 de lá (já amanhã em UTC) leva a data de hoje, no fluxo e no código' do
+      comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'evento_advbox' }, ['registrar_atividade', { 'texto' => 'comum' }]))
+      travel_to(Time.zone.parse('2026-10-08 00:30:00 UTC')) { described_class.processar(lead, 'requerimento_protocolado', 'PROTOCOLADO') }
+      expect(comum.execucoes.sole.contexto.dig('gatilho', 'hoje')).to eq('07/10/2026')
+      expect(lead.lead_activities.find_by!(kind: 'advbox_inss_protocolado').to_value).to include('07/10/2026')
+    end
   end
 
   describe 'o fluxo faz o mesmo que o código, regra a regra (atividades, tarefas, rascunhos, etapa)' do

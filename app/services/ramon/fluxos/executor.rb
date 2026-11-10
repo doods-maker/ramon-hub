@@ -102,7 +102,7 @@ class Ramon::Fluxos::Executor
 
   def executar(passo)
     # .name.constantize: pega a constante atual (o CI recarrega o código no meio; o módulo guardado no PASSOS pode ser o velho)
-    modulo = PASSOS.fetch(passo['tipo']).name.constantize
+    modulo = PASSOS.fetch(passo['tipo']) { raise Ramon::Fluxos::PassoImpossivel, "passo desconhecido: #{passo['tipo']}" }.name.constantize
     resultado = modulo.public_send(passo['tipo'], passo['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
     @execucao.tentativas = 0
     @execucao.contexto = @execucao.contexto.merge('vars' => (@execucao.contexto['vars'] || {}).merge(resultado[:vars] || {}))
@@ -147,6 +147,9 @@ class Ramon::Fluxos::Executor
       Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_fluxo_falhou',
                                          meta: { 'label' => fluxo.nome }, user_ids: admins).perform
     end
-    Ramon::NtfyPushJob.perform_later(title: "Fluxo falhou: #{fluxo.nome}", body: @execucao.erro.to_s.truncate(200))
+    # ntfy.sh é público: o texto do erro (pode ter trecho de resposta da IA ou dado do lead) fica no hub
+    passo = grafo.no(@execucao.no_atual)
+    onde = passo ? "Parou no passo #{passo['tipo']} (#{passo['id']})" : 'Parou'
+    Ramon::NtfyPushJob.perform_later(title: "Fluxo falhou: #{fluxo.nome}", body: "#{onde} — o erro está no hub")
   end
 end

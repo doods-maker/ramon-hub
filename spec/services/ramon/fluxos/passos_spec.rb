@@ -254,7 +254,7 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       Ramon::Fluxos::Passos::Lead.criar_tarefa(config, ctx(contexto: gatilho.deep_merge('gatilho' => { 'assumido' => true })))
       tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
       expect([tarefa.title, tarefa.due_at, tarefa.user]).to eq(['Reunião Cal.com: Primeiro', Time.zone.parse('2026-10-07T22:00:00Z'), agente])
-      expect(Ramon::Fluxos::Reunioes).to have_received(:na_agenda).with(tarefa, true)
+      expect(Ramon::Fluxos::Reunioes).to have_received(:na_agenda).with(tarefa, true, origem: kind_of(FluxoExecucao))
     end
 
     it 'fluxo comum criando a tarefa da reunião com o código no comando: o ciclo de lembretes só ensaia' do
@@ -264,6 +264,18 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
       ciclo = Ramon::Fluxos::Reunioes.fluxo(account, 'lembretes_reuniao').execucoes.find_by!(alvo: tarefa)
       expect(ciclo.ensaio).to be(true)
+    end
+
+    it 'fluxo de "reunião na agenda" que cria a tarefa da reunião não dispara a si mesmo (sem laço)' do
+      laco = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_na_agenda' },
+                                                   ['criar_tarefa', { 'titulo' => 'De novo', 'tipo' => 'meeting', 'prazo' => 'reuniao' }]))
+      outro = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_na_agenda' }, ['esperar', { 'quantidade' => 1, 'unidade' => 'horas' }]))
+      reuniao = create(:lead_task, lead: lead, account: account, kind: 'meeting', due_at: Time.zone.parse('2026-10-07T22:00:00Z'))
+      perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) { Ramon::Fluxos::Reunioes.na_agenda(reuniao, false) }
+      expect(laco.execucoes.count).to eq(1)
+      expect(lead.lead_tasks.where(title: 'De novo').count).to eq(1)
+      # os outros fluxos do gatilho ouvem a tarefa nova, um nível abaixo na cadeia
+      expect(outro.execucoes.pluck(:profundidade)).to contain_exactly(0, 1)
     end
 
     it 'ensaio da tarefa diz o prazo; da atividade, o tipo e o de → para' do
@@ -366,6 +378,24 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     config = { 'titulo' => 'Novo: {nome}', 'texto' => '{nome_completo} {telefone}· ganho' }
     expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx) }
       .to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Novo: Tese do push', body: 'Tese do push · ganho')
+  end
+
+  it 'push só leva a lista fechada: mensagem do cliente, resposta da IA, responsável e campo livre ficam no hub' do
+    lead.update!(thesis: create(:thesis, account: account, name: 'Tese do push'), closer: create(:user, account: account, name: 'Fulana Closer'),
+                 custom_attributes: { 'campos' => { 'cpf' => '000.000.000-00' } })
+    contexto = { 'gatilho' => { 'texto' => 'meu benefício foi negado', 'quando' => 'quinta, 08/10 às 14:00' },
+                 'vars' => { 'resposta_ia' => 'a cliente relata doença' } }
+    config = { 'titulo' => '{tese} · {etapa}', 'texto' => '{quando}|{texto}|{resposta_ia}|{responsavel}|{cpf}|{inventada}' }
+    marcador = Ramon::Fluxos::Contexto::FORA_DO_PUSH
+    expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(contexto: contexto)) }
+      .to have_enqueued_job(Ramon::NtfyPushJob)
+      .with(title: "Tese do push · #{lead.lead_stage.name}",
+            body: "quinta, 08/10 às 14:00|#{marcador}|#{marcador}|#{marcador}|#{marcador}|{inventada}")
+  end
+
+  it 'mover para etapa apagada do funil é passo impossível (não entra nas 3 tentativas)' do
+    expect { Ramon::Fluxos::Passos::Lead.mover_etapa({ 'etapa_id' => 0 }, ctx) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, 'a etapa escolhida não existe mais')
   end
 
   describe 'push uma vez por dia (B4.3)' do

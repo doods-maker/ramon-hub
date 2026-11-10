@@ -10,7 +10,7 @@ module Ramon::Fluxos::Passos::Lead
 
   def mover_etapa(config, ctx)
     lead = exigir_lead(ctx)
-    etapa = onde_o_ganho_entra(lead, lead.account.lead_stages.find(config['etapa_id']))
+    etapa = onde_o_ganho_entra(lead, etapa_do_passo(lead, config))
     adiante = ja_adiante(config, lead, etapa)
     return adiante if adiante
 
@@ -23,6 +23,11 @@ module Ramon::Fluxos::Passos::Lead
     # a mudança feita pelo próprio fluxo não pode cancelá-lo na próxima espera
     ctx.execucao.contexto = ctx.execucao.contexto.merge('etapa_inicial_id' => etapa.id)
     { saida: 's', resumo: "moveu para #{destino}" }
+  end
+
+  # Etapa apagada do funil: repetir não resolve (falha na hora, sem as 3 tentativas).
+  def etapa_do_passo(lead, config)
+    lead.account.lead_stages.find_by(id: config['etapa_id']) || raise(Ramon::Fluxos::PassoImpossivel, 'a etapa escolhida não existe mais')
   end
 
   # Entrar no ganho pela etapa principal (Fechado) cai onde o ganho entra (Ramon::EtapaDeGanho.entrada: Documentos para
@@ -51,7 +56,8 @@ module Ramon::Fluxos::Passos::Lead
     tarefa = lead.lead_tasks.create!(account: lead.account, kind: kind, title: titulo, due_at: prazo, user: responsavel,
                                      **formato_da_reuniao(kind, ctx))
     # B4.1: a tarefa da própria reunião põe a reunião na agenda → começa o ciclo de lembretes dela
-    Ramon::Fluxos::Reunioes.na_agenda(tarefa, decisao_do_evento(ctx, lead)) if config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
+    da_reuniao = config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
+    Ramon::Fluxos::Reunioes.na_agenda(tarefa, decisao_do_evento(ctx, lead), origem: ctx.execucao) if da_reuniao
     { saida: 's', resumo: "tarefa \"#{titulo}\" · #{responsavel&.name || 'sem responsável'}" }
   end
 

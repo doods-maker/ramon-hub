@@ -114,9 +114,17 @@ RSpec.describe Ramon::Fluxos::Executor do
       expect(e.retomar_em).to be_within(5.seconds).of(min.minutes.from_now)
       e.update!(retomar_em: 1.second.ago)
     end
+    # o push vai pro ntfy.sh (público): só o fluxo e o passo; o texto do erro fica no hub
     expect { avancar(e) }.to have_enqueued_job(Ramon::NtfyPushJob)
+      .with(title: 'Fluxo falhou: Fluxo de teste', body: 'Parou no passo nota_privada (p1) — o erro está no hub')
     expect(e.status).to eq('falhou')
     expect(e.erro).to include('fora do ar')
+  end
+
+  it 'passo de tipo que o motor não conhece falha na hora (sem as 3 tentativas)' do
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'x' }]))
+    e.update!(contexto: e.contexto.merge('grafo' => grafo_linear({ 'tipo' => 'manual' }, ['passo_que_saiu', {}])))
+    expect(avancar(e)).to have_attributes(status: 'falhou', tentativas: 0, erro: 'p1: passo desconhecido: passo_que_saiu')
   end
 
   it 'passo impossível falha na hora' do
