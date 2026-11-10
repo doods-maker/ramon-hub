@@ -321,7 +321,7 @@ const MATERNIDADE = {
 
 const PLANEJAMENTO = {
   dados: {
-    nome: 'Marina Souza Costa',
+    nome: 'Fulana de Tal Exemplo',
     formato_textos: 'aprovado',
     calculo_data: '05/10/2026',
     aposentadoria: { data: '18/04/2036', regra: 'aposentadoria por idade' },

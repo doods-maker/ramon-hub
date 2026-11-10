@@ -26,14 +26,18 @@ defineOptions({ name: 'LeadPlanejamento' });
 
 const { t } = useI18n();
 
-const FORMAS = [
-  'pro_labore',
-  'pro_labore_mais_salario',
-  'carne_20',
-  'simplificado_11',
-  'baixa_renda_5',
-  'empregado',
-];
+// chaves literais (sem chave dinâmica no i18n)
+const FORMAS = computed(() => [
+  ['pro_labore', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_PRO_LABORE')],
+  [
+    'pro_labore_mais_salario',
+    t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_PRO_LABORE_MAIS_SALARIO'),
+  ],
+  ['carne_20', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_CARNE_20')],
+  ['simplificado_11', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_SIMPLIFICADO_11')],
+  ['baixa_renda_5', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_BAIXA_RENDA_5')],
+  ['empregado', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_EMPREGADO')],
+]);
 const INTERVALO = 2000;
 const MAX_CONSULTAS = 60; // 2 min
 
@@ -62,6 +66,8 @@ const geracao = ref(null); // { estado, drive, drive_motivo, drive_erro }
 const baixando = ref(false);
 let timer = null;
 let consultas = 0;
+// resposta que chega depois de desmontar não pode agendar outra consulta
+let vivo = true;
 
 const gerando = computed(() => geracao.value?.estado === 'gerando');
 const ocupado = computed(
@@ -123,6 +129,11 @@ const pararConsulta = () => {
   timer = null;
 };
 
+let consultar;
+const agendar = () => {
+  if (vivo) timer = setTimeout(consultar, INTERVALO);
+};
+
 const comecar = async () => {
   limparErro('comecar');
   carregando.value = true;
@@ -177,7 +188,7 @@ const calcular = async () => {
   }
 };
 
-const consultar = async () => {
+consultar = async () => {
   consultas += 1;
   try {
     const { data } = await LeadsAPI.planejamentoGeracao(
@@ -194,7 +205,7 @@ const consultar = async () => {
       geracao.value = null;
       mostrarErro(t('RAMON.SIMULADOR.PLANEJAMENTO_DEMOROU'));
     } else {
-      timer = setTimeout(consultar, INTERVALO);
+      agendar();
     }
   } catch (error) {
     geracao.value = null;
@@ -214,7 +225,7 @@ const gerar = async () => {
     });
     calculoId.value = data.calculo_id;
     consultas = 0;
-    timer = setTimeout(consultar, INTERVALO);
+    agendar();
   } catch (error) {
     geracao.value = null;
     await handleError(error);
@@ -248,6 +259,8 @@ const baixar = async tipo => {
     URL.revokeObjectURL(url);
   } catch (error) {
     await handleError(error);
+    // 404 = arquivo expirou: baixar de novo não adianta, o retry gera de novo
+    if (error?.response?.status === 404) ultimaAcao.value = 'gerar';
   } finally {
     baixando.value = false;
   }
@@ -269,7 +282,10 @@ if (props.inicial?.dados) {
   dados.value = copia.dados;
 }
 
-onBeforeUnmount(pararConsulta);
+onBeforeUnmount(() => {
+  vivo = false;
+  pararConsulta();
+});
 </script>
 
 <template>
@@ -316,8 +332,12 @@ onBeforeUnmount(pararConsulta);
             data-testid="planejamento-forma"
             :class="SELECT"
           >
-            <option v-for="f in FORMAS" :key="f" :value="f">
-              {{ $t(`RAMON.SIMULADOR.PLANEJAMENTO_FORMA_${f.toUpperCase()}`) }}
+            <option
+              v-for="[valor, rotulo] in FORMAS"
+              :key="valor"
+              :value="valor"
+            >
+              {{ rotulo }}
             </option>
           </select>
         </label>

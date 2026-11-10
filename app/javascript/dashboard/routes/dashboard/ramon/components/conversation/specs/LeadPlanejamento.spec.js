@@ -228,15 +228,27 @@ describe('LeadPlanejamento', () => {
 
   it('baixar usa o arquivo do cálculo gerado', async () => {
     vi.useFakeTimers();
+    const { createObjectURL, revokeObjectURL } = global.URL;
     global.URL.createObjectURL = vi.fn(() => 'blob:mock');
     global.URL.revokeObjectURL = vi.fn();
+    const clique = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function guardaNome() {
+        clique.nome = this.download;
+      });
     const w = await calculado();
     LeadsAPI.planejamentoGerar.mockResolvedValue({ data: { calculo_id: 77 } });
     LeadsAPI.planejamentoGeracao.mockResolvedValue({
       data: { estado: 'pronto', drive: null, drive_motivo: 'sem_cliente' },
     });
     const blob = new Blob(['%PDF'], { type: 'application/pdf' });
-    LeadsAPI.planejamentoArquivo.mockResolvedValue({ data: blob, headers: {} });
+    LeadsAPI.planejamentoArquivo.mockResolvedValue({
+      data: blob,
+      headers: {
+        'content-disposition':
+          'attachment; filename="x.xlsx"; filename*=UTF-8\'\'Mem%C3%B3ria%20de%20c%C3%A1lculo%20-%20Fulana.xlsx',
+      },
+    });
     await clicar(w, 'planejamento-gerar');
     await vi.advanceTimersByTimeAsync(2000);
 
@@ -248,6 +260,11 @@ describe('LeadPlanejamento', () => {
       'memoria'
     );
     expect(global.URL.createObjectURL).toHaveBeenCalledWith(blob);
+    expect(clique.nome).toBe('Memória de cálculo - Fulana.xlsx');
+    expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
+
+    clique.mockRestore();
+    Object.assign(global.URL, { createObjectURL, revokeObjectURL });
   });
 
   it('para de consultar depois de 60 tentativas', async () => {
@@ -339,6 +356,13 @@ describe('LeadPlanejamento', () => {
     expect(w.find('[data-testid="planejamento-error"]').text()).toContain(
       'arquivo expirou'
     );
+    expect(w.find('[data-testid="planejamento-drive"]').text()).toContain(
+      'PLANEJAMENTO_DRIVE_SO_DOWNLOAD'
+    );
+    // arquivo expirou: tentar de novo gera de novo, não baixa o 404 outra vez
+    await clicar(w, 'planejamento-retry');
+    expect(LeadsAPI.planejamentoGerar).toHaveBeenCalledTimes(2);
+    expect(LeadsAPI.planejamentoArquivo).toHaveBeenCalledTimes(1);
   });
 
   it('reabrir do histórico restaura perfil e dados sem chamar o motor', async () => {
@@ -379,5 +403,46 @@ describe('LeadPlanejamento', () => {
     await vi.advanceTimersByTimeAsync(2000 * 5);
 
     expect(LeadsAPI.planejamentoGeracao).toHaveBeenCalledTimes(chamadas);
+  });
+
+  it('consulta em andamento ao desmontar não agenda outra', async () => {
+    vi.useFakeTimers();
+    const w = await calculado();
+    LeadsAPI.planejamentoGerar.mockResolvedValue({ data: { calculo_id: 77 } });
+    let responder;
+    LeadsAPI.planejamentoGeracao.mockReturnValueOnce(
+      new Promise(resolve => {
+        responder = resolve;
+      })
+    );
+    LeadsAPI.planejamentoGeracao.mockResolvedValue({
+      data: { estado: 'gerando' },
+    });
+    await clicar(w, 'planejamento-gerar');
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(LeadsAPI.planejamentoGeracao).toHaveBeenCalledTimes(1);
+
+    w.unmount();
+    responder({ data: { estado: 'gerando' } });
+    await vi.advanceTimersByTimeAsync(10000);
+
+    expect(LeadsAPI.planejamentoGeracao).toHaveBeenCalledTimes(1);
+  });
+
+  it('gerar em andamento ao desmontar não começa a consultar', async () => {
+    vi.useFakeTimers();
+    const w = await calculado();
+    let responder;
+    LeadsAPI.planejamentoGerar.mockReturnValueOnce(
+      new Promise(resolve => {
+        responder = resolve;
+      })
+    );
+    await clicar(w, 'planejamento-gerar');
+    w.unmount();
+    responder({ data: { calculo_id: 77 } });
+    await vi.advanceTimersByTimeAsync(10000);
+
+    expect(LeadsAPI.planejamentoGeracao).not.toHaveBeenCalled();
   });
 });

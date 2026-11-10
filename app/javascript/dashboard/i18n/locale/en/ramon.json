@@ -1826,7 +1826,7 @@
       "PLANEJAMENTO_GERANDO": "Generating…",
       "PLANEJAMENTO_MEMORIA_BAIXAR": "Download the calculation memo",
       "PLANEJAMENTO_DRIVE_SALVO": "Saved in the client folder on Drive",
-      "PLANEJAMENTO_DRIVE_SO_DOWNLOAD": "Not saved on Drive (no client folder) — download only.",
+      "PLANEJAMENTO_DRIVE_SO_DOWNLOAD": "Not saved on Drive — download only.",
       "PLANEJAMENTO_DEMOROU": "Generation did not finish in 2 minutes — try again.",
       "PLANEJAMENTO_SALARIO": "Salary",
       "PLANEJAMENTO_RMI_PROJETADA": "Projected RMI",
