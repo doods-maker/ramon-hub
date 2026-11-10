@@ -50,7 +50,7 @@ module Ramon::Fluxos::Reunioes
   def na_agenda(tarefa, assumido, origem: nil)
     dados = { 'inicio' => tarefa.due_at.iso8601, 'quando' => Ramon::ReuniaoAgendamento.quando(tarefa.due_at),
               'lead_id' => tarefa.lead_id, 'assumido' => assumido }
-    Ramon::Fluxos::Disparo.externo('reuniao_na_agenda', tarefa, dados, origem: origem)
+    Ramon::Fluxos::Disparo.externo('reuniao_na_agenda', tarefa, dados, origem)
   end
 
   # A chave (B4.1): RAMON_FLUXO_REUNIOES=on E os 3 fluxos em modo normal (regras em Ramon::Fluxos::Migracao).

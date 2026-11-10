@@ -38,7 +38,8 @@ class Ramon::Fluxos::Disparo
   # Gatilhos que nascem fora do ouvinte (reunião, ADVBOX, ZapSign, documento). Erro do motor
   # nunca derruba quem chamou: o job do ADVBOX/ZapSign repetiria e duplicaria atividade, nota e sino.
   # origem: a execução cujo passo causou o evento — a cadeia conta a profundidade e o fluxo não redispara a si mesmo.
-  def self.externo(gatilho_tipo, alvo, dados = {}, origem: nil)
+  # Posicional de propósito: com palavra-chave, o `'chave' => valor` sem chaves dos chamadores viraria keyword (ArgumentError).
+  def self.externo(gatilho_tipo, alvo, dados = {}, origem = nil)
     call(gatilho_tipo, alvo, dados, origem: origem)
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: alvo.try(:account)).capture_exception
