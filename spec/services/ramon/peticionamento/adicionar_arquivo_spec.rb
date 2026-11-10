@@ -26,6 +26,29 @@ RSpec.describe Ramon::Peticionamento::AdicionarArquivo do
     expect(a.tamanho).to eq(a.file.blob.byte_size)
   end
 
+  it 'recusa o que diz ser PDF ou imagem e não é: vale a assinatura dos primeiros bytes' do
+    [['application/pdf', 'MZ executável'], ['image/png', pdf], ['image/jpeg', 'GIF89a']].each do |tipo, bytes|
+      expect { described_class.call(peticao, bytes: bytes, nome: 'a.pdf', content_type: tipo, origem: 'upload') }
+        .to raise_error(ArgumentError, 'formato')
+    end
+    expect(peticao.arquivos.count).to eq(0)
+  end
+
+  it 'recusa arquivo acima do teto e pacote que passaria do teto, os mesmos da leitura da pasta' do
+    stub_const("#{described_class}::MAX_ARQUIVO", pdf.bytesize)
+    stub_const("#{described_class}::MAX_PASTA", pdf.bytesize + 1)
+    expect { described_class.call(peticao, bytes: "#{pdf} ", nome: 'a.pdf', content_type: 'application/pdf', origem: 'upload') }
+      .to raise_error(ArgumentError, 'muito_grande')
+    described_class.call(peticao, bytes: pdf, nome: 'a.pdf', content_type: 'application/pdf', origem: 'upload')
+    expect { described_class.call(peticao, bytes: pdf, nome: 'b.pdf', content_type: 'application/pdf', origem: 'upload') }
+      .to raise_error(ArgumentError, 'pasta_grande')
+    expect(peticao.arquivos.count).to eq(1)
+  end
+
+  it 'os tetos são os da leitura da pasta' do
+    expect([described_class::MAX_ARQUIVO, described_class::MAX_PASTA]).to eq([30.megabytes, 100.megabytes])
+  end
+
   it 'recusa HEIC e petição protocolada' do
     expect { described_class.call(peticao, bytes: 'x', nome: 'a.heic', content_type: 'image/heic', origem: 'upload') }
       .to raise_error(ArgumentError, 'formato')

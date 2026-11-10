@@ -9,6 +9,8 @@ class RamonAprovacaoAgente < ApplicationRecord
   DECISOES = %w[aprovada negada].freeze
   VALIDADE = 12.hours # igual ao timeout do hook da esteira: depois disso ninguém está esperando
   ENTRADA_MAXIMA = 50_000
+  TRECHO_MAXIMO = 4_000 # por campo, quando a entrada passa do teto
+  LISTA_MAXIMA = 10
   MOTIVO_MAXIMO = 1000
 
   belongs_to :decidida_por, class_name: 'User', optional: true
@@ -21,8 +23,26 @@ class RamonAprovacaoAgente < ApplicationRecord
   def self.abrir!(caso:, ferramenta:, entrada:)
     where(status: PENDENTE, created_at: ...VALIDADE.ago).delete_all
     where(decidida_em: ...VALIDADE.ago).where.not(motivo: nil).update_all(motivo: nil) # rubocop:disable Rails/SkipsModelValidations
-    entrada = { 'aviso' => 'Entrada grande demais para mostrar aqui: confira no painel.' } if entrada.to_json.size > ENTRADA_MAXIMA
-    create!(caso: caso.to_s.truncate(200), ferramenta: ferramenta.to_s.truncate(200), entrada: entrada)
+    create!(caso: caso.to_s.truncate(200), ferramenta: ferramenta.to_s.truncate(200), entrada: caber(entrada))
+  end
+
+  # Entrada acima do teto: fica o começo de cada campo (quem decide precisa ler o comando, o caminho, o início da peça).
+  def self.caber(entrada)
+    return entrada if entrada.to_json.size <= ENTRADA_MAXIMA
+
+    curta = encurtar(entrada)
+    return { 'aviso' => 'Entrada grande demais para mostrar aqui: confira no painel.' } if curta.to_json.size > ENTRADA_MAXIMA
+
+    curta.merge('aviso' => 'Entrada grande: cada campo mostra só o começo. Confira o resto no painel.')
+  end
+
+  def self.encurtar(valor)
+    case valor
+    when String then valor.truncate(TRECHO_MAXIMO)
+    when Hash then valor.transform_values { |v| encurtar(v) }
+    when Array then valor.first(LISTA_MAXIMA).map { |v| encurtar(v) }
+    else valor
+    end
   end
 
   def decidir!(decisao, user, motivo: nil)

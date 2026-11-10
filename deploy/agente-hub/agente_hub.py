@@ -113,18 +113,21 @@ def carregar_env(path):
 
 
 def hub(cfg, metodo, rota, body=None, query=None):
-    q = {'token': cfg.HUB_AGENTE_TOKEN, 'account_id': cfg.ACCOUNT_ID, **(query or {})}
+    # token no cabeçalho (com hífen: o proxy descarta sublinhado), não na URL: query string fica em log de proxy.
+    q = {'account_id': cfg.ACCOUNT_ID, **(query or {})}
     url = f'{cfg.HUB_URL}/public/api/v1/agente/{rota}?{urllib.parse.urlencode(q)}'
     data = json.dumps({'account_id': cfg.ACCOUNT_ID, **(body or {})}).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=metodo, headers={'Content-Type': 'application/json'})
+    req = urllib.request.Request(url, data=data, method=metodo,
+                                 headers={'Content-Type': 'application/json', 'X-Agente-Token': cfg.HUB_AGENTE_TOKEN})
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read() or b'{}')
 
 
 def mcp_call(cfg, tool, args):
-    url = f'{cfg.HUB_URL}/public/api/v1/mcp?token={urllib.parse.quote(cfg.HUB_MCP_TOKEN)}'
+    url = f'{cfg.HUB_URL}/public/api/v1/mcp'
     body = {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call', 'params': {'name': tool, 'arguments': args}}
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), method='POST', headers={'Content-Type': 'application/json'})
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), method='POST',
+                                 headers={'Content-Type': 'application/json', 'X-Mcp-Token': cfg.HUB_MCP_TOKEN})
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read())
 

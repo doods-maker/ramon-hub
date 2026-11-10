@@ -57,6 +57,16 @@ RSpec.describe Peticao do
     end.not_to have_enqueued_job(Ramon::PeticaoArquivarJob)
   end
 
+  it 'registrar_protocolo! com o storage fora não deixa protocolada sem comprovante' do
+    p = nova.tap(&:save!)
+    p.arquivos.create!(nome: 'Peticao.pdf', tipo: 'peticao', posicao: 1, principal: true, origem: 'upload', tamanho: 10)
+    comprovante = Rack::Test::UploadedFile.new(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf')
+    allow(ActiveStorage::Blob.service).to receive(:upload).and_raise('storage fora')
+    expect { p.registrar_protocolo!(usuario: user, numero_evento: '15', comprovante: comprovante) }.to raise_error('storage fora')
+    expect(p.reload).to have_attributes(status: 'rascunho', numero_evento: nil)
+    expect(Ramon::PeticaoArquivarJob).not_to have_been_enqueued
+  end
+
   it 'registrar_protocolo! recusa pacote com problema' do
     p = nova.tap(&:save!)
     comprovante = Rack::Test::UploadedFile.new(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf')
