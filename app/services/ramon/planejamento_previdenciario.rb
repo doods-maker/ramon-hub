@@ -22,6 +22,8 @@ class Ramon::PlanejamentoPrevidenciario
         perfil: perfil.to_h.compact_blank.merge('segurado_nome' => segurado_nome)
       }
       corpo[:vinculos_detalhe] = cnis['vinculos'] unless cnis['vinculos'].nil?
+      # CNIS lido antes do motor novo não traz a lista (o motor trata como vazia).
+      corpo[:abaixo_minimo_pos_reforma] = entrada['abaixo_minimo_pos_reforma'] if entrada['abaixo_minimo_pos_reforma'].present?
       corpo[:data_calculo] = data_calculo unless data_calculo.nil?
       cnis_data = data_iso(cnis['uploaded_at'])
       corpo[:cnis_data] = cnis_data if cnis_data

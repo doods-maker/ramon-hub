@@ -28,6 +28,13 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
       expect(corpo[:perfil]).to eq('segurado_nome' => 'X')
     end
 
+    it 'repassa os meses pós-reforma abaixo do mínimo que o /cnis separou' do
+      meses = [{ 'ano' => 2020, 'mes' => 11, 'salario' => 900.0, 'minimo' => 1045.0 }]
+      com_meses = cnis.deep_dup.tap { |c| c['entrada']['abaixo_minimo_pos_reforma'] = meses }
+      expect(described_class.payload(com_meses, {}, segurado_nome: 'X')[:abaixo_minimo_pos_reforma]).to eq(meses)
+      expect(described_class.payload(cnis, {}, segurado_nome: 'X')).not_to have_key(:abaixo_minimo_pos_reforma)
+    end
+
     it 'sem uploaded_at: omite cnis_data' do
       expect(described_class.payload(cnis.except('uploaded_at'), {}, segurado_nome: 'X')).not_to have_key(:cnis_data)
     end
