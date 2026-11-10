@@ -34,7 +34,7 @@ class Api::V1::Accounts::LeadPlanejamentosController < Api::V1::Accounts::BaseCo
 
   def arquivo
     tipo = params[:tipo].to_s
-    return head :bad_request unless TIPOS.key?(tipo)
+    return render json: { error: 'tipo inválido' }, status: :unprocessable_entity unless TIPOS.key?(tipo)
 
     bytes = Ramon::PlanejamentoPrevidenciario.arquivo(@calculo, tipo)
     return render json: { error: 'arquivo expirou — gere de novo' }, status: :not_found if bytes.nil?

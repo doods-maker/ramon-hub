@@ -146,6 +146,11 @@ RSpec.describe 'Lead Planejamentos API', type: :request do
       expect(response.parsed_body['error']).to eq('arquivo expirou — gere de novo')
     end
 
+    it 'arquivo com tipo fora de pdf/memoria dá 422' do
+      pegar('/arquivo', calculo_id: calculo.id, tipo: 'zip')
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
     it 'arquivo de cálculo de outro lead dá 404' do
       pegar('/arquivo', calculo_id: outro.id, tipo: 'pdf')
       expect(response).to have_http_status(:not_found)
