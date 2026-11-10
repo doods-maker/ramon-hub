@@ -36,6 +36,13 @@ class Api::V1::Accounts::RamonChegadasController < Api::V1::Accounts::BaseContro
     render json: { error: 'ADVBOX_UNAVAILABLE' }, status: :service_unavailable
   end
 
+  # Tela Hoje: as tarefas do ADVBOX de quem está logado (Ramon::MeuDiaAdvbox).
+  def meu_dia
+    render json: { payload: Ramon::MeuDiaAdvbox.new(Current.account, Current.user).perform }
+  rescue Ramon::AdvboxClient::UnavailableError
+    render json: { error: 'ADVBOX_UNAVAILABLE' }, status: :service_unavailable
+  end
+
   private
 
   def pode_avisar?

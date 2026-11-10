@@ -289,6 +289,17 @@
       "DOSSIE": "Abrir Dossiê 30s (D)",
       "SIMULATE": "Simular benefício (S)"
     },
+    "MEU_DIA": {
+      "ESTEIRA": "Peças da esteira para revisar",
+      "PECA_PRONTA": "Peça pronta",
+      "PAROU": "Parou",
+      "HOJE": "Hoje no ADVBOX",
+      "SEMANA": "Próximos 7 dias",
+      "SEM_HOJE": "Nenhuma tarefa no ADVBOX hoje.",
+      "SEM_SEMANA": "Nenhuma tarefa aberta nos próximos 7 dias.",
+      "PRAZO": "Prazo {dia}",
+      "ADVBOX_FORA": "O ADVBOX não respondeu. Tente de novo em alguns minutos."
+    },
     "COMMAND": {
       "TITLE": "Centro de Comando",
       "RELOAD": "Recarregar",

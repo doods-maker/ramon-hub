@@ -320,7 +320,10 @@ Rails.application.routes.draw do
           end
           resources :ramon_chegadas, only: [:index, :create], controller: 'ramon_chegadas' do
             member { post :responder }
-            collection { get :agenda }
+            collection do
+              get :agenda
+              get :meu_dia
+            end
           end
           resources :ramon_peticoes, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_peticoes' do
             member do

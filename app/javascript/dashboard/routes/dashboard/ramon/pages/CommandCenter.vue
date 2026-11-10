@@ -14,6 +14,7 @@ import { brlCompact } from '../helpers/currency';
 import { reasonLabel, severityDotClass, tomMotivo } from '../helpers/esteira';
 import AgendaToday from '../components/command/AgendaToday.vue';
 import AtendimentosHoje from '../components/equipe/AtendimentosHoje.vue';
+import MeuDiaAdvbox from '../components/command/MeuDiaAdvbox.vue';
 import NightCopilot from '../components/command/NightCopilot.vue';
 import FunnelConversion from '../components/command/FunnelConversion.vue';
 import TeamWeek from '../components/command/TeamWeek.vue';
@@ -47,11 +48,14 @@ const isFetching = computed(() => uiFlags.value.isFetching);
 const isLoading = computed(() => isFetching.value && !data.value);
 const hasError = computed(() => uiFlags.value.hasError);
 // Recepção = time "recepção" (mesmo nome do Chegada::RECEPCAO no backend).
-const ehRecepcao = computed(() =>
-  (getters['teams/getMyTeams']?.value || []).some(
-    time => time.name === 'recepção'
-  )
+const meusTimes = computed(() =>
+  (getters['teams/getMyTeams']?.value || []).map(time => time.name)
 );
+const ehRecepcao = computed(() => meusTimes.value.includes('recepção'));
+// Jurídico = time `advogados` (Ramon::Papeis::JURIDICO), decisão de 09/11: o
+// Hoje vira a agenda do ADVBOX. Admin no time vê a agenda e o painel comercial.
+const ehJuridico = computed(() => meusTimes.value.includes('advogados'));
+const soJuridico = computed(() => ehJuridico.value && !isAdmin.value);
 
 const money = value =>
   new Intl.NumberFormat('pt-BR', {
@@ -311,6 +315,7 @@ const markDone = async () => {
 // Atalhos reais da fila (mudos com campo focado — o composable cuida disso;
 // a página não tem modais próprios).
 const canAct = () =>
+  !soJuridico.value &&
   !isLoading.value &&
   !hasError.value &&
   !isQueueLoading.value &&
@@ -347,7 +352,7 @@ useKeyboardEvents({
         </h1>
       </div>
       <div class="flex flex-wrap items-center gap-4">
-        <div data-testid="daily-goal" class="text-right">
+        <div v-if="!soJuridico" data-testid="daily-goal" class="text-right">
           <p :class="TITULO">{{ t('RAMON.COMMAND.GOAL_LABEL') }}</p>
           <div class="flex items-center gap-2 mt-1.5">
             <span
@@ -391,6 +396,7 @@ useKeyboardEvents({
           @click="reload"
         />
         <Button
+          v-if="!soJuridico"
           data-testid="start-day"
           icon="i-lucide-play"
           :label="t('RAMON.COMMAND.START_DAY')"
@@ -402,10 +408,19 @@ useKeyboardEvents({
     <!-- Recepção: atendimentos de hoje com "Chegou" (opção A, 20/10) -->
     <AtendimentosHoje v-if="ehRecepcao" />
 
+    <!-- Tarefas do ADVBOX: agenda (jurídico) + peças da esteira para revisar.
+         Só jurídico e admin: a tarefa da esteira vai para o Eduardo (09/11) e
+         cada abertura gasta cota do ADVBOX. -->
+    <MeuDiaAdvbox v-if="ehJuridico || isAdmin" :com-agenda="ehJuridico" />
+
     <!-- Enquanto você dormia (copiloto noturno) — some quando 0 pendentes -->
     <NightCopilot :foco="focoSugestoes" />
 
-    <div v-if="isLoading" class="flex flex-col gap-5 animate-pulse">
+    <!-- Painel comercial: fora do jurídico -->
+    <div
+      v-if="!soJuridico && isLoading"
+      class="flex flex-col gap-5 animate-pulse"
+    >
       <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5">
         <div v-for="n in 6" :key="n" class="h-16 rounded-xl bg-n-alpha-2" />
       </div>
@@ -418,7 +433,11 @@ useKeyboardEvents({
     </div>
 
     <!-- Erro de carga: mostra retry em vez de fingir "tudo em dia" -->
-    <div v-else-if="hasError" data-testid="command-error" class="text-sm">
+    <div
+      v-else-if="!soJuridico && hasError"
+      data-testid="command-error"
+      class="text-sm"
+    >
       <p class="text-n-ruby-11">{{ t('RAMON.COMMAND.LOAD_ERROR') }}</p>
       <Button
         data-testid="command-retry"
@@ -430,7 +449,7 @@ useKeyboardEvents({
       />
     </div>
 
-    <div v-else class="flex flex-col gap-5">
+    <div v-else-if="!soJuridico" class="flex flex-col gap-5">
       <!-- KPI strip -->
       <div>
         <div
