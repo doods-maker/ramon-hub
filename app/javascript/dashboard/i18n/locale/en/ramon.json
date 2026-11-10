@@ -2549,6 +2549,7 @@
         "LEAD_ETAPA": "moved the stage from {de} to {para}",
         "LEAD_SDR": "changed the SDR from {de} to {para}",
         "LEAD_CLOSER": "changed the Closer from {de} to {para}",
+        "LEAD_TESE": "changed the thesis from {de} to {para}",
         "LEAD_VALOR": "changed the value from {de} to {para}",
         "LEAD_MOTIVO": "recorded the lost reason: {para}",
         "LEAD_GANHO": "marked the lead as won",

@@ -2549,6 +2549,7 @@
         "LEAD_ETAPA": "mudou a etapa de {de} para {para}",
         "LEAD_SDR": "trocou o SDR de {de} para {para}",
         "LEAD_CLOSER": "trocou o Closer de {de} para {para}",
+        "LEAD_TESE": "trocou a tese de {de} para {para}",
         "LEAD_VALOR": "mudou o valor de {de} para {para}",
         "LEAD_MOTIVO": "registrou o motivo da perda: {para}",
         "LEAD_GANHO": "marcou o lead como ganho",

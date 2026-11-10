@@ -658,13 +658,13 @@ RSpec.describe 'Leads API', type: :request do
       expect(lead.lost_at).to be_present
     end
 
-    it 'persiste custom_attributes no update' do
-      lead = create(:lead, account: account, lead_stage: novo)
+    it 'grava do jsonb só o que é da tela; chave de serviço vinda do cliente é descartada', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, custom_attributes: { 'zapsign' => { 'status' => 'pending' } })
       patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
-            params: { custom_attributes: { cpf: '123', origem: 'campanha' } },
+            params: { custom_attributes: { nps: { score: 9 }, zapsign: { status: 'signed' }, advbox: { lawsuits_id: 1 } } },
             headers: admin.create_new_auth_token, as: :json
       expect(response).to have_http_status(:success)
-      expect(lead.reload.custom_attributes).to eq('cpf' => '123', 'origem' => 'campanha')
+      expect(lead.reload.custom_attributes).to eq('nps' => { 'score' => 9 }, 'zapsign' => { 'status' => 'pending' })
     end
 
     it 'update parcial de custom_attributes faz merge — não apaga as demais chaves' do
@@ -745,6 +745,90 @@ RSpec.describe 'Leads API', type: :request do
       post "/api/v1/accounts/#{account.id}/leads/for_conversation",
            params: { conversation_id: da_caixa.conversation.display_id }, headers: agent.create_new_auth_token, as: :json
       expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  describe 'vendedor vê o funil todo, mas só altera o lead dele' do
+    let(:ana) { create(:user, account: account, role: :agent) }
+    let(:bia) { create(:user, account: account, role: :agent) }
+    let(:time_closer) { create(:team, account: account, name: 'closer') }
+    let(:perda) { { lead_stage_id: perdido.id, lost_reason: 'Sem interesse' } }
+
+    before { [ana, bia].each { |pessoa| create(:team_member, team: time_closer, user: pessoa) } }
+
+    def alterar(lead, user, params)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}", params: params, headers: user.create_new_auth_token, as: :json
+    end
+
+    it 'Closer não move para Perdido o lead de outro Closer, mas abre', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, closer: bia)
+      alterar(lead, ana, perda)
+      expect(response).to have_http_status(:unauthorized)
+      expect(lead.reload.lead_stage).to eq(novo)
+
+      get "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: ana.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'Closer altera o lead dele e o lead ainda sem Closer', :aggregate_failures do
+      dela = create(:lead, account: account, lead_stage: novo, closer: ana)
+      sem_closer = create(:lead, account: account, lead_stage: novo, sdr: bia)
+      [dela, sem_closer].each do |lead|
+        alterar(lead, ana, { name: 'Editado' })
+        expect(lead.reload.name).to eq('Editado')
+      end
+    end
+
+    it 'Closer não cria nem apaga tarefa no lead de outro Closer', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, closer: bia)
+      tarefa = create(:lead_task, account: account, lead: lead)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks",
+           params: { title: 'Ligar', due_at: 1.day.from_now }, headers: ana.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      delete "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks/#{tarefa.id}", headers: ana.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(lead.lead_tasks.count).to eq(1)
+    end
+
+    it 'ação em lote pula o lead de outro Closer' do
+      dela = create(:lead, account: account, lead_stage: novo, closer: ana)
+      da_bia = create(:lead, account: account, lead_stage: novo, closer: bia)
+      expect do
+        post "/api/v1/accounts/#{account.id}/bulk_actions", headers: ana.create_new_auth_token,
+                                                            params: { type: 'Lead', ids: [dela.id, da_bia.id], fields: perda }
+      end.to have_enqueued_job(Ramon::LeadBulkActionJob).with(account.id, ana.id, hash_including('ids' => [dela.id]))
+    end
+  end
+
+  describe 'tese travada depois do contrato apto (a comissão sai da tese)' do
+    let(:closer) { create(:user, account: account, role: :agent) }
+    let(:menor) { create(:thesis, account: account, name: 'Tese de comissão menor') }
+    let(:maior) { create(:thesis, account: account, name: 'Tese de comissão maior') }
+    let(:lead) { create(:lead, account: account, lead_stage: novo, thesis: menor, closer: closer) }
+
+    before { create(:team_member, team: create(:team, account: account, name: 'closer'), user: closer) }
+
+    def trocar_tese(user)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}", params: { thesis_id: maior.id }, headers: user.create_new_auth_token, as: :json
+    end
+
+    it 'antes do apto o Closer troca a tese' do
+      trocar_tese(closer)
+      expect(lead.reload.thesis).to eq(maior)
+    end
+
+    it 'depois do apto o Closer recebe 422 e a tese fica', :aggregate_failures do
+      lead.update_column(:apto_em, Time.current) # rubocop:disable Rails/SkipsModelValidations
+      trocar_tese(closer)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.thesis).to eq(menor)
+    end
+
+    it 'depois do apto o gestor troca, e a troca fica no Registro de ações', :aggregate_failures do
+      lead.update_column(:apto_em, Time.current) # rubocop:disable Rails/SkipsModelValidations
+      trocar_tese(admin)
+      expect(lead.reload.thesis).to eq(maior)
+      expect(lead.audits.last.audited_changes).to include('thesis_id' => [menor.id, maior.id])
     end
   end
 

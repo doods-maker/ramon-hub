@@ -228,5 +228,15 @@ RSpec.describe Ramon::ContratoApto do
 
       expect(lead.reload).to have_attributes(apto_em: be_present, contrato_cancelado_em: be_present)
     end
+
+    it 'voltou a fechar: o cancelamento deixa de valer (arrasto por engano não pesa no Closer)' do
+      lead = aguardando
+      described_class.validar!(lead, rafaela)
+      lead.reload.update!(lead_stage: open_stage)
+
+      lead.reload.update!(lead_stage: won_stage)
+
+      expect(lead.reload).to have_attributes(apto_em: be_present, contrato_cancelado_em: nil)
+    end
   end
 end

@@ -3,6 +3,7 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
   before_action :fetch_lead, if: -> { params[:lead_id].present? }
   before_action :fetch_task, only: [:update, :destroy, :complete]
   before_action :check_authorization
+  before_action -> { authorize(@lead, :update?) }, only: [:create, :update, :destroy, :complete] # tarefa é parte do lead
 
   def index
     @lead_tasks = params[:lead_id].present? ? @lead.lead_tasks.order(:due_at) : account_scope
