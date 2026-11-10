@@ -56,7 +56,7 @@ onMounted(async () => {
         v-for="item in dados.esteira"
         :key="item.advbox_post_id"
         data-testid="meu-dia-esteira"
-        class="flex items-center gap-3 rounded-lg px-2 py-2"
+        class="flex items-start gap-3 px-2 py-2"
       >
         <div class="min-w-0 flex-1">
           <p class="truncate text-[13.5px] font-medium text-n-slate-12">
@@ -65,17 +65,19 @@ onMounted(async () => {
           <p class="truncate text-[11px] text-n-slate-10">
             {{ item.situacao }}
           </p>
+          <a
+            v-if="item.peca"
+            :href="linkDrive(item.peca)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex min-h-11 items-center text-xs text-n-blue-11 underline sm:min-h-0 sm:pt-1"
+          >
+            <span class="truncate">{{ item.peca }}</span>
+          </a>
         </div>
-        <a
-          v-if="item.peca"
-          :href="linkDrive(item.peca)"
-          target="_blank"
-          rel="noopener noreferrer"
-          :title="item.peca"
-          :class="[CHIP, TOM.teal]"
-        >
+        <span v-if="item.peca" :class="[CHIP, TOM.teal]">
           {{ t('RAMON.MEU_DIA.PECA_PRONTA') }}
-        </a>
+        </span>
         <span v-else :class="[CHIP, TOM.amber]">
           {{ t('RAMON.MEU_DIA.PAROU') }}
         </span>
@@ -104,7 +106,7 @@ onMounted(async () => {
         v-for="item in dados.hoje"
         :key="item.advbox_post_id"
         data-testid="meu-dia-hoje"
-        class="flex items-center gap-3 rounded-lg px-2 py-2"
+        class="flex items-center gap-3 px-2 py-2"
         :class="{ 'line-through opacity-60': item.concluida }"
       >
         <div class="min-w-0 flex-1">
@@ -146,7 +148,9 @@ onMounted(async () => {
           class="truncate text-[13px] text-n-slate-12"
         >
           {{ item.tarefa }}
-          <span class="text-n-slate-10">{{ `· ${item.cliente_nome}` }}</span>
+          <span v-if="item.cliente_nome" class="text-n-slate-10">
+            {{ `· ${item.cliente_nome}` }}
+          </span>
         </p>
       </div>
     </div>

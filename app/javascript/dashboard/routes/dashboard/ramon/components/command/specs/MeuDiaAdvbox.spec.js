@@ -57,14 +57,12 @@ const payload = () => ({
       cliente_nome: 'MARIA SILVA',
       situacao: 'Esteira concluída com rascunho.',
       peca: 'Petição inicial — Maria Silva.docx',
-      criada_em: '2026-11-09',
     },
     {
       advbox_post_id: 9,
       cliente_nome: 'DIEGO',
       situacao: 'Parou por falta de laudo',
       peca: null,
-      criada_em: '2026-11-08',
     },
   ],
 });
@@ -102,6 +100,7 @@ describe('MeuDiaAdvbox.vue', () => {
     const linhas = wrapper.findAll('[data-testid="meu-dia-esteira"]');
     expect(linhas).toHaveLength(2);
     const link = linhas[0].find('a');
+    expect(link.text()).toBe('Petição inicial — Maria Silva.docx');
     expect(link.attributes('href')).toBe(
       `https://drive.google.com/drive/search?q=${encodeURIComponent('Petição inicial — Maria Silva.docx')}`
     );

@@ -408,8 +408,10 @@ useKeyboardEvents({
     <!-- Recepção: atendimentos de hoje com "Chegou" (opção A, 20/10) -->
     <AtendimentosHoje v-if="ehRecepcao" />
 
-    <!-- Tarefas do ADVBOX: agenda (jurídico) + peças da esteira para revisar -->
-    <MeuDiaAdvbox :com-agenda="ehJuridico" />
+    <!-- Tarefas do ADVBOX: agenda (jurídico) + peças da esteira para revisar.
+         Só jurídico e admin: a tarefa da esteira vai para o Eduardo (09/11) e
+         cada abertura gasta cota do ADVBOX. -->
+    <MeuDiaAdvbox v-if="ehJuridico || isAdmin" :com-agenda="ehJuridico" />
 
     <!-- Enquanto você dormia (copiloto noturno) — some quando 0 pendentes -->
     <NightCopilot :foco="focoSugestoes" />

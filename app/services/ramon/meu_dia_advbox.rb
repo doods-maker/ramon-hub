@@ -11,8 +11,10 @@ class Ramon::MeuDiaAdvbox
   # ponytail: a tarefa da esteira sempre abre com "SITUAÇÃO" e cita o .docx em Esteira/ (esteira-agentes,
   # vps/workspace/CLAUDE.md, "Fim do caso"). Se o prompt da esteira mudar, muda aqui.
   ESTEIRA = /\A\W*situação\b/i
-  SITUACAO = /\A\W*situação[^:\n]*:\s*(.*)/i
-  PECA = %r{Esteira/([^/\n()]+?\.docx)}
+  SITUACAO = /\A\W*situação\s*(?:\([^)\n]*\))?\s*:\s*(.*)/i
+  PECA = %r{Esteira/([[:alnum:]][^/\n()]*?\.docx)}
+  # 1ª frase: corta no ponto seguido de maiúscula (não em "art. 42" nem em "8.213").
+  FRASE = /\A.*?\.(?=\s+[[:upper:]]|\s*\z)/
   VAZIO = { hoje: [], semana: [], esteira: [] }.freeze
 
   def initialize(account, user)
@@ -57,7 +59,7 @@ class Ramon::MeuDiaAdvbox
   def minhas_tarefas(hoje)
     Rails.cache.fetch("ramon/meu_dia/#{eu_no_advbox['id']}/#{hoje.iso8601}", expires_in: 15.minutes) do
       paginas(date_start: (hoje - ATRAS).iso8601, date_end: (hoje + FRENTE).iso8601)
-        .select { |t| minha(t) }.uniq { |t| t['id'] }.sort_by { |t| [t['date'].to_s, t['id'].to_i] }
+        .select { |t| minha_atribuicao(t) }.uniq { |t| t['id'] }.sort_by { |t| [t['date'].to_s, t['id'].to_i] }
     end
   end
 
@@ -71,12 +73,12 @@ class Ramon::MeuDiaAdvbox
     end
   end
 
-  def minha(tarefa)
+  def minha_atribuicao(tarefa)
     Array(tarefa['users']).find { |u| u['user_id'] == eu_no_advbox['id'] }
   end
 
   def aberta?(tarefa)
-    minha(tarefa)&.dig('completed').blank?
+    minha_atribuicao(tarefa)&.dig('completed').blank?
   end
 
   def dia(tarefa)
@@ -98,8 +100,7 @@ class Ramon::MeuDiaAdvbox
     primeira_linha = notas[SITUACAO, 1].to_s
     {
       advbox_post_id: tarefa['id'], cliente_nome: Ramon::AgendaHojeService.cliente_de(tarefa)&.dig('name'),
-      criada_em: tarefa['created_at'].to_s.first(10), peca: notas[PECA, 1]&.strip,
-      situacao: (primeira_linha[/\A.*?\.(?=\s|\z)/] || primeira_linha).truncate(200)
+      peca: notas[PECA, 1]&.strip, situacao: (primeira_linha[FRASE] || primeira_linha).truncate(200)
     }
   end
 end

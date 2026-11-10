@@ -23,7 +23,9 @@ RSpec.describe Ramon::MeuDiaAdvbox do
                               'notes' => "SITUAÇÃO (retomada de 05/11/2026): parou por falta de laudo\n\nRASCUNHOS: Clientes/Maria Silva/Esteira/ " \
                                          '(formato antigo: 03 CNIS.md) e Esteira/_interno/. Não há .docx de peça.'),
       tarefa(10, '2026-11-03', 'notes' => 'SITUAÇÃO: já revisada', 'users' => [eu.merge('completed' => '2026-11-04 09:00:00')]),
-      tarefa(11, '2026-11-04', 'notes' => 'Ligar para o cliente sobre a SITUAÇÃO do processo')
+      tarefa(11, '2026-11-04', 'notes' => 'Ligar para o cliente sobre a SITUAÇÃO do processo'),
+      tarefa(12, '2026-11-01', 'notes' => "SITUAÇÃO (retomada 01/11 às 10:30): art. 42 cumprido. Falta laudo.\n\n" \
+                                          'RASCUNHOS: Esteira/. Não há .docx de peça.')
     ]
   end
 
@@ -65,11 +67,12 @@ RSpec.describe Ramon::MeuDiaAdvbox do
   it 'esteira = tarefas abertas que abrem com SITUAÇÃO, a peça só quando o .docx está em Esteira/' do
     esteira = meu_dia[:esteira]
 
-    expect(esteira.pluck(:advbox_post_id)).to eq([9, 8])
-    expect(esteira.second).to include(cliente_nome: 'MARIA SILVA', criada_em: '2026-11-02',
+    expect(esteira.pluck(:advbox_post_id)).to eq([9, 8, 12])
+    expect(esteira.second).to include(cliente_nome: 'MARIA SILVA',
                                       situacao: 'Esteira concluída com rascunho da petição inicial.',
                                       peca: 'Petição inicial — Maria Silva.docx')
     expect(esteira.first).to include(situacao: 'parou por falta de laudo', peca: nil)
+    expect(esteira.third).to include(situacao: 'art. 42 cumprido.', peca: nil)
   end
 
   it 'busca a página seguinte quando o ADVBOX diz que há mais' do
