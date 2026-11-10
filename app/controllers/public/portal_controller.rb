@@ -32,7 +32,9 @@ class Public::PortalController < ActionController::Base
     token = params[:token].to_s
     # token vazio JAMAIS pode virar find_by(portal_token: nil) — casaria um lead sem token
     @lead = token.present? ? Lead.find_by(portal_token: token) : nil
-    render :invalid, status: :not_found if @lead.nil?
+    return render :invalid, status: :not_found unless @lead&.portal_token_valido?
+
+    @lead.carimbar_portal_token! if @lead.portal_token_sem_prazo? # link antigo: o prazo começa a contar agora
   end
 
   # Etapas abertas do funil, na ordem do Kanban — a timeline do cliente.
