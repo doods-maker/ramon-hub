@@ -1,13 +1,16 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
+import PlanejamentoTextos from './PlanejamentoTextos.vue';
 import {
   AVISO,
+  CAMPO,
   CARTAO,
-  CARTAO_STATUS,
-  FILETE,
+  CHIP,
+  ROTULO,
+  SELECT,
   TITULO,
   TOM,
 } from '../../helpers/ui';
@@ -15,30 +18,88 @@ import {
 const props = defineProps({
   lead: { type: Object, required: true },
   seguradoNome: { type: String, default: '' },
-  // Parâmetros do cálculo reaberto do histórico (só desta aba): repreenche e
-  // recalcula sem gravar outra linha no histórico.
+  // params da linha do histórico: { perfil, dados } reabre no resultado sem
+  // chamar o motor; linha antiga (sem dados) começa do zero.
   inicial: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadPlanejamento' });
 
 const { t } = useI18n();
 
-const isLoading = ref(false);
-const pdfLoading = ref(false);
-const ocupado = computed(() => isLoading.value || pdfLoading.value);
+// textos ainda sem aprovação do Eduardo (spec §6.5): só as formas pró-labore têm modelo aprovado
+const rascunho = forma =>
+  t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_RASCUNHO', { forma });
+// chaves literais (sem chave dinâmica no i18n)
+const FORMAS = computed(() => [
+  ['pro_labore', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_PRO_LABORE')],
+  [
+    'pro_labore_mais_salario',
+    t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_PRO_LABORE_MAIS_SALARIO'),
+  ],
+  ['carne_20', rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_CARNE_20'))],
+  [
+    'simplificado_11',
+    rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_SIMPLIFICADO_11')),
+  ],
+  [
+    'baixa_renda_5',
+    rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_BAIXA_RENDA_5')),
+  ],
+  ['empregado', rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_EMPREGADO'))],
+]);
+// estados de snapshot.geracao (GERANDO/PRONTO/ERRO em Ramon::PlanejamentoPrevidenciario)
+const GERACAO = { GERANDO: 'gerando', PRONTO: 'pronto', ERRO: 'erro' };
+const INTERVALO = 2000;
+const MAX_CONSULTAS = 60; // 2 min
+
+const perfilVazio = () => ({
+  forma: 'pro_labore',
+  empresa: '',
+  salario_atual: '',
+  salario_emprego: '',
+  cenario_livre: '',
+  turma: '',
+  facultativo_semestral: false,
+  descarte_pontos: 'nao',
+});
+
+const perfil = ref(null); // formulário (passo 2)
+const perfilCalculado = ref(null); // o perfil que gerou `dados`: vai no Gerar
+const motivo = ref('');
+const dados = ref(null); // editado no lugar pelo PlanejamentoTextos
+const avisos = ref([]);
+const carregando = ref(false);
 const hasError = ref(false);
 const errorMessage = ref('');
-const resultado = ref(null);
-// erro nunca se mascara de vazio: retry refaz a mesma ação que falhou.
-const ultimaAcao = ref('planejar');
+const ultimaAcao = ref('comecar');
+const calculoId = ref(null);
+const geracao = ref(null); // { estado, drive, drive_motivo, drive_erro }
+const baixando = ref(false);
+let timer = null;
+let consultas = 0;
+// resposta que chega depois de desmontar não pode agendar outra consulta
+let vivo = true;
+
+const gerando = computed(() => geracao.value?.estado === GERACAO.GERANDO);
+const pronto = computed(() => geracao.value?.estado === GERACAO.PRONTO);
+const ocupado = computed(
+  () => carregando.value || gerando.value || baixando.value
+);
+const comSalarioEmprego = computed(
+  () => perfil.value?.forma === 'pro_labore_mais_salario'
+);
+const comFacultativo = computed(() =>
+  perfil.value?.forma?.startsWith('pro_labore')
+);
+const cenarios = computed(() =>
+  Array.isArray(dados.value?.cenarios) ? dados.value.cenarios : []
+);
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
 });
-const money = value => brl.format(Number(value || 0));
-const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
-const capitalizar = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+const money = v => (v === null || v === undefined ? '' : brl.format(Number(v)));
 
 // jsdom (specs) não implementa Blob.text() — FileReader funciona nos dois.
 const blobToText = blob =>
@@ -49,80 +110,210 @@ const blobToText = blob =>
     reader.readAsText(blob);
   });
 
-// planejamentoPdf usa responseType: 'blob', então em erro o axios entrega
+const mostrarErro = mensagem => {
+  errorMessage.value = mensagem || t('RAMON.SIMULADOR.PLANEJAMENTO_ERRO');
+  hasError.value = true;
+};
+
+// planejamentoArquivo usa responseType: 'blob', então em erro o axios entrega
 // error.response.data como Blob (não JSON) — precisa ler o texto antes.
 const handleError = async error => {
   const data = error?.response?.data;
   if (data instanceof Blob) {
     try {
-      const parsed = JSON.parse(await blobToText(data));
-      errorMessage.value =
-        parsed.error || t('RAMON.SIMULADOR.PLANEJAMENTO_ERRO');
+      mostrarErro(JSON.parse(await blobToText(data)).error);
     } catch {
-      errorMessage.value = t('RAMON.SIMULADOR.PLANEJAMENTO_ERRO');
+      mostrarErro();
     }
   } else {
-    errorMessage.value = data?.error || t('RAMON.SIMULADOR.PLANEJAMENTO_ERRO');
+    mostrarErro(data?.error);
   }
-  hasError.value = true;
 };
 
-const planejar = async (extra = {}) => {
-  ultimaAcao.value = 'planejar';
-  isLoading.value = true;
+const limparErro = acao => {
+  ultimaAcao.value = acao;
   hasError.value = false;
   errorMessage.value = '';
+};
+
+const pararConsulta = () => {
+  clearTimeout(timer);
+  timer = null;
+};
+
+let consultar;
+const agendar = () => {
+  if (vivo) timer = setTimeout(consultar, INTERVALO);
+};
+
+const comecar = async () => {
+  limparErro('comecar');
+  carregando.value = true;
   try {
     const { data } = await LeadsAPI.planejamento(props.lead.id, {
       segurado_nome: props.seguradoNome || undefined,
-      ...extra,
     });
-    resultado.value = data;
+    const sug = data.forma_sugerida || {};
+    perfil.value = {
+      ...perfilVazio(),
+      forma: sug.forma || 'pro_labore',
+      salario_atual:
+        sug.salario_atual === null || sug.salario_atual === undefined
+          ? ''
+          : String(sug.salario_atual),
+    };
+    motivo.value = (sug.motivo || '').replace(/\.$/, ''); // a frase já fecha com ponto
   } catch (error) {
     await handleError(error);
   } finally {
-    isLoading.value = false;
+    carregando.value = false;
   }
 };
 
-const baixarPdf = async () => {
-  ultimaAcao.value = 'pdf';
-  pdfLoading.value = true;
-  hasError.value = false;
-  errorMessage.value = '';
+const perfilParaEnviar = () => {
+  const p = perfil.value;
+  return {
+    ...p,
+    salario_emprego: comSalarioEmprego.value ? p.salario_emprego : '',
+    facultativo_semestral: comFacultativo.value && p.facultativo_semestral,
+  };
+};
+
+const calcular = async () => {
+  limparErro('calcular');
+  carregando.value = true;
+  const enviado = perfilParaEnviar();
   try {
-    const { data } = await LeadsAPI.planejamentoPdf(props.lead.id, {});
+    const { data } = await LeadsAPI.planejamento(props.lead.id, {
+      perfil: enviado,
+      segurado_nome: props.seguradoNome || undefined,
+    });
+    dados.value = data.dados;
+    avisos.value = data.avisos || [];
+    perfilCalculado.value = enviado;
+    pararConsulta();
+    geracao.value = null;
+  } catch (error) {
+    await handleError(error);
+  } finally {
+    carregando.value = false;
+  }
+};
+
+consultar = async () => {
+  consultas += 1;
+  try {
+    const { data } = await LeadsAPI.planejamentoGeracao(
+      props.lead.id,
+      calculoId.value
+    );
+    // linha sem geração devolve null: nada gerado, para sem quebrar
+    if (!data?.estado) {
+      geracao.value = null;
+    } else if (data.estado !== GERACAO.GERANDO) {
+      geracao.value = data;
+      if (data.estado === GERACAO.ERRO) mostrarErro(data.erro);
+    } else if (consultas >= MAX_CONSULTAS) {
+      geracao.value = null;
+      mostrarErro(t('RAMON.SIMULADOR.PLANEJAMENTO_DEMOROU'));
+    } else {
+      agendar();
+    }
+  } catch (error) {
+    geracao.value = null;
+    await handleError(error);
+  }
+};
+
+const gerar = async () => {
+  limparErro('gerar');
+  pararConsulta();
+  geracao.value = { estado: GERACAO.GERANDO };
+  try {
+    const { data } = await LeadsAPI.planejamentoGerar(props.lead.id, {
+      perfil: perfilCalculado.value,
+      dados: dados.value,
+      segurado_nome: props.seguradoNome || undefined,
+    });
+    calculoId.value = data.calculo_id;
+    consultas = 0;
+    agendar();
+  } catch (error) {
+    geracao.value = null;
+    await handleError(error);
+  }
+};
+
+const nomeDoArquivo = (headers, tipo) => {
+  const m = /filename\*=UTF-8''([^;]+)/i.exec(
+    headers?.['content-disposition'] || ''
+  );
+  if (m) return decodeURIComponent(m[1]);
+  return `planejamento-lead-${props.lead.id}.${tipo === 'pdf' ? 'pdf' : 'xlsx'}`;
+};
+
+const ultimoTipo = ref('pdf');
+const baixar = async tipo => {
+  limparErro('baixar');
+  ultimoTipo.value = tipo;
+  baixando.value = true;
+  try {
+    const { data, headers } = await LeadsAPI.planejamentoArquivo(
+      props.lead.id,
+      calculoId.value,
+      tipo
+    );
     const url = URL.createObjectURL(data);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `planejamento-lead-${props.lead.id}.pdf`;
+    link.download = nomeDoArquivo(headers, tipo);
     link.click();
     URL.revokeObjectURL(url);
   } catch (error) {
     await handleError(error);
+    // 404 = arquivo expirou: baixar de novo não adianta, o retry gera de novo
+    if (error?.response?.status === 404) ultimaAcao.value = 'gerar';
   } finally {
-    pdfLoading.value = false;
+    baixando.value = false;
   }
 };
 
-const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
+const retry = () =>
+  ({
+    comecar,
+    calcular,
+    gerar,
+    baixar: () => baixar(ultimoTipo.value),
+  })[ultimaAcao.value]();
 
-if (props.inicial) planejar({ sem_historico: true });
+if (props.inicial?.dados) {
+  // cópia: a edição não mexe no objeto do histórico que veio por prop
+  const copia = JSON.parse(JSON.stringify(props.inicial));
+  perfil.value = { ...perfilVazio(), ...(copia.perfil || {}) };
+  perfilCalculado.value = copia.perfil || {};
+  dados.value = copia.dados;
+}
+
+onBeforeUnmount(() => {
+  vivo = false;
+  pararConsulta();
+});
 </script>
 
 <template>
   <div class="flex flex-col gap-3" data-testid="lead-planejamento">
     <Button
-      data-testid="planejamento-planejar"
+      v-if="!perfil"
+      data-testid="planejamento-comecar"
       :disabled="ocupado"
       sm
       class="self-start"
       :label="
-        isLoading
-          ? $t('RAMON.SIMULADOR.PLANEJAMENTO_PLANEJANDO')
-          : $t('RAMON.SIMULADOR.PLANEJAMENTO_PLANEJAR')
+        carregando
+          ? $t('RAMON.SIMULADOR.PLANEJAMENTO_LENDO')
+          : $t('RAMON.SIMULADOR.PLANEJAMENTO_COMECAR')
       "
-      @click="planejar()"
+      @click="comecar"
     />
 
     <div v-if="hasError" data-testid="planejamento-error">
@@ -137,148 +328,273 @@ if (props.inicial) planejar({ sem_historico: true });
       />
     </div>
 
-    <template v-if="resultado">
-      <div
-        v-if="
-          resultado.decisoes_pendentes && resultado.decisoes_pendentes.length
-        "
-        class="flex flex-col gap-2"
-        data-testid="planejamento-pendencias"
-      >
-        <span :class="TITULO">
-          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PENDENCIAS') }}
-        </span>
-        <div
-          v-for="(pend, i) in resultado.decisoes_pendentes"
-          :key="i"
-          :class="[CARTAO_STATUS, FILETE.amber]"
-          :data-testid="`planejamento-pendencia-${i}`"
-        >
-          <p class="mb-0 text-xs text-n-amber-11 font-medium">
-            {{ pend.pergunta }}
-          </p>
-        </div>
+    <div
+      v-if="perfil"
+      class="flex flex-col gap-2"
+      data-testid="planejamento-perfil"
+    >
+      <p v-if="motivo" class="mb-0" :class="[AVISO, TOM.slate]">
+        {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_SUGERIDA', { motivo }) }}
+      </p>
+      <div class="grid grid-cols-2 gap-2">
+        <label :class="ROTULO">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA') }}
+          <select
+            v-model="perfil.forma"
+            data-testid="planejamento-forma"
+            :class="SELECT"
+          >
+            <option
+              v-for="[valor, rotulo] in FORMAS"
+              :key="valor"
+              :value="valor"
+            >
+              {{ rotulo }}
+            </option>
+          </select>
+        </label>
+        <label :class="ROTULO">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_EMPRESA') }}
+          <input
+            v-model="perfil.empresa"
+            type="text"
+            data-testid="planejamento-empresa"
+            :class="CAMPO"
+          />
+        </label>
+        <label :class="ROTULO">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_SALARIO_ATUAL') }}
+          <input
+            v-model="perfil.salario_atual"
+            type="text"
+            inputmode="decimal"
+            data-testid="planejamento-salario-atual"
+            class="font-mono"
+            :class="CAMPO"
+          />
+        </label>
+        <label v-if="comSalarioEmprego" :class="ROTULO">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_SALARIO_EMPREGO') }}
+          <input
+            v-model="perfil.salario_emprego"
+            type="text"
+            inputmode="decimal"
+            data-testid="planejamento-salario-emprego"
+            class="font-mono"
+            :class="CAMPO"
+          />
+        </label>
+        <label :class="ROTULO">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_CENARIO_LIVRE') }}
+          <input
+            v-model="perfil.cenario_livre"
+            type="text"
+            inputmode="decimal"
+            data-testid="planejamento-cenario-livre"
+            class="font-mono"
+            :class="CAMPO"
+          />
+        </label>
+        <label :class="ROTULO">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_TURMA') }}
+          <input
+            v-model="perfil.turma"
+            type="text"
+            data-testid="planejamento-turma"
+            :class="CAMPO"
+          />
+        </label>
       </div>
+      <label
+        v-if="comFacultativo"
+        class="flex items-center gap-2 text-xs text-n-slate-11"
+      >
+        <input
+          v-model="perfil.facultativo_semestral"
+          type="checkbox"
+          data-testid="planejamento-facultativo"
+        />
+        {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_FACULTATIVO') }}
+      </label>
+      <details class="text-xs text-n-slate-11">
+        <summary class="cursor-pointer">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_AVANCADO') }}
+        </summary>
+        <label class="mt-2" :class="ROTULO">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_DESCARTE_PONTOS') }}
+          <select
+            v-model="perfil.descarte_pontos"
+            data-testid="planejamento-descarte"
+            :class="SELECT"
+          >
+            <option value="nao">
+              {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_DESCARTE_PONTOS_NAO') }}
+            </option>
+            <option value="tempo_minimo">
+              {{
+                $t('RAMON.SIMULADOR.PLANEJAMENTO_DESCARTE_PONTOS_TEMPO_MINIMO')
+              }}
+            </option>
+          </select>
+        </label>
+      </details>
+      <Button
+        data-testid="planejamento-calcular"
+        :disabled="ocupado"
+        :variant="dados ? 'faded' : null"
+        :color="dados ? 'slate' : null"
+        sm
+        class="self-start"
+        :label="
+          carregando
+            ? $t('RAMON.SIMULADOR.PLANEJAMENTO_CALCULANDO')
+            : $t('RAMON.SIMULADOR.PLANEJAMENTO_CALCULAR')
+        "
+        @click="calcular"
+      />
+    </div>
 
+    <template v-if="dados">
       <div
-        v-for="(cenario, i) in resultado.cenarios"
-        :key="i"
         class="flex flex-col gap-2"
         :class="CARTAO"
-        :data-testid="`planejamento-cenario-${i}`"
+        data-testid="planejamento-resultado"
       >
-        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span class="text-sm font-semibold text-n-slate-12">
-            {{ capitalizar(cenario.nome) }}
+        <div class="flex flex-wrap gap-1">
+          <span
+            v-if="dados.formato_textos === 'rascunho'"
+            :class="[CHIP, TOM.amber]"
+          >
+            {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_AGUARDANDO_TEXTOS') }}
           </span>
-          <span class="text-xs text-n-slate-10">
-            {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_SALARIO') }}:
-            <span class="font-mono">{{ money(cenario.salario) }}</span>
-          </span>
-          <span class="text-xs text-n-slate-10">
-            {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_ALIQUOTA') }}:
-            <span class="font-mono">{{ cenario.aliquota }}%</span>
+          <span v-if="dados.versao === 'curta'" :class="[CHIP, TOM.slate]">
+            {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_VERSAO_CURTA') }}
           </span>
         </div>
-        <p v-if="cenario.observacao" class="mb-0 text-xs text-n-slate-10">
-          {{ cenario.observacao }}
-        </p>
-
-        <div
-          v-if="cenario.resultados && cenario.resultados.length"
-          class="overflow-x-auto"
+        <p
+          v-if="dados.aposentadoria"
+          class="mb-0 flex flex-wrap items-baseline gap-x-2 text-sm text-n-slate-12"
         >
+          <span :class="TITULO">
+            {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_APOSENTADORIA') }}
+          </span>
+          <span class="font-mono">{{ dados.aposentadoria.data }}</span>
+          <span>{{ dados.aposentadoria.regra }}</span>
+        </p>
+        <div v-if="cenarios.length" class="overflow-x-auto">
           <table class="w-full text-xs text-n-slate-11">
+            <thead>
+              <tr class="text-n-slate-10">
+                <th class="p-1 text-start font-medium">
+                  {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_CENARIO') }}
+                </th>
+                <th class="p-1 text-end font-medium">
+                  {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_SALARIO') }}
+                </th>
+                <th class="p-1 text-end font-medium">
+                  {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_RMI_PROJETADA') }}
+                </th>
+                <th class="p-1 text-end font-medium">
+                  {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_CUSTO') }}
+                </th>
+              </tr>
+            </thead>
             <tbody class="divide-y divide-n-weak">
               <tr
-                v-for="(r, j) in cenario.resultados"
-                :key="j"
-                :data-testid="`planejamento-cenario-${i}-resultado-${j}`"
+                v-for="(c, i) in cenarios"
+                :key="i"
+                :class="{ 'font-semibold text-n-slate-12': c.sugestao }"
+                :data-testid="`planejamento-cenario-${i}`"
               >
-                <td class="p-1">
-                  <span class="font-medium text-n-slate-12">{{
-                    r.titulo
-                  }}</span>
-                  <span class="text-n-slate-10"> ({{ r.regra }})</span>
-                </td>
-                <td class="p-1 text-end whitespace-nowrap">
-                  {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_FECHA_EM') }}:
-                  <span class="font-mono">{{ dataBr(r.fecha_em) }}</span>
-                </td>
-                <td class="p-1 text-end whitespace-nowrap">
-                  {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_RMI_PROJETADA') }}:
-                  <span class="font-mono">{{ money(r.rmi_projetada) }}</span>
-                </td>
-                <td class="p-1 text-end whitespace-nowrap">
-                  {{
-                    $t('RAMON.SIMULADOR.PLANEJAMENTO_MESES_CONTRIB', {
-                      n: r.meses_contribuindo,
-                    })
-                  }}
-                </td>
-                <td class="p-1 text-end whitespace-nowrap">
-                  {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_DESEMBOLSO') }}:
-                  <span class="font-mono">{{ money(r.desembolso_total) }}</span>
-                </td>
-                <td class="p-1 text-end whitespace-nowrap">
-                  {{
-                    $t('RAMON.SIMULADOR.PLANEJAMENTO_PAYBACK', {
-                      n: r.payback_meses,
-                    })
-                  }}
-                </td>
+                <td class="p-1">{{ c.nome }}</td>
+                <td class="p-1 text-end font-mono">{{ money(c.v) }}</td>
+                <td class="p-1 text-end font-mono">{{ money(c.rmi) }}</td>
+                <td class="p-1 text-end font-mono">{{ money(c.custo) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <div
-          v-if="cenario.regras_excluidas && cenario.regras_excluidas.length"
-          class="flex flex-col gap-0.5"
-          :data-testid="`planejamento-cenario-${i}-excluidas`"
+        <p v-if="dados.sugestao?.curta" class="mb-0 text-sm text-n-slate-12">
+          {{ dados.sugestao.curta }}
+        </p>
+        <p
+          v-if="dados.parar?.data"
+          class="mb-0 flex flex-wrap items-baseline gap-x-2 text-xs text-n-slate-11"
         >
-          <span class="text-xs font-medium text-n-slate-11">
-            {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_EXCLUIDAS_TITULO') }}
+          <span :class="TITULO">
+            {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PARAR') }}
           </span>
-          <p
-            v-for="(ex, k) in cenario.regras_excluidas"
-            :key="k"
-            class="mb-0 text-[11px] text-n-slate-10"
-          >
-            {{ ex.regra }}: {{ ex.motivo }}
-          </p>
-        </div>
-
+          <span class="font-mono">{{ dados.parar.data }}</span>
+          <span v-if="dados.parar.rmi" class="font-mono">
+            {{ money(dados.parar.rmi) }}
+          </span>
+        </p>
         <ul
-          v-if="cenario.avisos && cenario.avisos.length"
-          class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4"
+          v-if="avisos.length"
+          class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4 mb-0"
+          data-testid="planejamento-avisos"
         >
-          <li v-for="(aviso, k) in cenario.avisos" :key="k">{{ aviso }}</li>
+          <li v-for="(aviso, i) in avisos" :key="i">{{ aviso }}</li>
         </ul>
       </div>
 
-      <ul
-        v-if="resultado.avisos && resultado.avisos.length"
-        class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4"
-        data-testid="planejamento-avisos"
-      >
-        <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
-      </ul>
+      <PlanejamentoTextos :dados="dados" />
 
-      <Button
-        data-testid="planejamento-pdf-run"
-        :disabled="ocupado"
-        sm
-        faded
-        slate
-        class="self-start"
-        :label="
-          pdfLoading
-            ? $t('RAMON.SIMULADOR.PLANEJAMENTO_PDF_BAIXANDO')
-            : $t('RAMON.SIMULADOR.PLANEJAMENTO_PDF_BAIXAR')
-        "
-        @click="baixarPdf"
-      />
+      <div class="flex flex-wrap items-center gap-2">
+        <Button
+          data-testid="planejamento-gerar"
+          :disabled="ocupado"
+          sm
+          :label="
+            gerando
+              ? $t('RAMON.SIMULADOR.PLANEJAMENTO_GERANDO')
+              : $t('RAMON.SIMULADOR.PLANEJAMENTO_GERAR')
+          "
+          @click="gerar"
+        />
+        <template v-if="pronto">
+          <Button
+            data-testid="planejamento-baixar-pdf"
+            :disabled="ocupado"
+            sm
+            faded
+            slate
+            :label="$t('RAMON.SIMULADOR.PLANEJAMENTO_PDF_BAIXAR')"
+            @click="baixar('pdf')"
+          />
+          <Button
+            data-testid="planejamento-baixar-memoria"
+            :disabled="ocupado"
+            sm
+            faded
+            slate
+            :label="$t('RAMON.SIMULADOR.PLANEJAMENTO_MEMORIA_BAIXAR')"
+            @click="baixar('memoria')"
+          />
+        </template>
+      </div>
+      <p
+        v-if="pronto"
+        class="mb-0"
+        :class="[AVISO, geracao.drive_erro ? TOM.amber : TOM.slate]"
+        data-testid="planejamento-drive"
+      >
+        <a
+          v-if="geracao.drive?.pasta_url"
+          :href="geracao.drive.pasta_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-n-blue-11 underline"
+        >
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_DRIVE_SALVO') }}
+        </a>
+        <template v-else-if="geracao.drive_erro">
+          {{ geracao.drive_erro }}
+        </template>
+        <template v-else>
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_DRIVE_SO_DOWNLOAD') }}
+        </template>
+      </p>
     </template>
   </div>
 </template>

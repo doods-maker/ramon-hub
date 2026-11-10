@@ -204,7 +204,11 @@ class Ramon::PerfilIa
   def tools_bloqueadas = TOOLS_DA_ACAO.filter_map { |acao, tools| tools if permissao(acao) == :nunca }.flatten
 
   # Sem lista gravada na Etapa: a do perfil pronto; na conduzida (Documentos), Gatilhos::PADRAO_DOCUMENTOS.
-  def gatilhos(etapa = @etapa) = @cfg.dig('gatilhos', self.class.chave_da_etapa(etapa || abertas.first)) || Gatilhos.padrao(etapa, pronto)
+  # Nome completo (como em gravacao.rb): no test o Zeitwerk recarrega no meio da suíte (cache_classes false) e a
+  # classe antiga, que os specs já guardaram, perde as filhas autoloaded — o nome curto vira NameError.
+  # rubocop:disable Layout/LineLength -- quebrar a linha estoura o Metrics/ClassLength (175)
+  def gatilhos(etapa = @etapa) = @cfg.dig('gatilhos', self.class.chave_da_etapa(etapa || abertas.first)) || Ramon::PerfilIa::Gatilhos.padrao(etapa, pronto)
+  # rubocop:enable Layout/LineLength
 
   # Textos (prompt da conversa) dos gatilhos ligados na Etapa, na ordem de GATILHOS; pendente (texto nil) fica de fora.
   def textos_dos_gatilhos(etapa = @etapa) = GATILHOS.filter_map { |chave, g| g['texto'] if gatilhos(etapa).include?(chave) }

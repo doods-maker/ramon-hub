@@ -1,7 +1,8 @@
 # Comportamento comum dos proxies de cálculo (Simulador, Painel, Elegibilidade,
 # Pensão, Maternidade, Planejamento, Liquidação e CNIS): resolver o lead da
 # rota, parsear tipos e mapear os erros do motor pra HTTP. A regra de payload
-# de cada tipo fica no controller do tipo — só o boilerplate mora aqui.
+# de cada tipo fica fora daqui (no controller do tipo ou, no Planejamento, em
+# Ramon::PlanejamentoPrevidenciario) — só o boilerplate mora aqui.
 module CalculoProxy
   extend ActiveSupport::Concern
 

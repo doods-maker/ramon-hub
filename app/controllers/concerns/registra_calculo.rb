@@ -6,11 +6,12 @@ module RegistraCalculo
 
   private
 
-  # Chamar DEPOIS do render, como o persistir_especiais do painel: histórico é
-  # registro, nunca pode derrubar o cálculo que o advogado já está vendo.
-  # `valor` = número principal do resultado (mostrado na linha do histórico).
+  # Nunca levanta: histórico é registro e não pode derrubar o cálculo que o
+  # advogado já está vendo — os proxies chamam DEPOIS do render; quem precisa do
+  # registro (o gerar do planejamento) chama antes e trata o nil.
+  # Devolve o registro (ou nil). `valor` = número principal do resultado (mostrado na linha do histórico).
   def registrar_calculo(tipo, valor: nil)
-    return if sem_historico?
+    return nil if sem_historico?
 
     Calculo.create!(
       account: Current.account, lead: @lead, user: Current.user, tipo: tipo,
@@ -20,6 +21,7 @@ module RegistraCalculo
     )
   rescue StandardError => e
     Rails.logger.warn("[calculo] não registrou o histórico: #{e.class} #{e.message}")
+    nil
   end
 
   # Recalcular o que já está no histórico (ver memória de cálculo, reabrir um

@@ -5,18 +5,23 @@ RSpec.describe 'Lead Planejamentos API', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:lead) { create(:lead, account: account) }
   let(:motor_url) { 'http://motor:8000' }
-  let(:cnis_entrada) do
+  let(:cnis) do
     {
-      'segurado' => { 'nascimento' => '1975-01-20', 'sexo' => 'F' },
-      'competencias' => [{ 'ano' => 2023, 'mes' => 5, 'salario' => '2500.00' }],
-      'vinculos' => [{ 'inicio' => '2005-01-01', 'fim' => '2020-12-31', 'tipo' => 'EMPREGO', 'indicadores' => [] }]
+      'entrada' => {
+        'segurado' => { 'nascimento' => '1975-01-20', 'sexo' => 'F' },
+        'competencias' => [{ 'ano' => 2023, 'mes' => 5, 'salario' => '2500.00' }],
+        'vinculos' => [{ 'inicio' => '2005-01-01', 'fim' => '2020-12-31', 'tipo' => 'EMPREGO', 'indicadores' => [] }]
+      },
+      'vinculos' => [{ 'empresa' => 'Empresa Ficticia' }]
     }
   end
-  let(:motor_body) { { data_calculo: '2026-07-24', cenarios: [], decisoes_pendentes: [], avisos: [] }.to_json }
+  let(:motor_body) do
+    { dados: { nome: 'Ana' }, memoria_xlsx_b64: 'eA==', forma_sugerida: { forma: 'carne_20' }, avisos: [] }.to_json
+  end
+  let(:base) { "/api/v1/accounts/#{account.id}/leads/#{lead.id}/planejamento" }
 
-  def planejar(params = {}, headers = admin.create_new_auth_token, caminho = 'planejamento')
-    post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/#{caminho}",
-         params: params, headers: headers, as: :json
+  def planejar(params = {}, headers = admin.create_new_auth_token, caminho = '')
+    post "#{base}#{caminho}", params: params, headers: headers, as: :json
   end
 
   it 'returns unauthorized without auth' do
@@ -25,112 +30,148 @@ RSpec.describe 'Lead Planejamentos API', type: :request do
   end
 
   it 'returns unauthorized for an agent of another account' do
-    other_account = create(:account)
-    other_admin = create(:user, account: other_account, role: :administrator)
+    other_admin = create(:user, account: create(:account), role: :administrator)
     planejar({}, other_admin.create_new_auth_token)
     expect(response).to have_http_status(:unauthorized)
   end
 
-  it 'returns service unavailable sem MOTOR_CALCULOS_URL' do
-    planejar
-    expect(response).to have_http_status(:service_unavailable)
-  end
+  describe 'POST /planejamento (calcular)' do
+    before { lead.update!(cnis: cnis) }
 
-  context 'when the motor responds' do
-    before do
-      stub_request(:post, "#{motor_url}/planejamento")
+    def stub_motor
+      stub_request(:post, "#{motor_url}/planejamento/previdenciario")
         .to_return(status: 200, body: motor_body, headers: { 'Content-Type' => 'application/json' })
-      lead.update!(cnis: { 'entrada' => cnis_entrada })
     end
 
-    it 'proxies o payload com segurado/competencias/vinculos do CNIS + cenarios/data_calculo/horizonte_anos' do
+    it 'repassa o corpo do payload e tira a memória da resposta' do
+      stub_motor
       with_modified_env MOTOR_CALCULOS_URL: motor_url do
-        planejar(data_calculo: '2026-08-01', horizonte_anos: 10,
-                 cenarios: [{ nome: 'A', salario: '3000.00', aliquota: '20' }])
+        planejar(perfil: { forma: 'carne_20' })
       end
-      expect(response).to have_http_status(:success)
-      matcher = have_requested(:post, "#{motor_url}/planejamento").with do |req|
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.keys).to match_array(%w[dados forma_sugerida avisos])
+      matcher = have_requested(:post, "#{motor_url}/planejamento/previdenciario").with do |req|
         body = JSON.parse(req.body)
-        body['segurado'] == cnis_entrada['segurado'] &&
-          body['competencias'] == cnis_entrada['competencias'] &&
-          body['vinculos'] == cnis_entrada['vinculos'] &&
-          body['data_calculo'] == '2026-08-01' &&
-          body['horizonte_anos'] == 10 &&
-          body['cenarios'] == [{ 'nome' => 'A', 'salario' => '3000.00', 'aliquota' => '20' }]
+        body['perfil']['forma'] == 'carne_20' && body['vinculos_detalhe'] == cnis['vinculos']
       end
       expect(WebMock).to matcher
     end
 
-    it 'nao envia campos opcionais ausentes' do
-      with_modified_env MOTOR_CALCULOS_URL: motor_url do
-        planejar
-      end
-      matcher = have_requested(:post, "#{motor_url}/planejamento").with do |req|
-        body = JSON.parse(req.body)
-        !body.key?('data_calculo') && !body.key?('cenarios') && !body.key?('horizonte_anos')
-      end
-      expect(WebMock).to matcher
-    end
-
-    it 'falls back to the contact nascimento/sexo when there is no CNIS' do
-      lead.update!(cnis: nil, contact: create(:contact, account: account, data_nascimento: '1980-05-10', sexo: 'M'))
-      with_modified_env MOTOR_CALCULOS_URL: motor_url do
-        planejar
-      end
-      expect(response).to have_http_status(:success)
-      matcher = have_requested(:post, "#{motor_url}/planejamento").with do |req|
-        JSON.parse(req.body)['segurado'] == { 'nascimento' => '1980-05-10', 'sexo' => 'M' }
-      end
-      expect(WebMock).to matcher
-    end
-  end
-
-  it 'repassa o detail 422 do motor' do
-    stub_request(:post, "#{motor_url}/planejamento")
-      .to_return(status: 422, body: { detail: 'cenarios excede o maximo de 10' }.to_json,
-                 headers: { 'Content-Type' => 'application/json' })
-    with_modified_env MOTOR_CALCULOS_URL: motor_url do
+    it 'sem CNIS devolve 422 pedindo o CNIS' do
+      lead.update!(cnis: nil)
       planejar
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to eq('Anexe o CNIS para montar o planejamento.')
     end
-    expect(response).to have_http_status(:unprocessable_entity)
-    expect(response.parsed_body['error']).to include('cenarios excede o maximo de 10')
+
+    it 'motor desatualizado (404) vira 503 com a mensagem' do
+      stub_request(:post, "#{motor_url}/planejamento/previdenciario").to_return(status: 404, body: '{}')
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        planejar
+      end
+      expect(response).to have_http_status(:service_unavailable)
+      expect(response.parsed_body['error']).to match(/motor de cálculos desatualizado/)
+    end
+
+    it 'não grava histórico' do
+      stub_motor
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        expect { planejar(perfil: { forma: 'carne_20' }) }.not_to change(Calculo, :count)
+      end
+    end
   end
 
-  describe 'POST /planejamento/pdf' do
-    before { lead.update!(cnis: { 'entrada' => cnis_entrada }) }
-
-    it 'devolve o PDF do motor como attachment com segurado_nome default do contato' do
-      contact = create(:contact, account: account, name: 'Fulano de Tal')
-      lead.update!(contact: contact)
-      stub_request(:post, "#{motor_url}/planejamento/pdf")
-        .to_return(status: 200, body: '%PDF-1.7 fake', headers: { 'Content-Type' => 'application/pdf' })
-      with_modified_env MOTOR_CALCULOS_URL: motor_url do
-        planejar({}, admin.create_new_auth_token, 'planejamento/pdf')
-      end
-      expect(response).to have_http_status(:success)
-      expect(response.headers['Content-Type']).to include('application/pdf')
-      expect(response.body).to start_with('%PDF')
-      matcher = have_requested(:post, "#{motor_url}/planejamento/pdf").with do |req|
-        JSON.parse(req.body)['segurado_nome'] == 'Fulano de Tal'
-      end
-      expect(WebMock).to matcher
+  describe 'POST /planejamento/gerar' do
+    let(:dados) do
+      { 'nome' => 'Ana', 'cenarios' => [{ 'rmi' => 2234.62, 'sugestao' => true, 'bom' => %w[a b], 'vazio' => [] }],
+        'pendencias' => [], 'sugestao' => { 'itens' => ['x'] } }
     end
 
-    it 'usa segurado_nome explicito quando enviado' do
-      stub_request(:post, "#{motor_url}/planejamento/pdf")
-        .to_return(status: 200, body: '%PDF-1.7 fake', headers: { 'Content-Type' => 'application/pdf' })
-      with_modified_env MOTOR_CALCULOS_URL: motor_url do
-        planejar({ segurado_nome: 'Ciclana' }, admin.create_new_auth_token, 'planejamento/pdf')
-      end
-      matcher = have_requested(:post, "#{motor_url}/planejamento/pdf").with do |req|
-        JSON.parse(req.body)['segurado_nome'] == 'Ciclana'
-      end
-      expect(WebMock).to matcher
+    before { lead.update!(cnis: cnis) }
+
+    it 'grava o dados editado inteiro no histórico e enfileira o job' do
+      planejar({ perfil: { forma: 'pro_labore' }, dados: dados }, admin.create_new_auth_token, '/gerar')
+      calculo = Calculo.last
+      expect(Ramon::PlanejamentoGerarJob).to have_been_enqueued.with(calculo.id)
+      expect(response).to have_http_status(:accepted)
+      expect(response.parsed_body).to eq('calculo_id' => calculo.id)
+      expect(calculo.snapshot['params']['dados']).to eq(dados)
+      expect(calculo.snapshot['params']['perfil']).to eq('forma' => 'pro_labore')
+      expect(calculo.snapshot['geracao']).to eq('estado' => 'gerando')
+      expect(calculo.snapshot['valor']).to eq(2234.62)
     end
 
-    it 'returns service unavailable sem MOTOR_CALCULOS_URL' do
-      planejar({}, admin.create_new_auth_token, 'planejamento/pdf')
+    it 'sem CNIS devolve 422 pedindo o CNIS e não grava nem enfileira' do
+      lead.update!(cnis: nil)
+      expect { planejar({ perfil: {}, dados: dados }, admin.create_new_auth_token, '/gerar') }
+        .not_to change(Calculo, :count)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to eq('Anexe o CNIS para montar o planejamento.')
+      expect(Ramon::PlanejamentoGerarJob).not_to have_been_enqueued
+    end
+
+    it 'sem registro do histórico devolve 503' do
+      allow(Calculo).to receive(:create!).and_raise(ActiveRecord::RecordInvalid)
+      planejar({ perfil: {}, dados: dados }, admin.create_new_auth_token, '/gerar')
       expect(response).to have_http_status(:service_unavailable)
+    end
+  end
+
+  describe 'GET /planejamento/geracao e /arquivo' do
+    let(:calculo) do
+      Calculo.create!(account: account, lead: lead, user: admin, tipo: 'planejamento',
+                      snapshot: { 'params' => { 'dados' => { 'nome' => 'Ana' } }, 'geracao' => { 'estado' => 'pronto' } })
+    end
+    let(:outro) do
+      Calculo.create!(account: account, lead: create(:lead, account: account), user: admin, tipo: 'planejamento')
+    end
+
+    def pegar(caminho, query)
+      get "#{base}#{caminho}", params: query, headers: admin.create_new_auth_token, as: :json
+    end
+
+    it 'geracao devolve o estado' do
+      pegar('/geracao', calculo_id: calculo.id)
+      expect(response.parsed_body).to eq('estado' => 'pronto')
+    end
+
+    it 'geracao de cálculo de outro lead dá 404' do
+      pegar('/geracao', calculo_id: outro.id)
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'arquivo devolve o PDF com o nome do Drive' do
+      Redis::Alfred.setex(Ramon::PlanejamentoPrevidenciario.chave(calculo, 'pdf'), Base64.strict_encode64('%PDF-fake'), 1.hour)
+      pegar('/arquivo', calculo_id: calculo.id, tipo: 'pdf')
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq('%PDF-fake')
+      expect(response.headers['Content-Disposition']).to include('Planejamento previdenci')
+      expect(response.headers['Content-Type']).to include('application/pdf')
+    end
+
+    it 'arquivo de textos em rascunho sai com o prefixo RASCUNHO' do
+      calculo.update!(snapshot: calculo.snapshot.deep_merge('params' => { 'dados' => { 'formato_textos' => 'rascunho' } }))
+      Redis::Alfred.setex(Ramon::PlanejamentoPrevidenciario.chave(calculo, 'memoria'), Base64.strict_encode64('PK'), 1.hour)
+      pegar('/arquivo', calculo_id: calculo.id, tipo: 'memoria')
+      expect(response).to have_http_status(:ok)
+      expect(response.headers['Content-Disposition']).to include('RASCUNHO - Mem')
+      expect(response.headers['Content-Type']).to include('spreadsheetml')
+    end
+
+    it 'arquivo expirado dá 404' do
+      pegar('/arquivo', calculo_id: calculo.id, tipo: 'memoria')
+      expect(response).to have_http_status(:not_found)
+      expect(response.parsed_body['error']).to eq('arquivo expirou — gere de novo')
+    end
+
+    it 'arquivo com tipo fora de pdf/memoria dá 422' do
+      pegar('/arquivo', calculo_id: calculo.id, tipo: 'zip')
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
+    it 'arquivo de cálculo de outro lead dá 404' do
+      pegar('/arquivo', calculo_id: outro.id, tipo: 'pdf')
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
