@@ -49,6 +49,19 @@ RSpec.describe Ramon::Fluxos::LeadGanho do
       expect(lead.reload.custom_attributes.dig('advbox', 'lawsuits_id')).to eq(22)
     end
 
+    it 'ganho causado por um passo de fluxo entra na cadeia: herda a profundidade e para no limite (sem laço ganho ↔ perdido)' do
+      fluxo = Ramon::Fluxos::Migracao.semear(account, 'lead_ganho').first
+      outro = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }))
+      fundo = create(:lead, account: account)
+      Current.executed_by = outro.execucoes.create!(account: account, alvo: lead, profundidade: 1, status: 'concluida')
+      lead.update!(lead_stage: ganho)
+      Current.executed_by = outro.execucoes.create!(account: account, alvo: fundo, profundidade: 3, status: 'concluida')
+      fundo.update!(lead_stage: ganho)
+      expect(fluxo.execucoes.pluck(:alvo_id, :profundidade)).to eq([[lead.id, 2]])
+    ensure
+      Current.executed_by = nil
+    end
+
     it 'um desligado na tela devolve ao código, sem ensaio' do
       with_modified_env(ADVBOX_API_TOKEN: 'tok', RAMON_FLUXO_LEAD_GANHO: 'on') do
         fluxo = Ramon::Fluxos::Migracao.semear(account, 'lead_ganho').first

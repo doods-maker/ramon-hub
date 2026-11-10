@@ -37,10 +37,12 @@ class Ramon::Fluxos::Disparo
 
   # Gatilhos que nascem fora do ouvinte (reunião, ADVBOX, ZapSign, documento). Erro do motor
   # nunca derruba quem chamou: o job do ADVBOX/ZapSign repetiria e duplicaria atividade, nota e sino.
-  # origem: a execução cujo passo causou o evento — a cadeia conta a profundidade e o fluxo não redispara a si mesmo.
-  # Posicional de propósito: com palavra-chave, o `'chave' => valor` sem chaves dos chamadores viraria keyword (ArgumentError).
-  def self.externo(gatilho_tipo, alvo, dados = {}, origem = nil)
-    call(gatilho_tipo, alvo, dados, origem: origem)
+  # Evento causado por um passo de fluxo (o Executor deixa a execução em Current.executed_by enquanto o passo roda — tarefa
+  # de reunião criada, lead movido para o ganho): a execução é a origem, então a cadeia conta a profundidade e o fluxo
+  # não redispara a si mesmo. Fora de passo, Current.executed_by é nulo ou outra coisa (regra de automação, contato).
+  def self.externo(gatilho_tipo, alvo, dados = {})
+    autor = Current.executed_by
+    call(gatilho_tipo, alvo, dados, origem: autor.is_a?(FluxoExecucao) ? autor : nil)
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: alvo.try(:account)).capture_exception
     Rails.logger.warn("[Ramon::Fluxos::Disparo] #{gatilho_tipo}: #{e.class}") # a mensagem pode ter dado do lead

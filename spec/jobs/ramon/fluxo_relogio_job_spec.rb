@@ -26,8 +26,9 @@ RSpec.describe Ramon::FluxoRelogioJob do
       expect(orfa.reload).to have_attributes(status: 'esperando', tentativas: i + 1)
       orfa.update_columns(status: 'rodando', retomar_em: nil, updated_at: 15.minutes.ago) # rubocop:disable Rails/SkipsModelValidations
     end
-    expect { described_class.perform_now }.not_to have_enqueued_job(Ramon::FluxoAvancarJob)
+    expect { described_class.perform_now }.to have_enqueued_job(Ramon::NtfyPushJob)
     expect(orfa.reload).to have_attributes(status: 'falhou', erro: include('as tentativas acabaram'))
+    expect(orfa.trilha.last).to include('erro' => true, 'resumo' => include('as tentativas acabaram'))
   end
 
   it 'dispara os gatilhos de relógio do dia' do

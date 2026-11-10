@@ -45,12 +45,10 @@ module Ramon::Fluxos::Reunioes
 
   # A reunião entrou na agenda (tarefa criada ou movida): começa o ciclo de lembretes DESSA reunião (alvo = a tarefa).
   # 'assumido' = a decisão do evento que a pôs na agenda (código ou fluxos no comando).
-  # origem: a execução que criou a tarefa (passo Criar tarefa) — sem ela, um fluxo de "reunião na agenda" que cria a
-  # tarefa da reunião dispararia a si mesmo sem fim.
-  def na_agenda(tarefa, assumido, origem: nil)
+  def na_agenda(tarefa, assumido)
     dados = { 'inicio' => tarefa.due_at.iso8601, 'quando' => Ramon::ReuniaoAgendamento.quando(tarefa.due_at),
               'lead_id' => tarefa.lead_id, 'assumido' => assumido }
-    Ramon::Fluxos::Disparo.externo('reuniao_na_agenda', tarefa, dados, origem)
+    Ramon::Fluxos::Disparo.externo('reuniao_na_agenda', tarefa, dados)
   end
 
   # A chave (B4.1): RAMON_FLUXO_REUNIOES=on E os 3 fluxos em modo normal (regras em Ramon::Fluxos::Migracao).

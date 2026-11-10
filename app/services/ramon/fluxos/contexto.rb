@@ -14,8 +14,12 @@ class Ramon::Fluxos::Contexto
 
   # O que pode sair no push (ntfy.sh é público): lista fechada, sem dado pessoal. Fora dela — {texto} (mensagem do
   # cliente), {resposta_ia}, {responsavel}, {titulo}, campos livres — sai o marcador; nome vira a tese; telefone some.
+  # tese, etapa, origem e caixa são texto de cadastro da conta (não do lead).
   NO_PUSH = %w[tese etapa prioridade origem canal caixa status quando hoje regra evento sla_minutos tentativa dias_parado
                documentos_completos reuniao_de_pe horario_passou primeira_resposta].freeze
+  # {texto} depende do gatilho: no evento do ADVBOX é o nome da etapa/tarefa de lá ("SENTENCA PROFERIDA"), que o código
+  # também manda (Ramon::AdvboxEventRegras#marco); nos demais é a mensagem do cliente.
+  NO_PUSH_DO_GATILHO = { 'evento_advbox' => %w[texto] }.freeze
   FORA_DO_PUSH = '(ver no hub)'.freeze
 
   attr_reader :execucao
@@ -44,7 +48,8 @@ class Ramon::Fluxos::Contexto
   # (Ramon::NtfyPushJob.rotulo). O sino do hub segue com `interpolar` (tudo).
   def interpolar_push(texto)
     rotulo = Ramon::NtfyPushJob.rotulo(lead)
-    seguros = dados.to_h { |chave, valor| [chave, NO_PUSH.include?(chave) ? valor : FORA_DO_PUSH] }
+    livres = NO_PUSH + NO_PUSH_DO_GATILHO.fetch(execucao.fluxo&.gatilho_tipo, [])
+    seguros = dados.to_h { |chave, valor| [chave, livres.include?(chave) ? valor : FORA_DO_PUSH] }
     interpolar(texto, seguros.merge('nome' => rotulo, 'nome_completo' => rotulo, 'primeiro_nome' => rotulo, 'telefone' => ''))
   end
 

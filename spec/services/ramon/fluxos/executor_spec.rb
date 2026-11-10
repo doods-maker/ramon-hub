@@ -121,10 +121,19 @@ RSpec.describe Ramon::Fluxos::Executor do
     expect(e.erro).to include('fora do ar')
   end
 
-  it 'passo de tipo que o motor não conhece falha na hora (sem as 3 tentativas)' do
+  it 'passo de tipo que este worker ainda não conhece (deploy no meio) entra nas tentativas, não falha na hora' do
     e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'x' }]))
-    e.update!(contexto: e.contexto.merge('grafo' => grafo_linear({ 'tipo' => 'manual' }, ['passo_que_saiu', {}])))
-    expect(avancar(e)).to have_attributes(status: 'falhou', tentativas: 0, erro: 'p1: passo desconhecido: passo_que_saiu')
+    e.update!(contexto: e.contexto.merge('grafo' => grafo_linear({ 'tipo' => 'manual' }, ['passo_novo', {}])))
+    expect(avancar(e)).to have_attributes(status: 'esperando', tentativas: 1)
+  end
+
+  it 'passo lento que o relógio já deu por órfã e falhou: o executor não grava por cima' do
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'x' }]))
+    allow(Ramon::Fluxos::Passos::Conversa).to receive(:nota_privada) do
+      FluxoExecucao.where(id: e.id).update_all(status: 'falhou', erro: 'pelo relógio') # rubocop:disable Rails/SkipsModelValidations
+      { saida: 's', resumo: 'nota' }
+    end
+    expect(avancar(e)).to have_attributes(status: 'falhou', erro: 'pelo relógio', no_atual: 'p1')
   end
 
   it 'passo impossível falha na hora' do

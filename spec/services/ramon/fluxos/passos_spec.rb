@@ -254,7 +254,7 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       Ramon::Fluxos::Passos::Lead.criar_tarefa(config, ctx(contexto: gatilho.deep_merge('gatilho' => { 'assumido' => true })))
       tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
       expect([tarefa.title, tarefa.due_at, tarefa.user]).to eq(['Reunião Cal.com: Primeiro', Time.zone.parse('2026-10-07T22:00:00Z'), agente])
-      expect(Ramon::Fluxos::Reunioes).to have_received(:na_agenda).with(tarefa, true, origem: kind_of(FluxoExecucao))
+      expect(Ramon::Fluxos::Reunioes).to have_received(:na_agenda).with(tarefa, true)
     end
 
     it 'fluxo comum criando a tarefa da reunião com o código no comando: o ciclo de lembretes só ensaia' do
@@ -391,6 +391,22 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       .to have_enqueued_job(Ramon::NtfyPushJob)
       .with(title: "Tese do push · #{lead.lead_stage.name}",
             body: "quinta, 08/10 às 14:00|#{marcador}|#{marcador}|#{marcador}|#{marcador}|{inventada}")
+  end
+
+  it 'push de evento do ADVBOX leva o {texto} (nome da etapa de lá); nos outros gatilhos {texto} é a mensagem do cliente e fica no hub' do
+    config = { 'titulo' => 'Marco', 'texto' => '{nome_completo}: {texto}' }
+    contexto = { 'gatilho' => { 'texto' => 'SENTENCA PROFERIDA' } }
+    advbox = fluxo_publicado(account, grafo_linear({ 'tipo' => 'evento_advbox' }))
+    do_advbox = Ramon::Fluxos::Contexto.new(advbox.execucoes.create!(account: account, alvo: lead, contexto: contexto))
+    expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, do_advbox) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Marco', body: 'Lead: SENTENCA PROFERIDA')
+    expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(contexto: contexto)) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Marco', body: "Lead: #{Ramon::Fluxos::Contexto::FORA_DO_PUSH}")
+  end
+
+  it 'esperar com unidade inválida é passo impossível (não entra nas 3 tentativas)' do
+    expect { Ramon::Fluxos::Passos::Logica.esperar({ 'quantidade' => 2, 'unidade' => 'semanas' }, ctx) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, 'unidade de espera inválida: semanas')
   end
 
   it 'mover para etapa apagada do funil é passo impossível (não entra nas 3 tentativas)' do

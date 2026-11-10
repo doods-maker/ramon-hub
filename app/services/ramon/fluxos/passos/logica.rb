@@ -47,7 +47,10 @@ module Ramon::Fluxos::Passos::Logica
     { saida: 's', resumo: "espera até #{hora(ate)}", esperar_ate: ate, vars: { 'horario_passou' => 'nao' } }
   end
 
-  def duracao(config) = config['quantidade'].to_i.public_send(UNIDADES.fetch(config['unidade']))
+  def duracao(config)
+    unidade = UNIDADES[config['unidade']] || raise(Ramon::Fluxos::PassoImpossivel, "unidade de espera inválida: #{config['unidade']}")
+    config['quantidade'].to_i.public_send(unidade)
+  end
 
   def hora(momento) = momento.in_time_zone(Fluxo::ZONA).strftime('%d/%m %H:%M')
 

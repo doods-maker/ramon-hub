@@ -56,8 +56,7 @@ module Ramon::Fluxos::Passos::Lead
     tarefa = lead.lead_tasks.create!(account: lead.account, kind: kind, title: titulo, due_at: prazo, user: responsavel,
                                      **formato_da_reuniao(kind, ctx))
     # B4.1: a tarefa da própria reunião põe a reunião na agenda → começa o ciclo de lembretes dela
-    da_reuniao = config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
-    Ramon::Fluxos::Reunioes.na_agenda(tarefa, decisao_do_evento(ctx, lead), origem: ctx.execucao) if da_reuniao
+    Ramon::Fluxos::Reunioes.na_agenda(tarefa, decisao_do_evento(ctx, lead)) if config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
     { saida: 's', resumo: "tarefa \"#{titulo}\" · #{responsavel&.name || 'sem responsável'}" }
   end
 

@@ -20,15 +20,13 @@ class Ramon::FluxoRelogioJob < ApplicationJob
 
   # Execução órfã (worker morreu no meio do passo) volta pra fila contando a tentativa; passo que derruba o worker toda
   # vez falha no mesmo teto do erro comum (Executor::ESPERAS_ERRO) em vez de repetir (e duplicar webhook/tarefa) sem fim.
-  # ponytail: falha sem linha na trilha nem sino/push (update_all); o erro aparece na tela da execução.
   def resgatar_orfas
     agora = Time.current
+    teto = Ramon::Fluxos::Executor::ESPERAS_ERRO.size
     orfas = FluxoExecucao.where(status: 'rodando', updated_at: ..10.minutes.ago)
-    # rubocop:disable Rails/SkipsModelValidations
-    orfas.where(tentativas: Ramon::Fluxos::Executor::ESPERAS_ERRO.size..)
-         .update_all(status: 'falhou', erro: 'o passo não terminou (o worker caiu no meio) e as tentativas acabaram', updated_at: agora)
-    orfas.update_all(['status = ?, retomar_em = ?, updated_at = ?, tentativas = tentativas + 1', 'esperando', agora, agora])
-    # rubocop:enable Rails/SkipsModelValidations
+    orfas.where(tentativas: teto..).find_each { |orfa| Ramon::Fluxos::Executor.new(orfa).falhar_orfa! }
+    resgate = ['status = ?, retomar_em = ?, updated_at = ?, tentativas = tentativas + 1', 'esperando', agora, agora]
+    orfas.where(tentativas: ...teto).update_all(resgate) # rubocop:disable Rails/SkipsModelValidations
   end
 
   def isolar(nome)
