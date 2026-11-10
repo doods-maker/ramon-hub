@@ -40,11 +40,11 @@ class Ramon::DriveClient
     def root_id = ENV.fetch('RAMON_DRIVE_ROOT_ID')
 
     # Id que entra numa query do Drive: só caracteres de id (o que vem da tela não pode fechar a aspa e mudar o filtro).
-    def id!(id) = id.to_s.match?(/\A[\w-]+\z/) ? id : raise(ArgumentError, 'id_do_drive_invalido')
+    def id_de_query!(id) = id.to_s.match?(/\A[\w-]+\z/) ? id : raise(ArgumentError, 'id_do_drive_invalido')
 
     # Acha (ou cria) subpasta pelo nome exato dentro do pai. Nome vai escapado na query.
     def ensure_folder(name, parent_id)
-      q = "name = '#{name.gsub("'", "\\\\'")}' and '#{id!(parent_id)}' in parents " \
+      q = "name = '#{name.gsub("'", "\\\\'")}' and '#{id_de_query!(parent_id)}' in parents " \
           "and mimeType = '#{FOLDER_MIME}' and trashed = false"
       existing = service.list_files(q: q, fields: 'files(id)').files.first
       return existing.id if existing
@@ -77,12 +77,12 @@ class Ramon::DriveClient
 
     # Navegador de arquivos do Drive (Peticionamento): só pastas, PDF e JPG/PNG; pastas primeiro.
     def children(parent_id)
-      listar("'#{id!(parent_id)}' in parents and #{FILTRO_TIPOS}", 200)
+      listar("'#{id_de_query!(parent_id)}' in parents and #{FILTRO_TIPOS}", 200)
     end
 
     # Tudo que está na pasta (sem filtro de tipos), pastas incluídas com pasta: true.
     def conteudo_da_pasta(pasta_id)
-      ordenados(todas_as_paginas("'#{id!(pasta_id)}' in parents and trashed = false", 'files(id,name,mimeType,modifiedTime,size,parents)'))
+      ordenados(todas_as_paginas("'#{id_de_query!(pasta_id)}' in parents and trashed = false", 'files(id,name,mimeType,modifiedTime,size,parents)'))
     end
 
     # Marcadores que a esteira deixa na pasta pronta: [{id:, parents:, size:}]; a pasta é o pai do marcador.

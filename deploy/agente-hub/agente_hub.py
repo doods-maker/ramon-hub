@@ -21,7 +21,7 @@ def parse_pedido(content):
 
 def aceita(payload, secret_hdr, cfg):
     # segredo em branco no env não autentica ninguém ('' == '' passaria no compare_digest)
-    if not cfg.WEBHOOK_SECRET or not hmac.compare_digest(str(secret_hdr or ''), str(cfg.WEBHOOK_SECRET)):
+    if not str(cfg.WEBHOOK_SECRET or '').strip() or not hmac.compare_digest(str(secret_hdr or ''), str(cfg.WEBHOOK_SECRET)):
         return False, 'segredo'
     if (payload.get('sender_email') or '').lower() != cfg.EDUARDO_EMAIL.lower():
         return False, 'remetente'
@@ -227,7 +227,7 @@ def executar(cfg, cap, job):
                     else:
                         resposta += '\n\n(arquivo não salvo: conversa sem lead)'
                 if est.get('tarefa_advbox') and not tarefa_valida(est['tarefa_advbox'], ctx):
-                    resposta += '\n\n(tarefa não criada: o processo não é o deste lead)'
+                    resposta += '\n\n(tarefa não criada: sem texto, ou o processo não é o do lead desta conversa)'
                 elif est.get('tarefa_advbox'):
                     ta = est['tarefa_advbox']; texto = ta['texto'] + (f"\nArquivo: {acoes[-1]['ref']}" if acoes else '')
                     args = args_tarefa(cfg, ta, texto)

@@ -427,3 +427,4 @@ Lógica em `Ramon::SenhaForaDaIa` (`app/services/ramon/senha_fora_da_ia.rb`) e `
 |---|---|---|---|
 | `app/models/message.rb` | `content_for_llm` novo delega a `Ramon::SenhaForaDaIa.para_llm`; o corpo original virou `ramon_content_for_llm_original` (sem outra mudança) | todo transcript para LLM (copiloto, colheita, resumo, Captain BaseTaskService) passa aqui | senha fora da IA #334 |
 | `enterprise/app/services/captain/open_ai_message_builder_service.rb` | `generate_content` e a transcrição de áudio passam pelo filtro de senha | a IA que atende monta o histórico com `content` cru, sem `content_for_llm` | senha fora da IA #334 |
+| `config/initializers/filter_parameter_logging.rb` | +`:senha, :codigo, :confirmacao, :cpf` em `filter_parameters` (casam por trecho da chave, no hub todo) | login do Painel do Cliente ia em claro para o log de requisições | revisão 10/11 |

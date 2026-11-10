@@ -35,6 +35,19 @@ RSpec.describe Ramon::NtfyPushJob do
           expect(stub).to have_been_requested
         end
       end
+
+      it 'troca também o primeiro nome sozinho e sem acento, sem mexer em palavra que só contém o nome' do
+        lead.update!(name: 'Ana João')
+        with_modified_env NTFY_TOPIC: 'ramon-leads' do
+          stub = stub_request(:post, 'https://ntfy.sh/ramon-leads')
+                 .with(body: 'Reunião com Auxílio-Acidente Teste nesta semana; Auxílio-Acidente Teste confirmou')
+                 .to_return(status: 200)
+
+          described_class.perform_now(lead.id, title: 'Reuniao marcada', body: 'Reunião com Ana nesta semana; Joao confirmou')
+
+          expect(stub).to have_been_requested
+        end
+      end
     end
 
     context 'when NTFY_TOPIC is blank' do

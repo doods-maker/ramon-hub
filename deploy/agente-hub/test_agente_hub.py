@@ -31,7 +31,8 @@ class TestAceita(unittest.TestCase):
     def test_segredo_vazio_nunca_autentica(self):
         class SemSegredo(Cfg):
             WEBHOOK_SECRET = ''
-        for h in ['', None]:
+        for segredo, h in [('', ''), ('', None), ('  ', '  ')]:
+            SemSegredo.WEBHOOK_SECRET = segredo
             self.assertFalse(ah.aceita({'sender_email': 'edu@x.com', 'content': '@claude oi'}, h, SemSegredo)[0])
 
 

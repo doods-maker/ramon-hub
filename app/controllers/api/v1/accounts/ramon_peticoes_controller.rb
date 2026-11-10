@@ -149,7 +149,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   def drive
     raiz = Ramon::DriveClient.root_id
-    pasta = params[:pasta_id].presence || raiz
+    pasta = Ramon::DriveClient.id_de_query!(params[:pasta_id].presence || raiz) # antes de qualquer chamada ao Drive
     pai = pasta == raiz ? nil : Ramon::DriveClient.parent_of(pasta)
     render json: { pasta_id: pasta, pai_id: pai, raiz_id: raiz, itens: Ramon::DriveClient.children(pasta) }
   end
@@ -190,19 +190,12 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     Current.account_user.administrator? || @peticao.responsavel_id == Current.user.id
   end
 
-  # Só o responsável protocola: quem passa a petição adiante é ele mesmo (ou o admin), não quem quer assumir.
-  def novo_responsavel
-    raise ArgumentError, 'SO_RESPONSAVEL' if @peticao && params[:responsavel_id].to_i != @peticao.responsavel_id && !responsavel_ou_admin?
-
-    Current.account.users.find(params[:responsavel_id])
-  end
-
   def peticao_atributos
     attrs = params.permit(:contact_id, :numero_processo, :inicial, :tribunal, :prazo, :descricao).to_h
     # Chave presente e vazia limpa o cliente; chave ausente não mexe.
     attrs[:contact] = attrs[:contact_id].presence && Current.account.contacts.find(attrs[:contact_id]) if attrs.key?(:contact_id)
     attrs.delete(:contact_id)
-    attrs[:responsavel] = novo_responsavel if params[:responsavel_id].present?
+    attrs[:responsavel] = Current.account.users.find(params[:responsavel_id]) if params[:responsavel_id].present?
     attrs
   end
 
