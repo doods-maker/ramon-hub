@@ -2,9 +2,10 @@ require 'prawn'
 
 # Põe um arquivo no pacote da petição: PDF passa; JPG/PNG viram PDF A4 de 1 página; o resto é recusado.
 class Ramon::Peticionamento::AdicionarArquivo
-  # O tipo declarado não basta: os primeiros bytes têm de ser do formato (leitores aceitam lixo antes do %PDF até 1024 bytes).
+  # O tipo declarado não basta: imagem tem de começar pela assinatura; no PDF os leitores aceitam lixo antes do %PDF- até 1024 bytes.
+  PDF = '%PDF-'.b.freeze
   JPEG = "\xFF\xD8\xFF".b.freeze
-  ASSINATURAS = { 'application/pdf' => '%PDF-'.b, 'image/png' => "\x89PNG".b, 'image/jpeg' => JPEG, 'image/jpg' => JPEG }.freeze
+  IMAGENS = { 'image/png' => "\x89PNG".b, 'image/jpeg' => JPEG, 'image/jpg' => JPEG }.freeze
   MAX_ARQUIVO = Ramon::Peticionamento::ImportarPasta::MAX_ARQUIVO
   MAX_PASTA = Ramon::Peticionamento::ImportarPasta::MAX_PASTA
 
@@ -34,13 +35,22 @@ class Ramon::Peticionamento::AdicionarArquivo
   def para_pdf(bytes, content_type)
     raise ArgumentError, 'muito_grande' if bytes.bytesize > MAX_ARQUIVO
 
-    assinatura = ASSINATURAS[content_type]
-    raise ArgumentError, 'formato' unless assinatura && bytes.byteslice(0, 1024).b.include?(assinatura)
+    inicio = bytes.byteslice(0, 1024).b
+    if content_type == 'application/pdf'
+      raise ArgumentError, 'formato' unless inicio.include?(PDF)
 
-    return bytes if content_type == 'application/pdf'
+      return bytes
+    end
+    raise ArgumentError, 'formato' unless IMAGENS.key?(content_type) && inicio.start_with?(IMAGENS[content_type])
 
+    imagem_para_pdf(bytes)
+  end
+
+  def imagem_para_pdf(bytes)
     doc = Prawn::Document.new(page_size: 'A4', margin: 24)
     doc.image StringIO.new(bytes), fit: [doc.bounds.width, doc.bounds.height]
     doc.render
+  rescue StandardError # imagem corrompida: o Prawn falha de vários jeitos (erro próprio, Zlib, NoMethodError)
+    raise ArgumentError, 'formato'
   end
 end

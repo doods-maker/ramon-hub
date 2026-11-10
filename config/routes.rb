@@ -827,13 +827,16 @@ Rails.application.routes.draw do
         post 'zapsign_webhooks', to: 'zapsign_webhooks#create'
 
         # Ramon — servidor MCP p/ os Claude Cowork (item 29): leitura e escrita
-        # (AdvBox). GET/DELETE = 405 (sem stream SSE). Token via ?token= (o
-        # filter_parameters mascara no log). A rota antiga com o token no PATH
-        # foi removida 20/07 (vazava o token no log) — connectors migrados.
+        # (AdvBox). GET/DELETE = 405 (sem stream SSE). Token pelo cabeçalho
+        # X-Mcp-Token (runner do agente) ou via ?token= (conector do claude.ai,
+        # que não manda cabeçalho; o filter_parameters mascara no log do Rails,
+        # mas não no do proxy). A rota antiga com o token no PATH foi removida
+        # 20/07 (vazava o token no log) — connectors migrados.
         post 'mcp', to: 'mcp#create'
         match 'mcp', to: 'mcp#not_allowed', via: [:get, :delete]
 
-        # Ramon — API do agente do hub (Claude na VPS). Token via ?token=.
+        # Ramon — API do agente do hub (Claude na VPS). Token pelo cabeçalho
+        # X-Agente-Token; ?token= segue aceito para o runner antigo.
         get  'agente/contexto',  to: 'agente#contexto'
         post 'agente/nota',      to: 'agente#nota'
         post 'agente/arquivo',   to: 'agente#arquivo'

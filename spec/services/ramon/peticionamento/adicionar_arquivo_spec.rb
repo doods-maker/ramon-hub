@@ -27,11 +27,19 @@ RSpec.describe Ramon::Peticionamento::AdicionarArquivo do
   end
 
   it 'recusa o que diz ser PDF ou imagem e não é: vale a assinatura dos primeiros bytes' do
-    [['application/pdf', 'MZ executável'], ['image/png', pdf], ['image/jpeg', 'GIF89a']].each do |tipo, bytes|
+    png = File.binread(Rails.root.join('spec/assets/sample.png'))
+    [['application/pdf', 'MZ executável'], ['image/png', pdf], ['image/jpeg', 'GIF89a'],
+     ['image/png', "lixo#{png}"], # imagem tem de COMEÇAR pela assinatura
+     ['image/png', png.byteslice(0, 40)]].each do |tipo, bytes| # assinatura certa, imagem corrompida: 422, não 500
       expect { described_class.call(peticao, bytes: bytes, nome: 'a.pdf', content_type: tipo, origem: 'upload') }
         .to raise_error(ArgumentError, 'formato')
     end
     expect(peticao.arquivos.count).to eq(0)
+  end
+
+  it 'PDF com lixo antes do cabeçalho (até 1024 bytes) entra, como nos leitores' do
+    a = described_class.call(peticao, bytes: "\n\n#{pdf}", nome: 'a.pdf', content_type: 'application/pdf', origem: 'upload')
+    expect(a.file).to be_attached
   end
 
   it 'recusa arquivo acima do teto e pacote que passaria do teto, os mesmos da leitura da pasta' do

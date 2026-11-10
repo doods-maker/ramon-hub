@@ -114,6 +114,29 @@ describe('usePonteAprovacoes', () => {
     expect(msg.itens[0].entrada).toHaveLength(4000);
   });
 
+  it('entrada cortada pelo hub: o aviso vem primeiro no texto cru, antes do corte de 4000', async () => {
+    RamonAprovacoesAgenteAPI.get.mockResolvedValue({
+      data: {
+        pode_decidir: true,
+        pedidos: [
+          {
+            ...PEDIDO,
+            entrada: {
+              content: 'x'.repeat(5000),
+              aviso_hub: 'Entrada grande.',
+            },
+          },
+        ],
+      },
+    });
+    await ouvir();
+    const [[msg]] = enviadas('aprovacoes');
+    expect(msg.itens[0].entrada).toMatch(
+      /^\{\s*"aviso_hub": "Entrada grande\."/
+    );
+    expect(msg.itens[0].linhas).toContain('Entrada grande.');
+  });
+
   it('repete a cada 5 s enquanto houve ouvir no último minuto', async () => {
     await ouvir();
     await vi.advanceTimersByTimeAsync(5000);
