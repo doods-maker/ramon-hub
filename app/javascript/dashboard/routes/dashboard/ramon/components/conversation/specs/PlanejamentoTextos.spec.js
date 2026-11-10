@@ -7,9 +7,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 const dados = () =>
   reactive({
     nome: 'Ana',
-    cenarios: [
-      { nome: 'Mínimo', rmi: 2234.62, lead: 'L', bom: ['a', 'b'] },
-    ],
+    cenarios: [{ nome: 'Mínimo', rmi: 2234.62, lead: 'L', bom: ['a', 'b'] }],
     pode: [{ t: 'T', p: 'P' }],
     sugestao: { curta: 'c', titulo: 't', itens: ['i'] },
     documentos: { separar: ['s'], guardar: ['g'] },
@@ -21,16 +19,31 @@ describe('PlanejamentoTextos', () => {
   it('um textarea por texto editável e nenhum para número', () => {
     const w = montar(dados());
     expect(w.findAll('textarea').length).toBe(10);
-    expect(w.find('[data-testid="planejamento-texto-cenarios.0.rmi"]').exists()).toBe(
-      false
-    );
+    expect(
+      w.find('[data-testid="planejamento-texto-cenarios.0.rmi"]').exists()
+    ).toBe(false);
   });
 
   it('digitar muda o dados do pai', async () => {
     const d = dados();
     const w = montar(d);
-    await w.find('[data-testid="planejamento-texto-pode.0.p"]').setValue('novo');
+    await w
+      .find('[data-testid="planejamento-texto-pode.0.p"]')
+      .setValue('novo');
     expect(d.pode[0].p).toBe('novo');
+  });
+
+  it('cada seção leva o seu título', () => {
+    const w = montar(dados());
+    expect(w.find('[data-testid="planejamento-secao-nao_pode"]').exists()).toBe(
+      false
+    );
+    expect(w.find('[data-testid="planejamento-secao-pode"] h4').text()).toBe(
+      'RAMON.SIMULADOR.PLANEJAMENTO_SECAO_PODE'
+    );
+    expect(
+      w.find('[data-testid="planejamento-secao-cenarios"] h4').text()
+    ).toBe('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_CENARIOS');
   });
 
   it('observações internas avisam que não vão no PDF', () => {

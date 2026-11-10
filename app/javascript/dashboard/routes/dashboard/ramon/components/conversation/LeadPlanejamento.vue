@@ -26,6 +26,9 @@ defineOptions({ name: 'LeadPlanejamento' });
 
 const { t } = useI18n();
 
+// textos ainda sem aprovação do Eduardo (spec §6.5): só as formas pró-labore têm modelo aprovado
+const rascunho = forma =>
+  t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_RASCUNHO', { forma });
 // chaves literais (sem chave dinâmica no i18n)
 const FORMAS = computed(() => [
   ['pro_labore', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_PRO_LABORE')],
@@ -33,11 +36,19 @@ const FORMAS = computed(() => [
     'pro_labore_mais_salario',
     t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_PRO_LABORE_MAIS_SALARIO'),
   ],
-  ['carne_20', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_CARNE_20')],
-  ['simplificado_11', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_SIMPLIFICADO_11')],
-  ['baixa_renda_5', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_BAIXA_RENDA_5')],
-  ['empregado', t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_EMPREGADO')],
+  ['carne_20', rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_CARNE_20'))],
+  [
+    'simplificado_11',
+    rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_SIMPLIFICADO_11')),
+  ],
+  [
+    'baixa_renda_5',
+    rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_BAIXA_RENDA_5')),
+  ],
+  ['empregado', rascunho(t('RAMON.SIMULADOR.PLANEJAMENTO_FORMA_EMPREGADO'))],
 ]);
+// estados de snapshot.geracao (GERANDO/PRONTO/ERRO em Ramon::PlanejamentoPrevidenciario)
+const GERACAO = { GERANDO: 'gerando', PRONTO: 'pronto', ERRO: 'erro' };
 const INTERVALO = 2000;
 const MAX_CONSULTAS = 60; // 2 min
 
@@ -69,7 +80,8 @@ let consultas = 0;
 // resposta que chega depois de desmontar não pode agendar outra consulta
 let vivo = true;
 
-const gerando = computed(() => geracao.value?.estado === 'gerando');
+const gerando = computed(() => geracao.value?.estado === GERACAO.GERANDO);
+const pronto = computed(() => geracao.value?.estado === GERACAO.PRONTO);
 const ocupado = computed(
   () => carregando.value || gerando.value || baixando.value
 );
@@ -198,9 +210,9 @@ consultar = async () => {
     // linha sem geração devolve null: nada gerado, para sem quebrar
     if (!data?.estado) {
       geracao.value = null;
-    } else if (data.estado !== 'gerando') {
+    } else if (data.estado !== GERACAO.GERANDO) {
       geracao.value = data;
-      if (data.estado === 'erro') mostrarErro(data.erro);
+      if (data.estado === GERACAO.ERRO) mostrarErro(data.erro);
     } else if (consultas >= MAX_CONSULTAS) {
       geracao.value = null;
       mostrarErro(t('RAMON.SIMULADOR.PLANEJAMENTO_DEMOROU'));
@@ -216,7 +228,7 @@ consultar = async () => {
 const gerar = async () => {
   limparErro('gerar');
   pararConsulta();
-  geracao.value = { estado: 'gerando' };
+  geracao.value = { estado: GERACAO.GERANDO };
   try {
     const { data } = await LeadsAPI.planejamentoGerar(props.lead.id, {
       perfil: perfilCalculado.value,
@@ -429,6 +441,8 @@ onBeforeUnmount(() => {
       <Button
         data-testid="planejamento-calcular"
         :disabled="ocupado"
+        :variant="dados ? 'faded' : null"
+        :color="dados ? 'slate' : null"
         sm
         class="self-start"
         :label="
@@ -538,7 +552,7 @@ onBeforeUnmount(() => {
           "
           @click="gerar"
         />
-        <template v-if="geracao?.estado === 'pronto'">
+        <template v-if="pronto">
           <Button
             data-testid="planejamento-baixar-pdf"
             :disabled="ocupado"
@@ -560,7 +574,7 @@ onBeforeUnmount(() => {
         </template>
       </div>
       <p
-        v-if="geracao?.estado === 'pronto'"
+        v-if="pronto"
         class="mb-0"
         :class="[AVISO, geracao.drive_erro ? TOM.amber : TOM.slate]"
         data-testid="planejamento-drive"
@@ -570,7 +584,7 @@ onBeforeUnmount(() => {
           :href="geracao.drive.pasta_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="underline"
+          class="text-n-blue-11 underline"
         >
           {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_DRIVE_SALVO') }}
         </a>

@@ -1804,6 +1804,7 @@
       "PLANEJAMENTO_FORMA_SIMPLIFICADO_11": "Simplified 11%",
       "PLANEJAMENTO_FORMA_BAIXA_RENDA_5": "Low income 5%",
       "PLANEJAMENTO_FORMA_EMPREGADO": "Employee",
+      "PLANEJAMENTO_FORMA_RASCUNHO": "{forma} (awaiting approval of the texts)",
       "PLANEJAMENTO_EMPRESA": "Company",
       "PLANEJAMENTO_SALARIO_ATUAL": "Current contribution (R$)",
       "PLANEJAMENTO_SALARIO_EMPREGO": "Job salary (R$)",

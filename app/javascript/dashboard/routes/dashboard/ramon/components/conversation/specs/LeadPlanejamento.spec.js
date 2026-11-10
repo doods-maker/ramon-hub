@@ -118,6 +118,35 @@ describe('LeadPlanejamento', () => {
     );
   });
 
+  it('formas sem textos aprovados aparecem como "aguardando aprovação dos textos"', async () => {
+    LeadsAPI.planejamento.mockResolvedValue(resposta());
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    const rotulo = valor =>
+      w
+        .find(`[data-testid="planejamento-forma"] option[value="${valor}"]`)
+        .text();
+
+    ['carne_20', 'simplificado_11', 'baixa_renda_5', 'empregado'].forEach(f =>
+      expect(rotulo(f)).toContain('PLANEJAMENTO_FORMA_RASCUNHO')
+    );
+    ['pro_labore', 'pro_labore_mais_salario'].forEach(f =>
+      expect(rotulo(f)).not.toContain('PLANEJAMENTO_FORMA_RASCUNHO')
+    );
+  });
+
+  it('com resultado na tela só "Gerar" é primário; "Calcular" vira secundário', async () => {
+    LeadsAPI.planejamento.mockResolvedValue(resposta());
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    const classes = id => w.find(`[data-testid="${id}"]`).classes();
+    expect(classes('planejamento-calcular')).not.toContain('bg-n-slate-9/10');
+
+    await clicar(w, 'planejamento-calcular');
+    expect(classes('planejamento-calcular')).toContain('bg-n-slate-9/10');
+    expect(classes('planejamento-gerar')).not.toContain('bg-n-slate-9/10');
+  });
+
   it('salário do emprego e facultativo só aparecem na forma que usa', async () => {
     LeadsAPI.planejamento.mockResolvedValue(resposta());
     const w = montar();
@@ -193,9 +222,13 @@ describe('LeadPlanejamento', () => {
     );
     await vi.advanceTimersByTimeAsync(2000);
 
-    expect(
-      w.find('[data-testid="planejamento-drive"] a').attributes('href')
-    ).toBe('https://drive.google.com/drive/folders/x');
+    const link = w.find('[data-testid="planejamento-drive"] a');
+    expect(link.attributes('href')).toBe(
+      'https://drive.google.com/drive/folders/x'
+    );
+    expect(link.classes()).toEqual(
+      expect.arrayContaining(['text-n-blue-11', 'underline'])
+    );
     expect(w.find('[data-testid="planejamento-baixar-pdf"]').exists()).toBe(
       true
     );

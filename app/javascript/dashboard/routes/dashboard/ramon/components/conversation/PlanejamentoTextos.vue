@@ -17,6 +17,21 @@ const props = defineProps({ dados: { type: Object, required: true } });
 const { t } = useI18n();
 
 const SO_ADVOGADO = 'observacoes_internas';
+// chaves literais (sem chave dinâmica no i18n), uma por SECOES_EDITAVEIS
+const TITULOS = computed(() => ({
+  pendencias: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_PENDENCIAS'),
+  observacoes_internas: t(
+    'RAMON.SIMULADOR.PLANEJAMENTO_SECAO_OBSERVACOES_INTERNAS'
+  ),
+  pode: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_PODE'),
+  nao_pode: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_NAO_PODE'),
+  sugestao: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_SUGESTAO'),
+  cenarios: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_CENARIOS'),
+  melhorias: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_MELHORIAS'),
+  passos: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_PASSOS'),
+  conferir: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_CONFERIR'),
+  documentos: t('RAMON.SIMULADOR.PLANEJAMENTO_SECAO_DOCUMENTOS'),
+}));
 
 const grupos = computed(() => {
   const porSecao = new Map();
@@ -39,7 +54,7 @@ const linhas = valor => Math.min(8, Math.max(2, Math.ceil(valor.length / 70)));
       :data-testid="`planejamento-secao-${g.secao}`"
     >
       <h4 :class="TITULO">
-        {{ t(`RAMON.SIMULADOR.PLANEJAMENTO_SECAO_${g.secao.toUpperCase()}`) }}
+        {{ TITULOS[g.secao] }}
       </h4>
       <p v-if="g.secao === SO_ADVOGADO" :class="[AVISO, TOM.amber]">
         {{ t('RAMON.SIMULADOR.PLANEJAMENTO_SO_ADVOGADO') }}
