@@ -43,7 +43,7 @@ module LeadComercial
   # a data. As travas contra manipulação (reunião na agenda, origem pelo histórico) estão no LeadComissao.
   def registrar_reuniao!(resultado, user, task: nil, vou_pensar: false)
     task ||= reuniao_em_aberto
-    exigir_reuniao_marcada!(task)
+    conferir_registro_da_reuniao!(task, resultado)
     attrs = { reuniao_resultado: resultado, reuniao_registrada_em: reuniao_registrada_em || Time.current }
     attrs[:reuniao_pela_ia] = reuniao_da_ia?(task) if reuniao_registrada_em.nil?
     attrs[:closer] = user if closer_id.blank?

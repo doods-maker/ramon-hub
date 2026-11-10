@@ -13,10 +13,16 @@ RSpec.describe 'Ramon Calculos API', type: :request do
 
     before { create(:team_member, team: create(:team, account: account, name: 'advogados'), user: agent) }
 
-    it 'só o jurídico (e o admin) busca na base do AdvBox' do
-      fora = create(:user, account: account, role: :agent)
-      get url, params: { q: 'Maria Souza' }, headers: fora.create_new_auth_token, as: :json
+    it 'vendedor (time closer) não busca na base do AdvBox; a recepção busca (Chegou cliente)', :aggregate_failures do
+      allow(Ramon::AdvboxClient).to receive(:get).and_return('data' => [])
+      vendedor, recepcao = create_list(:user, 2, account: account, role: :agent)
+      create(:team_member, team: create(:team, account: account, name: 'closer'), user: vendedor)
+      create(:team_member, team: create(:team, account: account, name: 'recepção'), user: recepcao)
+
+      get url, params: { q: 'Maria Souza' }, headers: vendedor.create_new_auth_token, as: :json
       expect(response).to have_http_status(:unauthorized)
+      get url, params: { q: 'Maria Souza' }, headers: recepcao.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
     end
 
     it 'exige login' do

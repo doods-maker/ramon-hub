@@ -891,11 +891,34 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'reunião que a IA marcou segue da IA mesmo cancelada e remarcada à mão (não paga o SDR)', :aggregate_failures do
       lead.update!(closer: closer)
-      lead.lead_activities.create!(account: account, user: nil, kind: 'meeting_scheduled', to_value: 'Reunião')
+      Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: 1.day.from_now, title: 'Reunião', user: nil)
+      Ramon::ReuniaoAgendamento.cancelar(task: lead.lead_tasks.find_by!(kind: 'meeting'), user: outro)
+      lead.lead_tasks.destroy_all
       na_agenda(user: outro)
       registrar(closer)
 
       expect(lead.reload).to have_attributes(reuniao_resultado: 'qualificada', reuniao_pela_ia: true)
+    end
+
+    it 'outro lead do mesmo contato herda a origem da IA (lead duplicado não lava a reunião)' do
+      contato = create(:contact, account: account)
+      antigo = create(:lead, account: account, lead_stage: novo, contact: contato)
+      antigo.marcar_reuniao_da_ia!
+      lead.update!(closer: closer, contact: contato)
+      na_agenda(user: outro)
+      registrar(closer)
+
+      expect(lead.reload.reuniao_pela_ia).to be(true)
+    end
+
+    it 'resultado já registrado só o gestor corrige', :aggregate_failures do
+      lead.update!(closer: closer, reuniao_resultado: 'nao_qualificada', reuniao_registrada_em: 3.days.ago)
+      registrar(closer)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.reuniao_resultado).to eq('nao_qualificada')
+
+      registrar(admin)
+      expect(lead.reload.reuniao_resultado).to eq('qualificada')
     end
 
     it 'reunião marcada por gente, sem IA no histórico, não é da IA' do
@@ -937,7 +960,7 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'correção mantém a 1ª data (mês da apuração não muda)' do
       lead.update!(closer: closer, reuniao_resultado: 'nao_qualificada', reuniao_registrada_em: 3.days.ago.change(usec: 0))
-      expect { registrar(closer) }.not_to(change { lead.reload.reuniao_registrada_em })
+      expect { registrar(admin) }.not_to(change { lead.reload.reuniao_registrada_em })
     end
 
     it 'vou_pensar grava a marca à parte, sem mexer no resultado', :aggregate_failures do
