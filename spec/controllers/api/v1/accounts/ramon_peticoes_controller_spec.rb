@@ -244,6 +244,22 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body).to include('error' => 'DRIVE_OFF')
   end
 
+  it 'só o responsável (ou o admin) passa a petição adiante: outro advogado não assume para protocolar', :aggregate_failures do
+    peticao = peticao_com_principal
+    patch "#{url}/#{peticao.id}", params: { responsavel_id: bia.id }, headers: bia.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(peticao.reload.responsavel).to eq(ana)
+
+    patch "#{url}/#{peticao.id}", params: { responsavel_id: bia.id }, headers: ana.create_new_auth_token, as: :json
+    expect(peticao.reload.responsavel).to eq(bia)
+  end
+
+  it 'drive com id que não é id → 422, sem consultar o Drive' do
+    allow(Ramon::DriveClient).to receive_messages(configured?: true, root_id: 'raiz', parent_of: 'raiz')
+    get "#{url}/drive", params: { pasta_id: "x' in parents or name contains '" }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+  end
+
   it 'drive navega: raiz sem pai; subpasta com pai; busca' do
     allow(Ramon::DriveClient).to receive_messages(configured?: true, root_id: 'raiz', children: [{ id: 'a' }], parent_of: 'raiz',
                                                   search: [{ id: 'b' }])

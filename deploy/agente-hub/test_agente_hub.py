@@ -28,6 +28,12 @@ class TestAceita(unittest.TestCase):
                      ({'sender_email': 'edu@x.com', 'content': '@claude oi'}, 'errado')]:
             self.assertFalse(ah.aceita(p, h, Cfg)[0])
 
+    def test_segredo_vazio_nunca_autentica(self):
+        class SemSegredo(Cfg):
+            WEBHOOK_SECRET = ''
+        for h in ['', None]:
+            self.assertFalse(ah.aceita({'sender_email': 'edu@x.com', 'content': '@claude oi'}, h, SemSegredo)[0])
+
 
 class TestCap(unittest.TestCase):
     def test_cap_e_pausa(self):
@@ -101,6 +107,16 @@ class TestTarefa(unittest.TestCase):
         self.assertEqual((b['responsavel_id'], b['tipo_tarefa_id']), (cfg.ADVBOX_TAREFA_RESPONSAVEL_ID, cfg.ADVBOX_TAREFA_TIPO_ID))
         c = ah.args_tarefa(cfg, {'lawsuit_id': 9, 'texto': 'x', 'responsavel_id': 'abc'}, 'x')
         self.assertEqual(c['responsavel_id'], cfg.ADVBOX_TAREFA_RESPONSAVEL_ID)
+
+    def test_so_cria_tarefa_no_processo_do_lead_da_conversa(self):
+        ta = {'lawsuit_id': 9, 'texto': 'x'}
+        self.assertTrue(ah.tarefa_valida(ta, {'advbox_lawsuit_id': 9}))
+        self.assertTrue(ah.tarefa_valida({'lawsuit_id': '9', 'texto': 'x'}, {'advbox_lawsuit_id': 9}))
+        self.assertFalse(ah.tarefa_valida(ta, {'advbox_lawsuit_id': 7}))   # processo de outro cliente (injeção)
+        self.assertFalse(ah.tarefa_valida(ta, {'advbox_lawsuit_id': None}))  # lead sem processo no ADVBOX
+        self.assertFalse(ah.tarefa_valida({'lawsuit_id': None, 'texto': 'x'}, {'advbox_lawsuit_id': None}))
+        self.assertFalse(ah.tarefa_valida({'lawsuit_id': 9, 'texto': '  '}, {'advbox_lawsuit_id': 9}))
+        self.assertFalse(ah.tarefa_valida(None, {'advbox_lawsuit_id': 9}))
 
 
 class TestArquivo(unittest.TestCase):

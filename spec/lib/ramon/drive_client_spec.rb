@@ -16,6 +16,12 @@ RSpec.describe Ramon::DriveClient do
     expect(api).to have_received(:list_files).with(hash_including(page_size: 200, supports_all_drives: true))
   end
 
+  it 'children recusa id que não é id (fecharia a aspa da query) sem chamar o Drive' do
+    allow(api).to receive(:list_files)
+    expect { described_class.children("x' in parents or name contains '") }.to raise_error(ArgumentError)
+    expect(api).not_to have_received(:list_files)
+  end
+
   it 'search escapa barra e aspas' do
     allow(api).to receive(:list_files).and_return(Google::Apis::DriveV3::FileList.new(files: []))
     described_class.search("a\\b'c")

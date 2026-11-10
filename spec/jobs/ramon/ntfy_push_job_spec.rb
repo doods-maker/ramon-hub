@@ -23,6 +23,20 @@ RSpec.describe Ramon::NtfyPushJob do
       end
     end
 
+    context 'when the caller put the lead name in the text' do
+      it 'troca o nome pela tese no título e no corpo (o ntfy.sh é público)' do
+        with_modified_env NTFY_TOPIC: 'ramon-leads' do
+          stub = stub_request(:post, 'https://ntfy.sh/ramon-leads')
+                 .with(headers: { 'Title' => 'Reuniao marcada: Auxilio-Acidente Teste' }, body: 'IA: rascunho para Auxílio-Acidente Teste')
+                 .to_return(status: 200)
+
+          described_class.perform_now(lead.id, title: 'Reuniao marcada: João da Silva', body: 'IA: rascunho para joão da silva')
+
+          expect(stub).to have_been_requested
+        end
+      end
+    end
+
     context 'when NTFY_TOPIC is blank' do
       it 'não faz nenhuma request' do
         with_modified_env NTFY_TOPIC: '' do

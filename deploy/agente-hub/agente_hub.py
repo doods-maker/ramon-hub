@@ -20,7 +20,8 @@ def parse_pedido(content):
 
 
 def aceita(payload, secret_hdr, cfg):
-    if not hmac.compare_digest(str(secret_hdr or ''), str(cfg.WEBHOOK_SECRET)):
+    # segredo em branco no env não autentica ninguém ('' == '' passaria no compare_digest)
+    if not cfg.WEBHOOK_SECRET or not hmac.compare_digest(str(secret_hdr or ''), str(cfg.WEBHOOK_SECRET)):
         return False, 'segredo'
     if (payload.get('sender_email') or '').lower() != cfg.EDUARDO_EMAIL.lower():
         return False, 'remetente'
@@ -184,6 +185,13 @@ def arquivo_valido(p, a):
                 and PEDIDO_DOCUMENTO.search(p.get('pedido') or ''))
 
 
+# A conversa do cliente entra no prompt: o processo da tarefa não pode vir só da resposta do modelo. Só cria no
+# processo ADVBOX do lead desta conversa (o que o hub devolveu no contexto) — o prompt já pede isso, o runner garante.
+def tarefa_valida(ta, ctx):
+    processo = (ctx or {}).get('advbox_lawsuit_id')
+    return bool(isinstance(ta, dict) and processo and str(ta.get('lawsuit_id')) == str(processo) and (ta.get('texto') or '').strip())
+
+
 def executar(cfg, cap, job):
     t0 = time.time(); p = parse_pedido(job['content']); acoes = []; status = 'ok'; resposta = ''
     conv, lead_id = job['conversation_id'], job.get('lead_id')
@@ -218,7 +226,9 @@ def executar(cfg, cap, job):
                         acoes.append({'tipo': 'drive', 'ref': up.get('url')})
                     else:
                         resposta += '\n\n(arquivo não salvo: conversa sem lead)'
-                if est.get('tarefa_advbox'):
+                if est.get('tarefa_advbox') and not tarefa_valida(est['tarefa_advbox'], ctx):
+                    resposta += '\n\n(tarefa não criada: o processo não é o deste lead)'
+                elif est.get('tarefa_advbox'):
                     ta = est['tarefa_advbox']; texto = ta['texto'] + (f"\nArquivo: {acoes[-1]['ref']}" if acoes else '')
                     args = args_tarefa(cfg, ta, texto)
                     res = mcp_call(cfg, 'advbox_criar_tarefa', args)

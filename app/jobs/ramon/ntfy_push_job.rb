@@ -35,10 +35,16 @@ class Ramon::NtfyPushJob < ApplicationJob
     http.read_timeout = 5
 
     req = Net::HTTP::Post.new(uri)
-    req['Title'] = ascii_title(custom_title.presence || 'Novo lead')
+    req['Title'] = ascii_title(sem_nome(custom_title, lead).presence || 'Novo lead')
     req['Tags'] = 'bell'
-    req.body = custom_body.presence || body_for(lead)
+    req.body = sem_nome(custom_body, lead).presence || body_for(lead)
     http.request(req)
+  end
+
+  # Guarda única da regra do topo: o nome do lead (e o do contato) que algum chamador pôs no texto sai como a tese.
+  def sem_nome(texto, lead)
+    nomes = [lead&.name, lead&.contact&.name].compact_blank.uniq.select { |nome| nome.length >= 3 }
+    nomes.reduce(texto.to_s) { |limpo, nome| limpo.gsub(/#{Regexp.escape(nome)}/i, self.class.rotulo(lead)) }
   end
 
   # Header HTTP não aceita não-ASCII → transliterar (acentos) p/ ASCII;
