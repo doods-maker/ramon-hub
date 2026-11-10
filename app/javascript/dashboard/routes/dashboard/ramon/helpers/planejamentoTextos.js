@@ -42,9 +42,9 @@ export const camposEditaveis = dados => {
 };
 
 export const definirTexto = (dados, caminho, valor) => {
-  const pai = caminho.slice(0, -1).reduce((no, k) => no?.[k], dados);
-  const chave = caminho[caminho.length - 1];
-  if (typeof pai?.[chave] !== 'string')
-    throw new Error(`Só texto é editável: ${caminho.join('.')}`);
-  pai[chave] = valor;
+  const alvo = caminho.join('.');
+  if (!camposEditaveis(dados).some(c => c.caminho.join('.') === alvo))
+    throw new Error(`Só texto das seções editáveis: ${alvo}`);
+  const pai = caminho.slice(0, -1).reduce((no, k) => no[k], dados);
+  pai[caminho[caminho.length - 1]] = valor;
 };

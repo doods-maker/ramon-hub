@@ -83,4 +83,31 @@ describe('planejamentoTextos', () => {
   it('definirTexto recusa número', () => {
     expect(() => definirTexto(dados(), ['cenarios', 0, 'rmi'], '1')).toThrow();
   });
+
+  it('definirTexto recusa texto fora das seções editáveis', () => {
+    const d = { ...dados(), calculo_data: '01/01/2026' };
+    [
+      ['calculo_data'],
+      ['aposentadoria', 'data'],
+      ['cenarios', 0, 'nome'],
+      ['cenarios', 0, 'titulo'],
+      ['nome'],
+    ].forEach(c => expect(() => definirTexto(d, c, 'x')).toThrow());
+    expect(d.aposentadoria.data).toBe('16/03/2040');
+  });
+
+  it('definirTexto recusa caminho inexistente e alvo objeto/array', () => {
+    const d = dados();
+    expect(() => definirTexto(d, ['pode', 9, 't'], 'x')).toThrow();
+    expect(() => definirTexto(d, ['nada', 'x'], 'x')).toThrow();
+    expect(() => definirTexto(d, ['pode', 0], 'x')).toThrow();
+    expect(() => definirTexto(d, ['cenarios', 0, 'bom'], 'x')).toThrow();
+    expect(() => definirTexto(d, ['sugestao'], 'x')).toThrow();
+  });
+
+  it('definirTexto aceita marcador como texto', () => {
+    const d = dados();
+    definirTexto(d, ['pode', 0, 'p'], 'em {data_ap} aposenta');
+    expect(d.pode[0].p).toBe('em {data_ap} aposenta');
+  });
 });
