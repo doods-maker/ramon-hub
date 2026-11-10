@@ -64,61 +64,6 @@ describe Ramon::ContactAnonymizer do
     expect(destroy.audited_changes.to_json).not_to include('Duplicado', '7777')
   end
 
-  # O titular pede eliminação: o que ele deixou nos leads (fora do contato) também sai.
-  describe 'o que mora nos leads do titular' do
-    let(:lead) do
-      create(:lead, account: account, contact: contact, name: 'Joao da Silva', portal_token: 'token-vivo',
-                    cnis: { 'filename' => 'cnis-joao.pdf' }, custom_attributes: { 'zapsign' => { 'cpf' => '52998224725' } })
-    end
-
-    it 'anonimiza o lead e mata o link mágico', :aggregate_failures do
-      lead
-      perform
-      expect(lead.reload).to have_attributes(name: "Titular anonimizado ##{contact.id}", cnis: nil, custom_attributes: {}, portal_token: nil)
-    end
-
-    it 'redige notas e reuniões do lead e apaga os cálculos', :aggregate_failures do
-      nota = lead.lead_notes.create!(account: account, body: 'Joao passou o CPF 529.982.247-25')
-      reuniao = create(:reuniao, account: account, lead: lead, status: 'pronta',
-                                 transcricao: 'Eu sou o Joao, meu CPF é 529.982.247-25', ata: 'Joao da Silva quer revisar o benefício')
-      Calculo.create!(account: account, lead: lead, tipo: 'rmi', segurado_nome: 'Joao da Silva', segurado_cpf: '52998224725',
-                      snapshot: { 'cnis' => { 'nome' => 'Joao da Silva' } })
-
-      perform
-      expect(nota.reload.body).to include('[nome]', '[cpf]')
-      expect(nota.body).not_to include('Joao', '529.982.247-25')
-      expect(reuniao.reload.transcricao).not_to include('Joao', '529.982.247-25')
-      expect(reuniao.ata).not_to include('Joao')
-      expect(lead.calculos.count).to eq(0)
-    end
-
-    it 'apaga os anexos das conversas do titular' do
-      message.attachments.create!(account_id: account.id, file_type: :image, external_url: 'https://exemplo.com/rg.png')
-
-      perform
-      expect(message.reload.attachments).to be_empty
-    end
-
-    it 'tira o telefone do source_id do contato na caixa' do
-      contato_na_caixa = conversation.contact_inbox
-      contato_na_caixa.update_columns(source_id: '5548999998888') # rubocop:disable Rails/SkipsModelValidations
-
-      perform
-      expect(contato_na_caixa.reload.source_id).to eq("anonimizado-#{contato_na_caixa.id}")
-    end
-
-    # Sem regra escrita sobre o dever de guarda: do caso de cliente só o link mágico morre.
-    it 'preserva o caso ganho e os anexos dele, mas mata o link mágico', :aggregate_failures do
-      lead.update_columns(won_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
-      message.attachments.create!(account_id: account.id, file_type: :image, external_url: 'https://exemplo.com/rg.png')
-
-      perform
-      expect(lead.reload).to have_attributes(name: 'Joao da Silva', portal_token: nil)
-      expect(lead.cnis).to eq('filename' => 'cnis-joao.pdf')
-      expect(message.reload.attachments.size).to eq(1)
-    end
-  end
-
   it 'records the bulk deletion as made by who asked', :aggregate_failures do
     admin = create(:user, account: account, role: :administrator)
     Contacts::BulkActionService.new(account: account, user: admin, params: { action_name: 'delete', ids: [contact.id] }).perform

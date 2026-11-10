@@ -1,4 +1,6 @@
 class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
+  include ParametroDeData
+
   before_action :current_account
   before_action :fetch_lead, if: -> { params[:lead_id].present? }
   before_action :fetch_task, only: [:update, :destroy, :complete]
@@ -7,8 +9,6 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
 
   def index
     @lead_tasks = params[:lead_id].present? ? @lead.lead_tasks.order(:due_at) : account_scope
-  rescue ArgumentError # from/to da Agenda fora de formato
-    render json: { error: 'DATA_INVALIDA' }, status: :unprocessable_entity
   end
 
   def create
@@ -46,10 +46,8 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
   # Período da Agenda (from..to): abertas do período + concluídas hoje (a
   # Agenda mostra apagadas) + vencidas abertas de qualquer dia (fixadas em Hoje).
   def agenda_scope(scope)
-    de, ate = [params[:from], params[:to]].map { |valor| Time.zone.parse(valor.to_s) }
-    raise ArgumentError, 'from/to' unless de && ate # nil viraria intervalo aberto (a conta inteira)
-
-    periodo = scope.where(due_at: de..ate)
+    # Sem from/to válidos é 422: nil viraria intervalo aberto (a conta inteira).
+    periodo = scope.where(due_at: hora_do_parametro(:from)..hora_do_parametro(:to))
     hoje = Time.current.in_time_zone('America/Sao_Paulo').all_day
     periodo.open_tasks.or(periodo.where(completed_at: hoje)).or(scope.overdue)
   end
