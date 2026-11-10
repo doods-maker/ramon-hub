@@ -13,16 +13,18 @@ RSpec.describe 'Ramon Calculos API', type: :request do
 
     before { create(:team_member, team: create(:team, account: account, name: 'advogados'), user: agent) }
 
-    it 'vendedor (time closer) não busca na base do AdvBox; a recepção busca (Chegou cliente)', :aggregate_failures do
-      allow(Ramon::AdvboxClient).to receive(:get).and_return('data' => [])
-      vendedor, recepcao = create_list(:user, 2, account: account, role: :agent)
+    it 'agente sem time de trabalho com cliente não busca na base do AdvBox; o Closer e a recepção buscam', :aggregate_failures do
+      allow(Ramon::AdvboxClient).to receive(:customers).and_return('data' => [])
+      sem_time, vendedor, recepcao = create_list(:user, 3, account: account, role: :agent)
       create(:team_member, team: create(:team, account: account, name: 'closer'), user: vendedor)
       create(:team_member, team: create(:team, account: account, name: 'recepção'), user: recepcao)
 
-      get url, params: { q: 'Maria Souza' }, headers: vendedor.create_new_auth_token, as: :json
+      get url, params: { q: 'Maria Souza' }, headers: sem_time.create_new_auth_token, as: :json
       expect(response).to have_http_status(:unauthorized)
-      get url, params: { q: 'Maria Souza' }, headers: recepcao.create_new_auth_token, as: :json
-      expect(response).to have_http_status(:success)
+      [vendedor, recepcao].each do |pessoa|
+        get url, params: { q: 'Maria Souza' }, headers: pessoa.create_new_auth_token, as: :json
+        expect(response).to have_http_status(:success)
+      end
     end
 
     it 'exige login' do
