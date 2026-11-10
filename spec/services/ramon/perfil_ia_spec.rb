@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe Ramon::PerfilIa do
+  # No CI, um reload do Zeitwerk no meio da bateria apaga Ramon::PerfilIa::Gatilhos da classe que o RSpec guardou
+  # (NameError em 5 exemplos quando este arquivo cai no mesmo lote do reload); buscar a classe na hora acha a recarregada.
+  def described_class = Ramon::PerfilIa
+
   let(:account) { create(:account) }
   # etapas do seed (Leads::SeedDefaultConfigService) — Novo … Última chance, Fechado, Perdido
   let(:etapa) { ->(label) { account.lead_stages.find_by(label: label) } }
