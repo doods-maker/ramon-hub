@@ -10,12 +10,15 @@ module Ramon::Fluxos::EventosAdvbox
   module_function
 
   def processar(lead, regra, nome)
-    dados = { 'regra' => regra, 'texto' => nome, 'primeiro_nome' => primeiro_nome(lead), 'hoje' => Time.zone.today.strftime('%d/%m/%Y') }
+    dados = { 'regra' => regra, 'texto' => nome, 'primeiro_nome' => primeiro_nome(lead), 'hoje' => hoje }
     assumido = Ramon::Fluxos::Migracao.assumiu?(lead.account, 'eventos_advbox')
     feitas = Ramon::Fluxos::Disparo.externo('evento_advbox', lead, dados.merge('assumido' => assumido))
     Ramon::AdvboxEventRegras.new(lead.account).public_send(regra, lead, nome) unless assumido && feitas.any?
     Ramon::Fluxos::Disparo.externo('evento_advbox', lead, dados)
   end
+
+  # O dia em São Paulo: o fuso do app é UTC, e um evento às 21h30 daqui sairia com a data de amanhã.
+  def hoje = Time.find_zone!(Fluxo::ZONA).today.strftime('%d/%m/%Y')
 
   # Como o código escreve nos rascunhos (Ramon::AdvboxEventRegras#first_name) — vai pronto no gatilho como {primeiro_nome}.
   def primeiro_nome(lead) = lead.name.to_s.split.first.presence || 'cliente'

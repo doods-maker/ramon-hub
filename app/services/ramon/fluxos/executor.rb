@@ -35,6 +35,8 @@ class Ramon::Fluxos::Executor
     return @execucao if cancelar_se_preciso
 
     andar
+    return @execucao.reload if @perdida # o relógio já a devolveu à fila ou a falhou: quem grava é ele
+
     @execucao.save!
     avisar_falha if @execucao.status == 'falhou' && !@execucao.ensaio
     @execucao
@@ -42,9 +44,30 @@ class Ramon::Fluxos::Executor
     Current.executed_by = nil
   end
 
+  # Órfã que estourou as tentativas (Ramon::FluxoRelogioJob): falha pelo caminho de sempre — linha na trilha, sino e push.
+  # Reivindica por UPDATE condicional (ainda 'rodando', com o carimbo de quando foi lida): se o executor de verdade
+  # gravou no meio, não é mais órfã e nada muda.
+  def falhar_orfa!
+    passo = grafo.no(@execucao.no_atual) || {}
+    erro = 'o passo não terminou (o worker caiu no meio) e as tentativas acabaram'
+    trilha = @execucao.trilha + [linha(passo['id'], passo['tipo'], "erro: #{erro}", erro: true)]
+    minha = FluxoExecucao.where(id: @execucao.id, status: 'rodando', updated_at: @execucao.updated_at)
+    feitas = minha.update_all(status: 'falhou', erro: "#{passo['id']}: #{erro}", trilha: trilha, updated_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+    return if feitas.zero?
+
+    @execucao.reload
+    avisar_falha unless @execucao.ensaio
+  end
+
   private
 
   def grafo = @grafo ||= @execucao.grafo
+
+  # Passo que leva mais de 10 min (rodar_skill) parece órfã ao relógio, que devolve a execução à fila ou a falha. Antes de
+  # gravar o resultado, o executor confere que ela segue 'rodando'; senão sai sem gravar por cima.
+  # ponytail: só o status — se outro executor já a reivindicou de novo, os dois se julgam donos (o passo lento roda 2 vezes,
+  # como antes); um carimbo de dono (coluna nova) resolveria.
+  def perdida? = @perdida = !FluxoExecucao.exists?(id: @execucao.id, status: 'rodando')
 
   # Troca esperando (vencida) → rodando numa transação curta: dois jobs nunca andam a mesma execução.
   def reivindicar
@@ -87,8 +110,8 @@ class Ramon::Fluxos::Executor
       passo = grafo.no(@execucao.no_atual)
       return @execucao.status = 'concluida' if passo.nil?
 
-      resultado = executar(passo)
-      return if resultado.nil? # erro: já ficou esperando nova tentativa ou falhou
+      resultado = rodar(passo)
+      return if resultado.nil? # erro (já ficou esperando nova tentativa ou falhou) ou execução perdida para o relógio
 
       registrar(passo, resultado)
       return @execucao.status = 'concluida' if resultado[:parar]
@@ -100,8 +123,14 @@ class Ramon::Fluxos::Executor
     @execucao.assign_attributes(status: 'falhou', erro: "passou de #{LIMITE_PASSOS} passos")
   end
 
+  def rodar(passo)
+    resultado = executar(passo)
+    resultado unless perdida?
+  end
+
   def executar(passo)
     # .name.constantize: pega a constante atual (o CI recarrega o código no meio; o módulo guardado no PASSOS pode ser o velho)
+    # tipo desconhecido dá KeyError e entra nas tentativas de propósito: no deploy, web e worker ficam minutos em versões diferentes
     modulo = PASSOS.fetch(passo['tipo']).name.constantize
     resultado = modulo.public_send(passo['tipo'], passo['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
     @execucao.tentativas = 0
@@ -147,6 +176,9 @@ class Ramon::Fluxos::Executor
       Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_fluxo_falhou',
                                          meta: { 'label' => fluxo.nome }, user_ids: admins).perform
     end
-    Ramon::NtfyPushJob.perform_later(title: "Fluxo falhou: #{fluxo.nome}", body: @execucao.erro.to_s.truncate(200))
+    # ntfy.sh é público: o texto do erro (pode ter trecho de resposta da IA ou dado do lead) fica no hub
+    passo = grafo.no(@execucao.no_atual)
+    onde = passo ? "Parou no passo #{passo['tipo']} (#{passo['id']})" : 'Parou'
+    Ramon::NtfyPushJob.perform_later(title: "Fluxo falhou: #{fluxo.nome}", body: "#{onde} — o erro está no hub")
   end
 end

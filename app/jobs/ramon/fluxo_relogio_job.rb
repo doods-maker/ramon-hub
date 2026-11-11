@@ -8,9 +8,7 @@ class Ramon::FluxoRelogioJob < ApplicationJob
   queue_as :scheduled_jobs
 
   def perform
-    # ponytail: execução órfã (worker morreu) volta pra fila
-    orfas = FluxoExecucao.where(status: 'rodando', updated_at: ..10.minutes.ago)
-    orfas.update_all(status: 'esperando', retomar_em: Time.current, updated_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+    resgatar_orfas
     FluxoExecucao.where(status: 'esperando', retomar_em: ..Time.current).order(:retomar_em).limit(500).pluck(:id)
                  .each { |id| Ramon::FluxoAvancarJob.perform_later(id) }
     # cada gatilho isolado: erro num não impede o outro nem vira retry-loop do cron
@@ -19,6 +17,17 @@ class Ramon::FluxoRelogioJob < ApplicationJob
   end
 
   private
+
+  # Execução órfã (worker morreu no meio do passo) volta pra fila contando a tentativa; passo que derruba o worker toda
+  # vez falha no mesmo teto do erro comum (Executor::ESPERAS_ERRO) em vez de repetir (e duplicar webhook/tarefa) sem fim.
+  def resgatar_orfas
+    agora = Time.current
+    teto = Ramon::Fluxos::Executor::ESPERAS_ERRO.size
+    orfas = FluxoExecucao.where(status: 'rodando', updated_at: ..10.minutes.ago)
+    orfas.where(tentativas: teto..).find_each { |orfa| Ramon::Fluxos::Executor.new(orfa).falhar_orfa! }
+    resgate = ['status = ?, retomar_em = ?, updated_at = ?, tentativas = tentativas + 1', 'esperando', agora, agora]
+    orfas.where(tentativas: ...teto).update_all(resgate) # rubocop:disable Rails/SkipsModelValidations
+  end
 
   def isolar(nome)
     yield

@@ -12,6 +12,16 @@ class Ramon::Fluxos::Contexto
                                 valor prioridade caixa caixa_id status etiquetas documentos_completos documentos_faltantes
                                 resposta_ia reuniao_de_pe horario_passou primeira_resposta sla_minutos tentativa dias_parado]).freeze
 
+  # O que pode sair no push (ntfy.sh é público): lista fechada, sem dado pessoal. Fora dela — {texto} (mensagem do
+  # cliente), {resposta_ia}, {responsavel}, {titulo}, campos livres — sai o marcador; nome vira a tese; telefone some.
+  # tese, etapa, origem e caixa são texto de cadastro da conta (não do lead).
+  NO_PUSH = %w[tese etapa prioridade origem canal caixa status quando hoje regra evento sla_minutos tentativa dias_parado
+               documentos_completos reuniao_de_pe horario_passou primeira_resposta].freeze
+  # {texto} depende do gatilho: no evento do ADVBOX é o nome da etapa/tarefa de lá ("SENTENCA PROFERIDA"), que o código
+  # também manda (Ramon::AdvboxEventRegras#marco); nos demais é a mensagem do cliente.
+  NO_PUSH_DO_GATILHO = { 'evento_advbox' => %w[texto] }.freeze
+  FORA_DO_PUSH = '(ver no hub)'.freeze
+
   attr_reader :execucao
 
   def initialize(execucao)
@@ -34,10 +44,13 @@ class Ramon::Fluxos::Contexto
     texto.to_s.gsub(/\{(\w+)\}/) { valores.key?(Regexp.last_match(1)) ? valores[Regexp.last_match(1)].to_s : Regexp.last_match(0) }
   end
 
-  # Push vai pro ntfy.sh (servidor público): nome e telefone do lead viram a tese (Ramon::NtfyPushJob.rotulo).
+  # Push vai pro ntfy.sh (servidor público): só as chaves de NO_PUSH saem como são; o nome do lead vira a tese
+  # (Ramon::NtfyPushJob.rotulo). O sino do hub segue com `interpolar` (tudo).
   def interpolar_push(texto)
     rotulo = Ramon::NtfyPushJob.rotulo(lead)
-    interpolar(texto, dados.merge('nome' => rotulo, 'nome_completo' => rotulo, 'primeiro_nome' => rotulo, 'telefone' => ''))
+    livres = NO_PUSH + NO_PUSH_DO_GATILHO.fetch(execucao.fluxo&.gatilho_tipo, [])
+    seguros = dados.to_h { |chave, valor| [chave, livres.include?(chave) ? valor : FORA_DO_PUSH] }
+    interpolar(texto, seguros.merge('nome' => rotulo, 'nome_completo' => rotulo, 'primeiro_nome' => rotulo, 'telefone' => ''))
   end
 
   # Valor cru que o gatilho trouxe (ids e horários que não viram texto: inicio, quem_marcou_id, tarefa_ids, lead_id).

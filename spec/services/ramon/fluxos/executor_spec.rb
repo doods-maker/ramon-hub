@@ -114,9 +114,26 @@ RSpec.describe Ramon::Fluxos::Executor do
       expect(e.retomar_em).to be_within(5.seconds).of(min.minutes.from_now)
       e.update!(retomar_em: 1.second.ago)
     end
+    # o push vai pro ntfy.sh (público): só o fluxo e o passo; o texto do erro fica no hub
     expect { avancar(e) }.to have_enqueued_job(Ramon::NtfyPushJob)
+      .with(title: 'Fluxo falhou: Fluxo de teste', body: 'Parou no passo nota_privada (p1) — o erro está no hub')
     expect(e.status).to eq('falhou')
     expect(e.erro).to include('fora do ar')
+  end
+
+  it 'passo de tipo que este worker ainda não conhece (deploy no meio) entra nas tentativas, não falha na hora' do
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'x' }]))
+    e.update!(contexto: e.contexto.merge('grafo' => grafo_linear({ 'tipo' => 'manual' }, ['passo_novo', {}])))
+    expect(avancar(e)).to have_attributes(status: 'esperando', tentativas: 1)
+  end
+
+  it 'passo lento que o relógio já deu por órfã e falhou: o executor não grava por cima' do
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'x' }]))
+    allow(Ramon::Fluxos::Passos::Conversa).to receive(:nota_privada) do
+      FluxoExecucao.where(id: e.id).update_all(status: 'falhou', erro: 'pelo relógio') # rubocop:disable Rails/SkipsModelValidations
+      { saida: 's', resumo: 'nota' }
+    end
+    expect(avancar(e)).to have_attributes(status: 'falhou', erro: 'pelo relógio', no_atual: 'p1')
   end
 
   it 'passo impossível falha na hora' do

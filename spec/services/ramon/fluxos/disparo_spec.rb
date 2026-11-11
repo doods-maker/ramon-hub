@@ -53,6 +53,16 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(b.execucoes.last.profundidade).to eq(2)
   end
 
+  it 'evento causado por um passo (Current.executed_by é a execução) entra na cadeia mesmo sem origem explícita' do
+    a = fluxo_publicado(account, grafo_linear({ 'tipo' => 'documento_recebido' }, nota))
+    b = fluxo_publicado(account, grafo_linear({ 'tipo' => 'documento_recebido' }, nota))
+    Current.executed_by = a.execucoes.create!(account: account, alvo: lead, profundidade: 1, status: 'concluida')
+    expect(described_class.externo('documento_recebido', lead, 'documento' => 'RG').map(&:fluxo)).to eq([b])
+    expect(b.execucoes.last.profundidade).to eq(2)
+  ensure
+    Current.executed_by = nil
+  end
+
   it 'modo sombra cria execução de ensaio' do
     fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_criado' }, nota), modo: 'sombra')
     described_class.call('lead_criado', lead)
