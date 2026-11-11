@@ -11,6 +11,22 @@ RSpec.describe 'Ramon Calculos API', type: :request do
   describe 'GET /advbox_customers' do
     let(:url) { "/api/v1/accounts/#{account.id}/ramon_calculos/advbox_customers" }
 
+    before { create(:team_member, team: create(:team, account: account, name: 'advogados'), user: agent) }
+
+    it 'agente sem time de trabalho com cliente não busca na base do AdvBox; o Closer e a recepção buscam', :aggregate_failures do
+      allow(Ramon::AdvboxClient).to receive(:customers).and_return('data' => [])
+      sem_time, vendedor, recepcao = create_list(:user, 3, account: account, role: :agent)
+      create(:team_member, team: create(:team, account: account, name: 'closer'), user: vendedor)
+      create(:team_member, team: create(:team, account: account, name: 'recepção'), user: recepcao)
+
+      get url, params: { q: 'Maria Souza' }, headers: sem_time.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      [vendedor, recepcao].each do |pessoa|
+        get url, params: { q: 'Maria Souza' }, headers: pessoa.create_new_auth_token, as: :json
+        expect(response).to have_http_status(:success)
+      end
+    end
+
     it 'exige login' do
       get url, params: { q: 'Silva' }
       expect(response).to have_http_status(:unauthorized)
