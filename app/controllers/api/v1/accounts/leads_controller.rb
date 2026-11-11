@@ -1,4 +1,6 @@
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
+  include ParametroDeData
+
   ASSIGNMENT_KEYS = %w[sdr_id closer_id].freeze
   # O que a tela grava no jsonb do lead (checklists, sugestão de documento, NPS, simulador). O resto (zapsign, advbox,
   # colheita, temperatura, roteiro…) é de serviço: vindo do cliente, é descartado em silêncio, porque os checklists
@@ -185,8 +187,8 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def apply_period_filters(leads)
-    leads = leads.where(created_at: Date.parse(params[:created_after]).beginning_of_day..) if params[:created_after].present?
-    leads = leads.where(created_at: ..Date.parse(params[:created_before]).end_of_day) if params[:created_before].present?
+    leads = leads.where(created_at: data_do_parametro(:created_after).beginning_of_day..) if params[:created_after].present?
+    leads = leads.where(created_at: ..data_do_parametro(:created_before).end_of_day) if params[:created_before].present?
     Ramon::LeadRadar.closed_window(Current.account, leads, params)
   end
 

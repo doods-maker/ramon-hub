@@ -527,6 +527,22 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to eq([recente.id])
     end
 
+    it 'data inválida em created_after/created_before responde 422, não 500', :aggregate_failures do
+      [{ created_after: 'ontem' }, { created_before: 'ontem' }, { created_after: ['2026-01-01'] }, { created_before: '1' * 500 }].each do |filtro|
+        get "/api/v1/accounts/#{account.id}/leads", params: filtro, headers: admin.create_new_auth_token
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body['error']).to eq('DATA_INVALIDA')
+      end
+    end
+
+    it 'filtra por created_before' do
+      antigo = account.leads.create!(name: 'Antigo', lead_stage: novo)
+      antigo.update_column(:created_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
+      account.leads.create!(name: 'Recente', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", params: { created_before: 2.days.ago.to_date.to_s }, headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([antigo.id])
+    end
+
     it 'filtra por stalled numa etapa com stalled_after_days' do
       parado = account.leads.create!(name: 'Parado', lead_stage: qualif)
       parado.update_column(:stage_entered_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations

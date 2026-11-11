@@ -4,6 +4,11 @@
 module LeadCadence
   extend ActiveSupport::Concern
 
+  # Mesmo critério de LeadTask.open_tasks; em memória quando pré-carregado (índice do Kanban: sem 1 COUNT por lead).
+  def open_tasks_count
+    lead_tasks.loaded? ? lead_tasks.count { |t| t.completed_at.nil? } : lead_tasks.open_tasks.size
+  end
+
   # Tarefa aberta com o menor due_at — fonte de next_task_due_at/next_task_title
   # no jbuilder e no broadcast. Mesmo padrão do latest_triage: com lead_tasks
   # pré-carregada (índice do Kanban via includes) resolve em memória, sem query.
@@ -40,7 +45,7 @@ module LeadCadence
       won_at: won_at,
       lost_at: lost_at,
       stalled: stalled?,
-      open_tasks_count: lead_tasks.open_tasks.size,
+      open_tasks_count: open_tasks_count,
       next_task_due_at: next_task&.due_at,
       next_task_title: next_task&.title,
       dcb_em: dcb_em,
