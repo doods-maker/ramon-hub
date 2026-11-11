@@ -142,6 +142,36 @@ describe('LeadPlanejamento', () => {
     expect(corpo.dados.pendencias[0].p).toBe('CTPS já pedida');
   });
 
+  it('a caixa de atenção troca o título depois de calcular', async () => {
+    LeadsAPI.planejamento.mockResolvedValue(resposta(dadosMotor(ATENCAO)));
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    const caixa = () => w.find('[data-testid="planejamento-atencao"]').text();
+    expect(caixa()).toContain('PLANEJAMENTO_ATENCAO');
+    expect(caixa()).not.toContain('PLANEJAMENTO_ATENCAO_GERAR');
+    await clicar(w, 'planejamento-calcular');
+    expect(caixa()).toContain('PLANEJAMENTO_ATENCAO_GERAR');
+  });
+
+  it('melhorias ficam recolhidas na completa e abertas na curta', async () => {
+    const melhorias = [{ t: 'Mais 12 meses', p: 'texto melhoria' }];
+    LeadsAPI.planejamento.mockResolvedValue(
+      resposta(dadosMotor({ melhorias }))
+    );
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    await clicar(w, 'planejamento-calcular');
+    const mais = () => w.find('[data-testid="planejamento-mais-textos"]');
+    expect(mais().text()).toContain('Mais 12 meses');
+
+    LeadsAPI.planejamento.mockResolvedValue(
+      resposta(dadosMotor({ melhorias, versao: 'curta' }))
+    );
+    await clicar(w, 'planejamento-calcular');
+    expect(mais().text()).not.toContain('Mais 12 meses');
+    expect(w.text()).toContain('Mais 12 meses');
+  });
+
   it('sem pendências nem observações, não há caixa de atenção', async () => {
     LeadsAPI.planejamento.mockResolvedValue(resposta());
     const w = montar();

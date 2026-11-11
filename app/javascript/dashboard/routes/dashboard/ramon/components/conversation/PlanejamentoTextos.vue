@@ -45,11 +45,11 @@ const alternar = secao => {
   else editando.value.add(secao);
 };
 
-// rótulo do motor ao lado do título (impacto da pendência: "pode tirar tempo")
-const rotulo = c => {
+// impacto da pendência ("pode tirar tempo"): rótulo do motor ao lado do título
+const impacto = c => {
   if (c.caminho.at(-1) !== 't') return null;
-  const item = c.caminho.slice(0, -1).reduce((no, k) => no?.[k], props.dados);
-  return typeof item?.imp === 'string' ? item.imp : null;
+  const [secao, i] = c.caminho;
+  return props.dados[secao][i].imp ?? null;
 };
 
 const grupos = computed(() => {
@@ -61,7 +61,7 @@ const grupos = computed(() => {
       ...c,
       id: c.caminho.join('.'),
       destaque: ['t', 'titulo'].includes(c.caminho.at(-1)),
-      rotulo: rotulo(c),
+      impacto: impacto(c),
     });
   });
   return [...porSecao].map(([secao, campos]) => ({ secao, campos }));
@@ -75,16 +75,13 @@ const linhas = valor => Math.min(8, Math.max(2, Math.ceil(valor.length / 70)));
     <section
       v-for="g in grupos"
       :key="g.secao"
-      class="flex flex-col gap-1.5"
+      class="flex flex-col gap-2"
       :data-testid="`planejamento-secao-${g.secao}`"
     >
       <div class="flex items-center justify-between gap-2">
         <h4 class="mb-0" :class="TITULO">
           {{ TITULOS[g.secao] }}
-          <span
-            v-if="g.secao === SO_ADVOGADO"
-            class="normal-case tracking-normal font-normal"
-          >
+          <span v-if="g.secao === SO_ADVOGADO">
             {{ `· ${t('RAMON.SIMULADOR.PLANEJAMENTO_SO_ADVOGADO')}` }}
           </span>
         </h4>
@@ -125,11 +122,11 @@ const linhas = valor => Math.min(8, Math.max(2, Math.ceil(valor.length / 70)));
         >
           {{ c.valor }}
           <span
-            v-if="c.rotulo"
+            v-if="c.impacto"
             class="ms-1 align-middle"
             :class="[CHIP, TOM.amber]"
           >
-            {{ c.rotulo }}
+            {{ c.impacto }}
           </span>
         </p>
       </div>

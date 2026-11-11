@@ -1845,6 +1845,7 @@
       "PLANEJAMENTO_PDF_BAIXAR": "Baixar PDF do planejamento",
       "PLANEJAMENTO_SO_ADVOGADO": "Só para o advogado — não vai no PDF",
       "PLANEJAMENTO_ATENCAO": "Confira antes de calcular",
+      "PLANEJAMENTO_ATENCAO_GERAR": "Confira antes de gerar o PDF",
       "PLANEJAMENTO_EDITAR": "Editar",
       "PLANEJAMENTO_EDITAR_PRONTO": "Pronto",
       "PLANEJAMENTO_MAIS_TEXTOS": "Mais textos do relatório",

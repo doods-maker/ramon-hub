@@ -96,8 +96,18 @@ const comFacultativo = computed(() =>
 // Caixa de atenção: vem do CNIS, então aparece já no "Começar" (só leitura)
 // e, depois de calcular, fica editável (o texto das pendências vai no PDF).
 const ATENCAO = ['pendencias', 'observacoes_internas'];
-const PRINCIPAIS = ['pode', 'nao_pode', 'sugestao', 'cenarios', 'melhorias'];
-const OUTRAS = ['passos', 'conferir', 'documentos'];
+// Abertos: o que o advogado confere sempre. Na versão curta (já tem direito)
+// as melhorias são o conteúdo principal; na completa ficam recolhidas.
+const PRINCIPAIS = computed(() =>
+  dados.value?.versao === 'curta'
+    ? ['pode', 'nao_pode', 'melhorias']
+    : ['pode', 'nao_pode', 'sugestao']
+);
+const OUTRAS = computed(() =>
+  dados.value?.versao === 'curta'
+    ? ['passos', 'documentos']
+    : ['melhorias', 'cenarios', 'passos', 'conferir', 'documentos']
+);
 const previa = ref(null); // dados da 1ª chamada (sem perfil)
 const fonteAtencao = computed(() => dados.value || previa.value);
 const temAtencao = computed(() =>
@@ -353,7 +363,11 @@ onBeforeUnmount(() => {
         data-testid="planejamento-atencao"
       >
         <p class="mb-0 text-sm font-medium text-n-slate-12">
-          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_ATENCAO') }}
+          {{
+            dados
+              ? $t('RAMON.SIMULADOR.PLANEJAMENTO_ATENCAO_GERAR')
+              : $t('RAMON.SIMULADOR.PLANEJAMENTO_ATENCAO')
+          }}
         </p>
         <PlanejamentoTextos
           :dados="fonteAtencao"
@@ -571,7 +585,7 @@ onBeforeUnmount(() => {
         <summary class="cursor-pointer text-xs text-n-slate-11">
           {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_MAIS_TEXTOS') }}
         </summary>
-        <PlanejamentoTextos class="mt-3" :dados="dados" :secoes="OUTRAS" />
+        <PlanejamentoTextos class="mt-4" :dados="dados" :secoes="OUTRAS" />
       </details>
 
       <div class="flex flex-wrap items-center gap-2">
