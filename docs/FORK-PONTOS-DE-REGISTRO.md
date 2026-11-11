@@ -429,5 +429,11 @@ Lógica em `Ramon::SenhaForaDaIa` (`app/services/ramon/senha_fora_da_ia.rb`) e `
 |---|---|---|---|
 | `app/models/message.rb` | `content_for_llm` novo delega a `Ramon::SenhaForaDaIa.para_llm`; o corpo original virou `ramon_content_for_llm_original` (sem outra mudança) | todo transcript para LLM (copiloto, colheita, resumo, Captain BaseTaskService) passa aqui | senha fora da IA #334 |
 | `enterprise/app/services/captain/open_ai_message_builder_service.rb` | `generate_content` e a transcrição de áudio passam pelo filtro de senha | a IA que atende monta o histórico com `content` cru, sem `content_for_llm` | senha fora da IA #334 |
+
+## Chave de cache vencida (11/11/2026)
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `app/helpers/cache_keys_helper.rb` | `fetch_value_for_key` grava e devolve uma chave nova quando a do Redis venceu, em vez do `'0000000000'` fixo | o navegador que guardou a lista de caixas sob o zero fixo antes da caixa Equipe existir voltava a achá-la válida quando a chave vencia (72h), e a Equipe sumia do menu | cache de caixas, times e etiquetas |
 | `config/initializers/filter_parameter_logging.rb` | +`:senha, :codigo, :confirmacao, :cpf` em `filter_parameters` (casam por trecho da chave, no hub todo) | login do Painel do Cliente ia em claro para o log de requisições | revisão 10/11 |
 | `config/routes.rb` | só comentário nas rotas `mcp` e `agente/*`: token agora também por cabeçalho (`X-Mcp-Token`, `X-Agente-Token`) | token fora da URL (log de proxy) | revisão 10/11 #348 |
