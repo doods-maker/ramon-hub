@@ -49,17 +49,21 @@ class Ramon::ContactAnonymizer
 
   private
 
-  # Cliente = lead ganho ou caso de cálculo, ligado pelo contato OU por uma conversa dele (caso de cálculo nasce sem
-  # contact_id: olhar só @contact.leads deixaria o cliente sem proteção).
+  # Sair da etapa de ganho zera won_at: apto_em e contrato_cancelado_em guardam que o contrato existiu.
+  CLIENTE_SQL = 'leads.won_at IS NOT NULL OR leads.apto_em IS NOT NULL OR leads.contrato_cancelado_em IS NOT NULL OR leads.source = ?'.freeze
+
+  # Cliente = lead ganho (hoje ou antes de cancelar) ou caso de cálculo, ligado pelo contato OU por uma conversa dele
+  # (caso de cálculo nasce sem contact_id: olhar só @contact.leads deixaria o cliente sem proteção).
   def leads_de_cliente
     leads = @contact.account.leads
     leads.where(contact_id: @contact.id).or(leads.where(conversation_id: @contact.conversations.select(:id)))
-         .where('leads.won_at IS NOT NULL OR leads.source = ?', Lead::FONTE_CALCULO)
+         .where(CLIENTE_SQL, Lead::FONTE_CALCULO)
   end
 
   # Antes de qualquer escrita. Sino só no hub (pode levar o nome do lead); sem push ntfy.
+  # O registro vai no lead do funil quando há um; caso de cálculo só na falta dele.
   def recusar_cliente!
-    lead = leads_de_cliente.order(:id).last
+    lead = leads_de_cliente.funil.reorder(:id).last || leads_de_cliente.reorder(:id).last # reorder: Lead tem ordem padrão
     return if lead.nil?
 
     Ramon::ContratoApto.registrar(lead, Audited.store[:audited_user] || Current.user, PEDIDO)

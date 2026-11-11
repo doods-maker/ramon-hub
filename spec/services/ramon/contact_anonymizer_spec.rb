@@ -105,6 +105,23 @@ describe Ramon::ContactAnonymizer do
       intacto
     end
 
+    # Sair da etapa de ganho zera won_at; o contrato que já existiu continua sendo caso de cliente.
+    it 'contrato cancelado depois de apto (won_at zerado): não apaga nada', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: open_stage, contact: contact, apto_em: 1.month.ago, contrato_cancelado_em: 1.day.ago)
+
+      expect(lead.won_at).to be_nil
+      expect { perform }.to raise_error(described_class::ClienteGanho)
+      intacto
+    end
+
+    it 'lead ganho e caso de cálculo mais novo: o pedido fica no histórico do lead do funil', :aggregate_failures do
+      ganho = create(:lead, account: account, lead_stage: won_stage, contact: contact)
+      create(:lead, account: account, lead_stage: open_stage, conversation: conversation, source: Lead::FONTE_CALCULO)
+
+      expect { perform }.to raise_error(described_class::ClienteGanho)
+      expect(ganho.lead_activities.where(kind: 'eliminacao_pedida').count).to eq(1)
+    end
+
     it 'lead aberto (não ganho) não protege: o titular é anonimizado como antes', :aggregate_failures do
       lead = create(:lead, account: account, lead_stage: open_stage, contact: contact, conversation: conversation)
 
