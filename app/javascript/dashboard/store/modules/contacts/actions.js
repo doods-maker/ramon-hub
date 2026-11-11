@@ -212,6 +212,10 @@ export const actions = {
       commit(types.SET_CONTACT_UI_FLAG, { isDeleting: false });
     } catch (error) {
       commit(types.SET_CONTACT_UI_FLAG, { isDeleting: false });
+      // FORK(ramon/LGPD): cliente com contrato não é eliminado; a tela traduz o código
+      if (error.response?.data?.error === 'cliente_ganho') {
+        throw new Error('cliente_ganho');
+      }
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       } else {

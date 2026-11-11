@@ -29,7 +29,12 @@ const deleteContact = async id => {
     await store.dispatch('contacts/delete', id);
     useAlert(t('CONTACTS_LAYOUT.DETAILS.DELETE_DIALOG.API.SUCCESS_MESSAGE'));
   } catch (error) {
-    useAlert(t('CONTACTS_LAYOUT.DETAILS.DELETE_DIALOG.API.ERROR_MESSAGE'));
+    // FORK(ramon/LGPD): cliente com contrato não é eliminado por aqui
+    useAlert(
+      error.message === 'cliente_ganho'
+        ? t('RAMON.CONTATO.CLIENTE_GANHO')
+        : t('CONTACTS_LAYOUT.DETAILS.DELETE_DIALOG.API.ERROR_MESSAGE')
+    );
   }
 };
 

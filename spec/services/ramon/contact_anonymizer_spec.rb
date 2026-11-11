@@ -64,6 +64,58 @@ describe Ramon::ContactAnonymizer do
     expect(destroy.audited_changes.to_json).not_to include('Duplicado', '7777')
   end
 
+  # Decisão de 11/11/2026: pedido de eliminação de cliente não apaga nada; fica registrado e a gestão decide.
+  describe 'titular que é cliente' do
+    let(:gestor) { create(:user, account: account, role: :administrator) }
+    let(:won_stage) { account.lead_stages.find_by(is_won: true) }
+    let(:open_stage) { account.lead_stages.find_by(is_won: false, is_lost: false) }
+
+    before { gestor }
+
+    def intacto
+      expect(contact.reload).to have_attributes(name: 'Joao da Silva', email: 'contato@exemplo.com', cpf: '52998224725')
+      expect(message.reload.content).to include('529.982.247-25')
+      expect(note.reload.content).to include('529.982.247-25')
+    end
+
+    it 'cliente pelo contato: não apaga nada, registra no histórico do lead e avisa os gestores', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: won_stage, contact: contact, name: 'Lead ganho')
+
+      expect { perform }.to raise_error(described_class::ClienteGanho)
+
+      intacto
+      expect(lead.lead_activities.where(kind: 'eliminacao_pedida').count).to eq(1)
+      aviso = gestor.notifications.find_by(notification_type: 'ramon_fluxo_aviso')
+      expect(aviso).to have_attributes(primary_actor: lead)
+      expect(aviso.meta['label']).to include('Lead ganho')
+    end
+
+    it 'cliente só pela conversa (lead ganho sem contato ligado): não apaga nada', :aggregate_failures do
+      create(:lead, account: account, lead_stage: won_stage, conversation: conversation)
+
+      expect { perform }.to raise_error(described_class::ClienteGanho)
+      intacto
+    end
+
+    it 'caso de cálculo sem contato, ligado pela conversa: não apaga nada', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: open_stage, conversation: conversation, source: Lead::FONTE_CALCULO)
+
+      expect(lead).to have_attributes(contact_id: nil, won_at: nil)
+      expect { perform }.to raise_error(described_class::ClienteGanho)
+      intacto
+    end
+
+    it 'lead aberto (não ganho) não protege: o titular é anonimizado como antes', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: open_stage, contact: contact, conversation: conversation)
+
+      perform
+
+      expect(contact.reload.name).to eq("Titular anonimizado ##{contact.id}")
+      expect(message.reload.content).not_to include('529.982.247-25')
+      expect(lead.lead_activities.where(kind: 'eliminacao_pedida')).to be_empty
+    end
+  end
+
   it 'records the bulk deletion as made by who asked', :aggregate_failures do
     admin = create(:user, account: account, role: :administrator)
     Contacts::BulkActionService.new(account: account, user: admin, params: { action_name: 'delete', ids: [contact.id] }).perform

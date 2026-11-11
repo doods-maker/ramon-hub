@@ -246,6 +246,17 @@ describe('#actions', () => {
     });
   });
 
+  describe('#delete (FORK ramon/LGPD)', () => {
+    it('cliente com contrato: devolve o código para a tela traduzir', async () => {
+      axios.delete.mockRejectedValue({
+        response: { data: { error: 'cliente_ganho' } },
+      });
+      await expect(
+        actions.delete({ commit }, contactList[0].id)
+      ).rejects.toThrow('cliente_ganho');
+    });
+  });
+
   describe('#setContact', () => {
     it('returns correct mutations', () => {
       const data = { id: 1, name: 'john doe', availability_status: 'online' };

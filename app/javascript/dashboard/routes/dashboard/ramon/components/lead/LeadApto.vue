@@ -1,7 +1,8 @@
 <script setup>
 // Contrato apto (Ramon::ContratoApto): depois do contrato limpo, o advogado da
 // tese valida ("Apto para protocolo") ou devolve com motivo; sem resposta em 5
-// dias úteis o backend dá o apto sozinho. O Closer do lead reenvia o devolvido;
+// dias úteis o backend dá o apto sozinho (só com assinatura conferida no
+// ZapSign; sem ela o caso espera o advogado e a tela avisa). O Closer do lead reenvia o devolvido;
 // o admin designa o advogado do lead (tese sem advogado fixo, ex.: IR). Quem
 // pode cada ação o backend confere (apto_pode_validar vem do servidor).
 import { computed, ref } from 'vue';
@@ -71,6 +72,13 @@ const designar = event => {
       >
         {{ $t('RAMON.APTO.PRAZO', { data: prazo }) }}
       </span>
+    </p>
+    <p
+      v-if="situacao === 'aguardando' && lead.assinatura_conferida === false"
+      data-testid="apto-sem-assinatura"
+      class="mt-1 text-xs text-n-amber-11"
+    >
+      {{ $t('RAMON.APTO.SEM_ASSINATURA') }}
     </p>
     <p
       v-if="situacao === 'devolvido' && lead.devolvido_motivo"

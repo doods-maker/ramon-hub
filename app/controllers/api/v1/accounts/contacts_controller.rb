@@ -111,6 +111,8 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
     # conversas e estatísticas. Ver Ramon::ContactAnonymizer.
     Ramon::ContactAnonymizer.new(@contact).perform
     head :ok
+  rescue Ramon::ContactAnonymizer::ClienteGanho # cliente com contrato: nada é apagado; a tela traduz o código
+    render_error({ error: 'cliente_ganho' }, :unprocessable_entity)
   end
 
   def avatar

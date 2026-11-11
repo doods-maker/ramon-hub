@@ -8,7 +8,12 @@ class Contacts::BulkDeleteService
     return if @contact_ids.blank?
 
     # FORK(ramon/LGPD): anonimiza como a exclusão individual (ContactsController#destroy).
-    contacts.find_each { |contact| Ramon::ContactAnonymizer.new(contact, comentario: 'anonimizado_em_massa').perform }
+    # Cliente com contrato é pulado (o anonimizador já registrou o pedido e avisou a gestão); o lote segue.
+    contacts.find_each do |contact|
+      Ramon::ContactAnonymizer.new(contact, comentario: 'anonimizado_em_massa').perform
+    rescue Ramon::ContactAnonymizer::ClienteGanho
+      next
+    end
   end
 
   private

@@ -51,7 +51,12 @@ const onDelete = async hide => {
       router.push({ name: 'contacts_dashboard' });
     }
   } catch (error) {
-    useAlert(error.message || t('DELETE_CONTACT.API.ERROR_MESSAGE'));
+    // FORK(ramon/LGPD): cliente com contrato não é eliminado por aqui
+    useAlert(
+      error.message === 'cliente_ganho'
+        ? t('RAMON.CONTATO.CLIENTE_GANHO')
+        : error.message || t('DELETE_CONTACT.API.ERROR_MESSAGE')
+    );
   }
 };
 </script>

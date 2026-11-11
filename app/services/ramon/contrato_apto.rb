@@ -3,6 +3,8 @@
 # devolvido com motivo. Sem resposta em 5 dias úteis (seg–sex, sem feriados; conta do dia seguinte e vence no FIM do 5º
 # dia, como prazo) o caso fica apto sozinho, na hora do prazo (apto_por_id nil). Depois de apto a comissão é devida:
 # cancelar o contrato não tira o apto.
+# Apto por prazo exige assinatura conferida no ZapSign (decisão de 11/11/2026): o "ganho" pode vir de arrasto manual no
+# Kanban, e apto gera comissão. Sem o selo o caso espera a validação de um advogado (cobre o contrato em papel).
 # Só entram na fila os contratos limpos a partir de VALE_DESDE: o estoque anterior não vira "apto por prazo" no 1º deploy.
 # Quem valida: o advogado designado no lead → os advogados da tese (Playbooks) → os administradores. O admin sempre pode
 # validar. Tese sem advogado fixo (ex.: IR): ao entrar na fila, o responsável do processo no ADVBOX (usuário do hub com o
@@ -56,11 +58,14 @@ module Ramon::ContratoApto
   # O que o painel e o card leem (vai no comercial_event_data do lead). Quem pode validar vai no jbuilder (depende de quem pede).
   def dados(lead)
     { apto_situacao: situacao(lead), apto_prazo: prazo(lead)&.iso8601, apto_em: lead.apto_em&.iso8601,
-      devolvido_motivo: lead.devolvido_motivo, validador_id: lead.validador_id }
+      devolvido_motivo: lead.devolvido_motivo, validador_id: lead.validador_id, assinatura_conferida: assinatura_conferida?(lead) }
   end
 
+  # 'signed' é o que Ramon::ZapsignLeadStatusJob grava depois de conferir o documento no ZapSign.
+  def assinatura_conferida?(lead) = lead.custom_attributes&.dig('zapsign', 'status') == 'signed'
+
   def prazo(lead)
-    return unless situacao(lead) == 'aguardando'
+    return unless situacao(lead) == 'aguardando' && assinatura_conferida?(lead)
 
     dia = lead.validacao_desde.in_time_zone(ZONA).to_date
     DIAS_UTEIS.times { dia = proximo_dia_util(dia) }
@@ -109,8 +114,7 @@ module Ramon::ContratoApto
       avisar_validadores(lead)
     end
     sem_apto.where(devolvido_em: nil).where.not(validacao_desde: nil).find_each do |lead|
-      vence = prazo(lead)
-      next unless vence && vence <= agora
+      next unless (vence = prazo(lead)) && vence <= agora # prazo nil: fora da fila ou assinatura não conferida
 
       lead.update!(apto_em: vence, apto_por_id: nil)
       registrar(lead, nil, 'apto_por_prazo')

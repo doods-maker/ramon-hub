@@ -3,7 +3,13 @@
 # preservando conversas e estatísticas (anonimização, não apagamento físico).
 # Usado pelo delete da UI (ContactsController#destroy); fluxos internos que
 # exigem destroy físico (ex.: merge de contatos duplicados) seguem intocados.
+# Titular que é cliente (decisão de 11/11/2026): nada é apagado nem mascarado. O pedido fica no histórico do lead,
+# os gestores recebem o sino e `perform` levanta ClienteGanho; eliminar passa a ser decisão manual da gestão.
 class Ramon::ContactAnonymizer
+  class ClienteGanho < StandardError; end
+
+  PEDIDO = 'eliminacao_pedida'.freeze
+
   # A trilha (audits) é somente-inclusão e fica: o Registro de ações continua
   # mostrando quem editou/anonimizou e quando. Os VALORES antigos de PII em
   # audited_changes viram '[anonimizado]' — no contato e no(s) contato(s)
@@ -32,6 +38,7 @@ class Ramon::ContactAnonymizer
   end
 
   def perform
+    recusar_cliente!
     redact_messages
     redact_notes
     @contact.avatar.purge if @contact.avatar.attached?
@@ -41,6 +48,25 @@ class Ramon::ContactAnonymizer
   end
 
   private
+
+  # Cliente = lead ganho ou caso de cálculo, ligado pelo contato OU por uma conversa dele (caso de cálculo nasce sem
+  # contact_id: olhar só @contact.leads deixaria o cliente sem proteção).
+  def leads_de_cliente
+    leads = @contact.account.leads
+    leads.where(contact_id: @contact.id).or(leads.where(conversation_id: @contact.conversations.select(:id)))
+         .where('leads.won_at IS NOT NULL OR leads.source = ?', Lead::FONTE_CALCULO)
+  end
+
+  # Antes de qualquer escrita. Sino só no hub (pode levar o nome do lead); sem push ntfy.
+  def recusar_cliente!
+    lead = leads_de_cliente.order(:id).last
+    return if lead.nil?
+
+    Ramon::ContratoApto.registrar(lead, Audited.store[:audited_user] || Current.user, PEDIDO)
+    Ramon::ContratoApto.avisar(lead, Ramon::Papeis.gestor_ids(lead.account),
+                               "Pedido de eliminação de dados de cliente com contrato: #{lead.name}. Nada foi apagado.")
+    raise ClienteGanho
+  end
 
   def name_tokens
     @name_tokens ||= [@contact.name, @contact.middle_name, @contact.last_name]
