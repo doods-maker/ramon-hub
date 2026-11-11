@@ -55,6 +55,21 @@ const clicar = async (w, id) => {
   await flushPromises();
 };
 
+const editarPode = w => clicar(w, 'planejamento-editar-pode');
+
+const ATENCAO = {
+  pendencias: [
+    {
+      t: 'Vínculo sem data de saída',
+      imp: 'pode tirar tempo',
+      p: 'Pedir a CTPS.',
+    },
+  ],
+  observacoes_internas: [
+    { t: 'Mês abaixo do mínimo', imp: 'conferir', p: 'Ver 11/2020.' },
+  ],
+};
+
 const calculado = async () => {
   LeadsAPI.planejamento.mockResolvedValue(resposta());
   const w = montar();
@@ -89,6 +104,85 @@ describe('LeadPlanejamento', () => {
     expect(w.find('[data-testid="planejamento-resultado"]').exists()).toBe(
       false
     );
+  });
+
+  it('começar já mostra pendências e observações, só para ler', async () => {
+    LeadsAPI.planejamento.mockResolvedValue(resposta(dadosMotor(ATENCAO)));
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+
+    const caixa = w.find('[data-testid="planejamento-atencao"]');
+    expect(caixa.text()).toContain('Vínculo sem data de saída');
+    expect(caixa.text()).toContain('pode tirar tempo');
+    expect(caixa.text()).toContain('Mês abaixo do mínimo');
+    expect(
+      caixa.find('[data-testid="planejamento-editar-pendencias"]').exists()
+    ).toBe(false);
+    expect(w.find('[data-testid="planejamento-resultado"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('depois de calcular, a caixa de atenção fica editável e vai no Gerar', async () => {
+    LeadsAPI.planejamento.mockResolvedValue(resposta(dadosMotor(ATENCAO)));
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    await clicar(w, 'planejamento-calcular');
+    await clicar(w, 'planejamento-editar-pendencias');
+    await w
+      .find('[data-testid="planejamento-texto-pendencias.0.p"]')
+      .setValue('CTPS já pedida');
+    LeadsAPI.planejamentoGerar.mockResolvedValue({ data: { calculo_id: 77 } });
+    LeadsAPI.planejamentoGeracao.mockResolvedValue({
+      data: { estado: 'gerando' },
+    });
+    await clicar(w, 'planejamento-gerar');
+
+    const [, corpo] = LeadsAPI.planejamentoGerar.mock.calls.at(-1);
+    expect(corpo.dados.pendencias[0].p).toBe('CTPS já pedida');
+  });
+
+  it('a caixa de atenção troca o título depois de calcular', async () => {
+    LeadsAPI.planejamento.mockResolvedValue(resposta(dadosMotor(ATENCAO)));
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    const caixa = () => w.find('[data-testid="planejamento-atencao"]').text();
+    expect(caixa()).toContain('PLANEJAMENTO_ATENCAO');
+    expect(caixa()).not.toContain('PLANEJAMENTO_ATENCAO_GERAR');
+    await clicar(w, 'planejamento-calcular');
+    expect(caixa()).toContain('PLANEJAMENTO_ATENCAO_GERAR');
+  });
+
+  it('melhorias ficam recolhidas na completa e abertas na curta', async () => {
+    const melhorias = [{ t: 'Mais 12 meses', p: 'texto melhoria' }];
+    LeadsAPI.planejamento.mockResolvedValue(
+      resposta(dadosMotor({ melhorias }))
+    );
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    await clicar(w, 'planejamento-calcular');
+    const mais = () => w.find('[data-testid="planejamento-mais-textos"]');
+    expect(mais().text()).toContain('Mais 12 meses');
+
+    LeadsAPI.planejamento.mockResolvedValue(
+      resposta(dadosMotor({ melhorias, versao: 'curta' }))
+    );
+    await clicar(w, 'planejamento-calcular');
+    expect(mais().text()).not.toContain('Mais 12 meses');
+    expect(w.text()).toContain('Mais 12 meses');
+  });
+
+  it('sem pendências nem observações, não há caixa de atenção', async () => {
+    LeadsAPI.planejamento.mockResolvedValue(resposta());
+    const w = montar();
+    await clicar(w, 'planejamento-comecar');
+    expect(w.find('[data-testid="planejamento-atencao"]').exists()).toBe(false);
+  });
+
+  it('resultado abre em leitura, sem caixas de texto', async () => {
+    const w = await calculado();
+    expect(w.findAll('textarea').length).toBe(0);
+    expect(w.text()).toContain('texto pode');
   });
 
   it('calcular manda o perfil confirmado', async () => {
@@ -196,6 +290,7 @@ describe('LeadPlanejamento', () => {
   it('gerar manda o dados editado e consulta até ficar pronto', async () => {
     vi.useFakeTimers();
     const w = await calculado();
+    await editarPode(w);
     await w
       .find('[data-testid="planejamento-texto-pode.0.p"]')
       .setValue('texto editado');
@@ -335,6 +430,7 @@ describe('LeadPlanejamento', () => {
     vi.useFakeTimers();
     const w = await calculado();
     const campo = '[data-testid="planejamento-texto-pode.0.p"]';
+    await editarPode(w);
     await w.find(campo).setValue('texto editado');
     LeadsAPI.planejamentoGerar.mockResolvedValue({ data: { calculo_id: 77 } });
     LeadsAPI.planejamentoGeracao.mockResolvedValue({
@@ -352,6 +448,7 @@ describe('LeadPlanejamento', () => {
   it('422 ao calcular aparece em português e mantém o resultado editado', async () => {
     const w = await calculado();
     const campo = '[data-testid="planejamento-texto-pode.0.p"]';
+    await editarPode(w);
     await w.find(campo).setValue('texto editado');
     LeadsAPI.planejamento.mockRejectedValueOnce({
       response: { status: 422, data: { error: 'salário atual inválido' } },

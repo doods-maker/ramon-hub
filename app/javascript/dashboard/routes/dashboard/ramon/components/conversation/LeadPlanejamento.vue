@@ -8,7 +8,9 @@ import {
   AVISO,
   CAMPO,
   CARTAO,
+  CARTAO_STATUS,
   CHIP,
+  FILETE,
   ROTULO,
   SELECT,
   TITULO,
@@ -91,6 +93,26 @@ const comSalarioEmprego = computed(
 const comFacultativo = computed(() =>
   perfil.value?.forma?.startsWith('pro_labore')
 );
+// Caixa de atenção: vem do CNIS, então aparece já no "Começar" (só leitura)
+// e, depois de calcular, fica editável (o texto das pendências vai no PDF).
+const ATENCAO = ['pendencias', 'observacoes_internas'];
+// Abertos: o que o advogado confere sempre. Na versão curta (já tem direito)
+// as melhorias são o conteúdo principal; na completa ficam recolhidas.
+const PRINCIPAIS = computed(() =>
+  dados.value?.versao === 'curta'
+    ? ['pode', 'nao_pode', 'melhorias']
+    : ['pode', 'nao_pode', 'sugestao']
+);
+const OUTRAS = computed(() =>
+  dados.value?.versao === 'curta'
+    ? ['passos', 'documentos']
+    : ['melhorias', 'cenarios', 'passos', 'conferir', 'documentos']
+);
+const previa = ref(null); // dados da 1ª chamada (sem perfil)
+const fonteAtencao = computed(() => dados.value || previa.value);
+const temAtencao = computed(() =>
+  ATENCAO.some(s => fonteAtencao.value?.[s]?.length)
+);
 const cenarios = computed(() =>
   Array.isArray(dados.value?.cenarios) ? dados.value.cenarios : []
 );
@@ -163,6 +185,7 @@ const comecar = async () => {
           : String(sug.salario_atual),
     };
     motivo.value = (sug.motivo || '').replace(/\.$/, ''); // a frase já fecha com ponto
+    previa.value = data.dados || null;
   } catch (error) {
     await handleError(error);
   } finally {
@@ -333,6 +356,25 @@ onBeforeUnmount(() => {
       class="flex flex-col gap-2"
       data-testid="planejamento-perfil"
     >
+      <div
+        v-if="temAtencao"
+        class="flex flex-col gap-2"
+        :class="[CARTAO_STATUS, FILETE.amber]"
+        data-testid="planejamento-atencao"
+      >
+        <p class="mb-0 text-sm font-medium text-n-slate-12">
+          {{
+            dados
+              ? $t('RAMON.SIMULADOR.PLANEJAMENTO_ATENCAO_GERAR')
+              : $t('RAMON.SIMULADOR.PLANEJAMENTO_ATENCAO')
+          }}
+        </p>
+        <PlanejamentoTextos
+          :dados="fonteAtencao"
+          :secoes="ATENCAO"
+          :editavel="!!dados"
+        />
+      </div>
       <p v-if="motivo" class="mb-0" :class="[AVISO, TOM.slate]">
         {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_SUGERIDA', { motivo }) }}
       </p>
@@ -538,7 +580,13 @@ onBeforeUnmount(() => {
         </ul>
       </div>
 
-      <PlanejamentoTextos :dados="dados" />
+      <PlanejamentoTextos :dados="dados" :secoes="PRINCIPAIS" />
+      <details class="text-sm" data-testid="planejamento-mais-textos">
+        <summary class="cursor-pointer text-xs text-n-slate-11">
+          {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_MAIS_TEXTOS') }}
+        </summary>
+        <PlanejamentoTextos class="mt-4" :dados="dados" :secoes="OUTRAS" />
+      </details>
 
       <div class="flex flex-wrap items-center gap-2">
         <Button

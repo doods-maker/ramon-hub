@@ -78,6 +78,19 @@ describe('planejamentoTextos', () => {
     ).toThrow();
   });
 
+  it('pendências e observações: só título e texto; o impacto é rótulo do motor', () => {
+    const d = {
+      pendencias: [{ t: 'Vínculo aberto', imp: 'pode tirar tempo', p: 'x' }],
+      observacoes_internas: [{ t: 'Mês baixo', imp: 'conferir', p: 'y' }],
+    };
+    expect(camposEditaveis(d).map(c => c.caminho.join('.'))).toEqual([
+      'pendencias.0.t',
+      'pendencias.0.p',
+      'observacoes_internas.0.t',
+      'observacoes_internas.0.p',
+    ]);
+  });
+
   it('versão curta: cenários, sugestão e conferir não vão no PDF, não editam', () => {
     const d = {
       ...dados(),
