@@ -60,6 +60,19 @@ RSpec.describe Ramon::PeticaoArquivarJob do
     expect(peticao.reload.arquivada_em).to be_present
   end
 
+  it 'falha ao apagar não carimba; o retry apaga o que faltou e só então marca arquivada' do
+    allow(Ramon::DriveClient).to receive(:upload).and_return('f')
+    allow(ActiveStorage::Blob.service).to receive(:delete).and_raise('storage fora')
+    described_class.perform_now(peticao.id) # retry_on engole o erro e reenfileira
+    expect(peticao.reload.arquivada_em).to be_nil
+    expect(peticao.arquivos.last.file).to be_attached
+
+    allow(ActiveStorage::Blob.service).to receive(:delete).and_call_original
+    described_class.perform_now(peticao.id)
+    expect(peticao.reload.arquivada_em).to be_present
+    expect(peticao.arquivos.map { |a| a.file.attached? }).to eq([false, false])
+  end
+
   context 'without pasta-base' do
     it 'usa "Protocolos sem cliente" na raiz' do
       allow(Ramon::DriveClient).to receive(:upload).and_return('f')

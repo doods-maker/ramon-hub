@@ -96,6 +96,8 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   def arquivos
     arquivo = params.require(:file)
+    raise ArgumentError, 'muito_grande' if arquivo.size > Ramon::Peticionamento::AdicionarArquivo::MAX_ARQUIVO # antes de ler para a memória
+
     Ramon::Peticionamento::AdicionarArquivo.call(
       @peticao, bytes: arquivo.read, nome: arquivo.original_filename, content_type: arquivo.content_type, origem: 'upload',
                 tipo: params[:tipo].presence, principal: ActiveModel::Type::Boolean.new.cast(params[:principal]) || false
@@ -105,7 +107,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   def arquivos_drive
     Array(params[:file_ids]).each do |file_id|
-      bytes, mime, nome = Ramon::DriveClient.download(file_id)
+      bytes, mime, nome = Ramon::DriveClient.download(file_id, limite: Ramon::Peticionamento::AdicionarArquivo::MAX_ARQUIVO)
       Ramon::Peticionamento::AdicionarArquivo.call(@peticao, bytes: bytes, nome: nome, content_type: mime, origem: 'drive',
                                                              drive_origem_id: file_id)
     end
@@ -125,7 +127,8 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   def ordem
     ids = Array(params[:ids]).map(&:to_i)
-    @peticao.arquivos.find(ids) # 404 se algum id não for do pacote
+    raise ArgumentError, 'ordem_incompleta' unless ids.sort == @peticao.arquivos.ids.sort # lista parcial duplicaria posições
+
     renumerar(ids)
     render_peticao
   end

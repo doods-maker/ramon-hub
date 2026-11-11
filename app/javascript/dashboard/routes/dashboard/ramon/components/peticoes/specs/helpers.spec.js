@@ -60,6 +60,9 @@ describe('peticoes/helpers', () => {
     expect(erroPeticao(erro({ error: 'SO_RESPONSAVEL' }), t)).toBe(
       'RAMON.PETICOES.ERROS.SO_RESPONSAVEL|undefined'
     );
+    expect(erroPeticao(erro({ error: 'muito_grande' }), t)).toBe(
+      'RAMON.PETICOES.ERROS.MUITO_GRANDE|undefined'
+    );
     expect(erroPeticao(erro({ error: 'DRIVE_OFF' }), t)).toBe(
       'RAMON.PETICOES.DRIVE_OFF|undefined'
     );

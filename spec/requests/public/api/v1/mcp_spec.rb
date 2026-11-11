@@ -14,6 +14,13 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
   end
 
   describe 'autenticação' do
+    it 'aceita o token pelo cabeçalho X-Mcp-Token, sem token na URL' do
+      with_modified_env(RAMON_MCP_TOKEN: token, ADVBOX_API_TOKEN: 'token-advbox') do
+        post '/public/api/v1/mcp', params: rpc('tools/list').to_json, headers: { 'CONTENT_TYPE' => 'application/json', 'X-Mcp-Token' => token }
+      end
+      expect(response).to have_http_status(:ok)
+    end
+
     it 'rejeita token errado com 401' do
       post_mcp(rpc('tools/list'), path_token: 'errado')
       expect(response).to have_http_status(:unauthorized)

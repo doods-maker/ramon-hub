@@ -4,7 +4,7 @@
 import { onBeforeUnmount, onMounted, toValue } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RamonAprovacoesAgenteAPI from 'dashboard/api/ramonAprovacoesAgente';
-import { descreverPedido } from '../helpers/pedidoAgente';
+import { comAvisoPrimeiro, descreverPedido } from '../helpers/pedidoAgente';
 
 const INTERVALO_MS = 5000;
 const OUVINDO_MS = 60000;
@@ -47,10 +47,11 @@ export const usePonteAprovacoes = (iframeRef, url) => {
         d.linha && String(d.linha),
         ...d.blocos.map(b => (b.rotulo ? `${b.rotulo}: ${b.texto}` : b.texto)),
       ].filter(Boolean),
-      entrada: JSON.stringify(pedido.entrada ?? {}, null, 2).slice(
-        0,
-        ENTRADA_MAXIMA
-      ),
+      entrada: JSON.stringify(
+        comAvisoPrimeiro(pedido.entrada ?? {}),
+        null,
+        2
+      ).slice(0, ENTRADA_MAXIMA),
       criadoEm: pedido.created_at,
     };
   };

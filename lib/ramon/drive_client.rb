@@ -141,8 +141,11 @@ class Ramon::DriveClient
     end
 
     # => [bytes, mime_type, name]
-    def download(file_id)
-      meta = service.get_file(file_id, fields: 'name,mimeType', supports_all_drives: true)
+    # `limite`: recusa pelo tamanho que o Drive informa, antes de trazer os bytes para a memória.
+    def download(file_id, limite: nil)
+      meta = service.get_file(file_id, fields: 'name,mimeType,size', supports_all_drives: true)
+      raise ArgumentError, 'muito_grande' if limite && meta.size.to_i > limite
+
       io = StringIO.new
       service.get_file(file_id, download_dest: io, supports_all_drives: true)
       [io.string, meta.mime_type, meta.name]

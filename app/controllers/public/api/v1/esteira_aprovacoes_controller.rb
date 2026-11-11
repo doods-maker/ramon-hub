@@ -9,8 +9,11 @@ class Public::Api::V1::EsteiraAprovacoesController < PublicController
   end
 
   def create
+    entrada = params[:entrada]
+    return head :unprocessable_entity unless entrada.nil? || entrada.is_a?(ActionController::Parameters)
+
     aprovacao = RamonAprovacaoAgente.abrir!(caso: params[:caso], ferramenta: params.require(:ferramenta),
-                                            entrada: params[:entrada]&.to_unsafe_h || {})
+                                            entrada: entrada&.to_unsafe_h || {})
     # O ntfy é público: o push não leva caso, ferramenta nem dado de cliente.
     Ramon::NtfyPushJob.perform_later(title: 'Esteira pede aprovacao', body: 'Abra Agentes no hub para responder.')
     render json: { id: aprovacao.id }, status: :created

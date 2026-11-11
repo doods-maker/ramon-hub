@@ -30,6 +30,11 @@ export const blocosDoTexto = texto =>
         : { rotulo: null, texto: trecho };
     });
 
+// Aviso do hub quando a entrada foi cortada (RamonAprovacaoAgente::AVISO): aparece sempre, antes do conteúdo.
+const AVISO = 'aviso_hub';
+export const comAvisoPrimeiro = entrada =>
+  entrada?.[AVISO] ? { [AVISO]: entrada[AVISO], ...entrada } : entrada;
+
 const dataBr = valor => String(valor).split('-').reverse().join('/');
 
 const camposDe = ({ entrada = {}, nomes = {} }) => {
@@ -67,6 +72,9 @@ export const descreverPedido = pedido => {
     numero,
     linha: acao?.linha ? entrada[acao.linha] : null,
     campos: camposDe({ entrada, nomes: pedido.nomes }),
-    blocos: blocosDoTexto(entrada.descricao || entrada.aviso),
+    blocos: [
+      ...blocosDoTexto(entrada[AVISO]),
+      ...blocosDoTexto(entrada.descricao || entrada.aviso),
+    ],
   };
 };

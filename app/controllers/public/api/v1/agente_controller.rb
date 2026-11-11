@@ -1,5 +1,6 @@
-# API do agente do hub (Claude Code na VPS, usuário `agente`). Token na query
-# (mesmo padrão do MCP: filter_parameters mascara). Só leitura de contexto +
+# API do agente do hub (Claude Code na VPS, usuário `agente`). Token no cabeçalho
+# `X-Agente-Token` (hífen: o Caddy descarta sublinhado); a query `?token=` segue aceita
+# para o runner antigo, mas fica em log de proxy. Só leitura de contexto +
 # escritas determinísticas que o runner faz DEPOIS do LLM: nota privada,
 # arquivo no Drive, linha de trilha. Spec: docs/superpowers/specs/2026-08-17-agente-hub-design.md
 class Public::Api::V1::AgenteController < PublicController
@@ -64,7 +65,7 @@ class Public::Api::V1::AgenteController < PublicController
 
   def verify_token
     secret = ENV.fetch('RAMON_AGENTE_TOKEN', nil)
-    provided = params[:token].to_s
+    provided = request.headers['X-Agente-Token'].presence || params[:token].to_s
     return if secret.present? && provided.present? && ActiveSupport::SecurityUtils.secure_compare(provided, secret)
 
     head :unauthorized
