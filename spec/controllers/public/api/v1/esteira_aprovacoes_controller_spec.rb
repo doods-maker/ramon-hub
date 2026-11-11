@@ -36,9 +36,43 @@ RSpec.describe 'Hook da esteira: aprovações', type: :request do
     end.to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Esteira pede aprovacao', body: 'Abra Agentes no hub para responder.')
   end
 
-  it 'entrada grande demais não é guardada' do
-    post url, params: { ferramenta: 'Write', entrada: { content: 'x' * 60_000 } }, headers: headers, as: :json
-    expect(RamonAprovacaoAgente.last.entrada.keys).to eq(['aviso'])
+  it 'entrada grande guarda o começo de cada campo, dentro do teto, para quem decide ler' do
+    post url, params: { ferramenta: 'Write', entrada: { file_path: '/casos/123/peca.md', content: "INICIO #{'x' * 60_000}" } },
+              headers: headers, as: :json
+    entrada = RamonAprovacaoAgente.last.entrada
+    expect(entrada['file_path']).to eq('/casos/123/peca.md')
+    expect(entrada['content']).to start_with('INICIO xxx').and end_with('… [cortado: eram 60007 caracteres]')
+    expect(entrada['aviso_hub']).to be_present
+    expect(entrada.to_json.size).to be <= RamonAprovacaoAgente::ENTRADA_MAXIMA
+  end
+
+  it 'lista cortada ganha um item final dizendo quantos ficaram de fora; campo `aviso` da ferramenta fica como veio' do
+    post url, params: { ferramenta: 'Outra', entrada: { aviso: 'da ferramenta', edits: Array.new(15) { 'y' * 5_000 } } },
+              headers: headers, as: :json
+    entrada = RamonAprovacaoAgente.last.entrada
+    expect(entrada['edits'].size).to eq(11)
+    expect(entrada['edits'].last).to eq('… [cortado: +5 itens]')
+    expect(entrada).to include('aviso' => 'da ferramenta', 'aviso_hub' => be_present)
+  end
+
+  it 'muitos campos grandes: o trecho por campo diminui até caber, em vez de sumir tudo' do
+    post url, params: { ferramenta: 'Outra', entrada: (1..20).to_h { |n| ["campo#{n}", 'x' * 5_000] } }, headers: headers, as: :json
+    entrada = RamonAprovacaoAgente.last.entrada
+    expect(entrada.keys).to include('campo1', 'campo20', 'aviso_hub')
+    expect(entrada['campo20']).to start_with('x' * 1_000).and include('[cortado')
+    expect(entrada.to_json.size).to be <= RamonAprovacaoAgente::ENTRADA_MAXIMA
+  end
+
+  it 'entrada impossível de encurtar (só as chaves já passam do teto) vira só o aviso' do
+    post url, params: { ferramenta: 'Outra', entrada: (1..6_000).to_h { |n| ["campo#{n}", 'x'] } }, headers: headers, as: :json
+    expect(RamonAprovacaoAgente.last.entrada.keys).to eq(['aviso_hub'])
+  end
+
+  it 'entrada que não é objeto → 422, não 500' do
+    expect do
+      post url, params: { ferramenta: 'Bash', entrada: 'rm -rf' }, headers: headers, as: :json
+    end.not_to change(RamonAprovacaoAgente, :count)
+    expect(response).to have_http_status(:unprocessable_entity)
   end
 
   it 'recusa sem token, com token errado e quando a env está vazia' do

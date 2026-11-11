@@ -1,5 +1,5 @@
 # Arquiva o pacote protocolado (PDFs numerados + comprovante) na pasta do cliente no Drive.
-# Falha no meio: nada local é apagado e `arquivada_em` não é gravada; o retry pula o que já subiu (drive_file_id).
+# Falha no meio: `arquivada_em` não é gravada; o retry pula o que já subiu (drive_file_id) e termina de apagar o que faltou.
 class Ramon::PeticaoArquivarJob < ApplicationJob
   queue_as :low
   retry_on StandardError, wait: 15.minutes, attempts: 8
@@ -12,8 +12,9 @@ class Ramon::PeticaoArquivarJob < ApplicationJob
     peticao.arquivos.where(drive_file_id: nil).to_a.each { |a| subir_arquivo(a, pasta) }
     subir_comprovante(peticao, pasta)
 
-    peticao.update!(arquivada_em: Time.current)
+    # Carimbo só depois de apagar tudo: purge que falha volta no retry (purge de anexo já apagado não faz nada).
     peticao.arquivos.each { |a| a.file.purge }
+    peticao.update!(arquivada_em: Time.current)
   end
 
   private
@@ -40,7 +41,8 @@ class Ramon::PeticaoArquivarJob < ApplicationJob
     arquivo.update_columns(drive_file_id: id) # rubocop:disable Rails/SkipsModelValidations
   end
 
-  # ponytail: sem marcador próprio — se o job morrer entre este upload e `arquivada_em`, o retry sobe o comprovante de novo (aceito).
+  # ponytail: sem marcador próprio — se o job morrer entre este upload e `arquivada_em` (ou um purge falhar),
+  # o retry sobe o comprovante de novo (aceito).
   def subir_comprovante(peticao, pasta)
     return unless peticao.comprovante.attached?
 

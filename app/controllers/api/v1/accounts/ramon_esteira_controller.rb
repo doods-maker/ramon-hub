@@ -19,6 +19,7 @@ class Api::V1::Accounts::RamonEsteiraController < Api::V1::Accounts::BaseControl
   # Reunião não se adia (perderia lembretes e o horário no Google): Remarcar
   # no painel do lead.
   def snooze
+    authorize(@lead, :update?) # tarefa é parte do lead
     task = @lead.lead_tasks.open_tasks.find_by(id: params[:task_id])
     return render json: { error: 'REUNIAO_REMARCAR' }, status: :unprocessable_entity if task&.kind == 'meeting'
 

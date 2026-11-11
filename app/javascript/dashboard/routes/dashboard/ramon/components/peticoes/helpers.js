@@ -49,6 +49,9 @@ export const baixarTodos = (arquivos, buscar) =>
 // Códigos de erro do backend → texto; o resto vem pronto do servidor (ou o padrão).
 const ERROS = {
   formato: 'RAMON.PETICOES.ERROS.FORMATO',
+  muito_grande: 'RAMON.PETICOES.ERROS.MUITO_GRANDE',
+  pasta_grande: 'RAMON.PETICOES.ERROS.PACOTE_GRANDE',
+  ordem_incompleta: 'RAMON.PETICOES.ERROS.ORDEM_INCOMPLETA',
   protocolada: 'RAMON.PETICOES.ERROS.PROTOCOLADA',
   pasta_invalida: 'RAMON.PETICOES.ERROS.PASTA_INVALIDA',
   pasta_ja_usada: 'RAMON.PETICOES.ERROS.PASTA_JA_USADA',

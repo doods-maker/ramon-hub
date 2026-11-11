@@ -266,6 +266,18 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       expect(ciclo.ensaio).to be(true)
     end
 
+    it 'fluxo de "reunião na agenda" que cria a tarefa da reunião não dispara a si mesmo (sem laço)' do
+      laco = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_na_agenda' },
+                                                   ['criar_tarefa', { 'titulo' => 'De novo', 'tipo' => 'meeting', 'prazo' => 'reuniao' }]))
+      outro = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_na_agenda' }, ['esperar', { 'quantidade' => 1, 'unidade' => 'horas' }]))
+      reuniao = create(:lead_task, lead: lead, account: account, kind: 'meeting', due_at: Time.zone.parse('2026-10-07T22:00:00Z'))
+      perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) { Ramon::Fluxos::Reunioes.na_agenda(reuniao, false) }
+      expect(laco.execucoes.count).to eq(1)
+      expect(lead.lead_tasks.where(title: 'De novo').count).to eq(1)
+      # os outros fluxos do gatilho ouvem a tarefa nova, um nível abaixo na cadeia
+      expect(outro.execucoes.pluck(:profundidade)).to contain_exactly(0, 1)
+    end
+
     it 'ensaio da tarefa diz o prazo; da atividade, o tipo e o de → para' do
       c = ctx(ensaio: true, contexto: gatilho)
       tarefa = Ramon::Fluxos::Passos::Lead.criar_tarefa({ 'titulo' => '{titulo_tarefa}', 'tipo' => 'meeting', 'prazo' => 'reuniao' }, c)
@@ -366,6 +378,40 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     config = { 'titulo' => 'Novo: {nome}', 'texto' => '{nome_completo} {telefone}· ganho' }
     expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx) }
       .to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Novo: Tese do push', body: 'Tese do push · ganho')
+  end
+
+  it 'push só leva a lista fechada: mensagem do cliente, resposta da IA, responsável e campo livre ficam no hub' do
+    lead.update!(thesis: create(:thesis, account: account, name: 'Tese do push'), closer: create(:user, account: account, name: 'Fulana Closer'),
+                 custom_attributes: { 'campos' => { 'cpf' => '000.000.000-00' } })
+    contexto = { 'gatilho' => { 'texto' => 'meu benefício foi negado', 'quando' => 'quinta, 08/10 às 14:00' },
+                 'vars' => { 'resposta_ia' => 'a cliente relata doença' } }
+    config = { 'titulo' => '{tese} · {etapa}', 'texto' => '{quando}|{texto}|{resposta_ia}|{responsavel}|{cpf}|{inventada}' }
+    marcador = Ramon::Fluxos::Contexto::FORA_DO_PUSH
+    expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(contexto: contexto)) }
+      .to have_enqueued_job(Ramon::NtfyPushJob)
+      .with(title: "Tese do push · #{lead.lead_stage.name}",
+            body: "quinta, 08/10 às 14:00|#{marcador}|#{marcador}|#{marcador}|#{marcador}|{inventada}")
+  end
+
+  it 'push de evento do ADVBOX leva o {texto} (nome da etapa de lá); nos outros gatilhos {texto} é a mensagem do cliente e fica no hub' do
+    config = { 'titulo' => 'Marco', 'texto' => '{nome_completo}: {texto}' }
+    contexto = { 'gatilho' => { 'texto' => 'SENTENCA PROFERIDA' } }
+    advbox = fluxo_publicado(account, grafo_linear({ 'tipo' => 'evento_advbox' }))
+    do_advbox = Ramon::Fluxos::Contexto.new(advbox.execucoes.create!(account: account, alvo: lead, contexto: contexto))
+    expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, do_advbox) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Marco', body: 'Lead: SENTENCA PROFERIDA')
+    expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(contexto: contexto)) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Marco', body: "Lead: #{Ramon::Fluxos::Contexto::FORA_DO_PUSH}")
+  end
+
+  it 'esperar com unidade inválida é passo impossível (não entra nas 3 tentativas)' do
+    expect { Ramon::Fluxos::Passos::Logica.esperar({ 'quantidade' => 2, 'unidade' => 'semanas' }, ctx) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, 'unidade de espera inválida: semanas')
+  end
+
+  it 'mover para etapa apagada do funil é passo impossível (não entra nas 3 tentativas)' do
+    expect { Ramon::Fluxos::Passos::Lead.mover_etapa({ 'etapa_id' => 0 }, ctx) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, 'a etapa escolhida não existe mais')
   end
 
   describe 'push uma vez por dia (B4.3)' do

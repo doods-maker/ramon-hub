@@ -4,7 +4,7 @@ class Api::V1::Accounts::LeadZapsignController < Api::V1::Accounts::BaseControll
   before_action :fetch_lead, only: [:create, :preview, :dados]
 
   def create
-    authorize(@lead, :show?)
+    authorize(@lead, :update?)
     regenerar = ActiveModel::Type::Boolean.new.cast(params[:regenerar]) || false
     render json: Ramon::ZapsignContractService.new(@lead, template_id: params[:template_id]).perform(regenerar: regenerar)
   rescue Ramon::ZapsignContractService::ConflictError => e
@@ -24,8 +24,10 @@ class Api::V1::Accounts::LeadZapsignController < Api::V1::Accounts::BaseControll
   # "Dados do contrato" do painel: grava no CONTATO (vale pros próximos casos
   # dele) e devolve a prévia nova.
   def dados
-    authorize(@lead, :show?)
+    authorize(@lead, :update?)
     contact = @lead.contact
+    return render json: { error: 'Lead sem contato: vincule um contato primeiro.' }, status: :unprocessable_entity if contact.nil?
+
     contact.custom_attributes = (contact.custom_attributes || {}).merge(dados_params.except('email'))
     contact.email = dados_params['email'].presence if dados_params.key?('email')
     contact.save!

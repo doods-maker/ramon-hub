@@ -10,6 +10,8 @@ class Captain::Tools::AdvboxMcpTool < Captain::Tools::BasePublicTool
   class << self
     attr_reader :mcp_nome
 
+    def so_equipe? = true
+
     def escrita?
       false
     end

@@ -92,8 +92,11 @@ class Peticao < ApplicationRecord
         raise ActiveRecord::RecordInvalid, self
       end
 
+      # Sobe o comprovante antes: `attach` de arquivo só envia depois do commit, e storage fora deixaria protocolada sem comprovante.
+      blob = ActiveStorage::Blob.create_and_upload!(io: comprovante, filename: comprovante.original_filename,
+                                                    content_type: comprovante.content_type)
       update!(status: 'protocolada', numero_evento: numero_evento, protocolada_em: Time.current, protocolada_por: usuario)
-      self.comprovante.attach(comprovante)
+      self.comprovante.attach(blob)
     end
     Ramon::PeticaoArquivarJob.perform_later(id)
   end

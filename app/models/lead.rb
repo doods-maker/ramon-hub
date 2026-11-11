@@ -2,6 +2,8 @@ class Lead < ApplicationRecord
   include LeadCadence
   include LeadDocs
   include LeadComercial
+  include LeadComissao
+  include LeadPortal
   include LeadCasoCalculo
   include LeadRoteiro
 
@@ -142,14 +144,6 @@ class Lead < ApplicationRecord
       vinculos_detalhe: cnis['vinculos'],
       parametros: cnis['parametros'] || {}
     )
-  end
-
-  # Portal do cliente (link mágico): token nasce sob demanda, nunca por callback.
-  def ensure_portal_token!
-    return portal_token if portal_token.present?
-
-    update!(portal_token: SecureRandom.urlsafe_base64(24))
-    portal_token
   end
 
   def prescription

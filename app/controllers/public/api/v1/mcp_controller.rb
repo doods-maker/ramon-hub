@@ -38,7 +38,8 @@ class Public::Api::V1::McpController < PublicController
     secret = ENV.fetch('RAMON_MCP_TOKEN', nil)
     return head :unauthorized if secret.blank?
 
-    provided = params[:token].to_s
+    # O runner do agente manda por cabeçalho (fora do log de proxy); o conector do claude.ai só consegue pela query.
+    provided = request.headers['X-Mcp-Token'].presence || params[:token].to_s
     return if provided.present? && ActiveSupport::SecurityUtils.secure_compare(provided, secret)
 
     head :unauthorized

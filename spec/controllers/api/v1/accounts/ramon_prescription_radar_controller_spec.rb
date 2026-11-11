@@ -7,6 +7,17 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
   let(:active_stage) { account.lead_stages.find_by(is_won: false, is_lost: false) }
   let(:lost_stage) { account.lead_stages.find_by(is_lost: true) }
 
+  # O radar segue a visibilidade do lead (LeadPolicy::Scope): quem tem visão total do funil vê a base inteira.
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
+  it 'quem não vê o lead não o recebe no radar' do
+    create(:lead, account: account, lead_stage: active_stage, dcb_em: 65.months.ago.to_date, benefit_monthly_value: 1000)
+
+    get url, headers: create(:user, account: account, role: :agent).create_new_auth_token, as: :json
+
+    expect(response.parsed_body['items']).to eq([])
+  end
+
   it 'ordena por sangramento e soma o resumo (incluindo lead perdido)' do
     big = create(:lead, account: account, lead_stage: lost_stage, dcb_em: 70.months.ago.to_date, benefit_monthly_value: 2000)
     small = create(:lead, account: account, lead_stage: active_stage, dcb_em: 65.months.ago.to_date, benefit_monthly_value: 1000)

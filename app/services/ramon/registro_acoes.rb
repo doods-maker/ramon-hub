@@ -15,7 +15,7 @@ class Ramon::RegistroAcoes
   TIPO_DO_MODELO = TIPOS.flat_map { |tipo, modelos| modelos.map { |modelo| [modelo, tipo] } }.to_h.freeze
   # campo do audited_changes → modelo cujo nome a tela mostra no lugar do id
   REFERENCIAS = {
-    'lead_stage_id' => 'LeadStage', 'sdr_id' => 'User', 'closer_id' => 'User', 'assignee_id' => 'User',
+    'lead_stage_id' => 'LeadStage', 'thesis_id' => 'Thesis', 'sdr_id' => 'User', 'closer_id' => 'User', 'assignee_id' => 'User',
     'user_id' => 'User', 'team_id' => 'Team', 'contact_id' => 'Contact',
     'responsavel_id' => 'User', 'protocolada_por_id' => 'User'
   }.freeze

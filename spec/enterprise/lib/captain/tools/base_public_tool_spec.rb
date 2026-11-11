@@ -30,6 +30,34 @@ RSpec.describe Captain::Tools::BasePublicTool, type: :model do
       expect(Captain::ToolRun.last.resultado).to include('boom')
     end
 
+    # Tool de escritório anexada por engano ao assistente que fala com o cliente: recusa no atendimento.
+    describe 'tool so da equipe' do
+      let(:conversation) { create(:conversation, account: account) }
+      let(:tools) do
+        [Captain::Tools::FunilHojeTool, Captain::Tools::AgendaDoEscritorioTool, Captain::Tools::BuscarClienteAdvboxTool,
+         Captain::Tools::CriarTarefaAdvboxTool]
+      end
+
+      it 'recusa no atendimento ao cliente (conversa no state, sem source) sem executar', :aggregate_failures do
+        atendimento = Struct.new(:state).new({ conversation: { id: conversation.id } })
+        allow(Ramon::AdvboxMcpService).to receive(:call_tool)
+
+        tools.each { |klass| expect(klass.new(assistant).execute(atendimento, nome: 'Fulano')).to eq(described_class::SO_EQUIPE) }
+        expect(Ramon::AdvboxMcpService).not_to have_received(:call_tool)
+      end
+
+      it 'segue rodando para a equipe (copiloto: source no state)' do
+        copiloto = Struct.new(:state).new({ conversation: { id: conversation.id }, source: 'copiloto_painel' })
+        allow(Ramon::AdvboxMcpService).to receive(:call_tool).and_return({ content: [{ text: '[]' }] })
+
+        expect(Captain::Tools::BuscarClienteAdvboxTool.new(assistant).execute(copiloto, nome: 'Fulano')).to eq('[]')
+      end
+
+      it 'nao atinge as tools do atendimento' do
+        expect(Captain::Tools::ChecarPrescricaoTool.so_equipe?).to be(false)
+      end
+    end
+
     it 'nao derruba a tool quando o registro falha' do
       tool = Captain::Tools::ChecarPrescricaoTool.new(assistant)
       allow(Captain::ToolRun).to receive(:create!).and_raise(ActiveRecord::StatementInvalid)

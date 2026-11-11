@@ -55,7 +55,7 @@ json.apto_pode_validar Ramon::ContratoApto.pode_validar?(lead, Current.user) unl
 json.dcb_em lead.dcb_em
 json.benefit_monthly_value lead.benefit_monthly_value
 json.stalled lead.stalled?
-json.open_tasks_count lead.lead_tasks.open_tasks.size
+json.open_tasks_count lead.open_tasks_count
 next_task = lead.next_open_task
 json.next_task_due_at next_task&.due_at
 json.next_task_title next_task&.title

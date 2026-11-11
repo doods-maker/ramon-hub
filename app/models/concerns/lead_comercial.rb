@@ -25,7 +25,7 @@ module LeadComercial
     # ClassLength). contact_id fica no destroy para a tela saber de quem era.
     # contrato_cancelado_em é update_columns (sem callback): o cancelamento
     # aparece como won_at → nil na mesma linha da troca de etapa.
-    audited only: %w[lead_stage_id value sdr_id closer_id won_at lost_reason contact_id apto_em devolvido_em devolvido_motivo validador_id],
+    audited only: %w[lead_stage_id thesis_id value sdr_id closer_id won_at lost_reason contact_id apto_em devolvido_em devolvido_motivo validador_id],
             on: [:update, :destroy], associated_with: :account
     # Perdido exige motivo (regra 06/10), de qualquer pessoa, admin inclusive. Ponto
     # único: tela, API, lote e IA passam por aqui; o controller devolve 422.
@@ -39,12 +39,13 @@ module LeadComercial
   # reunião (a informada, senão a aberta mais antiga até hoje) é concluída.
   # vou_pensar: o cliente vai pensar — marca à parte (atividade), NUNCA um 3º
   # resultado: a qualificação é o que paga o SDR e não muda por isso.
-  # reuniao_pela_ia: a tarefa da reunião nasceu sem criador (IA/automação) — não paga o SDR (decisão 09/11/2026); vale a
-  # do 1º registro, como a data.
+  # reuniao_pela_ia: reunião que a IA/automação marcou não paga o SDR (decisão 09/11/2026); vale a do 1º registro, como
+  # a data. As travas contra manipulação (reunião na agenda, origem pelo histórico) estão no LeadComissao.
   def registrar_reuniao!(resultado, user, task: nil, vou_pensar: false)
     task ||= reuniao_em_aberto
+    conferir_registro_da_reuniao!(task, resultado)
     attrs = { reuniao_resultado: resultado, reuniao_registrada_em: reuniao_registrada_em || Time.current }
-    attrs[:reuniao_pela_ia] = task.present? && task.user_id.nil? if reuniao_registrada_em.nil?
+    attrs[:reuniao_pela_ia] = reuniao_da_ia?(task) if reuniao_registrada_em.nil?
     attrs[:closer] = user if closer_id.blank?
     update!(attrs.merge(etapa_reuniao_realizada))
     registrar_atividades_da_reuniao(resultado, user, vou_pensar)

@@ -11,6 +11,8 @@ class Captain::Tools::AgendaDoEscritorioTool < Captain::Tools::BasePublicTool
   MAX_ATRASADAS = 20
   ADVBOX_FORA = 'AdvBox indisponivel agora.'.freeze
 
+  def self.so_equipe? = true
+
   def perform(_tool_context, data: nil)
     dia = resolver_dia(data)
     return 'Data invalida. Use o formato AAAA-MM-DD.' if dia.nil?

@@ -29,6 +29,38 @@ RSpec.describe 'Portal do cliente (link mágico)', type: :request do
       expect(response.body).not_to include("Seu caso está em: #{lead.lead_stage.name}")
     end
 
+    it 'link vencido (gerado há mais de 30 dias) devolve 404; gerar de novo dá um link novo que abre', :aggregate_failures do
+      token = lead.ensure_portal_token!
+      travel_to(31.days.from_now) do
+        get "/portal/#{token}"
+        expect(response).to have_http_status(:not_found)
+
+        novo = lead.reload.ensure_portal_token!
+        expect(novo).not_to eq(token)
+        get "/portal/#{novo}"
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    it 'gerar o link de novo dentro do prazo mantém o mesmo link e renova os 30 dias', :aggregate_failures do
+      token = lead.ensure_portal_token!
+      travel_to(20.days.from_now) { expect(lead.reload.ensure_portal_token!).to eq(token) }
+      travel_to(45.days.from_now) do
+        get "/portal/#{token}"
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    it 'link antigo, de antes da validade, abre e começa a contar o prazo no primeiro acesso', :aggregate_failures do
+      lead.update_columns(portal_token: 'tokenantigo') # rubocop:disable Rails/SkipsModelValidations
+      get '/portal/tokenantigo'
+      expect(response).to have_http_status(:success)
+      travel_to(31.days.from_now) do
+        get '/portal/tokenantigo'
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
     it 'token inválido devolve 404 com página neutra' do
       get '/portal/token-que-nao-existe'
 

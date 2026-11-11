@@ -116,7 +116,5 @@ class Ramon::AdvboxEventRegras
     lead.name.to_s.split.first.presence || 'cliente'
   end
 
-  def today_br
-    Time.zone.today.strftime('%d/%m/%Y')
-  end
+  def today_br = Ramon::Fluxos::EventosAdvbox.hoje
 end

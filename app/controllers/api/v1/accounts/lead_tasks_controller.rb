@@ -1,8 +1,11 @@
 class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
+  include ParametroDeData
+
   before_action :current_account
   before_action :fetch_lead, if: -> { params[:lead_id].present? }
   before_action :fetch_task, only: [:update, :destroy, :complete]
   before_action :check_authorization
+  before_action -> { authorize(@lead, :update?) }, only: [:create, :update, :destroy, :complete] # tarefa é parte do lead
 
   def index
     @lead_tasks = params[:lead_id].present? ? @lead.lead_tasks.order(:due_at) : account_scope
@@ -43,7 +46,8 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
   # Período da Agenda (from..to): abertas do período + concluídas hoje (a
   # Agenda mostra apagadas) + vencidas abertas de qualquer dia (fixadas em Hoje).
   def agenda_scope(scope)
-    periodo = scope.where(due_at: Time.zone.parse(params[:from].to_s)..Time.zone.parse(params[:to].to_s))
+    # Sem from/to válidos é 422: nil viraria intervalo aberto (a conta inteira).
+    periodo = scope.where(due_at: hora_do_parametro(:from)..hora_do_parametro(:to))
     hoje = Time.current.in_time_zone('America/Sao_Paulo').all_day
     periodo.open_tasks.or(periodo.where(completed_at: hoje)).or(scope.overdue)
   end

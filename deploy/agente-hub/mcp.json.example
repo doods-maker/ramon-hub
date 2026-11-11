@@ -1,1 +1,1 @@
-{"mcpServers":{"advbox":{"type":"http","url":"https://chat.ramonantonio.adv.br/public/api/v1/mcp?token=${HUB_MCP_TOKEN}"}}}
+{"mcpServers":{"advbox":{"type":"http","url":"https://chat.ramonantonio.adv.br/public/api/v1/mcp","headers":{"X-Mcp-Token":"${HUB_MCP_TOKEN}"}}}}

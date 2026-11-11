@@ -6,6 +6,8 @@ class Captain::Tools::FunilHojeTool < Captain::Tools::BasePublicTool
 
   TOP_TESES = 3
 
+  def self.so_equipe? = true
+
   def perform(_tool_context)
     log_tool_usage('funil_hoje')
     metrics = Ramon::CockpitMetrics.new(@assistant.account)

@@ -236,6 +236,30 @@ RSpec.describe Ramon::Peticionamento::ImportarPasta do
     expect(peticao.arquivos.count).to eq(1)
   end
 
+  it 'arquivo que diz ser PDF e não é vira recusa nomeada, sem erro para o job repetir nem LLM' do
+    stub_download('b', 'isto não é um PDF')
+    importar
+    expect(peticao.reload.leitura).to include('estado' => 'lida', 'recusas' => ['formato:02 Procuração.pdf'])
+    expect(peticao.arquivos.count).to eq(0)
+    expect(Ramon::Peticionamento::LerPeca).not_to have_received(:call)
+  end
+
+  it 'Drive sem `size`: o tamanho de verdade é conferido depois de baixar e vira recusa nomeada' do
+    stub_pasta([item('01 Petição.pdf', pdf, 'a').merge(size: nil)])
+    stub_const('Ramon::Peticionamento::AdicionarArquivo::MAX_ARQUIVO', 100)
+    importar
+    expect(peticao.reload.leitura).to include('estado' => 'lida', 'recusas' => ['muito_grande:01 Petição.pdf'])
+    expect(peticao.arquivos.count).to eq(0)
+  end
+
+  it 'Drive sem `size`: pacote que passa do teto pelos bytes de verdade vira `pasta_grande`' do
+    stub_pasta([item('01 Petição.pdf', pdf, 'a').merge(size: nil), item('02 Procuração.pdf', pdf, 'b').merge(size: nil)])
+    stub_const('Ramon::Peticionamento::AdicionarArquivo::MAX_PASTA', 1_000)
+    importar
+    expect(peticao.reload.leitura['recusas']).to eq(['pasta_grande'])
+    expect(peticao.arquivos.count).to eq(0)
+  end
+
   it 'erro do Drive sobe, para o job tentar de novo' do
     allow(Ramon::DriveClient).to receive(:download).and_raise(Google::Apis::ServerError, 'x')
     expect { importar }.to raise_error(Google::Apis::ServerError)

@@ -54,6 +54,20 @@ describe('descreverPedido', () => {
     });
   });
 
+  it('entrada cortada: o aviso do hub aparece antes do texto, mesmo havendo descrição', () => {
+    const { blocos } = descreverPedido({
+      ferramenta: 'mcp__advbox__advbox_criar_tarefa',
+      entrada: {
+        descricao: 'SITUAÇÃO: Parou… [cortado]',
+        aviso_hub: 'Entrada grande.',
+      },
+    });
+    expect(blocos).toEqual([
+      { rotulo: null, texto: 'Entrada grande.' },
+      { rotulo: 'SITUAÇÃO', texto: 'Parou… [cortado]' },
+    ]);
+  });
+
   it('sem o nome no ADVBOX, mostra o número', () => {
     const { campos } = descreverPedido({
       ferramenta: 'mcp__advbox__advbox_criar_tarefa',
