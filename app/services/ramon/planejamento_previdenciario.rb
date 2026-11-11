@@ -11,7 +11,7 @@ class Ramon::PlanejamentoPrevidenciario
   # Espelho de SECOES_EDITAVEIS em app/javascript/dashboard/routes/dashboard/ramon/helpers/planejamentoTextos.js
   # (mudou lá, muda aqui), assim como ITENS_EDITAVEIS: nas listas de itens, só essas chaves são texto livre.
   SECOES_EDITAVEIS = %w[pendencias observacoes_internas pode nao_pode sugestao cenarios melhorias passos conferir documentos].freeze
-  ITENS_EDITAVEIS = { 'cenarios' => %w[lead bom], 'melhorias' => %w[t p] }.freeze
+  ITENS_EDITAVEIS = { 'pendencias' => %w[t p], 'observacoes_internas' => %w[t p], 'cenarios' => %w[lead bom], 'melhorias' => %w[t p] }.freeze
 
   class << self
     # cnis = lead.cnis; perfil = Hash string-keyed vindo da tela.

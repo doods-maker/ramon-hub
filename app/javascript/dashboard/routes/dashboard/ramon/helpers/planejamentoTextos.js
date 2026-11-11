@@ -16,6 +16,8 @@ export const SECOES_EDITAVEIS = [
 // Seções que são listas de itens: só estas chaves de cada item são texto livre
 // (nome, título, data e regra vêm do motor e alimentam o PDF/recálculo).
 export const ITENS_EDITAVEIS = {
+  pendencias: ['t', 'p'],
+  observacoes_internas: ['t', 'p'],
   cenarios: ['lead', 'bom'],
   melhorias: ['t', 'p'],
 };

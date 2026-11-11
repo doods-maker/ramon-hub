@@ -217,6 +217,7 @@ RSpec.describe Ramon::PlanejamentoPrevidenciario do
         'chave a mais' => ->(r) { r.merge('versao' => 'curta') },
         'item a mais numa seção editável' => ->(r) { r.merge('pendencias' => r['pendencias'] + r['pendencias']) },
         'texto virou número numa seção editável' => ->(r) { r.merge('pendencias' => [r['pendencias'][0].merge('p' => 1)]) },
+        'impacto da pendência (rótulo do motor)' => ->(r) { r.merge('pendencias' => [r['pendencias'][0].merge('imp' => 'outro')]) },
         'data de uma melhoria (texto do motor)' => ->(r) { r.merge('melhorias' => [r['melhorias'][0].merge('data' => '01/01/2030')]) }
       }.each do |o_que, mudar|
         it "#{o_que} diferente: erro e não gera PDF" do
