@@ -2739,6 +2739,9 @@
       "EXCLUIR_CONFIRMA": "Confirmar exclusão",
       "ERROS": {
         "FORMATO": "Só arquivos PDF, JPG ou PNG.",
+        "MUITO_GRANDE": "O arquivo tem mais de 30 MB. Reduza e envie de novo.",
+        "PACOTE_GRANDE": "Com este arquivo o pacote passaria de 100 MB.",
+        "ORDEM_INCOMPLETA": "O pacote mudou enquanto você reordenava. Recarregue a petição e tente de novo.",
         "PROTOCOLADA": "Esta petição já foi protocolada e não pode mais ser alterada.",
         "SO_RESPONSAVEL": "Só o advogado responsável ou um administrador registra o protocolo.",
         "PASTA_INVALIDA": "Não achei essa pasta no Drive do escritório. Escolha outra.",

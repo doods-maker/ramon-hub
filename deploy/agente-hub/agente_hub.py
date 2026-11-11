@@ -20,7 +20,8 @@ def parse_pedido(content):
 
 
 def aceita(payload, secret_hdr, cfg):
-    if not hmac.compare_digest(str(secret_hdr or ''), str(cfg.WEBHOOK_SECRET)):
+    # segredo em branco no env não autentica ninguém ('' == '' passaria no compare_digest)
+    if not str(cfg.WEBHOOK_SECRET or '').strip() or not hmac.compare_digest(str(secret_hdr or ''), str(cfg.WEBHOOK_SECRET)):
         return False, 'segredo'
     if (payload.get('sender_email') or '').lower() != cfg.EDUARDO_EMAIL.lower():
         return False, 'remetente'
@@ -112,18 +113,21 @@ def carregar_env(path):
 
 
 def hub(cfg, metodo, rota, body=None, query=None):
-    q = {'token': cfg.HUB_AGENTE_TOKEN, 'account_id': cfg.ACCOUNT_ID, **(query or {})}
+    # token no cabeçalho (com hífen: o proxy descarta sublinhado), não na URL: query string fica em log de proxy.
+    q = {'account_id': cfg.ACCOUNT_ID, **(query or {})}
     url = f'{cfg.HUB_URL}/public/api/v1/agente/{rota}?{urllib.parse.urlencode(q)}'
     data = json.dumps({'account_id': cfg.ACCOUNT_ID, **(body or {})}).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=metodo, headers={'Content-Type': 'application/json'})
+    req = urllib.request.Request(url, data=data, method=metodo,
+                                 headers={'Content-Type': 'application/json', 'X-Agente-Token': cfg.HUB_AGENTE_TOKEN})
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read() or b'{}')
 
 
 def mcp_call(cfg, tool, args):
-    url = f'{cfg.HUB_URL}/public/api/v1/mcp?token={urllib.parse.quote(cfg.HUB_MCP_TOKEN)}'
+    url = f'{cfg.HUB_URL}/public/api/v1/mcp'
     body = {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call', 'params': {'name': tool, 'arguments': args}}
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), method='POST', headers={'Content-Type': 'application/json'})
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), method='POST',
+                                 headers={'Content-Type': 'application/json', 'X-Mcp-Token': cfg.HUB_MCP_TOKEN})
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read())
 
@@ -184,6 +188,13 @@ def arquivo_valido(p, a):
                 and PEDIDO_DOCUMENTO.search(p.get('pedido') or ''))
 
 
+# A conversa do cliente entra no prompt: o processo da tarefa não pode vir só da resposta do modelo. Só cria no
+# processo ADVBOX do lead desta conversa (o que o hub devolveu no contexto) — o prompt já pede isso, o runner garante.
+def tarefa_valida(ta, ctx):
+    processo = (ctx or {}).get('advbox_lawsuit_id')
+    return bool(isinstance(ta, dict) and processo and str(ta.get('lawsuit_id')) == str(processo) and (ta.get('texto') or '').strip())
+
+
 def executar(cfg, cap, job):
     t0 = time.time(); p = parse_pedido(job['content']); acoes = []; status = 'ok'; resposta = ''
     conv, lead_id = job['conversation_id'], job.get('lead_id')
@@ -218,7 +229,9 @@ def executar(cfg, cap, job):
                         acoes.append({'tipo': 'drive', 'ref': up.get('url')})
                     else:
                         resposta += '\n\n(arquivo não salvo: conversa sem lead)'
-                if est.get('tarefa_advbox'):
+                if est.get('tarefa_advbox') and not tarefa_valida(est['tarefa_advbox'], ctx):
+                    resposta += '\n\n(tarefa não criada: sem texto, ou o processo não é o do lead desta conversa)'
+                elif est.get('tarefa_advbox'):
                     ta = est['tarefa_advbox']; texto = ta['texto'] + (f"\nArquivo: {acoes[-1]['ref']}" if acoes else '')
                     args = args_tarefa(cfg, ta, texto)
                     res = mcp_call(cfg, 'advbox_criar_tarefa', args)

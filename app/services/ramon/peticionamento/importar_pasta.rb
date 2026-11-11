@@ -6,6 +6,9 @@ class Ramon::Peticionamento::ImportarPasta
   CPF = /(?<!\d)(?:\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})(?!\d)/
   MAX_ARQUIVO = 30.megabytes
   MAX_PASTA = 100.megabytes
+  # O que AdicionarArquivo recusa pelos bytes de verdade (o Drive nem sempre informa `size`, e o tipo dele é só o declarado).
+  RECUSAS_DO_ARQUIVO = %w[formato muito_grande pasta_grande].freeze
+  Recusa = Class.new(StandardError)
 
   def self.call(peticao) = new(peticao).call
 
@@ -22,11 +25,17 @@ class Ramon::Peticionamento::ImportarPasta
     recusas = regras.recusas + recusas_de_tamanho(regras.arquivos)
     return gravar_recusa(recusas, regras.avisos) if recusas.any?
 
-    baixados = regras.arquivos.map { |a| [a, Ramon::DriveClient.download(a[:id]).first] }
-    ler(regras.avisos, baixados.first.last) if trocar_pacote(baixados)
+    baixar_e_ler(regras)
   end
 
   private
+
+  def baixar_e_ler(regras)
+    baixados = regras.arquivos.map { |a| [a, Ramon::DriveClient.download(a[:id]).first] }
+    ler(regras.avisos, baixados.first.last) if trocar_pacote(baixados)
+  rescue Recusa => e # a trava já desfez a troca; tentar de novo daria no mesmo, então vira recusa nomeada
+    gravar_recusa([e.message], regras.avisos)
+  end
 
   def lendo? = @peticao.conferencia? && @peticao.leitura['estado'] == 'lendo'
 
@@ -73,6 +82,10 @@ class Ramon::Peticionamento::ImportarPasta
                                                            origem: 'drive', drive_origem_id: arquivo[:id], principal: primeiro,
                                                            tipo: ('peticao' if primeiro))
                                            .update_columns(drive_file_id: arquivo[:id]) # rubocop:disable Rails/SkipsModelValidations
+  rescue ArgumentError => e
+    raise unless RECUSAS_DO_ARQUIVO.include?(e.message)
+
+    raise Recusa, e.message == 'pasta_grande' ? e.message : "#{e.message}:#{arquivo[:name]}"
   end
 
   # O LLM precisa do arquivo já anexado: por isso a leitura vem depois da troca, em outra trava.

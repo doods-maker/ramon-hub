@@ -15,6 +15,14 @@ RSpec.describe 'Public Agente API', type: :request do
     expect(response).to have_http_status(:unauthorized)
   end
 
+  it 'aceita o token pelo cabeçalho X-Agente-Token (fora da URL) e recusa cabeçalho errado' do
+    caminho = "/public/api/v1/agente/contexto?account_id=#{account.id}&conversation_id=#{conversation.display_id}"
+    get caminho, headers: { 'X-Agente-Token' => token }
+    expect(response).to have_http_status(:ok)
+    get caminho, headers: { 'X-Agente-Token' => 'errado' }
+    expect(response).to have_http_status(:unauthorized)
+  end
+
   it 'devolve contexto com mensagens, contato e lead' do
     create(:message, account: account, conversation: conversation, inbox: inbox, message_type: :incoming, content: 'oi, sofri acidente')
     lead = create(:lead, account: account, contact: contact, conversation: conversation)

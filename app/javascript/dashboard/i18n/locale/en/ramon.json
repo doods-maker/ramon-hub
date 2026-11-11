@@ -2739,6 +2739,9 @@
       "EXCLUIR_CONFIRMA": "Confirm delete",
       "ERROS": {
         "FORMATO": "Only PDF, JPG or PNG files.",
+        "MUITO_GRANDE": "The file is larger than 30 MB. Make it smaller and send it again.",
+        "PACOTE_GRANDE": "With this file the package would go over 100 MB.",
+        "ORDEM_INCOMPLETA": "The package changed while you were reordering. Reload the petition and try again.",
         "PROTOCOLADA": "This petition is already filed and can no longer be changed.",
         "SO_RESPONSAVEL": "Only the responsible lawyer or an administrator can record the filing.",
         "PASTA_INVALIDA": "That folder was not found in the firm Drive. Pick another one.",

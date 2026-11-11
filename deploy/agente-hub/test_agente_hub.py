@@ -28,6 +28,13 @@ class TestAceita(unittest.TestCase):
                      ({'sender_email': 'edu@x.com', 'content': '@claude oi'}, 'errado')]:
             self.assertFalse(ah.aceita(p, h, Cfg)[0])
 
+    def test_segredo_vazio_nunca_autentica(self):
+        class SemSegredo(Cfg):
+            WEBHOOK_SECRET = ''
+        for segredo, h in [('', ''), ('', None), ('  ', '  ')]:
+            SemSegredo.WEBHOOK_SECRET = segredo
+            self.assertFalse(ah.aceita({'sender_email': 'edu@x.com', 'content': '@claude oi'}, h, SemSegredo)[0])
+
 
 class TestCap(unittest.TestCase):
     def test_cap_e_pausa(self):
@@ -102,6 +109,16 @@ class TestTarefa(unittest.TestCase):
         c = ah.args_tarefa(cfg, {'lawsuit_id': 9, 'texto': 'x', 'responsavel_id': 'abc'}, 'x')
         self.assertEqual(c['responsavel_id'], cfg.ADVBOX_TAREFA_RESPONSAVEL_ID)
 
+    def test_so_cria_tarefa_no_processo_do_lead_da_conversa(self):
+        ta = {'lawsuit_id': 9, 'texto': 'x'}
+        self.assertTrue(ah.tarefa_valida(ta, {'advbox_lawsuit_id': 9}))
+        self.assertTrue(ah.tarefa_valida({'lawsuit_id': '9', 'texto': 'x'}, {'advbox_lawsuit_id': 9}))
+        self.assertFalse(ah.tarefa_valida(ta, {'advbox_lawsuit_id': 7}))   # processo de outro cliente (injeção)
+        self.assertFalse(ah.tarefa_valida(ta, {'advbox_lawsuit_id': None}))  # lead sem processo no ADVBOX
+        self.assertFalse(ah.tarefa_valida({'lawsuit_id': None, 'texto': 'x'}, {'advbox_lawsuit_id': None}))
+        self.assertFalse(ah.tarefa_valida({'lawsuit_id': 9, 'texto': '  '}, {'advbox_lawsuit_id': 9}))
+        self.assertFalse(ah.tarefa_valida(None, {'advbox_lawsuit_id': 9}))
+
 
 class TestArquivo(unittest.TestCase):
     def test_so_sobe_documento_com_conteudo(self):
@@ -111,6 +128,30 @@ class TestArquivo(unittest.TestCase):
         self.assertFalse(ah.arquivo_valido({'pedido': 'monta o dossiê'}, {'nome': 'dossie.md', 'conteudo_md': '  '}))
         self.assertFalse(ah.arquivo_valido({'pedido': 'monta o dossiê'}, {'nome': '', 'conteudo_md': 'x'}))
         self.assertFalse(ah.arquivo_valido({'pedido': 'monta o dossiê'}, None))
+
+
+class TestTokenForaDaUrl(unittest.TestCase):
+    class C:
+        HUB_URL = 'https://hub'; ACCOUNT_ID = '1'; HUB_AGENTE_TOKEN = 'tok-agente'; HUB_MCP_TOKEN = 'tok-mcp'
+
+    def _capturar(self, chamada):
+        from unittest import mock
+        resposta = mock.MagicMock()
+        resposta.__enter__.return_value.read.return_value = b'{}'
+        with mock.patch('urllib.request.urlopen', return_value=resposta) as urlopen:
+            chamada()
+        return urlopen.call_args[0][0]
+
+    def test_hub_manda_o_token_no_cabecalho(self):
+        req = self._capturar(lambda: ah.hub(self.C, 'GET', 'contexto', query={'conversation_id': 7}))
+        self.assertNotIn('tok-agente', req.full_url)
+        self.assertIn('account_id=1', req.full_url)
+        self.assertEqual(req.get_header('X-agente-token'), 'tok-agente')  # urllib guarda o nome capitalizado
+
+    def test_mcp_manda_o_token_no_cabecalho(self):
+        req = self._capturar(lambda: ah.mcp_call(self.C, 'advbox_criar_tarefa', {}))
+        self.assertNotIn('tok-mcp', req.full_url)
+        self.assertEqual(req.get_header('X-mcp-token'), 'tok-mcp')
 
 
 if __name__ == '__main__':

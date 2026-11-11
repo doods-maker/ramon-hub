@@ -92,10 +92,38 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body).to include('error' => 'formato')
   end
 
+  it 'upload que diz ser PDF e não é, ou acima do teto → 422, sem entrar no pacote', :aggregate_failures do
+    criar
+    peticao = account.peticoes.sole
+    falso = fixture_file_upload(Rails.root.join('spec/assets/sample.mp3'), 'application/pdf')
+    post "#{url}/#{peticao.id}/arquivos", params: { file: falso }, headers: ana.create_new_auth_token
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body).to include('error' => 'formato')
+
+    stub_const('Ramon::Peticionamento::AdicionarArquivo::MAX_ARQUIVO', 10)
+    enviar(peticao)
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body).to include('error' => 'muito_grande')
+    expect(peticao.arquivos.count).to eq(0)
+  end
+
+  it 'ordem com lista parcial, repetida ou com id de fora → 422, sem mexer nas posições', :aggregate_failures do
+    peticao = peticao_com_principal
+    outro = peticao.arquivos.create!(nome: 'Rg.pdf', tipo: 'documento_identificacao', posicao: 2, origem: 'upload', tamanho: 5)
+    primeiro = peticao.arquivos.first
+    [[outro.id], [outro.id, outro.id], [outro.id, primeiro.id, 0]].each do |ids|
+      patch "#{url}/#{peticao.id}/ordem", params: { ids: ids }, headers: ana.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'ordem_incompleta')
+    end
+    expect(peticao.arquivos.reload.pluck(:id, :posicao)).to eq([[primeiro.id, 1], [outro.id, 2]])
+  end
+
   it 'arquivos_drive baixa pelo DriveClient (stub) e grava origem drive' do
     criar
     allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
-    allow(Ramon::DriveClient).to receive(:download).with('drv1').and_return([File.binread(pdf), 'application/pdf', 'Laudo medico.pdf'])
+    allow(Ramon::DriveClient).to receive(:download).with('drv1', limite: 30.megabytes)
+                                                   .and_return([File.binread(pdf), 'application/pdf', 'Laudo medico.pdf'])
     post "#{url}/#{account.peticoes.sole.id}/arquivos_drive", params: { file_ids: ['drv1'] }, headers: ana.create_new_auth_token, as: :json
     expect(response).to have_http_status(:success)
     expect(response.parsed_body['arquivos'].first).to include('origem' => 'drive', 'tipo' => 'laudo_medico')
@@ -242,6 +270,14 @@ RSpec.describe 'Ramon Petições API', type: :request do
     post "#{url}/#{account.peticoes.sole.id}/arquivos_drive", params: { file_ids: ['drv1'] }, headers: ana.create_new_auth_token, as: :json
     expect(response).to have_http_status(:service_unavailable)
     expect(response.parsed_body).to include('error' => 'DRIVE_OFF')
+  end
+
+  it 'drive com id que não é id → 422, sem consultar o Drive' do
+    allow(Ramon::DriveClient).to receive_messages(configured?: true, root_id: 'raiz', parent_of: 'raiz', children: [])
+    get "#{url}/drive", params: { pasta_id: "x' in parents or name contains '" }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(Ramon::DriveClient).not_to have_received(:parent_of)
+    expect(Ramon::DriveClient).not_to have_received(:children)
   end
 
   it 'drive navega: raiz sem pai; subpasta com pai; busca' do
