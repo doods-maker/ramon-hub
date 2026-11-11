@@ -120,4 +120,12 @@ RSpec.describe 'Lead Tasks API', type: :request do
     titles = response.parsed_body['payload'].map { |t| t['title'] }
     expect(titles).to contain_exactly('aberta', 'feita hoje', 'vencida')
   end
+
+  it 'scope=agenda sem período válido responde 422 (não 500 nem a conta inteira)', :aggregate_failures do
+    ok = 1.day.from_now.iso8601
+    [{ from: 'xx', to: ok }, { from: ok, to: 'xx' }, { from: ok }, { from: '2026-13-45', to: ok }, { from: [ok], to: ok }].each do |periodo|
+      get "/api/v1/accounts/#{account.id}/lead_tasks", params: { scope: 'agenda', **periodo }, headers: agent.create_new_auth_token
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
 end

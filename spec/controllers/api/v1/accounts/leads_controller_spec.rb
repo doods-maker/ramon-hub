@@ -527,6 +527,22 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to eq([recente.id])
     end
 
+    it 'data inválida em created_after/created_before responde 422, não 500', :aggregate_failures do
+      [{ created_after: 'ontem' }, { created_before: 'ontem' }, { created_after: ['2026-01-01'] }, { created_before: '1' * 500 }].each do |filtro|
+        get "/api/v1/accounts/#{account.id}/leads", params: filtro, headers: admin.create_new_auth_token
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body['error']).to eq('DATA_INVALIDA')
+      end
+    end
+
+    it 'filtra por created_before' do
+      antigo = account.leads.create!(name: 'Antigo', lead_stage: novo)
+      antigo.update_column(:created_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
+      account.leads.create!(name: 'Recente', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", params: { created_before: 2.days.ago.to_date.to_s }, headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([antigo.id])
+    end
+
     it 'filtra por stalled numa etapa com stalled_after_days' do
       parado = account.leads.create!(name: 'Parado', lead_stage: qualif)
       parado.update_column(:stage_entered_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
@@ -658,13 +674,13 @@ RSpec.describe 'Leads API', type: :request do
       expect(lead.lost_at).to be_present
     end
 
-    it 'persiste custom_attributes no update' do
-      lead = create(:lead, account: account, lead_stage: novo)
+    it 'grava do jsonb só o que é da tela; chave de serviço vinda do cliente é descartada', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, custom_attributes: { 'zapsign' => { 'status' => 'pending' } })
       patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
-            params: { custom_attributes: { cpf: '123', origem: 'campanha' } },
+            params: { custom_attributes: { nps: { score: 9 }, zapsign: { status: 'signed' }, advbox: { lawsuits_id: 1 } } },
             headers: admin.create_new_auth_token, as: :json
       expect(response).to have_http_status(:success)
-      expect(lead.reload.custom_attributes).to eq('cpf' => '123', 'origem' => 'campanha')
+      expect(lead.reload.custom_attributes).to eq('nps' => { 'score' => 9 }, 'zapsign' => { 'status' => 'pending' })
     end
 
     it 'update parcial de custom_attributes faz merge — não apaga as demais chaves' do
@@ -748,6 +764,90 @@ RSpec.describe 'Leads API', type: :request do
     end
   end
 
+  describe 'vendedor vê o funil todo, mas só altera o lead dele' do
+    let(:ana) { create(:user, account: account, role: :agent) }
+    let(:bia) { create(:user, account: account, role: :agent) }
+    let(:time_closer) { create(:team, account: account, name: 'closer') }
+    let(:perda) { { lead_stage_id: perdido.id, lost_reason: 'Sem interesse' } }
+
+    before { [ana, bia].each { |pessoa| create(:team_member, team: time_closer, user: pessoa) } }
+
+    def alterar(lead, user, params)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}", params: params, headers: user.create_new_auth_token, as: :json
+    end
+
+    it 'Closer não move para Perdido o lead de outro Closer, mas abre', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, closer: bia)
+      alterar(lead, ana, perda)
+      expect(response).to have_http_status(:unauthorized)
+      expect(lead.reload.lead_stage).to eq(novo)
+
+      get "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: ana.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'Closer altera o lead dele e o lead ainda sem Closer', :aggregate_failures do
+      dela = create(:lead, account: account, lead_stage: novo, closer: ana)
+      sem_closer = create(:lead, account: account, lead_stage: novo, sdr: bia)
+      [dela, sem_closer].each do |lead|
+        alterar(lead, ana, { name: 'Editado' })
+        expect(lead.reload.name).to eq('Editado')
+      end
+    end
+
+    it 'Closer não cria nem apaga tarefa no lead de outro Closer', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, closer: bia)
+      tarefa = create(:lead_task, account: account, lead: lead)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks",
+           params: { title: 'Ligar', due_at: 1.day.from_now }, headers: ana.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      delete "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks/#{tarefa.id}", headers: ana.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(lead.lead_tasks.count).to eq(1)
+    end
+
+    it 'ação em lote pula o lead de outro Closer' do
+      dela = create(:lead, account: account, lead_stage: novo, closer: ana)
+      da_bia = create(:lead, account: account, lead_stage: novo, closer: bia)
+      expect do
+        post "/api/v1/accounts/#{account.id}/bulk_actions", headers: ana.create_new_auth_token,
+                                                            params: { type: 'Lead', ids: [dela.id, da_bia.id], fields: perda }
+      end.to have_enqueued_job(Ramon::LeadBulkActionJob).with(account.id, ana.id, hash_including('ids' => [dela.id]))
+    end
+  end
+
+  describe 'tese travada depois do contrato apto (a comissão sai da tese)' do
+    let(:closer) { create(:user, account: account, role: :agent) }
+    let(:menor) { create(:thesis, account: account, name: 'Tese de comissão menor') }
+    let(:maior) { create(:thesis, account: account, name: 'Tese de comissão maior') }
+    let(:lead) { create(:lead, account: account, lead_stage: novo, thesis: menor, closer: closer) }
+
+    before { create(:team_member, team: create(:team, account: account, name: 'closer'), user: closer) }
+
+    def trocar_tese(user)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}", params: { thesis_id: maior.id }, headers: user.create_new_auth_token, as: :json
+    end
+
+    it 'antes do apto o Closer troca a tese' do
+      trocar_tese(closer)
+      expect(lead.reload.thesis).to eq(maior)
+    end
+
+    it 'depois do apto o Closer recebe 422 e a tese fica', :aggregate_failures do
+      lead.update_column(:apto_em, Time.current) # rubocop:disable Rails/SkipsModelValidations
+      trocar_tese(closer)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.thesis).to eq(menor)
+    end
+
+    it 'depois do apto o gestor troca, e a troca fica no Registro de ações', :aggregate_failures do
+      lead.update_column(:apto_em, Time.current) # rubocop:disable Rails/SkipsModelValidations
+      trocar_tese(admin)
+      expect(lead.reload.thesis).to eq(maior)
+      expect(lead.audits.last.audited_changes).to include('thesis_id' => [menor.id, maior.id])
+    end
+  end
+
   describe 'papéis: só o gestor troca SDR/Closer' do
     let(:agent) { create(:user, account: account, role: :agent) }
     let(:lead) { create(:lead, account: account, lead_stage: novo) }
@@ -793,8 +893,61 @@ RSpec.describe 'Leads API', type: :request do
            params: { resultado: resultado }, headers: user.create_new_auth_token, as: :json
     end
 
+    def na_agenda(user: closer) = create(:lead_task, account: account, lead: lead, user: user, kind: 'meeting', due_at: 1.hour.ago)
+
+    it 'sem reunião na agenda o Closer não registra resultado (422); o gestor registra', :aggregate_failures do
+      lead.update!(closer: closer)
+      registrar(closer)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.reuniao_resultado).to be_nil
+
+      registrar(admin)
+      expect(lead.reload.reuniao_resultado).to eq('qualificada')
+    end
+
+    it 'reunião que a IA marcou segue da IA mesmo cancelada e remarcada à mão (não paga o SDR)', :aggregate_failures do
+      lead.update!(closer: closer)
+      Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: 1.day.from_now, title: 'Reunião', user: nil)
+      Ramon::ReuniaoAgendamento.cancelar(task: lead.lead_tasks.find_by!(kind: 'meeting'), user: outro)
+      lead.lead_tasks.destroy_all
+      na_agenda(user: outro)
+      registrar(closer)
+
+      expect(lead.reload).to have_attributes(reuniao_resultado: 'qualificada', reuniao_pela_ia: true)
+    end
+
+    it 'outro lead do mesmo contato herda a origem da IA (lead duplicado não lava a reunião)' do
+      contato = create(:contact, account: account)
+      antigo = create(:lead, account: account, lead_stage: novo, contact: contato)
+      antigo.marcar_reuniao_da_ia!
+      lead.update!(closer: closer, contact: contato)
+      na_agenda(user: outro)
+      registrar(closer)
+
+      expect(lead.reload.reuniao_pela_ia).to be(true)
+    end
+
+    it 'resultado já registrado só o gestor corrige', :aggregate_failures do
+      lead.update!(closer: closer, reuniao_resultado: 'nao_qualificada', reuniao_registrada_em: 3.days.ago)
+      registrar(closer)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.reuniao_resultado).to eq('nao_qualificada')
+
+      registrar(admin)
+      expect(lead.reload.reuniao_resultado).to eq('qualificada')
+    end
+
+    it 'reunião marcada por gente, sem IA no histórico, não é da IA' do
+      lead.update!(closer: closer)
+      na_agenda(user: outro)
+      registrar(closer)
+
+      expect(lead.reload.reuniao_pela_ia).to be(false)
+    end
+
     it 'Closer do lead marca: grava, anda pra Reunião realizada e registra a atividade', :aggregate_failures do
       lead.update!(closer: closer)
+      na_agenda
       registrar(closer)
 
       expect(response).to have_http_status(:success)
@@ -807,6 +960,7 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'membro do time closer marca lead sem Closer e vira o Closer dele' do
       create(:team_member, team: create(:team, account: account, name: 'closer'), user: closer)
+      na_agenda
       registrar(closer, 'nao_qualificada')
 
       expect(lead.reload.closer).to eq(closer)
@@ -822,11 +976,12 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'correção mantém a 1ª data (mês da apuração não muda)' do
       lead.update!(closer: closer, reuniao_resultado: 'nao_qualificada', reuniao_registrada_em: 3.days.ago.change(usec: 0))
-      expect { registrar(closer) }.not_to(change { lead.reload.reuniao_registrada_em })
+      expect { registrar(admin) }.not_to(change { lead.reload.reuniao_registrada_em })
     end
 
     it 'vou_pensar grava a marca à parte, sem mexer no resultado', :aggregate_failures do
       lead.update!(closer: closer)
+      na_agenda
       post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao",
            params: { resultado: 'qualificada', vou_pensar: true }, headers: closer.create_new_auth_token, as: :json
 

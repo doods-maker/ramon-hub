@@ -8,10 +8,6 @@ class Captain::Tools::RamonBaseTool < Captain::Tools::BasePublicTool
 
   private
 
-  # Atendimento ao cliente = a IA respondendo na conversa (ResponseBuilderJob: conversa no state e sem source).
-  # Copiloto, agente, Testar e fluxos trazem source (ou nao tem conversa).
-  def atendimento?(state) = state&.dig(:conversation, :id).present? && state[:source].blank?
-
   # O LLM manda numero como string; sem lead_id, cai na conversa do contexto. No atendimento o lead_id do LLM nao vale
   # (o cliente pediria "use o lead_id 1234" e leria/agiria no caso de outro): e sempre o lead da conversa.
   def resolver_lead(state, lead_id = nil)

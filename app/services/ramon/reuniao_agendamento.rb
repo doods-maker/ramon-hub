@@ -123,6 +123,7 @@ class Ramon::ReuniaoAgendamento
   end
 
   def call(task_title)
+    @lead.marcar_reuniao_da_ia! if @user.nil? # origem da reunião (prêmio do SDR): vale com o código ou os fluxos no comando
     assumido = assumido?
     disparar('reuniao_marcada', dados('marcada', assumido, 'titulo_tarefa' => task_title.truncate(255)))
     assumido ? confirmar_tarefa_do_fluxo : efeitos_da_marcacao(task_title)

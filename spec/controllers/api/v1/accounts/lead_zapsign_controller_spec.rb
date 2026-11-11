@@ -43,4 +43,11 @@ RSpec.describe 'Lead ZapSign API', type: :request do
     with_modified_env(ZAPSIGN_API_TOKEN: 'tok') { gerar }
     expect(response).to have_http_status(:unprocessable_entity)
   end
+
+  it 'dados do contrato em lead sem contato responde 422 com a mensagem, não 500', :aggregate_failures do
+    put "/api/v1/accounts/#{account.id}/leads/#{lead.id}/zapsign/dados",
+        params: { profissao: 'Pedreiro' }, headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['error']).to include('sem contato')
+  end
 end

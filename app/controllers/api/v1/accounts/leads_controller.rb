@@ -1,5 +1,11 @@
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
+  include ParametroDeData
+
   ASSIGNMENT_KEYS = %w[sdr_id closer_id].freeze
+  # O que a tela grava no jsonb do lead (checklists, sugestão de documento, NPS, simulador). O resto (zapsign, advbox,
+  # colheita, temperatura, roteiro…) é de serviço: vindo do cliente, é descartado em silêncio, porque os checklists
+  # devolvem o jsonb inteiro no PATCH.
+  ATRIBUTOS_DA_TELA = %i[doc_status doc_anexos doc_sugestao colheita_status qualificacao_status nps ultima_simulacao].index_with { {} }.freeze
 
   # Fila do dia: só abertos; quente > morno > frio > sem temperatura; dentro da temperatura, quem espera
   # resposta há mais tempo (conversations.waiting_since, que o Chatwoot zera ao responder) vem primeiro.
@@ -181,8 +187,8 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def apply_period_filters(leads)
-    leads = leads.where(created_at: Date.parse(params[:created_after]).beginning_of_day..) if params[:created_after].present?
-    leads = leads.where(created_at: ..Date.parse(params[:created_before]).end_of_day) if params[:created_before].present?
+    leads = leads.where(created_at: data_do_parametro(:created_after).beginning_of_day..) if params[:created_after].present?
+    leads = leads.where(created_at: ..data_do_parametro(:created_before).end_of_day) if params[:created_before].present?
     Ramon::LeadRadar.closed_window(Current.account, leads, params)
   end
 
@@ -200,9 +206,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     render json: { error: 'ASSIGNMENT_FORBIDDEN' }, status: :forbidden
   end
 
-  def gestor?
-    Current.account_user&.administrator?
-  end
+  def gestor? = Current.account_user&.administrator?
 
   # Telefone é gravado em E.164 (+5548998123456): "(48) 99812-3456" só casa
   # pelos dígitos. Com 8+ dígitos a busca também compara só os números.
@@ -235,7 +239,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     params.permit(:name, :lead_stage_id, :lead_priority_id, :thesis_id,
                   :contact_id, :conversation_id, :sdr_id, :closer_id,
                   :position, :lost_reason, :value, :source, :channel, :dcb_em, :benefit_monthly_value,
-                  custom_attributes: {})
+                  custom_attributes: ATRIBUTOS_DA_TELA)
   end
 
   # PATCH parcial de custom_attributes: o cliente pode mandar só a chave que

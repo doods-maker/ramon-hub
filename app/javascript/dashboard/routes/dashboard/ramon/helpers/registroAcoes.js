@@ -105,6 +105,7 @@ const LEAD = [
   ['lead_stage_id', 'LEAD_ETAPA'],
   ['sdr_id', 'LEAD_SDR'],
   ['closer_id', 'LEAD_CLOSER'],
+  ['thesis_id', 'LEAD_TESE'],
   ['value', 'LEAD_VALOR'],
   ['lost_reason', 'LEAD_MOTIVO'],
 ];

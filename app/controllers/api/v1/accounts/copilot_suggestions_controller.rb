@@ -2,6 +2,8 @@ class Api::V1::Accounts::CopilotSuggestionsController < Api::V1::Accounts::BaseC
   before_action :current_account
   before_action :check_authorization
   before_action :fetch_suggestion, only: [:apply, :dismiss]
+  # Aplicar move etapa, marca Perdido ou gera contrato: é alterar o lead (LeadPolicy#update?).
+  before_action -> { authorize(@copilot_suggestion.lead, :update?) }, only: :apply
 
   def index
     @copilot_suggestions = pending_scope.includes(:lead)

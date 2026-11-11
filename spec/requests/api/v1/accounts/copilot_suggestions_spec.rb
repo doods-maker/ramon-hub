@@ -5,6 +5,22 @@ RSpec.describe 'Copilot Suggestions API', type: :request do
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:lead) { create(:lead, account: account) }
 
+  # Aplicar é alterar o lead (LeadPolicy#update?): o agente precisa ver o lead; o time comercial vê o funil todo.
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
+  it 'quem não pode alterar o lead não aplica a sugestão (Closer no lead de outro Closer)', :aggregate_failures do
+    outro, dono = create_list(:user, 2, account: account, role: :agent)
+    time = create(:team, account: account, name: 'closer')
+    [outro, dono].each { |pessoa| create(:team_member, team: time, user: pessoa) }
+    lead.update!(closer: dono)
+    suggestion = create(:copilot_suggestion, account: account, lead: lead)
+
+    post "/api/v1/accounts/#{account.id}/copilot_suggestions/#{suggestion.id}/apply", headers: outro.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(suggestion.reload.status).to eq('pending')
+  end
+
   it 'lists only pending suggestions with the lead name' do
     suggestion = create(:copilot_suggestion, account: account, lead: lead)
     create(:copilot_suggestion, account: account, lead: lead, status: 'dismissed')

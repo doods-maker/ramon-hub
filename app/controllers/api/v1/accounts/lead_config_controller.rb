@@ -2,6 +2,7 @@ class Api::V1::Accounts::LeadConfigController < Api::V1::Accounts::BaseControlle
   before_action :current_account
 
   def show
+    authorize(Lead, :index?)
     @stages = Current.account.lead_stages
     @lost_reasons = Current.account.lost_reasons
     @priorities = Current.account.lead_priorities
