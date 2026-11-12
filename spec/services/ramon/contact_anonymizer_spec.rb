@@ -153,6 +153,7 @@ describe Ramon::ContactAnonymizer do
       expect(lead.lost_reason).not_to include('Maria')
       expect(message.reload.content).not_to include('Maria')
       expect(message.processed_message_content).not_to include('529.982.247-25')
+      expect(Audited.audit_class.where(auditable: lead).map { |a| a.audited_changes.to_json }.join).not_to include('Maria')
     end
 
     it 'mascara notas, tarefas, reuniões e histórico; apaga cálculos, sugestões e o texto da triagem', :aggregate_failures do
@@ -195,11 +196,21 @@ describe Ramon::ContactAnonymizer do
       expect(feita.reload).to have_attributes(status: 'concluida', contexto: {})
     end
 
-    it 'não toca no lead de outro contato' do
-      outro = create(:lead, account: account, lead_stage: open_stage, name: 'Pedro Alves', portal_token: 'dele')
+    it 'não toca no lead de outro contato, nem no que aponta para a conversa do titular' do
+      outro_contato = create(:contact, account: account, name: 'Pedro Alves')
+      outro = create(:lead, account: account, lead_stage: open_stage, contact: outro_contato, conversation: conversation,
+                            name: 'Pedro Alves', portal_token: 'dele')
 
       perform
       expect(outro.reload).to have_attributes(name: 'Pedro Alves', portal_token: 'dele')
+    end
+
+    it 'contato com petição é cliente: nada é apagado', :aggregate_failures do
+      advogada = create(:user, account: account)
+      account.peticoes.create!(contact: contact, criado_por: advogada, responsavel: advogada, inicial: true, tribunal: 'tjsc')
+
+      expect { perform }.to raise_error(described_class::ClienteGanho)
+      expect(message.reload.content).to include('529.982.247-25')
     end
 
     it 'falha no meio desfaz tudo (transação)', :aggregate_failures do

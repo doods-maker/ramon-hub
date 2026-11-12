@@ -2,13 +2,14 @@
 # Chamado pelo Ramon::ContactAnonymizer dentro da transação, depois da recusa do cliente.
 # Texto livre é mascarado (o registro fica para a estatística); o que não tem o que preservar sai.
 # Fica: meta_referral (origem de marketing), valor do lead, datas e etapas.
+# Petição recusa antes (Ramon::ContactAnonymizer). Execução de fluxo de Painel, peça e chegada não é de não cliente.
 # ponytail: o evento na Agenda Google da reunião (lead_tasks.google_event_id) e a FAQ já vetorizada (embedding) ficam;
 # limpar à mão se o titular pedir.
 # rubocop:disable Rails/SkipsModelValidations
 class Ramon::RastrosDoTitular
   ATIVAS = %w[rodando esperando].freeze
 
-  attr_reader :pastas_drive
+  attr_reader :pastas_drive, :audios # preenchidos por perform; quem chama apaga depois do commit
 
   # leads: os do titular (pelo contato ou pela conversa); mask: o mascarador com os nomes do titular.
   def initialize(contact, leads, mask)
@@ -16,13 +17,13 @@ class Ramon::RastrosDoTitular
     @leads = leads
     @mask = mask
     @pastas_drive = {}
+    @audios = []
   end
 
   def perform
     @leads.each { |lead| limpar_lead(lead) }
     limpar_conversas
     limpar_execucoes
-    Peticao.where(contact_id: @contact.id).find_each { |p| p.update_columns(descricao: @mask.call(p.descricao), leitura: {}) }
   end
 
   private
@@ -53,7 +54,7 @@ class Ramon::RastrosDoTitular
   end
 
   def limpar_reuniao(reuniao)
-    reuniao.audio.purge_later if reuniao.audio.attached?
+    @audios << reuniao.audio if reuniao.audio.attached?
     reuniao.update_columns(titulo: @mask.call(reuniao.titulo), transcricao: @mask.call(reuniao.transcricao), ata: @mask.call(reuniao.ata))
   end
 
