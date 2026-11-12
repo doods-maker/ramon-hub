@@ -145,7 +145,9 @@ describe Ramon::ContactAnonymizer do
 
     it 'anonimiza o lead, guarda só a origem de marketing e mascara o nome do lead nas mensagens', :aggregate_failures do
       message.update_columns(content: 'Fala com a Maria', processed_message_content: 'CPF 529.982.247-25') # rubocop:disable Rails/SkipsModelValidations
-      lead
+      # Fora da etapa de perda o lead zera o motivo ao salvar: grava direto, com a trilha de quando foi perdido.
+      lead.update_columns(lost_reason: 'Maria mudou de ideia') # rubocop:disable Rails/SkipsModelValidations
+      Audited.audit_class.create!(auditable: lead, action: 'update', audited_changes: { 'lost_reason' => [nil, 'Maria mudou de ideia'] })
 
       perform
       expect(lead.reload).to have_attributes(name: "Titular anonimizado ##{contact.id}", cnis: nil, portal_token: nil,
