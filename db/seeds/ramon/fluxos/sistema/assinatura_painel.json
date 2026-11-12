@@ -10,7 +10,7 @@
     "o_que_mexe": [
       "A assinatura no Painel do Cliente (status e data da assinatura).",
       "Nada no lead: sem histórico, sino ou push.",
-      "Dispara o gatilho \"Assinatura do Painel do Cliente mudou (ZapSign)\" para os seus fluxos — na chegada do aviso, antes da conferência no ZapSign."
+      "Dispara o gatilho \"Assinatura do Painel do Cliente mudou (ZapSign)\" para os seus fluxos — depois da conferência no ZapSign e só quando o status muda (decisão do Eduardo, 12/11/2026)."
     ],
     "travas": [
       "O aviso do ZapSign só é aceito com o segredo combinado.",

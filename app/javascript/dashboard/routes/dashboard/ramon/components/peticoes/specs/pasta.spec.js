@@ -48,6 +48,7 @@ describe('peticoes/helpers · pela pasta', () => {
   it('erroPeticao traduz os erros da pasta', () => {
     const erro = error => ({ response: { data: { error } } });
     expect(erroPeticao(erro('pasta_invalida'), t)).toContain('PASTA_INVALIDA');
+    expect(erroPeticao(erro('fora_da_raiz'), t)).toContain('FORA_DA_RAIZ');
     expect(erroPeticao(erro('em_leitura'), t)).toContain('EM_LEITURA');
     expect(erroPeticao(erro('pacote_da_pasta'), t)).toContain(
       'PACOTE_DA_PASTA'

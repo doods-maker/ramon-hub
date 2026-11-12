@@ -121,13 +121,24 @@ RSpec.describe 'Ramon Petições API', type: :request do
 
   it 'arquivos_drive baixa pelo DriveClient (stub) e grava origem drive' do
     criar
-    allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
+    allow(Ramon::DriveClient).to receive_messages(configured?: true, dentro_da_raiz?: true)
     allow(Ramon::DriveClient).to receive(:download).with('drv1', limite: 30.megabytes)
                                                    .and_return([File.binread(pdf), 'application/pdf', 'Laudo medico.pdf'])
     post "#{url}/#{account.peticoes.sole.id}/arquivos_drive", params: { file_ids: ['drv1'] }, headers: ana.create_new_auth_token, as: :json
     expect(response).to have_http_status(:success)
     expect(response.parsed_body['arquivos'].first).to include('origem' => 'drive', 'tipo' => 'laudo_medico')
     expect(PeticaoArquivo.sole.drive_origem_id).to eq('drv1')
+  end
+
+  it 'arquivos_drive recusa arquivo fora da raiz do Drive do hub, sem baixar nenhum (decisão de 12/11)', :aggregate_failures do
+    criar
+    allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
+    allow(Ramon::DriveClient).to receive(:dentro_da_raiz?) { |id| id == 'drv1' }
+    allow(Ramon::DriveClient).to receive(:download)
+    post "#{url}/#{account.peticoes.sole.id}/arquivos_drive", params: { file_ids: %w[drv1 fora1] }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body).to include('error' => 'fora_da_raiz')
+    expect(Ramon::DriveClient).not_to have_received(:download)
   end
 
   it 'troca principal, reordena e remove renumerando' do
@@ -282,13 +293,21 @@ RSpec.describe 'Ramon Petições API', type: :request do
 
   it 'drive navega: raiz sem pai; subpasta com pai; busca' do
     allow(Ramon::DriveClient).to receive_messages(configured?: true, root_id: 'raiz', children: [{ id: 'a' }], parent_of: 'raiz',
-                                                  search: [{ id: 'b' }])
+                                                  search_na_raiz: [{ id: 'b' }])
     get "#{url}/drive", headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body).to include('pasta_id' => 'raiz', 'pai_id' => nil, 'raiz_id' => 'raiz', 'itens' => [{ 'id' => 'a' }])
     get "#{url}/drive", params: { pasta_id: 'sub' }, headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body).to include('pasta_id' => 'sub', 'pai_id' => 'raiz')
     get "#{url}/drive_busca", params: { q: 'laudo' }, headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body).to include('itens' => [{ 'id' => 'b' }])
+  end
+
+  it 'drive não navega fora da raiz do Drive do hub (decisão de 12/11)', :aggregate_failures do
+    allow(Ramon::DriveClient).to receive_messages(configured?: true, root_id: 'raiz', parent_of: nil, children: [])
+    get "#{url}/drive", params: { pasta_id: 'fora' }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body).to include('error' => 'pasta_invalida')
+    expect(Ramon::DriveClient).not_to have_received(:children)
   end
 
   it 'processos vêm do portal do cliente pelo CPF do contato; sem portal → []' do
@@ -304,7 +323,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
   describe 'pela pasta' do
     let(:headers) { ana.create_new_auth_token }
 
-    before { allow(Ramon::DriveClient).to receive_messages(configured?: true, pasta?: true) }
+    before { allow(Ramon::DriveClient).to receive_messages(configured?: true, pasta?: true, dentro_da_raiz?: true) }
 
     def da_pasta(pasta_id: 'p1', **attrs)
       account.peticoes.create!({ criado_por: ana, responsavel: ana, status: 'conferencia', pela_pasta: true, drive_pasta_id: pasta_id,
@@ -367,6 +386,15 @@ RSpec.describe 'Ramon Petições API', type: :request do
       end
       expect(account.peticoes.count).to eq(0)
       expect(Ramon::DriveClient).not_to have_received(:pasta?).with("x' or '1'='1")
+    end
+
+    it 'pasta fora da raiz do Drive do hub → 422 pasta_invalida, sem criar (decisão de 12/11)', :aggregate_failures do
+      allow(Ramon::DriveClient).to receive(:dentro_da_raiz?).with('fora1').and_return(false)
+      expect { post "#{url}/pela_pasta", params: { pasta_id: 'fora1' }, headers: headers, as: :json }
+        .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'pasta_invalida')
+      expect(account.peticoes.count).to eq(0)
     end
 
     it 'apontar sem Drive configurado → 503' do

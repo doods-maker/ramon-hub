@@ -1,5 +1,6 @@
 # Confere no ZapSign o status real do documento (o payload do webhook não é a
 # verdade) e marca assinado no PortalAssinatura correspondente.
+# O gatilho "Assinatura do Painel" dispara aqui, depois da conferência e só quando o status muda (decisão de 12/11/2026).
 class Ramon::ZapsignStatusJob < ApplicationJob
   queue_as :low
   retry_on Ramon::ZapsignClient::UnavailableError, wait: :polynomially_longer, attempts: 5
@@ -11,5 +12,6 @@ class Ramon::ZapsignStatusJob < ApplicationJob
     doc = Ramon::ZapsignClient.doc(a.doc_token)
     status = doc['status'].to_s
     a.update!(status: status.presence || a.status, assinado_em: (status == 'signed' ? Time.current : a.assinado_em))
+    Ramon::Fluxos::Disparo.externo('assinatura_painel', a) if a.saved_change_to_status?
   end
 end

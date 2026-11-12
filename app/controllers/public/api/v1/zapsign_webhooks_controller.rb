@@ -10,7 +10,8 @@ class Public::Api::V1::ZapsignWebhooksController < PublicController
   def create
     token = params[:token].to_s
     assinatura = PortalAssinatura.find_by(doc_token: token)
-    conferir(assinatura) if assinatura
+    # o gatilho "Assinatura do Painel" dispara no job, depois da conferência (decisão de 12/11/2026)
+    Ramon::ZapsignStatusJob.perform_later(assinatura.id) if assinatura
     # contrato gerado pelo cartão do painel (lead.custom_attributes['zapsign'])
     lead = Lead.find_by("custom_attributes -> 'zapsign' ->> 'doc_token' = ?", token) if token.present?
     Ramon::ZapsignLeadStatusJob.perform_later(lead.id, token) if lead
@@ -18,12 +19,6 @@ class Public::Api::V1::ZapsignWebhooksController < PublicController
   end
 
   private
-
-  # Regra fixa (08/10): a conferência de sempre; o gatilho "Assinatura do Painel" só avisa os fluxos comuns (N1 = B).
-  def conferir(assinatura)
-    Ramon::ZapsignStatusJob.perform_later(assinatura.id)
-    Ramon::Fluxos::Disparo.externo('assinatura_painel', assinatura)
-  end
 
   def verify_secret
     secret = ENV.fetch('ZAPSIGN_WEBHOOK_SECRET', nil)

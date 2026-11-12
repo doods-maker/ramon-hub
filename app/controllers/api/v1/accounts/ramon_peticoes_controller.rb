@@ -105,8 +105,12 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     render_peticao
   end
 
+  # Só arquivo dentro da raiz do Drive do hub (decisão de 12/11/2026); confere todos antes de baixar qualquer um.
   def arquivos_drive
-    Array(params[:file_ids]).each do |file_id|
+    file_ids = Array(params[:file_ids])
+    return render json: { error: 'fora_da_raiz' }, status: :unprocessable_entity unless file_ids.all? { |id| Ramon::DriveClient.dentro_da_raiz?(id) }
+
+    file_ids.each do |file_id|
       bytes, mime, nome = Ramon::DriveClient.download(file_id, limite: Ramon::Peticionamento::AdicionarArquivo::MAX_ARQUIVO)
       Ramon::Peticionamento::AdicionarArquivo.call(@peticao, bytes: bytes, nome: nome, content_type: mime, origem: 'drive',
                                                              drive_origem_id: file_id)
@@ -153,12 +157,15 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   def drive
     raiz = Ramon::DriveClient.root_id
     pasta = Ramon::DriveClient.id_de_query!(params[:pasta_id].presence || raiz) # antes de qualquer chamada ao Drive
+    # navegador confinado à raiz do Drive do hub (decisão de 12/11/2026)
+    return render json: { error: 'pasta_invalida' }, status: :unprocessable_entity unless pasta == raiz || Ramon::DriveClient.dentro_da_raiz?(pasta)
+
     pai = pasta == raiz ? nil : Ramon::DriveClient.parent_of(pasta)
     render json: { pasta_id: pasta, pai_id: pai, raiz_id: raiz, itens: Ramon::DriveClient.children(pasta) }
   end
 
   def drive_busca
-    render json: { itens: Ramon::DriveClient.search(params[:q]) }
+    render json: { itens: Ramon::DriveClient.search_na_raiz(params[:q]) }
   end
 
   def processos

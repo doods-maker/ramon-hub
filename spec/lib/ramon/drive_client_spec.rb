@@ -73,6 +73,21 @@ RSpec.describe Ramon::DriveClient do
     end
   end
 
+  describe '.search_na_raiz' do
+    before { allow(described_class).to receive(:root_id).and_return('raiz') }
+
+    it 'deixa só o que está dentro da raiz; pergunta cada pasta ao Drive uma vez', :aggregate_failures do
+      allow(described_class).to receive(:search).with('laudo').and_return(
+        [{ id: 'a', parents: ['sub'] }, { id: 'b', parents: ['sub'] }, { id: 'c', parents: ['fora'] }, { id: 'd', parents: nil }]
+      )
+      allow(described_class).to receive(:parent_of).with('sub').and_return('raiz')
+      allow(described_class).to receive(:parent_of).with('fora').and_return(nil)
+
+      expect(described_class.search_na_raiz('laudo').pluck(:id)).to eq(%w[a b])
+      expect(described_class).to have_received(:parent_of).with('sub').once
+    end
+  end
+
   it 'search com menos de 3 letras não chama a API' do
     expect(api).not_to receive(:list_files)
     expect(described_class.search('ab')).to eq([])

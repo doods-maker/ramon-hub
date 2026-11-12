@@ -30,7 +30,8 @@ module RamonPeticaoPasta
 
   # O id entra na query do Drive: só caracteres de id; e tem de ser uma pasta de verdade (em qualquer lugar do Drive do escritório).
   def pasta_valida?(pasta_id)
-    pasta_id.match?(/\A[\w-]+\z/) && Ramon::DriveClient.pasta?(pasta_id)
+    # só pasta dentro da raiz do Drive do hub (decisão de 12/11/2026)
+    pasta_id.match?(/\A[\w-]+\z/) && Ramon::DriveClient.pasta?(pasta_id) && Ramon::DriveClient.dentro_da_raiz?(pasta_id)
   end
 
   def pasta_ja_usada(existente)
