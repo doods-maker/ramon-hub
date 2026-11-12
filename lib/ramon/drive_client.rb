@@ -97,6 +97,13 @@ class Ramon::DriveClient
       rename(file_id, MARCADOR_PASTA_USADA)
     end
 
+    # Eliminação LGPD: só pasta dentro da raiz e nunca a raiz. Só o dono manda à lixeira (a conta do escritório, que criou a pasta).
+    def lixeira(pasta_id)
+      raise ArgumentError, 'fora_da_raiz' if pasta_id.blank? || pasta_id == root_id || !dentro_da_raiz?(pasta_id)
+
+      service.update_file(pasta_id, { trashed: true }, fields: 'id', supports_all_drives: true)
+    end
+
     # parent_of memorizado: várias subidas na mesma requisição perguntam cada pasta uma vez só.
     def pais_memo = Hash.new { |h, id| h[id] = parent_of(id) }
 

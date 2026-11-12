@@ -5,6 +5,8 @@
 # exigem destroy físico (ex.: merge de contatos duplicados) seguem intocados.
 # Titular que é cliente (decisão de 11/11/2026): nada é apagado nem mascarado. O pedido fica no histórico do lead,
 # os gestores recebem o sino e `perform` levanta ClienteGanho; eliminar passa a ser decisão manual da gestão.
+# Quem não é cliente (decisões de 12/11/2026): tudo numa transação, inclusive o que ficou nos leads e nas conversas
+# (Ramon::RastrosDoTitular); a pasta do Drive do lead vai para a lixeira depois do commit, registrada no histórico do lead.
 class Ramon::ContactAnonymizer
   class ClienteGanho < StandardError; end
 
@@ -37,13 +39,19 @@ class Ramon::ContactAnonymizer
     @comentario = comentario
   end
 
+  # A recusa grava o pedido antes, fora da transação; o Drive fica para depois do commit (não volta com rollback).
   def perform
     recusar_cliente!
-    redact_messages
-    redact_notes
-    @contact.avatar.purge if @contact.avatar.attached?
-    anonymize_contact
-    redact_audits
+    rastros = Ramon::RastrosDoTitular.new(@contact, leads_do_titular.to_a, ->(texto) { mascarar(texto) })
+    ActiveRecord::Base.transaction(requires_new: true) do # requires_new: savepoint se alguém já abriu transação
+      redact_messages
+      redact_notes
+      rastros.perform
+      @contact.avatar.purge_later if @contact.avatar.attached?
+      anonymize_contact
+      redact_audits
+    end
+    lixeira_do_drive(rastros.pastas_drive)
     @contact
   end
 
@@ -54,10 +62,11 @@ class Ramon::ContactAnonymizer
 
   # Cliente = lead ganho (hoje ou antes de cancelar) ou caso de cálculo, ligado pelo contato OU por uma conversa dele
   # (caso de cálculo nasce sem contact_id: olhar só @contact.leads deixaria o cliente sem proteção).
-  def leads_de_cliente
+  def leads_de_cliente = leads_do_titular.where(CLIENTE_SQL, Lead::FONTE_CALCULO)
+
+  def leads_do_titular
     leads = @contact.account.leads
     leads.where(contact_id: @contact.id).or(leads.where(conversation_id: @contact.conversations.select(:id)))
-         .where(CLIENTE_SQL, Lead::FONTE_CALCULO)
   end
 
   # Antes de qualquer escrita. Sino só no hub (pode levar o nome do lead); sem push ntfy.
@@ -66,15 +75,18 @@ class Ramon::ContactAnonymizer
     lead = leads_de_cliente.funil.reorder(:id).last || leads_de_cliente.reorder(:id).last # reorder: Lead tem ordem padrão
     return if lead.nil?
 
-    Ramon::ContratoApto.registrar(lead, Audited.store[:audited_user] || Current.user, PEDIDO)
+    Ramon::ContratoApto.registrar(lead, autor, PEDIDO)
     Ramon::ContratoApto.avisar(lead, Ramon::Papeis.gestor_ids(lead.account),
                                "Pedido de eliminação de dados de cliente com contrato: #{lead.name}. Nada foi apagado.")
     raise ClienteGanho
   end
 
+  # O nome do lead pode diferir do contato (digitado pela equipe, vindo do ADVBOX): entra na máscara também.
   def name_tokens
-    @name_tokens ||= [@contact.name, @contact.middle_name, @contact.last_name]
+    @name_tokens ||= [@contact.name, @contact.middle_name, @contact.last_name, *leads_do_titular.pluck(:name)]
   end
+
+  def mascarar(texto) = texto.presence && Ramon::Pseudonymizer.mask(texto, names: name_tokens)
 
   # Redige TODAS as mensagens das conversas do titular (PII aparece também em
   # respostas de agente que citam CPF/telefone). update_columns de propósito:
@@ -82,10 +94,9 @@ class Ramon::ContactAnonymizer
   # rubocop:disable Rails/SkipsModelValidations
   def redact_messages
     Message.where(conversation_id: @contact.conversations.select(:id)).find_each do |message|
-      next if message.content.blank?
+      next if message.content.blank? && message.processed_message_content.blank?
 
-      masked = Ramon::Pseudonymizer.mask(message.content, names: name_tokens)
-      message.update_columns(content: masked) if masked != message.content
+      message.update_columns(content: mascarar(message.content), processed_message_content: mascarar(message.processed_message_content))
     end
   end
 
@@ -108,6 +119,19 @@ class Ramon::ContactAnonymizer
       additional_attributes: {}, custom_attributes: {}
     )
   end
+
+  # Falha no Drive não desfaz a eliminação: fica no histórico do lead para apagar à mão (o id da pasta vai junto).
+  def lixeira_do_drive(pastas)
+    pastas.each do |pasta, lead|
+      Ramon::DriveClient.lixeira(pasta)
+      Ramon::ContratoApto.registrar(lead, autor, 'drive_lixeira')
+    rescue StandardError => e
+      Rails.logger.warn("[lgpd] pasta #{pasta} do lead #{lead.id} não foi para a lixeira: #{e.class} #{e.message}")
+      Ramon::ContratoApto.registrar(lead, autor, 'drive_lixeira_falhou', pasta)
+    end
+  end
+
+  def autor = Audited.store[:audited_user] || Current.user
 
   def redact_audits
     sql = ActiveRecord::Base.sanitize_sql([REDACAO_AUDITS_SQL, { id: @contact.id, mesclado: "mesclado:#{@contact.id}" }])

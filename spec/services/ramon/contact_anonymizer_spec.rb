@@ -133,6 +133,105 @@ describe Ramon::ContactAnonymizer do
     end
   end
 
+  # Decisões de 12/11/2026: quem não é cliente perde também o que ficou nos leads e nas conversas.
+  describe 'titular que não é cliente: rastros fora do contato' do
+    let(:open_stage) { account.lead_stages.find_by(is_won: false, is_lost: false) }
+    let(:lead) do
+      create(:lead, account: account, lead_stage: open_stage, contact: contact, conversation: conversation, name: 'Maria Souza',
+                    portal_token: 'token-vivo', cnis: { 'filename' => 'cnis.pdf' }, lost_reason: 'Maria mudou de ideia',
+                    benefit_monthly_value: 2100,
+                    custom_attributes: { 'meta_referral' => { 'ctwa_clid' => 'abc' }, 'zapsign' => { 'cpf' => '52998224725' } })
+    end
+
+    it 'anonimiza o lead, guarda só a origem de marketing e mascara o nome do lead nas mensagens', :aggregate_failures do
+      message.update_columns(content: 'Fala com a Maria', processed_message_content: 'CPF 529.982.247-25') # rubocop:disable Rails/SkipsModelValidations
+      lead
+
+      perform
+      expect(lead.reload).to have_attributes(name: "Titular anonimizado ##{contact.id}", cnis: nil, portal_token: nil,
+                                             benefit_monthly_value: nil, custom_attributes: { 'meta_referral' => { 'ctwa_clid' => 'abc' } })
+      expect(lead.lost_reason).not_to include('Maria')
+      expect(message.reload.content).not_to include('Maria')
+      expect(message.processed_message_content).not_to include('529.982.247-25')
+    end
+
+    it 'mascara notas, tarefas, reuniões e histórico; apaga cálculos, sugestões e o texto da triagem', :aggregate_failures do
+      nota = lead.lead_notes.create!(account: account, body: 'Joao passou o CPF 529.982.247-25')
+      tarefa = create(:lead_task, account: account, lead: lead, title: 'Ligar para o Joao', meet_url: 'https://meet.google.com/x')
+      reuniao = create(:reuniao, account: account, lead: lead, status: 'pronta', transcricao: 'Eu sou o Joao', ata: 'Joao da Silva quer revisar')
+      atividade = lead.lead_activities.create!(account: account, kind: 'note_added', to_value: 'Joao mandou o RG')
+      Calculo.create!(account: account, lead: lead, tipo: 'rmi', segurado_nome: 'Joao da Silva', snapshot: { 'cnis' => {} })
+      create(:copilot_suggestion, account: account, lead: lead)
+      triagem = lead.lead_triages.create!(account: account, status: 'done', source_text: 'Joao, 52998224725', result: 'viável')
+
+      perform
+      expect(nota.reload.body).to include('[nome]', '[cpf]')
+      expect(tarefa.reload).to have_attributes(title: 'Ligar para o [nome]', meet_url: nil)
+      expect([reuniao.reload.transcricao, reuniao.ata].join).not_to include('Joao')
+      expect(atividade.reload.to_value).not_to include('Joao')
+      expect([lead.calculos.count, lead.copilot_suggestions.count]).to eq([0, 0])
+      expect(triagem.reload).to have_attributes(source_text: nil, result: nil, status: 'done')
+    end
+
+    it 'apaga todos os anexos (inclusive os da equipe), troca o source_id e limpa os atributos da conversa', :aggregate_failures do
+      da_equipe = create(:message, conversation: conversation, account: account, inbox: conversation.inbox, message_type: :outgoing)
+      [message, da_equipe].each { |m| m.attachments.create!(account_id: account.id, file_type: :image, external_url: 'https://exemplo.com/rg.png') }
+      conversation.update_columns(additional_attributes: { 'referer' => 'https://lp.exemplo.com/?nome=Joao' }) # rubocop:disable Rails/SkipsModelValidations
+      contato_na_caixa = conversation.contact_inbox
+
+      perform
+      expect(Attachment.where(message_id: [message.id, da_equipe.id])).to be_empty
+      expect(conversation.reload.additional_attributes).to eq({})
+      expect(contato_na_caixa.reload.source_id).to eq("anonimizado-#{contato_na_caixa.id}")
+    end
+
+    it 'cancela o fluxo que ainda ia rodar e apaga o contexto das execuções', :aggregate_failures do
+      fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'assinatura_painel' }))
+      esperando = fluxo.execucoes.create!(account: account, alvo: lead, status: 'esperando', contexto: { 'nome' => 'Joao' }, trilha: ['g'])
+      feita = fluxo.execucoes.create!(account: account, alvo: conversation, status: 'concluida', contexto: { 'msg' => 'Joao' })
+
+      perform
+      expect(esperando.reload).to have_attributes(status: 'cancelada', contexto: {}, trilha: [])
+      expect(feita.reload).to have_attributes(status: 'concluida', contexto: {})
+    end
+
+    it 'não toca no lead de outro contato' do
+      outro = create(:lead, account: account, lead_stage: open_stage, name: 'Pedro Alves', portal_token: 'dele')
+
+      perform
+      expect(outro.reload).to have_attributes(name: 'Pedro Alves', portal_token: 'dele')
+    end
+
+    it 'falha no meio desfaz tudo (transação)', :aggregate_failures do
+      lead
+      allow(contact).to receive(:update!).and_raise(ActiveRecord::RecordInvalid)
+
+      expect { perform }.to raise_error(ActiveRecord::RecordInvalid)
+      expect(message.reload.content).to include('529.982.247-25')
+      expect(lead.reload).to have_attributes(name: 'Maria Souza', portal_token: 'token-vivo')
+    end
+
+    describe 'pasta do Drive do lead' do
+      before { lead.update_columns(custom_attributes: lead.custom_attributes.merge('drive' => { 'pasta_id' => 'pasta-1' })) } # rubocop:disable Rails/SkipsModelValidations
+
+      it 'vai para a lixeira depois da eliminação e fica no histórico do lead', :aggregate_failures do
+        allow(Ramon::DriveClient).to receive(:lixeira)
+
+        perform
+        expect(Ramon::DriveClient).to have_received(:lixeira).with('pasta-1').once
+        expect(lead.lead_activities.where(kind: 'drive_lixeira').count).to eq(1)
+      end
+
+      it 'Drive falhou: a eliminação vale e o histórico guarda a pasta para apagar à mão', :aggregate_failures do
+        allow(Ramon::DriveClient).to receive(:lixeira).and_raise(Google::Apis::ClientError, 'insufficientFilePermissions')
+
+        perform
+        expect(contact.reload.name).to eq("Titular anonimizado ##{contact.id}")
+        expect(lead.lead_activities.find_by(kind: 'drive_lixeira_falhou').to_value).to eq('pasta-1')
+      end
+    end
+  end
+
   it 'records the bulk deletion as made by who asked', :aggregate_failures do
     admin = create(:user, account: account, role: :administrator)
     Contacts::BulkActionService.new(account: account, user: admin, params: { action_name: 'delete', ids: [contact.id] }).perform

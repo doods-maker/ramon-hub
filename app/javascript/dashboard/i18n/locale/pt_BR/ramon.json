@@ -1290,7 +1290,9 @@
           "APTO_POR_PRAZO": "Apto por prazo (jurídico não respondeu)",
           "APTO_DEVOLVIDO": "Devolvido pelo jurídico",
           "APTO_REENVIADO": "Reenviado ao jurídico",
-          "ELIMINACAO_PEDIDA": "Eliminação dos dados pedida (cliente com contrato: nada foi apagado)"
+          "ELIMINACAO_PEDIDA": "Eliminação dos dados pedida (cliente com contrato: nada foi apagado)",
+          "DRIVE_LIXEIRA": "Dados eliminados: a pasta do Drive foi para a lixeira",
+          "DRIVE_LIXEIRA_FALHOU": "Dados eliminados, mas a pasta do Drive não foi para a lixeira: apagar à mão"
         }
       },
       "LOADING": "Carregando lead…",

@@ -73,6 +73,26 @@ RSpec.describe Ramon::DriveClient do
     end
   end
 
+  describe '.lixeira' do
+    before do
+      allow(described_class).to receive(:root_id).and_return('raiz')
+      allow(api).to receive(:update_file)
+    end
+
+    it 'manda à lixeira a pasta dentro da raiz' do
+      allow(described_class).to receive(:parent_of).with('cliente').and_return('raiz')
+      described_class.lixeira('cliente')
+      expect(api).to have_received(:update_file).with('cliente', { trashed: true }, hash_including(supports_all_drives: true))
+    end
+
+    it 'recusa a raiz e o que está fora dela, sem tocar no Drive', :aggregate_failures do
+      allow(described_class).to receive(:parent_of).with('fora').and_return(nil)
+      expect { described_class.lixeira('raiz') }.to raise_error(ArgumentError)
+      expect { described_class.lixeira('fora') }.to raise_error(ArgumentError)
+      expect(api).not_to have_received(:update_file)
+    end
+  end
+
   describe '.search_na_raiz' do
     before { allow(described_class).to receive(:root_id).and_return('raiz') }
 
