@@ -72,6 +72,10 @@ class Ramon::RastrosDoTitular
     Captain::ToolRun.where(conversation_id: conversa_ids).or(Captain::ToolRun.where(lead_id: lead_ids)).update_all(params: {}, resultado: nil)
     AgenteExecucao.where(conversation_id: conversa_ids).or(AgenteExecucao.where(lead_id: lead_ids))
                   .update_all(pedido: '[anonimizado]', resumo: nil, acoes: [])
+    mascarar_faqs if ChatwootApp.enterprise? # FAQ é modelo do enterprise
+  end
+
+  def mascarar_faqs
     Captain::AssistantResponse.where(documentable_type: 'Conversation', documentable_id: conversa_ids).find_each do |faq|
       faq.update_columns(question: @mask.call(faq.question), answer: @mask.call(faq.answer))
     end
