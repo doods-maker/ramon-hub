@@ -179,6 +179,16 @@ onMounted(() => {
               </span>
             </div>
             <p
+              v-if="
+                caso.apto_situacao === 'aguardando' &&
+                caso.assinatura_conferida === false
+              "
+              data-testid="validacao-sem-assinatura"
+              class="m-0 text-xs text-n-amber-11"
+            >
+              {{ t('RAMON.APTO.SEM_ASSINATURA') }}
+            </p>
+            <p
               v-if="caso.sem_validador"
               data-testid="validacao-sem-validador"
               class="m-0 text-xs text-n-amber-11"

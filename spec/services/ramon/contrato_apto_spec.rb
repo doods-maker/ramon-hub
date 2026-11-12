@@ -15,7 +15,10 @@ RSpec.describe Ramon::ContratoApto do
 
   before { admin }
 
-  def limpo(carimbo: sexta, thesis: tese, **attrs)
+  # assinado: false = ganho sem o selo do ZapSign (arrasto manual no Kanban, contrato em papel)
+  def limpo(carimbo: sexta, thesis: tese, assinado: true, custom_attributes: {}, **attrs)
+    custom_attributes = custom_attributes.merge('zapsign' => { 'status' => 'signed' }) if assinado
+    attrs = attrs.merge(custom_attributes: custom_attributes)
     create(:lead, account: account, lead_stage: won_stage, thesis: thesis, closer: closer, **attrs).tap do |lead|
       lead.update_columns(contrato_limpo_em: carimbo) # rubocop:disable Rails/SkipsModelValidations
     end
@@ -59,6 +62,14 @@ RSpec.describe Ramon::ContratoApto do
 
     it 'só existe enquanto aguarda validação' do
       expect(described_class.prazo(limpo)).to be_nil
+    end
+
+    it 'não existe sem assinatura conferida no ZapSign; o painel recebe o motivo', :aggregate_failures do
+      lead = aguardando(assinado: false)
+
+      expect(described_class.prazo(lead)).to be_nil
+      expect(described_class.dados(lead)).to include(apto_situacao: 'aguardando', apto_prazo: nil, assinatura_conferida: false)
+      expect(described_class.dados(aguardando)).to include(assinatura_conferida: true)
     end
   end
 
@@ -124,6 +135,34 @@ RSpec.describe Ramon::ContratoApto do
       expect(avisos_de(closer).count).to eq(1)
     end
 
+    it 'sem assinatura conferida no ZapSign o prazo vencido não vira apto: espera o advogado', :aggregate_failures do
+      lead = aguardando(assinado: false)
+
+      described_class.rodar!(sexta + 30.days)
+
+      expect(lead.reload.apto_em).to be_nil
+      expect(described_class.situacao(lead)).to eq('aguardando')
+      expect(lead.lead_activities.where(kind: 'apto_por_prazo')).to be_empty
+      expect(avisos_de(closer).count).to eq(0)
+    end
+
+    it 'documento recusado no ZapSign também não fica apto por prazo' do
+      lead = aguardando(assinado: false, custom_attributes: { 'zapsign' => { 'status' => 'refused' } })
+
+      described_class.rodar!(sexta + 30.days)
+
+      expect(lead.reload.apto_em).to be_nil
+    end
+
+    it 'contrato limpo antes da regra da assinatura (estoque da fila) segue a regra antiga: apto por prazo sem o selo', :aggregate_failures do
+      lead = aguardando(assinado: false, carimbo: Time.find_zone('America/Sao_Paulo').local(2026, 11, 11, 10))
+
+      expect(described_class.dados(lead)).to include(assinatura_conferida: true) # sem o aviso no painel
+      described_class.rodar!(sexta + 30.days)
+
+      expect(described_class.situacao(lead.reload)).to eq('apto_por_prazo')
+    end
+
     it 'devolvido não fica apto por prazo' do
       lead = aguardando(devolvido_em: sexta + 1.day, devolvido_motivo: 'Falta o laudo')
 
@@ -142,6 +181,15 @@ RSpec.describe Ramon::ContratoApto do
       expect(lead.reload).to have_attributes(apto_em: sexta + 1.day, apto_por_id: rafaela.id)
       expect(described_class.situacao(lead)).to eq('apto')
       expect(avisos_de(closer).count).to eq(1)
+    end
+
+    it 'sem assinatura conferida o advogado ainda valida na mão (contrato em papel)', :aggregate_failures do
+      lead = aguardando(assinado: false)
+
+      described_class.validar!(lead, rafaela)
+
+      expect(described_class.situacao(lead.reload)).to eq('apto')
+      expect(described_class.validar_lote!(account, rafaela, [aguardando(assinado: false).id])[:recusados]).to be_empty
     end
 
     it 'quem não é da tese nem admin não valida' do

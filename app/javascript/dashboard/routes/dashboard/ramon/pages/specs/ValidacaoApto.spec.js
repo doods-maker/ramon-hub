@@ -82,6 +82,26 @@ describe('ValidacaoApto.vue', () => {
     );
   });
 
+  it('sem assinatura conferida no ZapSign avisa que o caso não fica apto por prazo', async () => {
+    aptos.get.mockResolvedValue({
+      data: [
+        { ...fila[0], apto_prazo: null, assinatura_conferida: false },
+        { ...fila[0], id: 3, assinatura_conferida: true },
+        { ...fila[1], assinatura_conferida: false },
+      ],
+    });
+    const wrapper = montar();
+    await flushPromises();
+
+    const avisos = wrapper
+      .findAll('[data-testid="validacao-linha"]')
+      .map(linha =>
+        linha.find('[data-testid="validacao-sem-assinatura"]').exists()
+      );
+    expect(avisos).toEqual([true, false, false]);
+    expect(wrapper.text()).toContain('RAMON.APTO.SEM_ASSINATURA');
+  });
+
   it('valida em lote os marcados e recarrega', async () => {
     const wrapper = montar();
     await flushPromises();

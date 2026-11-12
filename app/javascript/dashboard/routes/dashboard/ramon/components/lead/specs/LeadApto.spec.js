@@ -59,6 +59,25 @@ describe('LeadApto', () => {
     expect(wrapper.text()).toContain('RAMON.APTO.SITUACAO.aguardando');
   });
 
+  it('sem assinatura conferida no ZapSign avisa que não fica apto por prazo', () => {
+    const aviso = lead =>
+      botao(montar(lead), 'apto-sem-assinatura').exists() &&
+      botao(montar(lead), 'apto-sem-assinatura').text();
+
+    expect(
+      aviso({ ...aguardando, apto_prazo: null, assinatura_conferida: false })
+    ).toBe('RAMON.APTO.SEM_ASSINATURA');
+    expect(aviso({ ...aguardando, assinatura_conferida: true })).toBe(false);
+    // só enquanto aguarda: validado na mão (contrato em papel) não avisa mais
+    expect(
+      aviso({
+        ...aguardando,
+        apto_situacao: 'apto',
+        assinatura_conferida: false,
+      })
+    ).toBe(false);
+  });
+
   it('devolver exige motivo antes de enviar', async () => {
     const apto = vi.fn();
     const wrapper = montar(aguardando, { apto });

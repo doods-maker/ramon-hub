@@ -798,7 +798,8 @@
     "CONTATO": {
       "CPF": "CPF (Brazilian taxpayer ID)",
       "DATA_NASCIMENTO": "Date of birth",
-      "LEAD_ABERTO": "Open lead"
+      "LEAD_ABERTO": "Open lead",
+      "CLIENTE_GANHO": "This contact is a client with a contract: the data is not erased from here. The request was recorded and management was notified."
     },
     "LINHA_DA_VIDA": {
       "OPEN": "Life timeline",
@@ -1288,7 +1289,8 @@
           "APTO_VALIDADO": "Ready for filing (legal)",
           "APTO_POR_PRAZO": "Ready for filing (legal deadline passed)",
           "APTO_DEVOLVIDO": "Sent back by legal",
-          "APTO_REENVIADO": "Sent to legal again"
+          "APTO_REENVIADO": "Sent to legal again",
+          "ELIMINACAO_PEDIDA": "Data erasure requested (client with a contract: nothing was deleted)"
         }
       },
       "LOADING": "Loading lead…",
@@ -2198,6 +2200,7 @@
       "TITULO": "Ready for filing (legal review)",
       "ERRO": "Could not save the legal review.",
       "PRAZO": "auto-approved on {data}",
+      "SEM_ASSINATURA": "Signature not verified in ZapSign. Without legal review, this contract is not auto-approved by deadline.",
       "VALIDAR": "Ready for filing",
       "DEVOLVER": "Send back",
       "DEVOLVER_CONFIRMAR": "Send back with reason",

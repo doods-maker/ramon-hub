@@ -798,7 +798,8 @@
     "CONTATO": {
       "CPF": "CPF",
       "DATA_NASCIMENTO": "Data de nascimento",
-      "LEAD_ABERTO": "Lead aberto"
+      "LEAD_ABERTO": "Lead aberto",
+      "CLIENTE_GANHO": "Este contato é cliente com contrato: os dados não são eliminados por aqui. O pedido foi registrado e a gestão foi avisada."
     },
     "LINHA_DA_VIDA": {
       "OPEN": "Linha da Vida",
@@ -1288,7 +1289,8 @@
           "APTO_VALIDADO": "Apto para protocolo (jurídico)",
           "APTO_POR_PRAZO": "Apto por prazo (jurídico não respondeu)",
           "APTO_DEVOLVIDO": "Devolvido pelo jurídico",
-          "APTO_REENVIADO": "Reenviado ao jurídico"
+          "APTO_REENVIADO": "Reenviado ao jurídico",
+          "ELIMINACAO_PEDIDA": "Eliminação dos dados pedida (cliente com contrato: nada foi apagado)"
         }
       },
       "LOADING": "Carregando lead…",
@@ -2198,6 +2200,7 @@
       "TITULO": "Apto para protocolo (jurídico)",
       "ERRO": "Não foi possível salvar a validação.",
       "PRAZO": "apto sozinho em {data}",
+      "SEM_ASSINATURA": "Assinatura não conferida no ZapSign. Sem validação do jurídico, este contrato não fica apto por prazo.",
       "VALIDAR": "Apto para protocolo",
       "DEVOLVER": "Devolver",
       "DEVOLVER_CONFIRMAR": "Devolver com motivo",

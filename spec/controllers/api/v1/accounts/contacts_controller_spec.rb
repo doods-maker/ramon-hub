@@ -743,6 +743,20 @@ RSpec.describe 'Contacts API', type: :request do
         expect(contact.conversations).not_to be_empty
       end
 
+      # FORK(ramon/LGPD): cliente com contrato não é eliminado pela tela (decisão de 11/11/2026).
+      it 'does not anonymize a contact that is a client and records the request', :aggregate_failures do
+        allow(OnlineStatusTracker).to receive(:get_presence).and_return(false)
+        lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(is_won: true), conversation: conversation)
+        nome = contact.name
+
+        delete "/api/v1/accounts/#{account.id}/contacts/#{contact.id}", headers: admin.create_new_auth_token
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body).to eq('error' => 'cliente_ganho')
+        expect(contact.reload.name).to eq(nome)
+        expect(lead.lead_activities.find_by(kind: 'eliminacao_pedida')).to have_attributes(user_id: admin.id)
+      end
+
       it 'does not delete the contact if online' do
         allow(OnlineStatusTracker).to receive(:get_presence).and_return(true)
 
