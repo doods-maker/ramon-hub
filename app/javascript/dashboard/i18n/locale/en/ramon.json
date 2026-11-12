@@ -1290,7 +1290,9 @@
           "APTO_POR_PRAZO": "Ready for filing (legal deadline passed)",
           "APTO_DEVOLVIDO": "Sent back by legal",
           "APTO_REENVIADO": "Sent to legal again",
-          "ELIMINACAO_PEDIDA": "Data erasure requested (client with a contract: nothing was deleted)"
+          "ELIMINACAO_PEDIDA": "Data erasure requested (client with a contract: nothing was deleted)",
+          "DRIVE_LIXEIRA": "Data erased: the Drive folder was moved to the trash",
+          "DRIVE_LIXEIRA_FALHOU": "Data erased, but the Drive folder was not moved to the trash: delete it by hand"
         }
       },
       "LOADING": "Loading lead…",
