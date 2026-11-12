@@ -133,7 +133,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
   it 'arquivos_drive recusa arquivo fora da raiz do Drive do hub, sem baixar nenhum (decisão de 12/11)', :aggregate_failures do
     criar
     allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
-    allow(Ramon::DriveClient).to receive(:dentro_da_raiz?) { |id| id == 'drv1' }
+    allow(Ramon::DriveClient).to receive(:dentro_da_raiz?) { |id, **| id == 'drv1' }
     allow(Ramon::DriveClient).to receive(:download)
     post "#{url}/#{account.peticoes.sole.id}/arquivos_drive", params: { file_ids: %w[drv1 fora1] }, headers: ana.create_new_auth_token, as: :json
     expect(response).to have_http_status(:unprocessable_entity)
@@ -306,7 +306,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
     allow(Ramon::DriveClient).to receive_messages(configured?: true, root_id: 'raiz', parent_of: nil, children: [])
     get "#{url}/drive", params: { pasta_id: 'fora' }, headers: ana.create_new_auth_token, as: :json
     expect(response).to have_http_status(:unprocessable_entity)
-    expect(response.parsed_body).to include('error' => 'pasta_invalida')
+    expect(response.parsed_body).to include('error' => 'fora_da_raiz')
     expect(Ramon::DriveClient).not_to have_received(:children)
   end
 
@@ -388,13 +388,21 @@ RSpec.describe 'Ramon Petições API', type: :request do
       expect(Ramon::DriveClient).not_to have_received(:pasta?).with("x' or '1'='1")
     end
 
-    it 'pasta fora da raiz do Drive do hub → 422 pasta_invalida, sem criar (decisão de 12/11)', :aggregate_failures do
+    it 'pasta fora da raiz do Drive do hub → 422 fora_da_raiz, sem criar (decisão de 12/11)', :aggregate_failures do
       allow(Ramon::DriveClient).to receive(:dentro_da_raiz?).with('fora1').and_return(false)
       expect { post "#{url}/pela_pasta", params: { pasta_id: 'fora1' }, headers: headers, as: :json }
         .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.parsed_body).to include('error' => 'pasta_invalida')
+      expect(response.parsed_body).to include('error' => 'fora_da_raiz')
       expect(account.peticoes.count).to eq(0)
+    end
+
+    it 'reler petição antiga apontada para pasta fora da raiz → 422 fora_da_raiz, sem enfileirar', :aggregate_failures do
+      peticao = da_pasta(pasta_id: 'fora1')
+      allow(Ramon::DriveClient).to receive(:dentro_da_raiz?).with('fora1').and_return(false)
+      expect { post "#{url}/#{peticao.id}/reler_pasta", headers: headers, as: :json }
+        .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response.parsed_body).to include('error' => 'fora_da_raiz')
     end
 
     it 'apontar sem Drive configurado → 503' do

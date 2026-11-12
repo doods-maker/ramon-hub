@@ -97,8 +97,11 @@ class Ramon::DriveClient
       rename(file_id, MARCADOR_PASTA_USADA)
     end
 
-    # A pasta (ou arquivo) está dentro da raiz do escritório (sobe até `niveis` pais)? `pais` memoriza o parent_of.
-    def dentro_da_raiz?(pasta_id, niveis: 8, pais: Hash.new { |h, id| h[id] = parent_of(id) })
+    # parent_of memorizado: várias subidas na mesma requisição perguntam cada pasta uma vez só.
+    def pais_memo = Hash.new { |h, id| h[id] = parent_of(id) }
+
+    # A pasta (ou arquivo, um nível a mais) está dentro da raiz do escritório (sobe até `niveis` pais)?
+    def dentro_da_raiz?(pasta_id, niveis: 10, pais: pais_memo)
       atual = pasta_id
       niveis.times do
         return true if atual == root_id
@@ -112,7 +115,7 @@ class Ramon::DriveClient
     # Busca do navegador do peticionamento: só o que está dentro da raiz (decisão de 12/11/2026). O pai vem da listagem.
     # ponytail: sobe a árvore a cada busca (memorizado na busca); índice das pastas da raiz se ficar lento.
     def search_na_raiz(texto)
-      pais = Hash.new { |h, id| h[id] = parent_of(id) }
+      pais = pais_memo
       search(texto).select { |item| (pai = item[:parents]&.first) && dentro_da_raiz?(pai, pais: pais) }
     end
 

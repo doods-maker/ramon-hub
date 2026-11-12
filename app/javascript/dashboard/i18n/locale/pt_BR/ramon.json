@@ -2745,7 +2745,7 @@
         "PROTOCOLADA": "Esta petição já foi protocolada e não pode mais ser alterada.",
         "SO_RESPONSAVEL": "Só o advogado responsável ou um administrador registra o protocolo.",
         "PASTA_INVALIDA": "Não achei essa pasta no Drive do escritório. Escolha outra.",
-        "FORA_DA_RAIZ": "Esse arquivo está fora da pasta do escritório no Drive. Escolha um que esteja dentro dela.",
+        "FORA_DA_RAIZ": "Isso está fora da pasta do escritório no Drive. Escolha algo que esteja dentro dela.",
         "PASTA_JA_USADA": "Já existe uma petição para essa pasta.",
         "EM_LEITURA": "A pasta ainda está sendo lida. Espere terminar para reler.",
         "PACOTE_DA_PASTA": "O pacote vem da pasta do Drive. Para mudar os arquivos, altere a pasta e clique em Reler a pasta."
@@ -3354,7 +3354,7 @@
         "relogio": "Todo dia, num horário",
         "horario_conta": "Horário da conta (a conta toda)",
         "nota_escrita": "Nota privada escrita (pela equipe)",
-        "assinatura_painel": "Assinatura do Painel do Cliente mudou (ZapSign)",
+        "assinatura_painel": "Cliente assinou pelo Painel do Cliente (ZapSign)",
         "documento_painel": "Cliente enviou documento pelo Painel",
         "chegada_cliente": "Recepção avisou a chegada de um cliente",
         "reuniao_gravada": "Reunião gravada (ou Refazer ata)",

@@ -67,7 +67,7 @@ RSpec.describe Ramon::DriveClient do
       expect(described_class.dentro_da_raiz?('p1')).to be(false)
     end
 
-    it 'false além de 8 níveis' do
+    it 'false além de 10 níveis' do
       allow(described_class).to receive(:parent_of) { |id| "#{id}x" }
       expect(described_class.dentro_da_raiz?('p')).to be(false)
     end

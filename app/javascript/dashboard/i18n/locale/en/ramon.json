@@ -2745,7 +2745,7 @@
         "PROTOCOLADA": "This petition is already filed and can no longer be changed.",
         "SO_RESPONSAVEL": "Only the responsible lawyer or an administrator can record the filing.",
         "PASTA_INVALIDA": "That folder was not found in the firm Drive. Pick another one.",
-        "FORA_DA_RAIZ": "That file is outside the firm folder in Drive. Pick one inside it.",
+        "FORA_DA_RAIZ": "That is outside the firm folder in Drive. Pick something inside it.",
         "PASTA_JA_USADA": "There is already a petition for that folder.",
         "EM_LEITURA": "The folder is still being read. Wait for it to finish before reading again.",
         "PACOTE_DA_PASTA": "The package comes from the Drive folder. To change the files, change the folder and click Read folder again."
@@ -3354,7 +3354,7 @@
         "relogio": "Every day at a set time",
         "horario_conta": "Account schedule (whole account)",
         "nota_escrita": "Private note written (by the team)",
-        "assinatura_painel": "Client Portal signature changed (ZapSign)",
+        "assinatura_painel": "Client signed in the Client Portal (ZapSign)",
         "documento_painel": "Client sent a document through the Portal",
         "chegada_cliente": "Front desk announced a client arrival",
         "reuniao_gravada": "Meeting recorded (or Redo minutes)",
