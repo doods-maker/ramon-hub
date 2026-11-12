@@ -14,6 +14,8 @@ module Ramon::ContratoApto
   ZONA = 'America/Sao_Paulo'.freeze
   AVISO = 'ramon_fluxo_aviso'.freeze
   VALE_DESDE = Time.find_zone(ZONA).local(2026, 11, 10).freeze
+  # A exigência da assinatura vale só para contrato limpo a partir daqui (decisão de 12/11/2026): o estoque da fila segue a regra antiga.
+  ASSINATURA_DESDE = Time.find_zone(ZONA).local(2026, 11, 12).freeze
 
   class Proibido < StandardError; end
   class Invalido < StandardError; end
@@ -58,14 +60,16 @@ module Ramon::ContratoApto
   # O que o painel e o card leem (vai no comercial_event_data do lead). Quem pode validar vai no jbuilder (depende de quem pede).
   def dados(lead)
     { apto_situacao: situacao(lead), apto_prazo: prazo(lead)&.iso8601, apto_em: lead.apto_em&.iso8601,
-      devolvido_motivo: lead.devolvido_motivo, validador_id: lead.validador_id, assinatura_conferida: assinatura_conferida?(lead) }
+      devolvido_motivo: lead.devolvido_motivo, validador_id: lead.validador_id, assinatura_conferida: assinatura_ok?(lead) }
   end
 
   # 'signed' é o que Ramon::ZapsignLeadStatusJob grava depois de conferir o documento no ZapSign.
-  def assinatura_conferida?(lead) = lead.custom_attributes&.dig('zapsign', 'status') == 'signed'
+  # ponytail: o painel lê assinatura_conferida só para o aviso; no estoque a exigência não vale, então vai true.
+  # dados roda para todo lead, inclusive sem carimbo (contrato_limpo_em nil).
+  def assinatura_ok?(lead) = lead.contrato_limpo_em&.before?(ASSINATURA_DESDE) || lead.custom_attributes&.dig('zapsign', 'status') == 'signed'
 
   def prazo(lead)
-    return unless situacao(lead) == 'aguardando' && assinatura_conferida?(lead)
+    return unless situacao(lead) == 'aguardando' && assinatura_ok?(lead)
 
     dia = lead.validacao_desde.in_time_zone(ZONA).to_date
     DIAS_UTEIS.times { dia = proximo_dia_util(dia) }
@@ -135,10 +139,9 @@ module Ramon::ContratoApto
   def dia_util?(dia) = !dia.on_weekend? && !Ramon::Agenda::Feriados.feriado?(dia)
 
   def proximo_dia_util(dia)
-    loop do
-      dia += 1
-      return dia if dia_util?(dia)
-    end
+    dia += 1
+    dia += 1 until dia_util?(dia)
+    dia
   end
 
   # Histórico do lead; a devolução também é a base da constância do Programa de Metas (devolvidos no trimestre).

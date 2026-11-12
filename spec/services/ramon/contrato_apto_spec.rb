@@ -154,6 +154,15 @@ RSpec.describe Ramon::ContratoApto do
       expect(lead.reload.apto_em).to be_nil
     end
 
+    it 'contrato limpo antes da regra da assinatura (estoque da fila) segue a regra antiga: apto por prazo sem o selo', :aggregate_failures do
+      lead = aguardando(assinado: false, carimbo: Time.find_zone('America/Sao_Paulo').local(2026, 11, 11, 10))
+
+      expect(described_class.dados(lead)).to include(assinatura_conferida: true) # sem o aviso no painel
+      described_class.rodar!(sexta + 30.days)
+
+      expect(described_class.situacao(lead.reload)).to eq('apto_por_prazo')
+    end
+
     it 'devolvido não fica apto por prazo' do
       lead = aguardando(devolvido_em: sexta + 1.day, devolvido_motivo: 'Falta o laudo')
 
