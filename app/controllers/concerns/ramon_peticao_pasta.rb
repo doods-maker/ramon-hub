@@ -1,8 +1,22 @@
-# Peticionamento pela pasta: apontar uma pasta do Drive, reler e confirmar a conferência.
+# Peticionamento pela pasta: apontar uma pasta do Drive, reler e confirmar a conferência; navegador e busca do Drive.
 module RamonPeticaoPasta
   extend ActiveSupport::Concern
 
   RELEITURA_MINUTOS = 10
+
+  # Navegador confinado à raiz do Drive do hub (decisão de 12/11/2026).
+  def drive
+    raiz = Ramon::DriveClient.root_id
+    pasta = Ramon::DriveClient.id_de_query!(params[:pasta_id].presence || raiz) # antes de qualquer chamada ao Drive
+    return fora_da_raiz unless Ramon::DriveClient.dentro_da_raiz?(pasta)
+
+    pai = pasta == raiz ? nil : Ramon::DriveClient.parent_of(pasta)
+    render json: { pasta_id: pasta, pai_id: pai, raiz_id: raiz, itens: Ramon::DriveClient.children(pasta) }
+  end
+
+  def drive_busca
+    render json: { itens: Ramon::DriveClient.search_na_raiz(params[:q]) }
+  end
 
   # Pastas que a esteira deixou prontas: o admin vê todas (inclusive sem dono); os demais, só as suas.
   def pastas_prontas
@@ -28,9 +42,14 @@ module RamonPeticaoPasta
     Current.account.peticoes.find_by(pela_pasta: true, drive_pasta_id: pasta_id)
   end
 
-  # O id entra na query do Drive: só caracteres de id; e tem de ser uma pasta de verdade (em qualquer lugar do Drive do escritório).
+  # O id entra na query do Drive: só caracteres de id; e tem de ser uma pasta de verdade. A raiz é conferida à parte (fora_da_raiz).
   def pasta_valida?(pasta_id)
     pasta_id.match?(/\A[\w-]+\z/) && Ramon::DriveClient.pasta?(pasta_id)
+  end
+
+  # Peticionamento confinado à raiz do Drive do hub (decisão de 12/11/2026).
+  def fora_da_raiz
+    render json: { error: 'fora_da_raiz' }, status: :unprocessable_entity
   end
 
   def pasta_ja_usada(existente)

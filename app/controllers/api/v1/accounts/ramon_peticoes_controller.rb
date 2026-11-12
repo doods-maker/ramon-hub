@@ -13,11 +13,11 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   before_action :current_account
   before_action :check_authorization
-  before_action :carregar_peticao, except: %i[index create pela_pasta pastas_prontas drive drive_busca processos] # rubocop:disable Rails/LexicallyScopedActionFilter -- pastas_prontas vem do concern
+  before_action :carregar_peticao, except: %i[index create pela_pasta pastas_prontas drive drive_busca processos] # rubocop:disable Rails/LexicallyScopedActionFilter -- pastas_prontas e drive vêm do concern
   before_action :exigir_editavel, only: %i[update destroy arquivos arquivos_drive atualizar_arquivo remover_arquivo ordem reler_pasta]
   before_action :exigir_pela_pasta, only: :reler_pasta
   before_action :exigir_pacote_livre, only: %i[arquivos arquivos_drive remover_arquivo ordem]
-  before_action :exigir_drive, only: %i[drive drive_busca arquivos_drive pela_pasta reler_pasta]
+  before_action :exigir_drive, only: %i[drive drive_busca arquivos_drive pela_pasta reler_pasta] # rubocop:disable Rails/LexicallyScopedActionFilter -- drive vem do concern
 
   rescue_from ActiveRecord::RecordInvalid do |e|
     render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
@@ -52,6 +52,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     pasta_id = params[:pasta_id].to_s.strip
     return render json: { error: 'pasta_id' }, status: :unprocessable_entity if pasta_id.blank?
     return render json: { error: 'pasta_invalida' }, status: :unprocessable_entity unless pasta_valida?(pasta_id)
+    return fora_da_raiz unless Ramon::DriveClient.dentro_da_raiz?(pasta_id)
 
     existente = peticao_da_pasta(pasta_id)
     return pasta_ja_usada(existente) if existente
@@ -69,6 +70,8 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   # Relê a pasta: guarda os campos da leitura anterior e só o `estado` volta a `lendo`.
   def reler_pasta
+    return fora_da_raiz unless Ramon::DriveClient.dentro_da_raiz?(@peticao.drive_pasta_id) # petição de antes de 12/11
+
     resultado = reservar_releitura
     erro = { protocolada: :unprocessable_entity, em_leitura: :conflict }[resultado]
     return render json: { error: resultado.to_s }, status: erro if erro
@@ -105,8 +108,13 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     render_peticao
   end
 
+  # Só arquivo dentro da raiz do Drive do hub (decisão de 12/11/2026); confere todos antes de baixar qualquer um.
   def arquivos_drive
-    Array(params[:file_ids]).each do |file_id|
+    file_ids = Array(params[:file_ids])
+    pais = Ramon::DriveClient.pais_memo
+    return fora_da_raiz unless file_ids.all? { |id| Ramon::DriveClient.dentro_da_raiz?(id, pais: pais) }
+
+    file_ids.each do |file_id|
       bytes, mime, nome = Ramon::DriveClient.download(file_id, limite: Ramon::Peticionamento::AdicionarArquivo::MAX_ARQUIVO)
       Ramon::Peticionamento::AdicionarArquivo.call(@peticao, bytes: bytes, nome: nome, content_type: mime, origem: 'drive',
                                                              drive_origem_id: file_id)
@@ -148,17 +156,6 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
     @peticao.registrar_protocolo!(usuario: Current.user, numero_evento: params[:numero_evento].presence, comprovante: params[:comprovante])
     render_peticao
-  end
-
-  def drive
-    raiz = Ramon::DriveClient.root_id
-    pasta = Ramon::DriveClient.id_de_query!(params[:pasta_id].presence || raiz) # antes de qualquer chamada ao Drive
-    pai = pasta == raiz ? nil : Ramon::DriveClient.parent_of(pasta)
-    render json: { pasta_id: pasta, pai_id: pai, raiz_id: raiz, itens: Ramon::DriveClient.children(pasta) }
-  end
-
-  def drive_busca
-    render json: { itens: Ramon::DriveClient.search(params[:q]) }
   end
 
   def processos

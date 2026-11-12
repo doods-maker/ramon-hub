@@ -33,9 +33,9 @@ RSpec.describe 'Public ZapSign Webhooks API', type: :request do
     expect { post_webhook({ token: '' }) }.not_to have_enqueued_job(Ramon::ZapsignLeadStatusJob)
   end
 
-  it 'gatilho comum (N1 = B): enfileira a conferência de sempre e o fluxo comum de "Assinatura do Painel" ouve' do
+  it 'o aviso só enfileira a conferência: o gatilho "Assinatura do Painel" espera o ZapSign confirmar (decisão de 12/11)' do
     comum = fluxo_publicado(assinatura.portal_cliente.account, grafo_linear({ 'tipo' => 'assinatura_painel' }))
     expect { post_webhook({ token: 'doc-1' }) }.to have_enqueued_job(Ramon::ZapsignStatusJob).with(assinatura.id)
-    expect(comum.execucoes.sole).to have_attributes(alvo: assinatura, ensaio: false)
+    expect(comum.execucoes).to be_empty
   end
 end

@@ -10,7 +10,7 @@
     "o_que_mexe": [
       "A assinatura no Painel do Cliente (status e data da assinatura).",
       "Nada no lead: sem histórico, sino ou push.",
-      "Dispara o gatilho \"Assinatura do Painel do Cliente mudou (ZapSign)\" para os seus fluxos — na chegada do aviso, antes da conferência no ZapSign."
+      "Dispara o gatilho \"Cliente assinou pelo Painel do Cliente (ZapSign)\" para os seus fluxos — depois da conferência no ZapSign, só quando a assinatura é confirmada; recusa e ZapSign fora do ar não disparam (decisão do Eduardo, 12/11/2026)."
     ],
     "travas": [
       "O aviso do ZapSign só é aceito com o segredo combinado.",
@@ -21,7 +21,7 @@
     ],
     "por_que": "Decisão do Eduardo (08/10): fica no código. É a atualização de um registro do Painel do Cliente a partir do ZapSign, sem escolha a fazer — não há o que desenhar.",
     "mudar": {
-      "pedido": "Para acrescentar algo (ex.: um push no celular da equipe), crie um fluxo seu com o gatilho \"Assinatura do Painel do Cliente mudou (ZapSign)\" — sem mexer no código. Nesse gatilho não há lead: os passos do lead (sino, tarefa, etapa) não estão disponíveis — use Push, Esperar, Se. Para mudar a conferência ou o que o Painel mostra, peça ao Claude: \"quando o cliente assinar pelo Painel, <mudança>\".",
+      "pedido": "Para acrescentar algo (ex.: um push no celular da equipe), crie um fluxo seu com o gatilho \"Cliente assinou pelo Painel do Cliente (ZapSign)\" — sem mexer no código. Nesse gatilho não há lead: os passos do lead (sino, tarefa, etapa) não estão disponíveis — use Push, Esperar, Se. Para mudar a conferência ou o que o Painel mostra, peça ao Claude: \"quando o cliente assinar pelo Painel, <mudança>\".",
       "arquivos": [
         "app/controllers/public/api/v1/zapsign_webhooks_controller.rb",
         "app/jobs/ramon/zapsign_status_job.rb",

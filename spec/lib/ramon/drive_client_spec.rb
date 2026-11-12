@@ -67,9 +67,24 @@ RSpec.describe Ramon::DriveClient do
       expect(described_class.dentro_da_raiz?('p1')).to be(false)
     end
 
-    it 'false além de 8 níveis' do
+    it 'false além de 10 níveis' do
       allow(described_class).to receive(:parent_of) { |id| "#{id}x" }
       expect(described_class.dentro_da_raiz?('p')).to be(false)
+    end
+  end
+
+  describe '.search_na_raiz' do
+    before { allow(described_class).to receive(:root_id).and_return('raiz') }
+
+    it 'deixa só o que está dentro da raiz; pergunta cada pasta ao Drive uma vez', :aggregate_failures do
+      allow(described_class).to receive(:search).with('laudo').and_return(
+        [{ id: 'a', parents: ['sub'] }, { id: 'b', parents: ['sub'] }, { id: 'c', parents: ['fora'] }, { id: 'd', parents: nil }]
+      )
+      allow(described_class).to receive(:parent_of).with('sub').and_return('raiz')
+      allow(described_class).to receive(:parent_of).with('fora').and_return(nil)
+
+      expect(described_class.search_na_raiz('laudo').pluck(:id)).to eq(%w[a b])
+      expect(described_class).to have_received(:parent_of).with('sub').once
     end
   end
 
