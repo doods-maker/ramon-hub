@@ -105,6 +105,7 @@ RSpec.describe Captain::Tools::Copilot::GetConversationService do
     # ramon: conversa da Equipe nunca vai para a IA (ADR 0011)
     context 'when the conversation is in the Equipe inbox' do
       it 'answers as not found, even with a message inside' do
+        AccountUser.find_by(user: user, account: account).update!(role: :administrator) # admin passa pelo filtro; só o fora_da_caixa barra
         Ramon::Equipe.sincronizar(account, criar: true)
         geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
         create(:message, account: account, inbox: geral.inbox, conversation: geral, sender: user, message_type: :outgoing, content: 'sigilo')
@@ -129,6 +130,29 @@ RSpec.describe Captain::Tools::Copilot::GetConversationService do
 
       it 'returns the conversation when it is assigned to the agent' do
         conversation.update!(assignee: user)
+
+        expect(service.execute(conversation_id: conversation.display_id)).to eq(conversation.to_llm_text)
+      end
+    end
+
+    # ramon: caminho principal do ADR 0004, sem custom role — agente puro, fila do time e admin
+    context 'when a plain agent asks for a conversation outside their inboxes' do
+      let(:conversation) { create(:conversation, account: account, inbox: create(:inbox, account: account)) }
+
+      it 'answers as not found' do
+        expect(service.execute(conversation_id: conversation.display_id)).to eq('Conversation not found')
+      end
+
+      it 'returns the conversation when it is in the queue of one of their teams' do
+        team = create(:team, account: account)
+        create(:team_member, team: team, user: user)
+        conversation.update!(team: team)
+
+        expect(service.execute(conversation_id: conversation.display_id)).to eq(conversation.to_llm_text)
+      end
+
+      it 'returns it to an administrator' do
+        AccountUser.find_by(user: user, account: account).update!(role: :administrator)
 
         expect(service.execute(conversation_id: conversation.display_id)).to eq(conversation.to_llm_text)
       end
