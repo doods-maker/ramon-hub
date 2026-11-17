@@ -121,4 +121,75 @@ describe('ConversationDock', () => {
       false
     );
   });
+  // Troca rápida de dock: o fetch atrasado de A não pode ativar A depois de B.
+  const buildRace = () => {
+    let resolveA;
+    const chatB = { id: 7, meta: { sender: { name: 'B' } } };
+    const loaded = { 7: chatB };
+    const setActiveChat = vi.fn();
+    const store = createStore({
+      state: { dockId: 42 },
+      mutations: {
+        setDock: (s, id) => {
+          s.dockId = id;
+        },
+      },
+      modules: {
+        leads: {
+          namespaced: true,
+          getters: {
+            getDockConversationId: (_s, _g, root) => root.dockId,
+            getSelectedLead: () => null,
+          },
+          actions: { closeDock: vi.fn() },
+        },
+        conversations: {
+          namespaced: true,
+          getters: {
+            getConversationById: () => id => loaded[id],
+            getSelectedChat: () => ({}),
+          },
+          actions: {
+            getConversation: () =>
+              new Promise(r => {
+                resolveA = () => {
+                  loaded[42] = chat;
+                  r();
+                };
+              }),
+            setActiveChat,
+          },
+        },
+      },
+    });
+    mount(ConversationDock, {
+      global: {
+        plugins: [store],
+        mocks: { $t: k => k },
+        stubs: { ConversationBox: true },
+      },
+    });
+    return { store, setActiveChat, chatB, resolve: () => resolveA() };
+  };
+
+  it('ignores a late fetch when the dock switched to another conversation', async () => {
+    const { store, setActiveChat, chatB, resolve } = buildRace();
+    store.commit('setDock', 7);
+    await flushPromises();
+    resolve();
+    await flushPromises();
+    expect(setActiveChat).toHaveBeenCalledTimes(1);
+    expect(setActiveChat).toHaveBeenCalledWith(expect.anything(), {
+      data: chatB,
+    });
+  });
+
+  it('ignores a late fetch when the dock was closed', async () => {
+    const { store, setActiveChat, resolve } = buildRace();
+    store.commit('setDock', null);
+    await flushPromises();
+    resolve();
+    await flushPromises();
+    expect(setActiveChat).not.toHaveBeenCalled();
+  });
 });

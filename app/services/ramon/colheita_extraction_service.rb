@@ -143,7 +143,7 @@ class Ramon::ColheitaExtractionService
     contact = @lead.contact
     return if contact.blank? || !cliente.is_a?(Hash)
     # Com representante, quem conversa não é o autor: CPF/nascimento da colheita são do beneficiário.
-    return if cliente.dig('representante', 'nome').present?
+    return if representante?(cliente)
 
     updates = contact_updates(contact, cliente)
     return if updates.empty?
@@ -152,6 +152,12 @@ class Ramon::ColheitaExtractionService
     # CPF inválido/duplicado não pode derrubar a colheita: tenta sem ele.
     updates.delete(:cpf)
     contact.reload.update(updates) if updates.any?
+  end
+
+  # A IA às vezes manda o representante como texto ("mãe") em vez de objeto — dig estouraria.
+  def representante?(cliente)
+    rep = cliente['representante']
+    rep.is_a?(Hash) ? rep['nome'].present? : rep.present?
   end
 
   def contact_updates(contact, cliente)

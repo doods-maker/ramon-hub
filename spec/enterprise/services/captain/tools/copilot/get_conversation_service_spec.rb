@@ -113,9 +113,32 @@ RSpec.describe Captain::Tools::Copilot::GetConversationService do
       end
     end
 
+    # ramon: agente só lê o que está no escopo dele (caixa de que é membro, atribuição ou time — ADR 0004)
+    context 'when the agent has no access to the conversation' do
+      let(:custom_role) { create(:custom_role, account: account, permissions: ['conversation_participating_manage']) }
+      let(:other_agent) { create(:user, account: account) }
+      let(:conversation) { create(:conversation, account: account, inbox: create(:inbox, account: account), assignee: other_agent) }
+
+      before { AccountUser.find_by(user: user, account: account).update(role: :agent, custom_role: custom_role) }
+
+      it 'answers as not found' do
+        create(:message, conversation: conversation, message_type: 'outgoing', content: 'Nota sigilosa', private: true)
+
+        expect(service.execute(conversation_id: conversation.display_id)).to eq('Conversation not found')
+      end
+
+      it 'returns the conversation when it is assigned to the agent' do
+        conversation.update!(assignee: user)
+
+        expect(service.execute(conversation_id: conversation.display_id)).to eq(conversation.to_llm_text)
+      end
+    end
+
     context 'when conversation exists' do
       let(:inbox) { create(:inbox, account: account) }
       let(:conversation) { create(:conversation, account: account, inbox: inbox) }
+
+      before { create(:inbox_member, user: user, inbox: inbox) }
 
       it 'returns the conversation in llm text format' do
         result = service.execute(conversation_id: conversation.display_id)

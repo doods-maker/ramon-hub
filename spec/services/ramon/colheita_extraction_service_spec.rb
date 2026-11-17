@@ -245,6 +245,16 @@ RSpec.describe Ramon::ColheitaExtractionService do
       expect(contact.data_nascimento).to be_nil
     end
 
+    it 'representante em texto também bloqueia cpf/nascimento e não derruba a colheita' do
+      json = colheita_json_cliente('cpf' => '529.982.247-25', 'nascimento' => '1985-03-10', 'representante' => 'mãe')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(json))
+      described_class.new(lead).perform
+      contact.reload
+      expect(contact.cpf).to be_nil
+      expect(contact.data_nascimento).to be_nil
+      expect(lead.reload.custom_attributes.dig('colheita', 'dados', 'cliente', 'representante')).to eq('mãe')
+    end
+
     it 'bloco fora da tese não chega ao banco' do
       base = JSON.parse(colheita_json).merge('maternidade' => { 'parto_em' => '2025-01-01' })
       allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(base.to_json))

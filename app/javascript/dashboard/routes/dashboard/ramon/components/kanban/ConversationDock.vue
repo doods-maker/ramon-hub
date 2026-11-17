@@ -40,6 +40,8 @@ const activate = async id => {
   } catch (e) {
     // segue: a checagem abaixo decide pelo que ficou (ou não) no store
   }
+  // Resposta velha: o dock já trocou de conversa (ou fechou) durante o fetch.
+  if (Number(id) !== Number(dockId.value)) return;
   const conversation = store.getters['conversations/getConversationById'](id);
   if (conversation) {
     store.dispatch('conversations/setActiveChat', { data: conversation });
