@@ -27,14 +27,13 @@ module Ramon::CopilotoPainel
     end
   end
 
-  # Admin vê qualquer conversa da conta; agente só as das caixas dele (o job roda no Sidekiq: sem Current.user/account).
+  # Mesmo escopo da tela (ADR 0004: caixa, atribuição, time; admin vê tudo) e a caixa Equipe nunca vai para a IA
+  # (ADR 0011). O job roda no Sidekiq: sem Current.user/account, por isso user e account vão explícitos.
   def conversa_visivel(account, display_id, user)
     return if display_id.blank? || user.nil?
 
-    conversas = account.conversations
-    admin = user.account_users.find_by(account_id: account.id)&.administrator?
-    conversas = conversas.where(inbox_id: user.inboxes.select(:id)) unless admin
-    conversas.find_by(display_id: display_id)
+    Conversations::PermissionFilterService.new(Ramon::Equipe.fora_da_caixa(account.conversations), user, account)
+                                          .perform.find_by(display_id: display_id)
   end
 
   def nome_cliente(lead, conversa)

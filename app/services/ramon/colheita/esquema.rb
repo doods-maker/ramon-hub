@@ -128,6 +128,12 @@ module Ramon::Colheita::Esquema # rubocop:disable Metrics/ModuleLength -- o mód
     [:ir, /isen[cç][aã]o de IR|imposto de renda/i, %w[saude ir]]
   ].freeze
 
+  # O esquema pede {nome:, parentesco:, motivo:}, mas a IA às vezes manda texto ("mãe"): os dois contam.
+  def self.representante?(cliente)
+    rep = cliente.is_a?(Hash) ? cliente['representante'] : nil
+    rep.is_a?(Hash) ? rep['nome'].present? : rep.present?
+  end
+
   def self.tese(thesis_name)
     TESES.find { |_, regex, _| thesis_name.to_s.match?(regex) }&.first
   end

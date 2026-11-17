@@ -40,6 +40,20 @@ RSpec.describe Ramon::CopilotoPainel do
       expect(described_class.contexto(account, conversa.display_id, agente)).to include('cliente Maria Souza')
     end
 
+    it 'agente com a conversa atribuída a ele recebe o caso mesmo fora da caixa (ADR 0004)' do
+      create(:lead, account: account, conversation_id: conversa.id, name: 'Maria Souza')
+      agente = create(:user, account: account, role: :agent)
+      conversa.update!(assignee: agente)
+
+      expect(described_class.contexto(account, conversa.display_id, agente)).to include('cliente Maria Souza')
+    end
+
+    it 'conversa da caixa Equipe nunca vai para a IA, nem para o admin (ADR 0011)' do
+      da_equipe = create(:conversation, account: account, inbox: create(:inbox, account: account, equipe: true))
+
+      expect(described_class.contexto(account, da_equipe.display_id, admin)).to include('nenhuma conversa aberta')
+    end
+
     it 'sem conversa aberta diz isso (e a data)' do
       expect(described_class.contexto(account, nil, admin)).to eq('Contexto: hoje é 07/10/2026; nenhuma conversa aberta na tela.')
     end

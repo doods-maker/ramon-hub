@@ -81,8 +81,11 @@ class Ramon::Colheita::Atendimento
   end
 
   def representante
-    rep = @dados.dig('cliente', 'representante')
-    return unless rep.is_a?(Hash) && rep['nome'].present?
+    return unless Ramon::Colheita::Esquema.representante?(@dados['cliente'])
+
+    rep = @dados['cliente']['representante']
+    return rep.strip if rep.is_a?(String) # a IA às vezes manda texto ("mãe") em vez do objeto
+    return unless rep.is_a?(Hash)
 
     texto = rep['nome'].to_s
     texto += " (#{rep['parentesco']})" if rep['parentesco'].present?

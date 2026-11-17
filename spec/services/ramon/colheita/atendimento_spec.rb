@@ -55,6 +55,11 @@ RSpec.describe Ramon::Colheita::Atendimento do
     expect(md).not_to include('Quem conversou')
   end
 
+  it 'mostra o representante que a IA mandou como texto' do
+    colheita['dados']['cliente']['representante'] = 'mãe'
+    expect(md).to include('- **Quem conversou:** mãe')
+  end
+
   it 'marca fonte (dd/mm) e (confirmar) e converte datas' do
     expect(md).to include('- Parou de trabalhar em: 15/05/2024 (02/06)')
     expect(md).to include('- Limitações atuais: não levanta o braço (confirmar)')

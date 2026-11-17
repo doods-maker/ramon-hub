@@ -135,8 +135,10 @@ class Ramon::ZapsignContractService
 
   # Com representante a colheita descreve o beneficiário, não quem assina: a equipe preenche à mão.
   def colheita_cliente
-    cliente = @lead.custom_attributes&.dig('colheita', 'dados', 'cliente') || {}
-    cliente.dig('representante', 'nome').present? ? {} : cliente
+    cliente = @lead.custom_attributes&.dig('colheita', 'dados', 'cliente')
+    return {} if !cliente.is_a?(Hash) || Ramon::Colheita::Esquema.representante?(cliente)
+
+    cliente
   end
 
   def estado_civil

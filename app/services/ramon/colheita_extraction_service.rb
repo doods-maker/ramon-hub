@@ -143,7 +143,7 @@ class Ramon::ColheitaExtractionService
     contact = @lead.contact
     return if contact.blank? || !cliente.is_a?(Hash)
     # Com representante, quem conversa não é o autor: CPF/nascimento da colheita são do beneficiário.
-    return if cliente.dig('representante', 'nome').present?
+    return if Ramon::Colheita::Esquema.representante?(cliente)
 
     updates = contact_updates(contact, cliente)
     return if updates.empty?

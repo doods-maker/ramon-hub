@@ -155,6 +155,17 @@ RSpec.describe Ramon::ZapsignContractService do
     expect(preview['dados'].values).not_to include('casado', 'montador')
   end
 
+  it 'com representante em texto (como a IA às vezes manda), não quebra e não usa a colheita' do
+    lead.update!(custom_attributes: { 'colheita' => { 'dados' => { 'cliente' => {
+                   'estado_civil' => 'casado', 'endereco' => 'Rua X, 1', 'representante' => 'mãe'
+                 } } } })
+
+    preview = described_class.new(lead.reload).preview
+
+    expect(preview['dados']).not_to include('rua' => 'Rua X, 1')
+    expect(preview['dados'].values).not_to include('casado')
+  end
+
   it 'sem endereço no contato cai na colheita (rua inteira) e na cidade do contato' do
     contact.update!(additional_attributes: { 'city' => 'Laguna' })
 
