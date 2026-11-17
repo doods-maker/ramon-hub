@@ -82,6 +82,7 @@ class Ramon::Colheita::Atendimento
 
   def representante
     rep = @dados.dig('cliente', 'representante')
+    return rep.strip.presence if rep.is_a?(String) # a IA às vezes manda texto ("mãe") em vez do objeto
     return unless rep.is_a?(Hash) && rep['nome'].present?
 
     texto = rep['nome'].to_s

@@ -1,6 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe Ramon::Colheita::Esquema do
+  it 'representante? aceita o objeto do esquema e o texto que a IA às vezes manda' do
+    expect(described_class.representante?('representante' => { 'nome' => 'Ana' })).to be(true)
+    expect(described_class.representante?('representante' => 'mãe')).to be(true)
+    expect(described_class.representante?('representante' => { 'nome' => nil })).to be(false)
+    expect(described_class.representante?('representante' => nil)).to be(false)
+    expect(described_class.representante?('sem cliente')).to be(false)
+  end
+
   it 'B31 = núcleo + segurado, saude, incapacidade' do
     expect(described_class.blocos_para('Auxílio por incapacidade temporária (auxílio-doença / B31)'))
       .to eq(%w[cliente beneficios fechamento outras_teses_sinal segurado saude incapacidade])
