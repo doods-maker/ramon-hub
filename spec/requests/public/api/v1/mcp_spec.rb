@@ -412,4 +412,87 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
       expect(response.parsed_body['error']['code']).to eq(-32_600)
     end
   end
+
+  # Relatório pós-contato: o Claude da recepção lê o WhatsApp do cliente no hub e registra o relatório como nota.
+  describe 'ferramentas do hub (conversas do cliente)' do
+    let(:account) { create(:account) }
+    let(:inbox) { create(:inbox, account: account) }
+    let(:atendente) { create(:user, account: account, name: 'Thais') }
+    let(:contact) { create(:contact, account: account, name: 'Maria', phone_number: '+5548999887766') }
+    let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact) }
+
+    def chamar(nome, argumentos)
+      with_modified_env(RAMON_LEAD_CAPTURE_ACCOUNT_ID: account.id.to_s) do
+        post_mcp(rpc('tools/call', { name: nome, arguments: argumentos }))
+      end
+      response.parsed_body['result']
+    end
+
+    def mensagens_lidas(termo)
+      result = chamar('hub_conversas_cliente', { telefone_ou_cpf: termo })
+      JSON.parse(result['content'].first['text'])['contatos'].flat_map { |c| c['conversas'] }.flat_map { |c| c['mensagens'] }
+    end
+
+    def mensagem(conversa, tipo, texto, **extra)
+      create(:message, account: account, conversation: conversa, inbox: conversa.inbox, message_type: tipo, content: texto, **extra)
+    end
+
+    it 'anuncia as duas ferramentas do hub' do
+      post_mcp(rpc('tools/list'))
+      expect(response.parsed_body['result']['tools'].pluck('name')).to include('hub_conversas_cliente', 'hub_criar_nota')
+    end
+
+    it 'acha o cliente pelo celular em outra grafia e devolve cliente, escritório e nota, sem senha' do
+      mensagem(conversation, :incoming, 'quando sai meu benefício? senha gov: Tx9#kLm2')
+      mensagem(conversation, :outgoing, 'Estamos acompanhando, Maria.', sender: atendente)
+      mensagem(conversation, :outgoing, 'cliente ligou reclamando da demora', sender: atendente, private: true)
+
+      lidas = mensagens_lidas('(48) 9988-7766')
+
+      expect(lidas.pluck('de')).to eq(%w[cliente escritorio nota])
+      expect(lidas.first['texto']).to eq('quando sai meu benefício? senha gov: [senha]')
+      expect(lidas.last).to include('autor' => 'Thais', 'texto' => 'cliente ligou reclamando da demora')
+    end
+
+    it 'deixa de fora a caixa Equipe e o que é mais velho que a janela' do
+      mensagem(conversation, :incoming, 'mensagem de dois meses atrás', created_at: 60.days.ago)
+      mensagem(conversation, :incoming, 'mensagem recente')
+      equipe = create(:conversation, account: account, inbox: create(:inbox, account: account, equipe: true), contact: contact)
+      mensagem(equipe, :outgoing, 'conversa interna da equipe', sender: atendente)
+
+      expect(mensagens_lidas('48999887766').pluck('texto')).to eq(['mensagem recente'])
+    end
+
+    it 'recusa telefone curto demais com isError' do
+      result = chamar('hub_conversas_cliente', { telefone_ou_cpf: '9988' })
+      expect(result['isError']).to be true
+      expect(result['content'].first['text']).to include 'telefone'
+    end
+
+    it 'recusa janela fora de 1 a 365 dias com isError' do
+      result = chamar('hub_conversas_cliente', { telefone_ou_cpf: '48999887766', dias: 0 })
+      expect(result['isError']).to be true
+      expect(result['content'].first['text']).to include 'dias'
+    end
+
+    it 'grava o relatório como nota privada na conversa, que volta na leitura como nota' do
+      mensagem(conversation, :incoming, 'oi')
+
+      result = chamar('hub_criar_nota', { conversa_id: conversation.display_id, texto: 'Relatório pós-contato: risco 7/10' })
+
+      expect(result['isError']).to be false
+      nota = mensagens_lidas('48999887766').last
+      expect(nota['de']).to eq 'nota'
+      expect(nota['texto']).to include 'Relatório pós-contato: risco 7/10'
+    end
+
+    it 'não grava nota em conversa da caixa Equipe' do
+      equipe = create(:conversation, account: account, inbox: create(:inbox, account: account, equipe: true), contact: contact)
+
+      result = chamar('hub_criar_nota', { conversa_id: equipe.display_id, texto: 'não pode entrar aqui' })
+
+      expect(result['isError']).to be true
+      expect(result['content'].first['text']).to include 'não encontrada'
+    end
+  end
 end
