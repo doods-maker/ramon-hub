@@ -469,6 +469,12 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
       expect(result['content'].first['text']).to include 'telefone'
     end
 
+    it 'recusa janela fora de 1 a 365 dias com isError' do
+      result = chamar('hub_conversas_cliente', { telefone_ou_cpf: '48999887766', dias: 0 })
+      expect(result['isError']).to be true
+      expect(result['content'].first['text']).to include 'dias'
+    end
+
     it 'grava o relatório como nota privada na conversa, que volta na leitura como nota' do
       mensagem(conversation, :incoming, 'oi')
 

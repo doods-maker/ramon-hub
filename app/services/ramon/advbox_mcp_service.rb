@@ -178,7 +178,8 @@ class Ramon::AdvboxMcpService
     { name: 'hub_conversas_cliente',
       description: 'Conversas de WhatsApp do cliente no Ramon Hub (mensagens do cliente, do escritório, áudios transcritos e notas ' \
                    'internas da equipe), achadas pelo celular (qualquer grafia) ou CPF — use o celular do advbox_cliente. ' \
-                   'Traz também os casos do cliente no hub. Cliente que nunca falou pelo hub volta com contatos vazio.',
+                   'Traz também os casos do cliente no hub. Cliente que nunca falou pelo hub volta com contatos vazio; sem conversa na ' \
+                   'janela, conversas vazio. cortada=true: só as 200 mensagens mais recentes da conversa vieram.',
       inputSchema: { type: 'object',
                      properties: { telefone_ou_cpf: { type: 'string', description: 'Celular com DDD ou CPF' },
                                    dias: { type: 'integer', description: 'Janela em dias (padrão 30, máximo 365)' } },

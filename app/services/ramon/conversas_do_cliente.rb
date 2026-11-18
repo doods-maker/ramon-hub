@@ -7,6 +7,9 @@ module Ramon::ConversasDoCliente
   DIAS_MAX = 365
   LIMITE_MENSAGENS = 200
   LIMITE_CONTATOS = 5
+  # ponytail: teto de payload = contatos × conversas × mensagens; com janela de 365 dias pode pesar no contexto do Claude.
+  LIMITE_CONVERSAS = 10
+  LIMITE_NOTA = 20_000
   MARCA_NOTA = '📋 Registrado pelo Claude (conector do hub)'.freeze
 
   module_function
@@ -17,11 +20,12 @@ module Ramon::ConversasDoCliente
     raise ArgumentError, 'informe o telefone com DDD ou o CPF do cliente (10+ dígitos)' if contatos.nil?
 
     desde = janela(dias).days.ago
-    { desde: desde.to_date.iso8601, contatos: contatos.limit(LIMITE_CONTATOS).map { |c| contato(account, c, desde) } }
+    { desde: desde.to_date.iso8601, contatos: contatos.order(:id).limit(LIMITE_CONTATOS).map { |c| contato(account, c, desde) } }
   end
 
   def anotar(account, conversa_id, texto)
     raise ArgumentError, 'texto da nota vazio' if texto.to_s.strip.empty?
+    raise ArgumentError, "nota longa demais (máximo #{LIMITE_NOTA} caracteres)" if texto.to_s.length > LIMITE_NOTA
 
     conversa = Ramon::Equipe.fora_da_caixa(account.conversations).find_by(display_id: conversa_id)
     raise ArgumentError, "conversa #{conversa_id} não encontrada" if conversa.nil?
@@ -31,14 +35,20 @@ module Ramon::ConversasDoCliente
   end
 
   def janela(dias)
-    dias.nil? ? DIAS_PADRAO : Integer(dias).clamp(1, DIAS_MAX)
+    return DIAS_PADRAO if dias.nil?
+
+    numero = Integer(dias)
+    raise ArgumentError, "dias precisa ser de 1 a #{DIAS_MAX}" unless numero.between?(1, DIAS_MAX)
+
+    numero
   end
 
   def contato(account, contact, desde)
     { contato_id: contact.id, nome: contact.name, telefone: contact.phone_number, cpf: contact.cpf,
       casos: account.leads.where(contact_id: contact.id).includes(:thesis, :lead_stage).map { |l| caso(l) },
       conversas: Ramon::Equipe.fora_da_caixa(contact.conversations).where(last_activity_at: desde..)
-                              .includes(:inbox, :assignee).order(last_activity_at: :desc).map { |c| conversa(c, desde) } }
+                              .includes(:inbox, :assignee).order(last_activity_at: :desc).limit(LIMITE_CONVERSAS)
+                              .map { |c| conversa(c, desde) } }
   end
 
   def caso(lead)
@@ -46,16 +56,19 @@ module Ramon::ConversasDoCliente
       perdido: lead.lost_at.present?, advbox_processo_id: lead.custom_attributes&.dig('advbox', 'lawsuits_id') }
   end
 
+  # cortada: bateu o teto de mensagens — as mais antigas da janela ficaram de fora.
   def conversa(conversation, desde)
+    registros = mensagens(conversation, desde)
     { conversa_id: conversation.display_id, caixa: conversation.inbox&.name, status: conversation.status,
-      atendente: conversation.assignee&.name, mensagens: mensagens(conversation, desde) }
+      atendente: conversation.assignee&.name, cortada: registros.size == LIMITE_MENSAGENS,
+      mensagens: registros.filter_map { |m| mensagem(m) } }
   end
 
   # Rascunho do Copiloto (Captain::Assistant) fica de fora: é sugestão não enviada. IS DISTINCT FROM mantém sender NULL.
   def mensagens(conversation, desde)
     conversation.messages.includes(:attachments, :sender).where(created_at: desde..).where.not(message_type: %i[activity template])
                 .where("messages.sender_type IS DISTINCT FROM 'Captain::Assistant'")
-                .reorder(created_at: :desc, id: :desc).limit(LIMITE_MENSAGENS).to_a.reverse.filter_map { |m| mensagem(m) }
+                .reorder(created_at: :desc, id: :desc).limit(LIMITE_MENSAGENS).to_a.reverse
   end
 
   # content_for_llm: traz a transcrição do áudio e passa pelo filtro de senha.
