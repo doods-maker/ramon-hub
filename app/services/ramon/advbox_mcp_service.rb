@@ -5,14 +5,16 @@
 # escopo aprovado pelo Eduardo 17/07/2026): além da leitura, expõe TODA a
 # escrita que a API oferece — tarefa, movimentação, cliente, processo
 # (criar/editar) e transação financeira (criar/editar). A API não tem
-# concluir/editar/apagar tarefa nem delete de nada.
+# concluir/editar/apagar tarefa nem delete de nada. v1.4 (18/11/2026): hub_conversas_cliente e hub_criar_nota
+# (Ramon::ConversasDoCliente) — o Claude da recepção lê o WhatsApp do cliente no hub e grava o relatório pós-contato.
 class Ramon::AdvboxMcpService
   PROTOCOL_VERSIONS = %w[2025-06-18 2025-03-26 2024-11-05].freeze
-  SERVER_INFO = { name: 'ramon-hub-advbox', version: '1.3.0' }.freeze
+  SERVER_INFO = { name: 'ramon-hub-advbox', version: '1.4.0' }.freeze
   INSTRUCTIONS = 'Consulta e escrita na gestão processual (AdvBox) da banca Ramon Antônio Advogados. ' \
                  'Datas no formato YYYY-MM-DD. Resultados são JSON cru da API; pagine com "limite" quando a lista vier grande. ' \
                  'As ferramentas advbox_criar_*/advbox_editar_* gravam DE VERDADE no AdvBox: antes de usar, chame advbox_configuracoes ' \
-                 'para obter os IDs (responsável, etapa, tipos, origem, contas) e confirme os dados com o usuário.'.freeze
+                 'para obter os IDs (responsável, etapa, tipos, origem, contas) e confirme os dados com o usuário. ' \
+                 'As ferramentas hub_* leem e anotam as conversas de WhatsApp do cliente no Ramon Hub.'.freeze
 
   LIMITE = { type: 'integer', description: 'Máximo de registros (padrão razoável; use valores pequenos)' }.freeze
   TOOLS = [
@@ -172,7 +174,21 @@ class Ramon::AdvboxMcpService
                                    conta_id: { type: 'integer' }, categoria_id: { type: 'integer' }, centro_custo_id: { type: 'integer' },
                                    cliente_id: { type: 'integer' }, processo_id: { type: 'integer' }, descricao: { type: 'string' },
                                    data_pagamento: { type: 'string', description: 'YYYY-MM-DD' } },
-                     required: ['id'] } }
+                     required: ['id'] } },
+    { name: 'hub_conversas_cliente',
+      description: 'Conversas de WhatsApp do cliente no Ramon Hub (mensagens do cliente, do escritório, áudios transcritos e notas ' \
+                   'internas da equipe), achadas pelo celular (qualquer grafia) ou CPF — use o celular do advbox_cliente. ' \
+                   'Traz também os casos do cliente no hub. Cliente que nunca falou pelo hub volta com contatos vazio.',
+      inputSchema: { type: 'object',
+                     properties: { telefone_ou_cpf: { type: 'string', description: 'Celular com DDD ou CPF' },
+                                   dias: { type: 'integer', description: 'Janela em dias (padrão 30, máximo 365)' } },
+                     required: ['telefone_ou_cpf'] } },
+    { name: 'hub_criar_nota',
+      description: 'Grava uma nota privada (só a equipe vê) numa conversa do Ramon Hub — ex.: o relatório pós-contato. ' \
+                   'conversa_id vem de hub_conversas_cliente. Mostre o texto e confirme com o usuário antes de gravar.',
+      inputSchema: { type: 'object',
+                     properties: { conversa_id: { type: 'integer' }, texto: { type: 'string' } },
+                     required: %w[conversa_id texto] } }
   ].each { |t| t[:inputSchema][:additionalProperties] = false }.freeze
 
   PROCESSO_FILTROS = { nome: :name, cpf: :identification, numero_processo: :process_number,
@@ -206,7 +222,9 @@ class Ramon::AdvboxMcpService
     'advbox_criar_processo' => ->(a) { Ramon::AdvboxClient.create_lawsuit(processo_payload(a).merge(customers_id: a.fetch('cliente_ids'))) },
     'advbox_editar_processo' => ->(a) { Ramon::AdvboxClient.update_lawsuit(a.fetch('id'), processo_payload(a)) },
     'advbox_criar_transacao' => ->(a) { Ramon::AdvboxClient.create_transaction(transacao_payload(a)) },
-    'advbox_editar_transacao' => ->(a) { Ramon::AdvboxClient.update_transaction(a.fetch('id'), transacao_payload(a)) }
+    'advbox_editar_transacao' => ->(a) { Ramon::AdvboxClient.update_transaction(a.fetch('id'), transacao_payload(a)) },
+    'hub_conversas_cliente' => ->(a) { Ramon::ConversasDoCliente.ler(conta_hub, a.fetch('telefone_ou_cpf'), dias: a['dias']) },
+    'hub_criar_nota' => ->(a) { Ramon::ConversasDoCliente.anotar(conta_hub, a.fetch('conversa_id'), a.fetch('texto')) }
   }.freeze
   ESCRITAS = FETCHERS.keys.grep(/criar|editar/).freeze
 
@@ -259,6 +277,12 @@ class Ramon::AdvboxMcpService
       value = args[pt.to_s]
       query[api] = value if value.present?
     end
+  end
+
+  # A conta do escritório (a mesma que recebe os leads das LPs).
+  def self.conta_hub
+    Account.find_by(id: ENV.fetch('RAMON_LEAD_CAPTURE_ACCOUNT_ID', nil)) ||
+      raise(ArgumentError, 'conta do hub não configurada (RAMON_LEAD_CAPTURE_ACCOUNT_ID)')
   end
 
   def self.dossie(processo_id)
