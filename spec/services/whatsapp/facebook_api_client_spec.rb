@@ -235,6 +235,36 @@ describe Whatsapp::FacebookApiClient do
     end
   end
 
+  describe '#request_smb_app_data' do
+    let(:phone_number_id) { 'test_phone_id' }
+
+    context 'when successful' do
+      before do
+        stub_request(:post, "https://graph.facebook.com/#{api_version}/#{phone_number_id}/smb_app_data")
+          .with(
+            headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' },
+            body: { messaging_product: 'whatsapp', sync_type: 'history' }.to_json
+          )
+          .to_return(status: 200, body: { request_id: 'req_123' }.to_json, headers: { 'Content-Type' => 'application/json' })
+      end
+
+      it 'asks Meta to sync the business app data and returns the request id' do
+        expect(api_client.request_smb_app_data(phone_number_id, 'history')['request_id']).to eq('req_123')
+      end
+    end
+
+    context 'when failed' do
+      before do
+        stub_request(:post, "https://graph.facebook.com/#{api_version}/#{phone_number_id}/smb_app_data")
+          .to_return(status: 400, body: { error: 'Sync window expired' }.to_json)
+      end
+
+      it 'raises an error' do
+        expect { api_client.request_smb_app_data(phone_number_id, 'smb_app_state_sync') }.to raise_error(/SMB app data sync failed/)
+      end
+    end
+  end
+
   describe '#unsubscribe_waba_webhook' do
     let(:waba_id) { 'test_waba_id' }
 

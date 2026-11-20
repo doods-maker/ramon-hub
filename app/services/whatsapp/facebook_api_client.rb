@@ -114,6 +114,18 @@ class Whatsapp::FacebookApiClient
     handle_response(response, 'Webhook callback override failed')
   end
 
+  # FORK(ramon): coexistência — pede à Meta os contatos (`smb_app_state_sync`) ou o histórico (`history`) do app.
+  # Só vale uma vez, até 24 h depois do onboarding; repetir exige desconectar e refazer o Embedded Signup.
+  def request_smb_app_data(phone_number_id, sync_type)
+    response = HTTParty.post(
+      "#{BASE_URI}/#{@api_version}/#{phone_number_id}/smb_app_data",
+      headers: request_headers,
+      body: { messaging_product: 'whatsapp', sync_type: sync_type }.to_json
+    )
+
+    handle_response(response, 'SMB app data sync failed')
+  end
+
   def unsubscribe_waba_webhook(waba_id)
     response = HTTParty.delete(
       "#{BASE_URI}/#{@api_version}/#{waba_id}/subscribed_apps",
