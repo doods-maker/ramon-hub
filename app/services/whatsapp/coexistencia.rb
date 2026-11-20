@@ -10,4 +10,19 @@ module Whatsapp::Coexistencia
       channel.save!(validate: false)
     end
   end
+
+  # Mesmo caminho do incoming normal (normalização BR/AR do source_id + ContactInboxWithContactBuilder, que
+  # reaproveita contato pelo telefone), sem passar pelo serviço de mensagem, que dispara lead e IA.
+  def self.contact_inbox!(inbox, telefone, nome)
+    source_id = Whatsapp::PhoneNumberNormalizationService.new(inbox).normalize_and_find_contact_by_provider(telefone, :cloud)
+    ContactInboxSourceIdResolver.new(
+      inbox: inbox, source_ids: [source_id], contact_attributes: { name: nome.presence || "+#{telefone}", phone_number: "+#{telefone}" }
+    ).perform
+  end
+
+  # Telefone em dígitos, até 15 (E.164); aceita "+", espaço, hífen e parênteses. BSUID ("BR.123...") não vira contato.
+  def self.telefone(valor)
+    digitos = valor.to_s.delete(' +()-')
+    digitos if digitos.match?(/\A\d{1,15}\z/)
+  end
 end

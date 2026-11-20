@@ -293,6 +293,8 @@ en:
         list_button_label: 'Choose an item'
         call_permission_request_body: 'We would like to call you regarding your conversation.'
         unsupported_message: 'This message is unavailable.'
+        historico_midia: '[mídia do histórico — ver no celular]'
+        historico_nao_importado: '[%{tipo} — conteúdo não importado]'
       voice_call:
         twilio: 'Voice Call'
         whatsapp: 'WhatsApp Call'
