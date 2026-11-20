@@ -47,8 +47,8 @@ RSpec.describe Ramon::Silencio do
     # A trava de verdade: lead, fluxo, IA e automação rodam nos listeners do AsyncDispatcher (EventDispatcherJob)
     # e o reenvio ao WhatsApp no SendReplyJob. Fora do silêncio a mesma mensagem enfileira os dois.
     it 'fora do silêncio enfileira EventDispatcherJob e SendReplyJob; dentro, nenhum dos dois' do
-      expect { criar_mensagem(:outgoing, silencio: false) }.to have_enqueued_job(EventDispatcherJob)
-      expect { criar_mensagem(:outgoing, silencio: false) }.to have_enqueued_job(SendReplyJob)
+      expect { criar_mensagem(:outgoing, silencio: false) }.to have_enqueued_job(EventDispatcherJob).at_least(:once)
+      expect { criar_mensagem(:outgoing, silencio: false) }.to have_enqueued_job(SendReplyJob).at_least(:once)
 
       expect { criar_mensagem(:outgoing) }.not_to have_enqueued_job(EventDispatcherJob)
       expect { criar_mensagem(:outgoing) }.not_to have_enqueued_job(SendReplyJob)

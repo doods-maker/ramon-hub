@@ -467,9 +467,11 @@ RSpec.describe Webhooks::WhatsappEventsJob do
 
       it 'records PARTNER_REMOVED on the channel found by WABA id and pushes ntfy, without prompting reauthorization' do
         wb_params = account_update_params(
-          event: 'PARTNER_REMOVED',
-          waba_info: { waba_id: channel.provider_config['business_account_id'], owner_business_id: 'owner_1' },
-          disconnection_info: { reason: 'PRIMARY_INACTIVITY', initiated_by: 'SYSTEM' }
+          {
+            event: 'PARTNER_REMOVED',
+            waba_info: { waba_id: channel.provider_config['business_account_id'], owner_business_id: 'owner_1' },
+            disconnection_info: { reason: 'PRIMARY_INACTIVITY', initiated_by: 'SYSTEM' }
+          }
         )
 
         expect { job.perform_now(wb_params) }
