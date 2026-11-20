@@ -47,6 +47,17 @@ RSpec.describe Whatsapp::Coexistencia::ImportarHistoricoService do
     expect(inbox.conversations.count).to eq(1)
   end
 
+  it 'lote seguinte do mesmo contato cai na mesma conversa importada, sem duplicar mensagem' do
+    importar
+    mensagens << { from: telefone_cliente, id: 'wamid.cliente2', timestamp: '1700000200', type: 'text', text: { body: 'Mandei os laudos' } }
+
+    expect { importar }.to change(Message, :count).by(1)
+
+    conversa = inbox.conversations.sole
+    expect(conversa.messages.pluck(:source_id)).to contain_exactly('wamid.cliente1', 'wamid.escritorio1', 'wamid.cliente2')
+    expect(conversa.reload.last_activity_at).to eq(Time.zone.at(1_700_000_200))
+  end
+
   it 'thread só com wamid que já chegou não cria contato na caixa nem conversa importada' do
     create(:message, account: inbox.account, inbox: inbox, source_id: 'wamid.cliente1')
     mensagens.replace([mensagens.first])

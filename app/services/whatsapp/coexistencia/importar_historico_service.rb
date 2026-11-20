@@ -62,8 +62,14 @@ class Whatsapp::Coexistencia::ImportarHistoricoService
     return Rails.logger.info("[WHATSAPP] Coexistencia: thread sem telefone ou ja importada (canal #{@channel.id})") if telefone.blank? || novas.empty?
 
     contact_inbox = Whatsapp::Coexistencia.contact_inbox!(@inbox, telefone, thread.dig(:context, :username))
-    conversa = conversa_importada(contact_inbox, ultima_atividade(novas))
-    novas.each { |mensagem| importar_mensagem(conversa, contact_inbox.contact, mensagem) }
+    # Fases, lotes e reentregas do mesmo contato podem rodar em paralelo no Sidekiq: a trava serializa o
+    # find-or-create da conversa e as mensagens (importar_mensagem reconfere o wamid já com a trava).
+    # O commit do with_lock (e os after_commit) cai dentro do Ramon::Silencio.executar de #perform.
+    # ponytail: trava de linha por contact_inbox; se um contato tiver lotes enormes, trocar por fila por contato.
+    contact_inbox.with_lock do
+      conversa = conversa_importada(contact_inbox, ultima_atividade(novas))
+      novas.each { |mensagem| importar_mensagem(conversa, contact_inbox.contact, mensagem) }
+    end
   end
 
   def ja_importada?(mensagem)
