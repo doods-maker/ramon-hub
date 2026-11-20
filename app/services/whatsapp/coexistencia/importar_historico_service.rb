@@ -55,13 +55,19 @@ class Whatsapp::Coexistencia::ImportarHistoricoService
   end
 
   def importar_thread(thread)
-    mensagens = Array(thread[:messages])
     telefone = Whatsapp::Coexistencia.telefone(thread[:id]) || Whatsapp::Coexistencia.telefone(thread.dig(:context, :wa_id))
-    return Rails.logger.info("[WHATSAPP] Coexistencia: thread sem telefone no canal #{@channel.id}, ignorada") if telefone.blank? || mensagens.empty?
+    # Webhook pode vir repetido, e mensagens depois do onboarding já chegaram por messages/smb_message_echoes:
+    # filtra antes de criar qualquer coisa, para não nascer conversa importada vazia.
+    novas = Array(thread[:messages]).reject { |mensagem| ja_importada?(mensagem) }
+    return Rails.logger.info("[WHATSAPP] Coexistencia: thread sem telefone ou ja importada (canal #{@channel.id})") if telefone.blank? || novas.empty?
 
     contact_inbox = Whatsapp::Coexistencia.contact_inbox!(@inbox, telefone, thread.dig(:context, :username))
-    conversa = conversa_importada(contact_inbox, ultima_atividade(mensagens))
-    mensagens.each { |mensagem| importar_mensagem(conversa, contact_inbox.contact, mensagem) }
+    conversa = conversa_importada(contact_inbox, ultima_atividade(novas))
+    novas.each { |mensagem| importar_mensagem(conversa, contact_inbox.contact, mensagem) }
+  end
+
+  def ja_importada?(mensagem)
+    mensagem[:id].blank? || Message.exists?(inbox_id: @inbox.id, source_id: mensagem[:id])
   end
 
   # Uma conversa importada por contato na caixa; lotes seguintes reaproveitam.
@@ -95,9 +101,8 @@ class Whatsapp::Coexistencia::ImportarHistoricoService
     mensagem[:timestamp].present? ? Time.zone.at(mensagem[:timestamp].to_i) : Time.current
   end
 
-  # Webhook pode vir repetido, e mensagens depois do onboarding já chegaram por messages/smb_message_echoes.
   def importar_mensagem(conversa, contato, mensagem)
-    return if mensagem[:id].blank? || Message.exists?(inbox_id: @inbox.id, source_id: mensagem[:id])
+    return if ja_importada?(mensagem)
 
     conversa.messages.create!(
       account_id: @inbox.account_id, inbox_id: @inbox.id, source_id: mensagem[:id], content: conteudo(mensagem),

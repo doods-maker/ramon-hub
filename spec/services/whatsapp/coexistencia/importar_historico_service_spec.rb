@@ -47,6 +47,14 @@ RSpec.describe Whatsapp::Coexistencia::ImportarHistoricoService do
     expect(inbox.conversations.count).to eq(1)
   end
 
+  it 'thread só com wamid que já chegou não cria contato na caixa nem conversa importada' do
+    create(:message, account: inbox.account, inbox: inbox, source_id: 'wamid.cliente1')
+    mensagens.replace([mensagens.first])
+
+    expect { importar }.not_to change(ContactInbox, :count)
+    expect(inbox.conversations.where("additional_attributes ->> ? = 'true'", Whatsapp::Coexistencia::MARCA)).to be_empty
+  end
+
   it 'troca mídia sem conteúdo e tipo desconhecido por texto fixo' do
     mensagens.replace([
                         { from: telefone_cliente, id: 'wamid.midia', timestamp: '1700000000', type: 'media_placeholder' },
