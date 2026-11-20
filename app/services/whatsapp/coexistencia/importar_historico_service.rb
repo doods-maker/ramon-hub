@@ -67,12 +67,12 @@ class Whatsapp::Coexistencia::ImportarHistoricoService
   # Uma conversa importada por contato na caixa; lotes seguintes reaproveitam.
   def conversa_importada(contact_inbox, ultima)
     existente = @inbox.conversations.where(contact_id: contact_inbox.contact_id)
-                      .find_by("conversations.additional_attributes ->> 'importado_coexistencia' = 'true'")
+                      .find_by("conversations.additional_attributes ->> ? = 'true'", Whatsapp::Coexistencia::MARCA)
     return atualizar_atividade(existente, ultima) if existente
 
     conversa = Conversation.create!(account_id: @inbox.account_id, inbox_id: @inbox.id, contact_id: contact_inbox.contact_id,
                                     contact_inbox_id: contact_inbox.id, status: :resolved,
-                                    additional_attributes: { 'importado_coexistencia' => true })
+                                    additional_attributes: { Whatsapp::Coexistencia::MARCA => true })
     # before_create põe pending em caixa com bot e preenche waiting_since; a importada nasce resolvida e lida.
     # rubocop:disable Rails/SkipsModelValidations
     conversa.update_columns(status: :resolved, waiting_since: nil, agent_last_seen_at: Time.current, last_activity_at: ultima)
@@ -111,9 +111,9 @@ class Whatsapp::Coexistencia::ImportarHistoricoService
   def direcao(mensagem, contato)
     if mensagem[:from].to_s == numero_do_canal
       { message_type: :outgoing, status: :delivered, sender: nil,
-        content_attributes: { 'importado_coexistencia' => true, 'external_echo' => true } }
+        content_attributes: { Whatsapp::Coexistencia::MARCA => true, 'external_echo' => true } }
     else
-      { message_type: :incoming, status: :sent, sender: contato, content_attributes: { 'importado_coexistencia' => true } }
+      { message_type: :incoming, status: :sent, sender: contato, content_attributes: { Whatsapp::Coexistencia::MARCA => true } }
     end
   end
 

@@ -31,14 +31,14 @@ RSpec.describe Whatsapp::Coexistencia::ImportarHistoricoService do
 
     conversa = inbox.conversations.find_by!(contact_id: contato.id)
     expect(conversa).to be_resolved
-    expect(conversa.additional_attributes['importado_coexistencia']).to be(true)
+    expect(conversa.additional_attributes[Whatsapp::Coexistencia::MARCA]).to be(true)
     expect(conversa.last_activity_at).to eq(Time.zone.at(1_700_000_100))
 
     entrada, saida = conversa.messages.reorder(:created_at).to_a
     expect(entrada).to have_attributes(message_type: 'incoming', sender: contato, source_id: 'wamid.cliente1',
                                        content: 'Oi, preciso de ajuda', created_at: Time.zone.at(1_700_000_000))
     expect(saida).to have_attributes(message_type: 'outgoing', sender: nil, source_id: 'wamid.escritorio1', content: 'Claro, me conta')
-    expect(entrada.content_attributes['importado_coexistencia']).to be(true)
+    expect(entrada.content_attributes[Whatsapp::Coexistencia::MARCA]).to be(true)
   end
 
   it 'é idempotente pelo wamid e reaproveita a conversa importada' do

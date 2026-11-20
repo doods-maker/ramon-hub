@@ -1,6 +1,9 @@
 # Coexistência completa do WhatsApp (número que segue no app WhatsApp Business e também no hub).
 # Estado em provider_config['coexistencia']: pedidos de sincronização, histórico recusado, desconexão.
 module Whatsapp::Coexistencia
+  # Marca da conversa e das mensagens importadas (additional_attributes / content_attributes).
+  MARCA = 'importado_coexistencia'.freeze
+
   # Trava a linha: o job de sincronização e os webhooks (history, account_update) escrevem no mesmo jsonb.
   # validate: false pula o validate_provider_config, que reconsulta a Meta (como Channel::Whatsapp#enable_voice_calling!).
   def self.registrar!(channel, dados)
