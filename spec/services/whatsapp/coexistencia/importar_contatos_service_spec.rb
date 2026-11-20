@@ -42,6 +42,16 @@ RSpec.describe Whatsapp::Coexistencia::ImportarContatosService do
     expect(inbox.contact_inboxes.find_by(source_id: '5548999992222')).to be_present
   end
 
+  it 'telefone que o contato não aceita pula só aquele contato' do
+    value = { state_sync: [{ type: 'contact', action: 'add', contact: { full_name: 'Ruim', phone_number: '0123456789' } },
+                           { type: 'contact', action: 'add', contact: { full_name: 'Ana Souza', phone_number: '5548999993333' } }] }
+
+    described_class.new(channel: channel, value: value).perform
+
+    expect(inbox.contact_inboxes.find_by!(source_id: '5548999993333').contact.name).to eq('Ana Souza')
+    expect(inbox.contact_inboxes.find_by(source_id: '0123456789')).to be_nil
+  end
+
   it 'importa em silêncio' do
     expect { importar(action: 'add') }.not_to have_enqueued_job(EventDispatcherJob)
   end

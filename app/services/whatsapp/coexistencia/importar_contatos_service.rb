@@ -23,6 +23,9 @@ class Whatsapp::Coexistencia::ImportarContatosService
 
     contato = Whatsapp::Coexistencia.contact_inbox!(@inbox, telefone, dados[:full_name]).contact
     completar_nome(contato, dados[:full_name], telefone)
+  rescue ActiveRecord::RecordInvalid => e
+    # Telefone que o Contact não aceita perde só este contato, não o lote inteiro.
+    Rails.logger.error("[WHATSAPP] Coexistencia: contato nao importado no canal #{@channel.id}: #{e.message}")
   end
 
   # Nome editado no hub manda: só troca quando o atual está vazio ou é o próprio telefone.

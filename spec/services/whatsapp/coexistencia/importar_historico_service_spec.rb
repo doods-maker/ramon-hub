@@ -66,6 +66,18 @@ RSpec.describe Whatsapp::Coexistencia::ImportarHistoricoService do
     expect(inbox.conversations.where("additional_attributes ->> ? = 'true'", Whatsapp::Coexistencia::MARCA)).to be_empty
   end
 
+  it 'telefone que o contato não aceita pula só aquela thread e o lote segue' do
+    ruim = { id: '0123456789', context: { wa_id: '0123456789' },
+             messages: [{ from: '0123456789', id: 'wamid.ruim', timestamp: '1700000000', type: 'text', text: { body: 'oi' } }] }
+    lote[:threads].unshift(ruim)
+
+    importar
+
+    expect(Message.find_by(source_id: 'wamid.ruim')).to be_nil
+    expect(inbox.contact_inboxes.find_by!(source_id: telefone_cliente).contact.conversations.count).to eq(1)
+    expect(Message.where(source_id: %w[wamid.cliente1 wamid.escritorio1]).count).to eq(2)
+  end
+
   it 'troca mídia sem conteúdo e tipo desconhecido por texto fixo' do
     mensagens.replace([
                         { from: telefone_cliente, id: 'wamid.midia', timestamp: '1700000000', type: 'media_placeholder' },

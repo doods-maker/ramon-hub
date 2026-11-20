@@ -55,7 +55,7 @@ class Whatsapp::Coexistencia::ImportarHistoricoService
   end
 
   def importar_thread(thread)
-    telefone = Whatsapp::Coexistencia.telefone(thread[:id]) || Whatsapp::Coexistencia.telefone(thread.dig(:context, :wa_id))
+    telefone = telefone_da(thread)
     # Webhook pode vir repetido, e mensagens depois do onboarding já chegaram por messages/smb_message_echoes:
     # filtra antes de criar qualquer coisa, para não nascer conversa importada vazia.
     novas = Array(thread[:messages]).reject { |mensagem| ja_importada?(mensagem) }
@@ -70,6 +70,13 @@ class Whatsapp::Coexistencia::ImportarHistoricoService
       conversa = conversa_importada(contact_inbox, ultima_atividade(novas))
       novas.each { |mensagem| importar_mensagem(conversa, contact_inbox.contact, mensagem) }
     end
+  rescue ActiveRecord::RecordInvalid => e
+    # Telefone que o Contact não aceita perde só esta thread, não o lote inteiro.
+    Rails.logger.error("[WHATSAPP] Coexistencia: thread nao importada no canal #{@channel.id}: #{e.message}")
+  end
+
+  def telefone_da(thread)
+    Whatsapp::Coexistencia.telefone(thread[:id]) || Whatsapp::Coexistencia.telefone(thread.dig(:context, :wa_id))
   end
 
   def ja_importada?(mensagem)
