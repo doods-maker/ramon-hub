@@ -35,11 +35,20 @@ RSpec.describe Whatsapp::Coexistencia::SincronizarJob do
     expect(api_client).to have_received(:request_smb_app_data).with(phone_number_id, 'history')
   end
 
-  it 'não grava quando a Meta devolve erro HTTP, para poder pedir de novo' do
+  it 'erro HTTP definitivo da Meta (4xx) não grava, avisa no ntfy uma vez e para' do
     allow(api_client).to receive(:request_smb_app_data).and_raise(RuntimeError, 'SMB app data sync failed: {"error":"x"}')
 
-    expect { described_class.perform_now(channel.id) }.not_to raise_error
+    expect { described_class.perform_now(channel.id) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(hash_including(title: 'Sincronizacao do WhatsApp falhou')).exactly(:once)
 
+    expect(api_client).to have_received(:request_smb_app_data).once
+    expect(channel.reload.provider_config['coexistencia']).to be_blank
+  end
+
+  it 'erro passageiro da Meta (429/5xx) não grava e tenta de novo' do
+    allow(api_client).to receive(:request_smb_app_data).and_raise(Whatsapp::Coexistencia::ErroTransitorio, 'SMB app data sync failed (503)')
+
+    expect { described_class.perform_now(channel.id) }.to have_enqueued_job(described_class).with(channel.id)
     expect(channel.reload.provider_config['coexistencia']).to be_blank
   end
 
@@ -59,10 +68,11 @@ RSpec.describe Whatsapp::Coexistencia::SincronizarJob do
     expect(api_client).not_to have_received(:request_smb_app_data)
   end
 
-  it 'não pede quando o webhook falhou e o canal pede reautorização' do
+  it 'não pede quando o webhook falhou e o canal pede reautorização, e avisa no ntfy' do
     channel.prompt_reauthorization!
 
-    described_class.perform_now(channel.id)
+    expect { described_class.perform_now(channel.id) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(hash_including(title: 'Sincronizacao do WhatsApp nao pedida'))
 
     expect(api_client).not_to have_received(:request_smb_app_data)
   end

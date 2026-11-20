@@ -259,8 +259,21 @@ describe Whatsapp::FacebookApiClient do
           .to_return(status: 400, body: { error: 'Sync window expired' }.to_json)
       end
 
-      it 'raises an error' do
-        expect { api_client.request_smb_app_data(phone_number_id, 'smb_app_state_sync') }.to raise_error(/SMB app data sync failed/)
+      it 'raises an error that is not transient' do
+        expect { api_client.request_smb_app_data(phone_number_id, 'smb_app_state_sync') }.to raise_error(RuntimeError, /SMB app data sync failed/)
+      end
+    end
+
+    [429, 500, 503].each do |status|
+      context "when Meta answers #{status}" do
+        before do
+          stub_request(:post, "https://graph.facebook.com/#{api_version}/#{phone_number_id}/smb_app_data")
+            .to_return(status: status, body: { error: 'Try again later' }.to_json)
+        end
+
+        it 'raises a transient error so the one-time sync is retried' do
+          expect { api_client.request_smb_app_data(phone_number_id, 'history') }.to raise_error(Whatsapp::Coexistencia::ErroTransitorio)
+        end
       end
     end
   end

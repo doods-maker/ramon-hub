@@ -122,6 +122,8 @@ class Whatsapp::FacebookApiClient
       headers: request_headers,
       body: { messaging_product: 'whatsapp', sync_type: sync_type }.to_json
     )
+    # 429/5xx é passageiro: o SincronizarJob tenta de novo. 4xx cai no handle_response (RuntimeError, definitivo).
+    raise Whatsapp::Coexistencia::ErroTransitorio, "SMB app data sync failed (#{response.code})" if response.code == 429 || response.code >= 500
 
     handle_response(response, 'SMB app data sync failed')
   end

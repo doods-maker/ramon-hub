@@ -4,6 +4,9 @@ module Whatsapp::Coexistencia
   # Marca da conversa e das mensagens importadas (additional_attributes / content_attributes).
   MARCA = 'importado_coexistencia'.freeze
 
+  # 429/5xx da Meta no pedido único de sincronização: o SincronizarJob tenta de novo em vez de perder o pedido.
+  class ErroTransitorio < StandardError; end
+
   # Trava a linha: o job de sincronização e os webhooks (history, account_update) escrevem no mesmo jsonb.
   # validate: false pula o validate_provider_config, que reconsulta a Meta (como Channel::Whatsapp#enable_voice_calling!).
   def self.registrar!(channel, dados)
