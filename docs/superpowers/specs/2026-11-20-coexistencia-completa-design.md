@@ -50,7 +50,7 @@ Outros eventos: `ACCOUNT_OFFBOARDED`, `ACCOUNT_RECONNECTED` (WABA em `entry[0].i
 
 ### 2. Pedido de sincronização (uma vez só)
 - `Whatsapp::FacebookApiClient#request_smb_app_data(phone_number_id, sync_type)` → `POST /<id>/smb_app_data`.
-- `Whatsapp::Coexistencia::SincronizarJob` (fila `low`): para cada `sync_type` em `smb_app_state_sync` e depois `history`, só chama se `provider_config['coexistencia'][<sync_type>]` estiver vazio. No sucesso, grava `{ 'pedido_em' => iso8601, 'request_id' => ... }`. Falha com HTTP de erro não grava, então pode tentar de novo. Exceção de rede: retry do job (3x).
+- `Whatsapp::Coexistencia::SincronizarJob` (fila `low`): para cada `sync_type` em `smb_app_state_sync` e depois `history`, só chama se `provider_config['coexistencia'][<sync_type>]` estiver vazio. No sucesso, grava `{ 'pedido_em' => iso8601, 'request_id' => ... }`. Nenhuma falha grava. 429/5xx (`Whatsapp::Coexistencia::ErroTransitorio`): retry `polynomially_longer` 6x (~20 min) e ntfy ao desistir. 4xx: ntfy uma vez e para. Canal com reautorização pendente: não pede e avisa no ntfy. Exceção de rede: retry do job (3x).
 - Disparado pelo `Whatsapp::EmbeddedSignupService#perform` quando `@is_coexistence` e o canal é novo (`@inbox_id.blank?`), **depois** do `setup_webhooks`.
 - Ponto de guarda: nunca chamar se o canal não for `provider == 'whatsapp_cloud'` e `source == 'embedded_signup'`.
 
