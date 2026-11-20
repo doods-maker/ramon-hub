@@ -36,11 +36,23 @@ RSpec.describe Ramon::Silencio do
 
     before { conversation }
 
-    def criar_mensagem(message_type)
-      described_class.executar do
+    def criar_mensagem(message_type, silencio: true)
+      criar = lambda do
         create(:message, account: account, inbox: inbox, conversation: conversation, message_type: message_type,
                          sender: message_type == :incoming ? contact : nil, content: 'oi')
       end
+      silencio ? described_class.executar(&criar) : criar.call
+    end
+
+    # A trava de verdade: lead, fluxo, IA e automação rodam nos listeners do AsyncDispatcher (EventDispatcherJob)
+    # e o reenvio ao WhatsApp no SendReplyJob. Fora do silêncio a mesma mensagem enfileira os dois.
+    it 'fora do silêncio enfileira EventDispatcherJob e SendReplyJob; dentro, nenhum dos dois' do
+      expect { criar_mensagem(:outgoing, silencio: false) }.to have_enqueued_job(EventDispatcherJob)
+      expect { criar_mensagem(:outgoing, silencio: false) }.to have_enqueued_job(SendReplyJob)
+
+      expect { criar_mensagem(:outgoing) }.not_to have_enqueued_job(EventDispatcherJob)
+      expect { criar_mensagem(:outgoing) }.not_to have_enqueued_job(SendReplyJob)
+      expect { criar_mensagem(:incoming) }.not_to have_enqueued_job(EventDispatcherJob)
     end
 
     it 'não reabre a conversa, não chama templates e não passa evento ao Dispatcher (lead, fluxo, IA, automação)' do
