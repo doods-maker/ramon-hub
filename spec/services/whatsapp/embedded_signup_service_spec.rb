@@ -104,6 +104,23 @@ describe Whatsapp::EmbeddedSignupService do
       end
     end
 
+    context 'with coexistence signup on a new channel' do
+      let(:coexistence_service) { described_class.new(account: account, params: params.merge(is_coexistence: true)) }
+
+      before { allow(channel).to receive(:id).and_return(42) }
+
+      it 'enqueues the one-time sync of contacts and history after the webhooks' do
+        expect(channel).to receive(:setup_webhooks).with(is_coexistence: true).ordered
+        expect(Whatsapp::Coexistencia::SincronizarJob).to receive(:perform_later).with(42).ordered
+
+        coexistence_service.perform
+      end
+    end
+
+    it 'does not enqueue the coexistence sync for a regular signup' do
+      expect { service.perform }.not_to have_enqueued_job(Whatsapp::Coexistencia::SincronizarJob)
+    end
+
     context 'when parameters are invalid' do
       it 'raises ArgumentError for missing parameters' do
         invalid_service = described_class.new(account: account, params: { code: '', waba_id: '' })
@@ -176,6 +193,12 @@ describe Whatsapp::EmbeddedSignupService do
                                                                             throughput: { 'level' => 'STANDARD' },
                                                                             messaging_limit_tier: 'TIER_1000'
                                                                           })
+      end
+
+      it 'does not enqueue the coexistence sync on reauthorization' do
+        coexistence_reauth = described_class.new(account: account, params: params.merge(is_coexistence: true), inbox_id: inbox_id)
+
+        expect { coexistence_reauth.perform }.not_to have_enqueued_job(Whatsapp::Coexistencia::SincronizarJob)
       end
 
       it 'uses ReauthorizationService and sets up webhooks' do

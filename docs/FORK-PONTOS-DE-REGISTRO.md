@@ -440,3 +440,19 @@ Lógica em `Ramon::SenhaForaDaIa` (`app/services/ramon/senha_fora_da_ia.rb`) e `
 | `config/initializers/filter_parameter_logging.rb` | +`:senha, :codigo, :confirmacao, :cpf` em `filter_parameters` (casam por trecho da chave, no hub todo) | login do Painel do Cliente ia em claro para o log de requisições | revisão 10/11 |
 | `config/routes.rb` | só comentário nas rotas `mcp` e `agente/*`: token agora também por cabeçalho (`X-Mcp-Token`, `X-Agente-Token`) | token fora da URL (log de proxy) | revisão 10/11 #348 |
 | `app/controllers/api/v1/accounts/contacts_controller.rb` (`destroy`), `app/services/contacts/bulk_delete_service.rb`, `store/modules/contacts/actions.js` (`delete`), `components-next/Contacts/ContactsForm/ConfirmContactDeleteDialog.vue`, `modules/contact/ContactDeleteModal.vue` | `destroy` responde 422 `{ error: "cliente_ganho" }` quando `Ramon::ContactAnonymizer` levanta `ClienteGanho`; a exclusão em massa pula esse contato; a action repassa o código e os dois diálogos mostram `RAMON.CONTATO.CLIENTE_GANHO` | cliente com contrato (lead ganho ou caso de cálculo) não é eliminado pela tela: o pedido fica no histórico do lead e a gestão é avisada | guarda do cliente 11/11 |
+
+## Coexistência completa do WhatsApp (20/11/2026)
+
+Spec: `docs/superpowers/specs/2026-11-20-coexistencia-completa-design.md`. Lógica nova em `Whatsapp::Coexistencia`
+(`app/services/whatsapp/coexistencia.rb` + `coexistencia/`, `app/jobs/whatsapp/coexistencia/`) e `Ramon::Silencio`.
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `app/dispatchers/dispatcher.rb` (`dispatch`) | `return if Current.importacao_silenciosa` | importação silenciosa: nenhum listener ouve (lead, fluxo, IA, automação, webhook, notificação, ActionCable) | coexistência 20/11 |
+| `app/models/message.rb` (`execute_after_create_commit_callbacks`) | `return if Current.importacao_silenciosa` | mensagem importada não reabre conversa, não reenvia (`SendReplyJob`), não roda template nem mexe na atividade | coexistência 20/11 |
+| `app/models/concerns/auto_assignment_handler.rb` (`run_auto_assignment`) | `return if Current.importacao_silenciosa` | conversa importada não entra na distribuição | coexistência 20/11 |
+| `lib/current.rb` | +`importacao_silenciosa` (e no `reset`) | flag do `Ramon::Silencio` | coexistência 20/11 |
+| `app/jobs/webhooks/whatsapp_events_job.rb` (`perform`) | `account_update` roteia antes da busca pelo número; `history` e `smb_app_state_sync` vão aos importadores, sem lock | sincronização do app em silêncio; desconexão | coexistência 20/11 |
+| `app/services/whatsapp/webhook_setup_service.rb` (`subscribed_fields`) + `facebook_api_client.rb` (`WEBHOOK_DEFAULT_FIELDS`, `request_smb_app_data`) | +`account_update history smb_app_state_sync`; POST `smb_app_data` | campos e pedido único da coexistência | coexistência 20/11 |
+| `app/services/whatsapp/embedded_signup_service.rb` (`perform`) | enfileira `Whatsapp::Coexistencia::SincronizarJob` em canal novo com coexistência, depois do `setup_webhooks` | contatos e histórico do app (uma vez, até 24 h) | coexistência 20/11 |
+| `config/locales/en.yml` | `conversations.messages.whatsapp.historico_midia` e `historico_nao_importado` | texto de mídia/tipo não importado | coexistência 20/11 |

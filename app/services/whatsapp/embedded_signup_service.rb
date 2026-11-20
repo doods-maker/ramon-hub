@@ -22,6 +22,8 @@ class Whatsapp::EmbeddedSignupService
     # 2. We need to run check_channel_health_and_prompt_reauth after webhook setup completes
     # 3. The channel is marked with source: 'embedded_signup' to skip the after_commit callback
     channel.setup_webhooks(is_coexistence: @is_coexistence)
+    # FORK-PONTO (ramon): coexistência em canal novo — pede uma única vez contatos e histórico do app (até 24 h).
+    Whatsapp::Coexistencia::SincronizarJob.perform_later(channel.id) if @is_coexistence && @inbox_id.blank?
     # Skip health check on reauth (avoids false disconnect emails) and on coexistence signups
     # (Meta's health data can lag several minutes behind a fresh FINISH event).
     check_channel_health_and_prompt_reauth(channel) if @inbox_id.blank? && !@is_coexistence

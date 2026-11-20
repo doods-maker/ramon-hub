@@ -177,7 +177,7 @@ describe Whatsapp::FacebookApiClient do
           .with(
             headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' },
             body: { override_callback_uri: callback_url, verify_token: verify_token,
-                    subscribed_fields: %w[messages smb_message_echoes] }.to_json
+                    subscribed_fields: %w[messages smb_message_echoes account_update history smb_app_state_sync] }.to_json
           )
           .to_return(
             status: 200,
@@ -224,13 +224,56 @@ describe Whatsapp::FacebookApiClient do
           .with(
             headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' },
             body: { override_callback_uri: callback_url, verify_token: verify_token,
-                    subscribed_fields: %w[messages smb_message_echoes] }.to_json
+                    subscribed_fields: %w[messages smb_message_echoes account_update history smb_app_state_sync] }.to_json
           )
           .to_return(status: 400, body: { error: 'Webhook callback override failed' }.to_json)
       end
 
       it 'raises an error' do
         expect { api_client.subscribe_waba_webhook(waba_id, callback_url, verify_token) }.to raise_error(/Webhook callback override failed/)
+      end
+    end
+  end
+
+  describe '#request_smb_app_data' do
+    let(:phone_number_id) { 'test_phone_id' }
+
+    context 'when successful' do
+      before do
+        stub_request(:post, "https://graph.facebook.com/#{api_version}/#{phone_number_id}/smb_app_data")
+          .with(
+            headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' },
+            body: { messaging_product: 'whatsapp', sync_type: 'history' }.to_json
+          )
+          .to_return(status: 200, body: { request_id: 'req_123' }.to_json, headers: { 'Content-Type' => 'application/json' })
+      end
+
+      it 'asks Meta to sync the business app data and returns the request id' do
+        expect(api_client.request_smb_app_data(phone_number_id, 'history')['request_id']).to eq('req_123')
+      end
+    end
+
+    context 'when failed' do
+      before do
+        stub_request(:post, "https://graph.facebook.com/#{api_version}/#{phone_number_id}/smb_app_data")
+          .to_return(status: 400, body: { error: 'Sync window expired' }.to_json)
+      end
+
+      it 'raises an error that is not transient' do
+        expect { api_client.request_smb_app_data(phone_number_id, 'smb_app_state_sync') }.to raise_error(RuntimeError, /SMB app data sync failed/)
+      end
+    end
+
+    [429, 500, 503].each do |status|
+      context "when Meta answers #{status}" do
+        before do
+          stub_request(:post, "https://graph.facebook.com/#{api_version}/#{phone_number_id}/smb_app_data")
+            .to_return(status: status, body: { error: 'Try again later' }.to_json)
+        end
+
+        it 'raises a transient error so the one-time sync is retried' do
+          expect { api_client.request_smb_app_data(phone_number_id, 'history') }.to raise_error(Whatsapp::Coexistencia::ErroTransitorio)
+        end
       end
     end
   end

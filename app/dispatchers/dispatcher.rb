@@ -13,6 +13,10 @@ class Dispatcher
   end
 
   def dispatch(event_name, timestamp, data, _async = false)
+    # FORK-PONTO (ramon): importação silenciosa da coexistência — nenhum listener ouve (lead, fluxo, IA, automação,
+    # webhook, notificação, ActionCable, relatório, campanha, CSAT). Ver Ramon::Silencio.
+    return if Current.importacao_silenciosa
+
     @sync_dispatcher.dispatch(event_name, timestamp, data)
     @async_dispatcher.dispatch(event_name, timestamp, data)
   end

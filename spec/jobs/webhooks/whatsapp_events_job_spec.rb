@@ -416,4 +416,88 @@ RSpec.describe Webhooks::WhatsappEventsJob do
       job.perform_now(wb_params)
     end
   end
+
+  context 'with coexistence sync webhooks' do
+    let(:importador) { instance_double(Whatsapp::Coexistencia::ImportarHistoricoService, perform: true) }
+    let(:importador_contatos) { instance_double(Whatsapp::Coexistencia::ImportarContatosService, perform: true) }
+
+    def coexistence_params(field, extra_value)
+      wb_params = params.deep_dup
+      wb_params[:entry].first[:changes].first[:field] = field
+      wb_params[:entry].first[:changes].first[:value].merge!(extra_value)
+      wb_params
+    end
+
+    it 'routes history to the silent history importer, never to the incoming message flow or the sender lock' do
+      wb_params = coexistence_params('history', history: [{ metadata: { phase: 0, chunk_order: 1, progress: 10 }, threads: [] }],
+                                                messages: [{ from: '5548999991111', id: 'wamid.midia', type: 'image' }])
+      job_instance = described_class.new
+      allow(Whatsapp::Coexistencia::ImportarHistoricoService).to receive(:new).and_return(importador)
+      allow(Whatsapp::IncomingMessageWhatsappCloudService).to receive(:new)
+      allow(job_instance).to receive(:with_lock)
+
+      job_instance.perform(wb_params)
+
+      expect(Whatsapp::Coexistencia::ImportarHistoricoService).to have_received(:new)
+        .with(channel: channel, value: wb_params[:entry].first[:changes].first[:value])
+      expect(importador).to have_received(:perform)
+      expect(Whatsapp::IncomingMessageWhatsappCloudService).not_to have_received(:new)
+      expect(job_instance).not_to have_received(:with_lock)
+    end
+
+    it 'routes smb_app_state_sync to the silent contacts importer' do
+      wb_params = coexistence_params('smb_app_state_sync',
+                                     state_sync: [{ type: 'contact', action: 'add', contact: { phone_number: '5548999992222' } }])
+      allow(Whatsapp::Coexistencia::ImportarContatosService).to receive(:new).and_return(importador_contatos)
+      allow(Whatsapp::IncomingMessageWhatsappCloudService).to receive(:new)
+
+      job.perform_now(wb_params)
+
+      expect(Whatsapp::Coexistencia::ImportarContatosService).to have_received(:new)
+        .with(channel: channel, value: wb_params[:entry].first[:changes].first[:value])
+      expect(importador_contatos).to have_received(:perform)
+      expect(Whatsapp::IncomingMessageWhatsappCloudService).not_to have_received(:new)
+    end
+
+    context 'with account_update (no metadata in the payload)' do
+      def account_update_params(value, entry_id: 'partner_portfolio_1')
+        { object: 'whatsapp_business_account', phone_number: channel.phone_number,
+          entry: [{ id: entry_id, changes: [{ field: 'account_update', value: value }] }] }
+      end
+
+      it 'records PARTNER_REMOVED on the channel found by WABA id and pushes ntfy, without prompting reauthorization' do
+        wb_params = account_update_params(
+          {
+            event: 'PARTNER_REMOVED',
+            waba_info: { waba_id: channel.provider_config['business_account_id'], owner_business_id: 'owner_1' },
+            disconnection_info: { reason: 'PRIMARY_INACTIVITY', initiated_by: 'SYSTEM' }
+          }
+        )
+
+        expect { job.perform_now(wb_params) }
+          .to have_enqueued_job(Ramon::NtfyPushJob).with(hash_including(title: 'WhatsApp desconectado do hub'))
+
+        channel.reload
+        expect(channel.provider_config['coexistencia']).to include('motivo' => 'PRIMARY_INACTIVITY', 'iniciado_por' => 'SYSTEM')
+        expect(channel.provider_config.dig('coexistencia', 'desconectado_em')).to be_present
+        expect(channel.reauthorization_required?).to be(false)
+      end
+
+      it 'clears the disconnection on ACCOUNT_RECONNECTED (WABA id in entry[0].id)' do
+        channel.provider_config = channel.provider_config.merge('coexistencia' => { 'desconectado_em' => '2026-11-20T10:00:00Z' })
+        channel.save!(validate: false)
+
+        job.perform_now(account_update_params({ event: 'ACCOUNT_RECONNECTED' }, entry_id: channel.provider_config['business_account_id']))
+
+        expect(channel.reload.provider_config.dig('coexistencia', 'desconectado_em')).to be_nil
+      end
+
+      it 'only logs other events' do
+        wb_params = account_update_params({ event: 'VERIFIED_ACCOUNT' }, entry_id: channel.provider_config['business_account_id'])
+
+        expect { job.perform_now(wb_params) }.not_to have_enqueued_job(Ramon::NtfyPushJob)
+        expect(channel.reload.provider_config['coexistencia']).to be_blank
+      end
+    end
+  end
 end

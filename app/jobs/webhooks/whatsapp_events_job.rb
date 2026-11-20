@@ -5,13 +5,26 @@ class Webhooks::WhatsappEventsJob < MutexApplicationJob
   # holder finishes and silently drop its message.
   retry_on LockAcquisitionError, wait: 2.seconds, attempts: 20
 
+  # FORK-PONTO (ramon): coexistência completa — sincronização do app WhatsApp Business, importada em silêncio.
+  COEXISTENCIA_IMPORTADORES = {
+    'history' => 'Whatsapp::Coexistencia::ImportarHistoricoService',
+    'smb_app_state_sync' => 'Whatsapp::Coexistencia::ImportarContatosService'
+  }.freeze
+
   def perform(params = {})
+    # account_update não tem metadata (o canal sai do WABA id), então roteia antes da busca pelo número.
+    return Whatsapp::Coexistencia::ContaAtualizadaService.new(params).perform if webhook_field(params) == 'account_update'
+
     channel = find_channel_from_whatsapp_business_payload(params)
 
     if channel_is_inactive?(channel)
       Rails.logger.warn("Inactive WhatsApp channel: #{channel&.phone_number || "unknown - #{params[:phone_number]}"}")
       return
     end
+
+    importador = COEXISTENCIA_IMPORTADORES[webhook_field(params)]
+    # Sem o lock por remetente: não é mensagem nova (nem o value.messages[] de mídia do history).
+    return importador.constantize.new(channel: channel, value: params.dig(:entry, 0, :changes, 0, :value)).perform if importador
 
     sender_id = contact_sender_id(params)
     return process_events(channel, params) if sender_id.blank?
@@ -97,6 +110,10 @@ class Webhooks::WhatsappEventsJob < MutexApplicationJob
   end
 
   private
+
+  def webhook_field(params)
+    params.dig(:entry, 0, :changes, 0, :field)
+  end
 
   # Echo payloads reverse the fields — `from` is the business number and `to` is the contact.
   # Returns nil for status-only webhooks so they bypass the lock.
