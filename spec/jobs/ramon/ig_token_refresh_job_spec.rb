@@ -20,9 +20,11 @@ RSpec.describe Ramon::IgTokenRefreshJob do
 
   context 'with a caixa do Instagram' do
     let(:vence_em) { 5.days.from_now }
-    # a factory chama access_token ao criar: nasce com folga e só depois recebe o vencimento do teste
+    # criar/salvar o canal chama access_token (callbacks): nasce com folga e o vencimento do teste entra sem callback
     let!(:canal) do
-      create(:channel_instagram, access_token: 'caixa_velho').tap { |c| c.update!(expires_at: vence_em, updated_at: 25.hours.ago) }
+      create(:channel_instagram, access_token: 'caixa_velho').tap do |c|
+        c.update_columns(expires_at: vence_em, updated_at: 25.hours.ago) # rubocop:disable Rails/SkipsModelValidations
+      end
     end
 
     before do
