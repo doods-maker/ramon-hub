@@ -20,7 +20,10 @@ RSpec.describe Ramon::IgTokenRefreshJob do
 
   context 'with a caixa do Instagram' do
     let(:vence_em) { 5.days.from_now }
-    let!(:canal) { create(:channel_instagram, access_token: 'caixa_velho', expires_at: vence_em) }
+    # a factory chama access_token ao criar: nasce com folga e só depois recebe o vencimento do teste
+    let!(:canal) do
+      create(:channel_instagram, access_token: 'caixa_velho').tap { |c| c.update!(expires_at: vence_em, updated_at: 25.hours.ago) }
+    end
 
     before do
       stub_request(:get, url).with(query: { grant_type: 'ig_refresh_token', access_token: 'velho' })
