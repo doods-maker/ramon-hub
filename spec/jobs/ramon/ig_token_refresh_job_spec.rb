@@ -17,4 +17,33 @@ RSpec.describe Ramon::IgTokenRefreshJob do
     expect { described_class.perform_now }.to have_enqueued_job(Ramon::NtfyPushJob)
     expect(InstallationConfig.find_by(name: 'RAMON_IG_PUBLISH_TOKEN').value).to eq 'velho'
   end
+
+  context 'with a caixa do Instagram' do
+    let!(:canal) { create(:channel_instagram, access_token: 'caixa_velho', expires_at: 5.days.from_now) }
+
+    before do
+      stub_request(:get, url).with(query: { grant_type: 'ig_refresh_token', access_token: 'velho' })
+                             .to_return(body: { access_token: 'novo', expires_in: 5_184_000 }.to_json)
+    end
+
+    it 'renova o token da caixa perto de vencer, mesmo sem uso' do
+      stub_request(:get, url).with(query: { grant_type: 'ig_refresh_token', access_token: 'caixa_velho' })
+                             .to_return(body: { access_token: 'caixa_novo', expires_in: 5_184_000 }.to_json)
+      described_class.perform_now
+      expect(canal.reload[:access_token]).to eq 'caixa_novo'
+      expect(canal.expires_at).to be > 50.days.from_now
+    end
+
+    it 'não chama a Meta quando a caixa ainda tem folga' do
+      canal.update!(expires_at: 30.days.from_now)
+      described_class.perform_now
+      expect(a_request(:get, url).with(query: hash_including(access_token: 'caixa_velho'))).not_to have_been_made
+    end
+
+    it 'avisa no celular quando a caixa não renova' do
+      stub_request(:get, url).with(query: hash_including(access_token: 'caixa_velho')).to_return(status: 400, body: '{}')
+      expect { described_class.perform_now }.to have_enqueued_job(Ramon::NtfyPushJob).once
+      expect(canal.reload[:access_token]).to eq 'caixa_velho'
+    end
+  end
 end

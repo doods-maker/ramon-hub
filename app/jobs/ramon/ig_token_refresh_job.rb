@@ -1,12 +1,13 @@
-# Renova o token de publicação do Instagram (vale 60 dias; renovar estende). Semanal.
+# Renova os tokens do Instagram (valem 60 dias; renovar estende). Semanal.
+# Publicação: token do super admin. Caixas: o token só renovava quando a caixa era usada.
 class Ramon::IgTokenRefreshJob < ApplicationJob
   queue_as :scheduled_jobs
 
   def perform
-    token = GlobalConfigService.load('RAMON_IG_PUBLISH_TOKEN', nil)
-    return if token.blank?
+    Channel::Instagram.find_each { |canal| renovar_caixa(canal) }
 
-    renovar(token)
+    token = GlobalConfigService.load('RAMON_IG_PUBLISH_TOKEN', nil)
+    renovar(token) if token.present?
   rescue StandardError => e
     # a URL de refresh carrega o token na query: o aviso nunca leva a URL, só a mensagem (com o token mascarado)
     msg = token.present? ? e.message.to_s.gsub(token, '[token]') : e.message.to_s
@@ -15,6 +16,16 @@ class Ramon::IgTokenRefreshJob < ApplicationJob
   end
 
   private
+
+  # O serviço do canal renova a 10 dias do vencimento e engole o erro; rodar toda semana cai nessa janela.
+  # Se depois disso ainda faltar menos de 10 dias, não renovou.
+  def renovar_caixa(canal)
+    canal.access_token
+    return if canal.reload.expires_at.present? && canal.expires_at > 10.days.from_now
+
+    Ramon::NtfyPushJob.perform_later(nil, title: 'Token da caixa do Instagram nao renovou',
+                                          body: "#{canal.inbox&.name} — reconectar a caixa no hub")
+  end
 
   def renovar(token)
     uri = URI('https://graph.instagram.com/refresh_access_token')
