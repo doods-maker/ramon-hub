@@ -17,4 +17,52 @@ RSpec.describe Ramon::IgTokenRefreshJob do
     expect { described_class.perform_now }.to have_enqueued_job(Ramon::NtfyPushJob)
     expect(InstallationConfig.find_by(name: 'RAMON_IG_PUBLISH_TOKEN').value).to eq 'velho'
   end
+
+  context 'with a caixa do Instagram' do
+    let(:vence_em) { 5.days.from_now }
+    # criar/salvar o canal chama access_token (callbacks): nasce com folga e o vencimento do teste entra sem callback
+    let!(:canal) do
+      create(:channel_instagram, access_token: 'caixa_velho').tap do |c|
+        c.update_columns(expires_at: vence_em, updated_at: 25.hours.ago) # rubocop:disable Rails/SkipsModelValidations
+      end
+    end
+
+    before do
+      stub_request(:get, url).with(query: { grant_type: 'ig_refresh_token', access_token: 'velho' })
+                             .to_return(body: { access_token: 'novo', expires_in: 5_184_000 }.to_json)
+    end
+
+    it 'renova o token da caixa perto de vencer, mesmo sem uso' do
+      stub_request(:get, url).with(query: { grant_type: 'ig_refresh_token', access_token: 'caixa_velho' })
+                             .to_return(body: { access_token: 'caixa_novo', expires_in: 5_184_000 }.to_json)
+      expect { described_class.perform_now }.not_to have_enqueued_job(Ramon::NtfyPushJob)
+      expect(canal.reload[:access_token]).to eq 'caixa_novo'
+      expect(canal.expires_at).to be > 50.days.from_now
+    end
+
+    it 'avisa no celular quando a caixa não renova, sem travar a publicação' do
+      stub_request(:get, url).with(query: hash_including(access_token: 'caixa_velho')).to_return(status: 400, body: '{}')
+      expect { described_class.perform_now }.to have_enqueued_job(Ramon::NtfyPushJob).once
+      expect(canal.reload[:access_token]).to eq 'caixa_velho'
+      expect(InstallationConfig.find_by(name: 'RAMON_IG_PUBLISH_TOKEN').value).to eq 'novo'
+    end
+
+    context 'with folga' do
+      let(:vence_em) { 30.days.from_now }
+
+      it 'não chama a Meta nem avisa' do
+        expect { described_class.perform_now }.not_to have_enqueued_job(Ramon::NtfyPushJob)
+        expect(a_request(:get, url).with(query: hash_including(access_token: 'caixa_velho'))).not_to have_been_made
+      end
+    end
+
+    context 'with o token já vencido' do
+      let(:vence_em) { 1.day.ago }
+
+      it 'avisa para reconectar, sem chamar a Meta' do
+        expect { described_class.perform_now }.to have_enqueued_job(Ramon::NtfyPushJob).once
+        expect(a_request(:get, url).with(query: hash_including(access_token: 'caixa_velho'))).not_to have_been_made
+      end
+    end
+  end
 end

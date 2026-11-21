@@ -148,7 +148,7 @@ ramon_portal_avisos_job:
   class: 'Ramon::PortalAvisosJob'
   queue: scheduled_jobs
 
-# Renova o token de publicação do Instagram toda segunda 06:00 UTC.
+# Renova os tokens do Instagram (publicação + caixas) toda segunda 06:00 UTC.
 ramon_ig_token_refresh_job:
   cron: '0 6 * * 1'
   class: 'Ramon::IgTokenRefreshJob'

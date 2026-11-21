@@ -1,8 +1,16 @@
-# Renova o token de publicação do Instagram (vale 60 dias; renovar estende). Semanal.
+# Renova os tokens do Instagram (valem 60 dias; renovar estende). Semanal.
+# Publicação: token do super admin. Caixas: o token só renovava quando a caixa era usada.
 class Ramon::IgTokenRefreshJob < ApplicationJob
   queue_as :scheduled_jobs
 
   def perform
+    renovar_publicacao
+    Channel::Instagram.find_each { |canal| conferir_caixa(canal) }
+  end
+
+  private
+
+  def renovar_publicacao
     token = GlobalConfigService.load('RAMON_IG_PUBLISH_TOKEN', nil)
     return if token.blank?
 
@@ -14,7 +22,22 @@ class Ramon::IgTokenRefreshJob < ApplicationJob
                                           body: "#{msg} — gerar outro no painel Meta e colar no super admin")
   end
 
-  private
+  # Instagram::RefreshOauthTokenService renova a menos de 10 dias do vencimento e engole o erro.
+  # Semanal cai 1 ou 2 vezes nessa janela; se ainda faltar menos de 10 dias depois, não renovou.
+  # ponytail: sem nova tentativa; o aviso chega com uns 4 dias de folga para reconectar.
+  def conferir_caixa(canal)
+    canal.access_token # o getter é que renova
+    return if canal.reload.expires_at > 10.days.from_now
+
+    avisar_caixa(canal)
+  rescue StandardError
+    avisar_caixa(canal)
+  end
+
+  def avisar_caixa(canal)
+    Ramon::NtfyPushJob.perform_later(nil, title: 'Token da caixa do Instagram nao renovou',
+                                          body: "#{canal.inbox&.name} — reconectar a caixa no hub")
+  end
 
   def renovar(token)
     uri = URI('https://graph.instagram.com/refresh_access_token')
