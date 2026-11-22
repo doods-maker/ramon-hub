@@ -31,7 +31,10 @@
       },
       "USADA": "Used {n}×",
       "NUNCA_USADA": "Not used yet",
-      "USADA_AJUDA": "How many times the assistant used this FAQ in real conversations (Test does not count). Last time: {quando}."
+      "USADA_AJUDA": "How many times the assistant used this FAQ in real conversations (Test does not count). Last time: {quando}.",
+      "GERAR_DE_DOCUMENTO": "Generate FAQs from a text or page",
+      "DOCUMENTOS_USADOS": "documents already used",
+      "GERAR_AJUDA": "The hub drafts FAQs from the text; the AI only uses the ones you approve."
     },
     "SKILLS": {
       "ABA_LIGADAS": "On ({n})",

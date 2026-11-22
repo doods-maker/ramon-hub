@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
-import { secoesIntranet } from '../helpers/navIntranet';
+import { secoesIntranet, grupoDaRota, linkDaAba } from '../helpers/navIntranet';
 import { usePainelAgentes } from '../composables/usePainelAgentes';
 
 defineProps({
@@ -28,7 +28,16 @@ const sections = computed(() =>
   secoesIntranet(isAdmin.value, !!painelAgentes.value)
 );
 
-const isActive = grupo => grupo.abas.some(a => a.names.includes(route.name));
+const ativo = computed(
+  () =>
+    grupoDaRota(route.name, isAdmin.value, !!painelAgentes.value, route.query)
+      ?.key
+);
+const isActive = grupo => grupo.key === ativo.value;
+const destino = grupo => {
+  const { name, params, query } = linkDaAba(grupo.abas[0]);
+  return accountScopedRoute(name, params, query);
+};
 </script>
 
 <template>
@@ -68,7 +77,7 @@ const isActive = grupo => grupo.abas.some(a => a.names.includes(route.name));
         <router-link
           v-for="grupo in section.grupos"
           :key="grupo.key"
-          :to="accountScopedRoute(grupo.abas[0].name)"
+          :to="destino(grupo)"
           :title="t(grupo.label)"
           class="flex items-center h-8 gap-2 px-2 text-sm rounded-lg hover:bg-n-alpha-2"
           :class="

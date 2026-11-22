@@ -352,6 +352,11 @@ const carregarPassos = async () => {
   }
 };
 const abaDetalhe = ref('playbook');
+const faqsDaTese = computed(() => ({
+  name: 'captain_assistants_index',
+  params: { navigationPath: 'captain_assistants_responses_index' },
+  query: { tese: selectedId.value },
+}));
 const passosDaTese = computed(
   () => passos.value.filter(p => p.thesis_id === selectedId.value).length
 );
@@ -792,6 +797,14 @@ onMounted(() => {
                 {{ $t('RAMON.ROTEIRO_IA.EDITOR.ABA_ROTEIRO') }}
                 <span class="font-mono text-[11px]">{{ passosDaTese }}</span>
               </button>
+              <!-- FAQs da tese: a tela de FAQs, já filtrada (resolvedor escolhe o assistente das FAQs). -->
+              <router-link
+                data-testid="playbooks-aba-faqs"
+                :to="faqsDaTese"
+                :class="[ABA, ABA_INATIVA]"
+              >
+                {{ $t('RAMON.PLAYBOOKS.ABA_FAQS') }}
+              </router-link>
             </nav>
 
             <section

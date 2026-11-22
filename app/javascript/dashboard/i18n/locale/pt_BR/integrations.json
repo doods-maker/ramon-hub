@@ -664,7 +664,7 @@
       },
       "SCENARIOS": {
         "TITLE": "Skills",
-        "DESCRIPTION": "Situações que o assistente sabe conduzir: quando usar cada skill, como conduzir e quais ferramentas ela usa.",
+        "DESCRIPTION": "Situações que o assistente sabe conduzir: quando usar cada skill, como conduzir e quais ações da IA ela usa.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selecionado | {count} itens selecionados",
           "SELECT_ALL": "Selecionar todos ({count})",
@@ -676,7 +676,7 @@
             "TITLE": "Exemplos de skills",
             "ADD": "Adicionar todos",
             "ADD_SINGLE": "Adicionar este",
-            "TOOLS_USED": "Ferramentas usadas:"
+            "TOOLS_USED": "Ações usadas:"
           },
           "NEW": {
             "CREATE": "Adicionar uma skill",
@@ -694,7 +694,7 @@
               },
               "INSTRUCTION": {
                 "LABEL": "Como conduzir",
-                "PLACEHOLDER": "Passo a passo do que o assistente faz — digite {'@'} para chamar uma ferramenta",
+                "PLACEHOLDER": "Passo a passo do que o assistente faz — digite {'@'} para chamar uma ação",
                 "ERROR": "Escreva como conduzir esta skill"
               },
               "CREATE": "Criar",

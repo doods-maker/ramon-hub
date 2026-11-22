@@ -1,11 +1,6 @@
-import { mount, flushPromises } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
-import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import FunilConfig from '../FunilConfig.vue';
-
-vi.mock('dashboard/api/captain/assistant', () => ({
-  default: { get: vi.fn(() => Promise.reject(new Error('sem Captain'))) },
-}));
 
 const STAGES = [
   { id: 1, name: 'Novo', stalled_after_days: 3, probability: 20 },
@@ -159,51 +154,17 @@ it('clears probability when the input is emptied', async () => {
   });
 });
 
-it('etapa de ganho escolhe o assistente da etapa (vazio = o da caixa)', async () => {
-  CaptainAssistantAPI.get.mockResolvedValueOnce({
-    data: { payload: [{ id: 5, name: 'Documentos' }] },
-  });
-  const updateStage = vi.fn();
-  const wrapper = mountPage({
-    updateStage,
-    stages: [
-      ...STAGES,
-      { id: 3, name: 'Documentos', is_won: true, captain_assistant_id: null },
-      { id: 4, name: 'Jurídico', is_won: true, captain_assistant_id: 5 },
-    ],
-  });
-  await flushPromises();
-  const selects = wrapper.findAll('[data-testid="stage-assistente"]');
-  expect(selects).toHaveLength(2);
-
-  await selects[0].setValue('5');
-  expect(updateStage).toHaveBeenLastCalledWith(expect.anything(), {
-    id: 3,
-    captain_assistant_id: 5,
-  });
-  await selects[1].setValue('');
-  expect(updateStage).toHaveBeenLastCalledWith(expect.anything(), {
-    id: 4,
-    captain_assistant_id: null,
-  });
-});
-
-it('sem assistentes (sem o Captain), nada de seletor', async () => {
-  const wrapper = mountPage({
-    stages: [{ id: 3, name: 'Documentos', is_won: true }],
-  });
-  await flushPromises();
+it('assistente das etapas de ganho saiu daqui: a tela aponta para Como atende', () => {
+  const wrapper = mountPage();
+  expect(
+    wrapper.find('[data-testid="funil-config-assistente-moveu"]').exists()
+  ).toBe(true);
   expect(wrapper.find('[data-testid="stage-assistente"]').exists()).toBe(false);
 });
 
-it('chave da etapa Documentos desligada: nada de seletor de assistente', async () => {
-  CaptainAssistantAPI.get.mockResolvedValueOnce({
-    data: { payload: [{ id: 5, name: 'Documentos' }] },
-  });
-  const wrapper = mountPage({
-    etapaDocumentos: false,
-    stages: [{ id: 3, name: 'Documentos', is_won: true }],
-  });
-  await flushPromises();
-  expect(wrapper.find('[data-testid="stage-assistente"]').exists()).toBe(false);
+it('chave da etapa Documentos desligada: nem o aviso aparece', () => {
+  const wrapper = mountPage({ etapaDocumentos: false });
+  expect(
+    wrapper.find('[data-testid="funil-config-assistente-moveu"]').exists()
+  ).toBe(false);
 });

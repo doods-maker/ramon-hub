@@ -160,15 +160,18 @@ _Avoid_: agente (genérico), bot, capitão
 
 **Skill**:
 Uma situação que o Assistente sabe conduzir (qualificar lead novo, preparar
-reunião, cobrar documento…): instrução + Tools permitidas. Editável na tela,
+reunião, cobrar documento…): instrução + Ações da IA permitidas. Editável na tela,
 sem código.
 _Avoid_: cenário, scenario
 
-**Tool**:
-Uma capacidade que o Assistente pode invocar (calcular benefício, buscar no
-ADVBOX…). Tool de leitura responde; Tool de escrita gera uma Sugestão
-pendente. Exceção: marcar reunião e o contrato automático executam quando o
-Perfil da IA dá Permissão *sozinha* e o lead está antes do Marcador.
+**Ação da IA**:
+Uma coisa concreta que o Assistente consegue fazer no sistema (calcular
+benefício, buscar no ADVBOX, agendar reunião…); o nome começa com verbo. A
+Skill diz *quando e como*; a Ação é *o que* ela executa. Ação de leitura
+responde; Ação de escrita gera uma Sugestão pendente. Exceção: marcar reunião e
+o contrato automático executam quando o Perfil da IA dá Permissão *sozinha* e o
+lead está antes do Marcador.
+_Avoid_: tool, ferramenta, ação (sem qualificar: Ação também é um tipo de Passo de Fluxo)
 
 **Sugestão**:
 Uma ação proposta pela IA à espera do clique humano (rascunho, alerta, mover
@@ -176,7 +179,7 @@ etapa, ação externa). Aplicar ou dispensar é sempre decisão de pessoa.
 _Avoid_: ação automática
 
 **Execução**:
-O registro auditável de uma Tool invocada: quando, com o quê, o que voltou,
+O registro auditável de uma Ação da IA invocada: quando, com o quê, o que voltou,
 quanto demorou.
 _Avoid_: confundir com Execução de fluxo (a passada de um Fluxo, ver Automações)
 
@@ -260,7 +263,7 @@ _Avoid_: rotina (sem qualificar), job
 Uma passada de um Fluxo por um alvo, com a Trilha dos passos por onde andou.
 Roda na versão publicada em que começou. O **ensaio** é a execução de mentira:
 avalia as condições num alvo real, descreve as ações e não executa nada.
-_Avoid_: Execução (é o registro de uma Tool da IA), teste, simulação
+_Avoid_: Execução (é o registro de uma Ação da IA), teste, simulação
 
 **Fluxo do sistema**:
 O desenho só-leitura, na aba "Do sistema", de uma das 29 automações que

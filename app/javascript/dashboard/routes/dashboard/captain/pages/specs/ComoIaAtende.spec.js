@@ -27,6 +27,8 @@ const montar = async () => {
   const wrapper = mount(ComoIaAtende, {
     global: {
       stubs: {
+        // Bloco do escritório (store do funil) tem spec próprio: AssistentePorEtapa.spec.js.
+        AssistentePorEtapa: true,
         RouterLink: {
           name: 'RouterLink',
           template: '<a :data-to="JSON.stringify(to)"><slot /></a>',

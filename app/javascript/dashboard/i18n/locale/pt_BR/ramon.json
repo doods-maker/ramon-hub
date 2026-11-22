@@ -173,6 +173,11 @@
         "BOTAO": "Testar este perfil",
         "DICA": "Abre o Testar com o perfil do jeito que está na tela, mesmo sem salvar",
         "SEM_IA": "Nenhuma caixa tem a IA conectada (Assistente → Caixas)"
+      },
+      "ASSISTENTE_ETAPA": {
+        "TITULO": "Quem atende nas etapas de ganho",
+        "DICA": "Vale para o escritório todo. Vazio = o assistente da caixa.",
+        "DA_CAIXA": "Assistente da caixa"
       }
     },
     "EQUIPE": {
@@ -727,7 +732,7 @@
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
       "THESES_HINT": "A classificação do lead é a tese.",
-      "THESES_LINK": "As teses ficam em Playbooks",
+      "THESES_LINK": "As teses ficam em Inteligência → Teses",
       "PRIORITIES": "Prioridades",
       "ADD": "Adicionar",
       "PRIORITY_PLACEHOLDER": "Nova prioridade",
@@ -736,16 +741,15 @@
       "CADENCE_DAYS": "dias",
       "PROBABILITY": "Probabilidade (%)",
       "PROBABILITY_HINT": "usada na previsão ponderada",
-      "ASSISTENTE": "Assistente desta etapa",
-      "ASSISTENTE_DA_CAIXA": "Assistente da caixa",
-      "ASSISTENTE_HINT": "Quem atende o lead nesta etapa. Assistente da caixa = o ligado à caixa da conversa. Só vale quando a caixa tem IA.",
       "REMOVE": "Remover",
       "WEIGHT": "Peso",
       "WEIGHT_OF": "peso {weight}",
       "LOAD_ERROR": "Não foi possível carregar as configurações do funil",
       "REMOVE_ERROR": "Não foi possível remover — tente de novo",
       "REMOVE_PRIORITY_CONFIRM": "Remover esta prioridade?",
-      "PRIORITIES_EMPTY": "Nenhuma prioridade ainda."
+      "PRIORITIES_EMPTY": "Nenhuma prioridade ainda.",
+      "ASSISTENTE_MOVEU": "O assistente de cada etapa de ganho agora fica em",
+      "ASSISTENTE_MOVEU_LINK": "Inteligência → Como atende"
     },
     "IMPORT": {
       "TITLE": "Importar leads (CSV)",
@@ -1576,7 +1580,7 @@
       }
     },
     "PLAYBOOKS": {
-      "TITLE": "Playbooks",
+      "TITLE": "Teses",
       "LIST_TITLE": "Teses",
       "ADD_PLACEHOLDER": "Nome da nova tese",
       "ADD": "Adicionar",
@@ -1644,7 +1648,8 @@
       "ITEM_DELETE": "Remover item",
       "VALIDADORES": "Advogados que validam o apto",
       "COMISSAO_APTO": "Comissão do híbrido por contrato apto (R$)",
-      "COMISSAO_APTO_AJUDA": "Vazio = a tese não paga comissão ao híbrido."
+      "COMISSAO_APTO_AJUDA": "Vazio = a tese não paga comissão ao híbrido.",
+      "ABA_FAQS": "FAQs"
     },
     "COPILOT": {
       "SUMMARIZE": "Resumir a conversa",
@@ -2820,7 +2825,7 @@
           "BUSCA": "Fazer uma busca na internet",
           "COMANDO": "Rodar um comando no servidor",
           "ARQUIVO": "Gravar um arquivo",
-          "OUTRA": "Usar a ferramenta {ferramenta}"
+          "OUTRA": "Usar a ação {ferramenta}"
         },
         "CAMPOS": {
           "PARA": "Para",
@@ -2866,7 +2871,23 @@
       "MARKETING": "Marketing",
       "TRAFEGO": "Tráfego",
       "CUSTOS_METAS": "Custos e metas",
-      "VALIDACAO_APTO": "Validação do jurídico"
+      "VALIDACAO_APTO": "Validação do jurídico",
+      "IA_VISAO_GERAL": "Visão geral",
+      "IA_COMO_ATENDE": "Como atende",
+      "IA_TESES": "Teses",
+      "IA_FAQS": "FAQs",
+      "IA_ASSISTENTES": "Assistentes",
+      "IA_REGRAS": "Regras gerais",
+      "IA_SKILLS": "Skills",
+      "IA_ACOES": "Ações da IA",
+      "IA_CAIXAS": "Caixas",
+      "IA_AUTOMACOES": "Automações",
+      "IA_TESTAR": "Testar",
+      "IA_CASOS": "Casos de teste",
+      "IA_HISTORICO": "Histórico",
+      "IA_EXECUCOES": "Execuções",
+      "IA_USO": "Uso e custo",
+      "IA_MUDANCAS": "Mudanças da IA"
     },
     "RAIL": {
       "INTERNOS": "Internos",
@@ -2984,7 +3005,7 @@
       "CATEGORIAS": {
         "IMPULSIONAMENTO": "Impulsionamento",
         "CRIATIVO": "Criativo",
-        "FERRAMENTA": "Ferramenta",
+        "FERRAMENTA": "Ação",
         "AGENCIA": "Agência",
         "EQUIPE": "Equipe",
         "OUTRO": "Outro"
@@ -3062,7 +3083,7 @@
       "DETALHE": {
         "MOTIVOS": "Por que falhou",
         "RESPOSTA": "Resposta",
-        "FERRAMENTAS": "Ferramentas pedidas",
+        "FERRAMENTAS": "Ações pedidas",
         "NENHUMA": "Nenhuma",
         "RODAPE": "passou para humano: {handoff} · {duracao}",
         "SEM_RESULTADO": "Este caso não entrou na rodada selecionada.",
@@ -3108,11 +3129,11 @@
     },
     "EXECUCOES": {
       "TITLE": "Execuções",
-      "SUBTITLE": "Tudo que o agente executou: qual ferramenta, com quais dados e o que voltou.",
+      "SUBTITLE": "Tudo que o agente executou: qual ação, com quais dados e o que voltou.",
       "TOTAL_24H": "Execuções 24h",
       "ERROS_24H": "Erros 24h",
-      "TOOLS_USADAS": "Ferramentas usadas",
-      "ALL_TOOLS": "Todas as ferramentas",
+      "TOOLS_USADAS": "Ações usadas",
+      "ALL_TOOLS": "Todas as ações",
       "ALL_STATUS": "Todos os status",
       "SHOW_RESULT": "ver o que voltou",
       "HIDE_RESULT": "esconder",
@@ -3137,8 +3158,8 @@
       "VER_MENOS": "Ver menos"
     },
     "FERRAMENTAS": {
-      "TITLE": "Ferramentas",
-      "SUBTITLE": "Tudo que os assistentes sabem fazer: o que cada ferramenta faz, em qual sistema mexe, onde é usada e quando rodou.",
+      "TITLE": "Ações da IA",
+      "SUBTITLE": "O que a IA consegue fazer no sistema: o que cada ação faz, em qual sistema mexe, em quais skills é usada e quando rodou. As Skills dizem quando usar cada uma.",
       "GRUPO": "{sistema} · {n}",
       "SISTEMA": {
         "funil": "Funil e casos do hub",
@@ -3227,10 +3248,10 @@
         "CONVERSA": "Conversa #{id}"
       },
       "FERRAMENTAS": {
-        "TITULO": "Ferramentas · 24h",
+        "TITULO": "Ações da IA · 24h",
         "EXECUCOES": "Execuções: {n}",
         "ERROS": "Erros: {n}",
-        "NADA": "Nenhuma ferramenta rodou nas últimas 24h.",
+        "NADA": "Nenhuma ação rodou nas últimas 24h.",
         "VER": "Ver execuções"
       },
       "AGENTE": {
@@ -3242,7 +3263,8 @@
       },
       "BASE": {
         "TITULO": "Base de conhecimento"
-      }
+      },
+      "PAINEL_AGENTES": "Agentes da esteira de petições: Painel dos agentes →"
     },
     "FLUXOS": {
       "TITULO": "Automações",

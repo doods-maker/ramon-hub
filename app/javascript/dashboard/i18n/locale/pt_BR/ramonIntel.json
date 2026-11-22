@@ -31,7 +31,10 @@
       },
       "USADA": "Usada {n}×",
       "NUNCA_USADA": "Ainda não usada",
-      "USADA_AJUDA": "Quantas vezes o assistente usou esta FAQ no atendimento de verdade (o Testar não conta). Última vez: {quando}."
+      "USADA_AJUDA": "Quantas vezes o assistente usou esta FAQ no atendimento de verdade (o Testar não conta). Última vez: {quando}.",
+      "GERAR_DE_DOCUMENTO": "Gerar FAQs de um texto ou página",
+      "DOCUMENTOS_USADOS": "documentos já usados",
+      "GERAR_AJUDA": "O hub escreve rascunhos de FAQ a partir do texto; a IA só usa as que você aprovar."
     },
     "SKILLS": {
       "ABA_LIGADAS": "Ligadas ({n})",
@@ -45,13 +48,13 @@
       "TESTAR": "Testar esta skill",
       "USO_30D": "Rodou {n}× em 30 dias",
       "SEM_USO_30D": "Não rodou em 30 dias",
-      "USO_AJUDA": "Quantas vezes as ferramentas desta skill rodaram no atendimento de verdade nos últimos 30 dias. O Testar e os Casos de teste não contam; ferramenta usada por duas skills conta nas duas.",
+      "USO_AJUDA": "Quantas vezes as ações desta skill rodaram no atendimento de verdade nos últimos 30 dias. O Testar e os Casos de teste não contam; ação usada por duas skills conta nas duas.",
       "EXEMPLO_LABEL": "Fala de exemplo (aparece no Testar)",
       "EXEMPLO_PLACEHOLDER": "Ex.: O que falta de documento deste caso?",
       "PAPEIS_LABEL": "Papéis que mais usam (aparecem primeiro no Testar)"
     },
     "EXECUCOES": {
-      "ABA_FERRAMENTAS": "Ferramentas da IA",
+      "ABA_FERRAMENTAS": "Ações da IA",
       "ABA_AGENTE": "Agente Claude",
       "STATUS": {
         "ok": "OK",
@@ -99,7 +102,7 @@
       "NENHUMA_DO_TIPO": "Nenhuma sugestão desse tipo agora."
     },
     "TESTAR": {
-      "FERRAMENTAS": "Ferramentas usadas:",
+      "FERRAMENTAS": "Ações usadas:",
       "FERRAMENTA_ERRO": "{nome} (erro)",
       "SUGESTOES": "Experimente (as do seu papel primeiro):",
       "CASO_PLACEHOLDER": "Testar com o caso… (nome do lead)",
@@ -121,7 +124,7 @@
           "pausa": "IA pausada na conversa",
           "fechado": "lead Fechado: só rascunho",
           "fora_do_horario": "fora do horário comercial",
-          "ferramenta_falhou": "uma ferramenta falhou"
+          "ferramenta_falhou": "uma ação falhou"
         }
       }
     },
