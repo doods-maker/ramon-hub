@@ -126,6 +126,16 @@ class Ramon::DriveClient
       search(texto).select { |item| (pai = item[:parents]&.first) && dentro_da_raiz?(pai, pais: pais) }
     end
 
+    # Peça da esteira pelo nome exato (botão "Abrir no Drive" do painel dos agentes): link do mais novo dentro da raiz.
+    def peca_na_raiz(nome)
+      files = service.list_files(
+        q: "name = '#{literal_de_query(nome)}' and trashed = false", fields: 'files(id,parents,webViewLink)',
+        order_by: 'modifiedTime desc', page_size: 10, supports_all_drives: true, include_items_from_all_drives: true
+      ).files.to_a
+      pais = pais_memo
+      files.find { |f| (pai = f.parents&.first) && dentro_da_raiz?(pai, pais: pais) }&.web_view_link
+    end
+
     # Nomes das pastas ancestrais (mais próxima primeiro), até `limite`.
     def nomes_acima(pasta_id, limite: 4)
       nomes = []
@@ -143,7 +153,7 @@ class Ramon::DriveClient
       texto = texto.to_s.strip
       return [] if texto.length < 3
 
-      listar("name contains '#{texto.gsub(/[\\']/) { |c| "\\#{c}" }}' and #{FILTRO_TIPOS}", 50)
+      listar("name contains '#{literal_de_query(texto)}' and #{FILTRO_TIPOS}", 50)
     end
 
     # Só pasta existente: erro de cliente do Drive (404 de id inexistente) é false; erro de servidor sobe.
@@ -177,6 +187,9 @@ class Ramon::DriveClient
       ).files.to_a
       ordenados(files)
     end
+
+    # Texto dentro de aspas simples numa query do Drive: escapa barra invertida e aspa.
+    def literal_de_query(texto) = texto.to_s.gsub(/[\\']/) { |c| "\\#{c}" }
 
     def ordenados(files) = files.map { |f| arquivo_hash(f) }.sort_by { |h| [h[:pasta] ? 0 : 1, h[:name].to_s.downcase] }
 
