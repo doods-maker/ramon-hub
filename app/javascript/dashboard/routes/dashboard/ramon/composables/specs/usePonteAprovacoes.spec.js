@@ -94,7 +94,7 @@ describe('usePonteAprovacoes', () => {
             ],
             entrada: JSON.stringify(PEDIDO.entrada, null, 2),
             criadoEm: PEDIDO.created_at,
-            caso: '123',
+            casoId: '123',
           },
         ],
       },
@@ -102,7 +102,7 @@ describe('usePonteAprovacoes', () => {
     );
   });
 
-  it('pedido sem número de caso: caso nulo (o painel não acha o cartão e o pedido fica só na lista)', async () => {
+  it('sem número no caso, manda casoId nulo', async () => {
     RamonAprovacoesAgenteAPI.get.mockResolvedValue({
       data: {
         pode_decidir: true,
@@ -111,7 +111,7 @@ describe('usePonteAprovacoes', () => {
     });
     await ouvir();
     const [[msg]] = enviadas('aprovacoes');
-    expect(msg.itens[0].caso).toBeNull();
+    expect(msg.itens[0].casoId).toBeNull();
   });
 
   it('corta a entrada em 4000 caracteres', async () => {

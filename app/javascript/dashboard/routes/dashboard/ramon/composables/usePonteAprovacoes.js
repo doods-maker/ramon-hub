@@ -53,8 +53,8 @@ export const usePonteAprovacoes = (iframeRef, url) => {
         2
       ).slice(0, ENTRADA_MAXIMA),
       criadoEm: pedido.created_at,
-      // Só o número: o painel acha o cartão do caso no Quadro; sem número, o pedido fica só na lista.
-      caso: d.numero || null,
+      // Só o número (sem o cliente): o Quadro do painel acha o cartão do caso por ele.
+      casoId: d.numero || null,
     };
   };
 
