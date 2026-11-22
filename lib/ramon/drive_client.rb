@@ -126,6 +126,16 @@ class Ramon::DriveClient
       search(texto).select { |item| (pai = item[:parents]&.first) && dentro_da_raiz?(pai, pais: pais) }
     end
 
+    # Peça da esteira pelo nome exato (botão "Abrir no Drive" do painel dos agentes): link do mais novo dentro da raiz.
+    def peca_na_raiz(nome)
+      files = service.list_files(
+        q: "name = '#{nome.to_s.gsub(/[\\']/) { |c| "\\#{c}" }}' and trashed = false", fields: 'files(id,parents,webViewLink)',
+        order_by: 'modifiedTime desc', page_size: 10, supports_all_drives: true, include_items_from_all_drives: true
+      ).files.to_a
+      pais = pais_memo
+      files.find { |f| (pai = f.parents&.first) && dentro_da_raiz?(pai, pais: pais) }&.web_view_link
+    end
+
     # Nomes das pastas ancestrais (mais próxima primeiro), até `limite`.
     def nomes_acima(pasta_id, limite: 4)
       nomes = []

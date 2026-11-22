@@ -53,6 +53,27 @@ RSpec.describe Ramon::DriveClient do
     expect(api).to have_received(:update_file).with('m1', { name: '_pasta-pronta.usada.json' }, hash_including(supports_all_drives: true))
   end
 
+  describe 'peca_na_raiz' do
+    before do
+      allow(described_class).to receive(:root_id).and_return('raiz')
+      allow(described_class).to receive(:parent_of) { |id| { 'esteira' => 'cliente', 'cliente' => 'raiz' }[id] }
+    end
+
+    def docx(id, pai) = Google::Apis::DriveV3::File.new(id: id, parents: [pai], web_view_link: "https://docs.google.com/#{id}")
+
+    it 'procura pelo nome exato, escapado, e devolve o link do mais novo que está dentro da raiz' do
+      allow(api).to receive(:list_files).and_return(Google::Apis::DriveV3::FileList.new(files: [docx('fora', 'outra'), docx('d', 'esteira')]))
+      expect(described_class.peca_na_raiz("Petição inicial — D'Ávila.docx")).to eq('https://docs.google.com/d')
+      expect(api).to have_received(:list_files).with(hash_including(q: "name = 'Petição inicial — D\\'Ávila.docx' and trashed = false",
+                                                                    order_by: 'modifiedTime desc', supports_all_drives: true))
+    end
+
+    it 'nenhum dentro da raiz: nil' do
+      allow(api).to receive(:list_files).and_return(Google::Apis::DriveV3::FileList.new(files: [docx('fora', 'outra')]))
+      expect(described_class.peca_na_raiz('Peça.docx')).to be_nil
+    end
+  end
+
   describe 'dentro_da_raiz?' do
     before { allow(described_class).to receive(:root_id).and_return('raiz') }
 

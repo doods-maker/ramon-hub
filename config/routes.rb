@@ -859,6 +859,8 @@ Rails.application.routes.draw do
   get 'ramon/google_agenda/callback', to: 'ramon/google_agenda_callbacks#show'
   # Portão do painel dos agentes: forward_auth do Caddy (ADR 0013).
   get 'ramon_painel_agentes/portao', to: 'ramon/painel_agentes_portao#show'
+  # Abrir no Drive a peça que a esteira gerou (link do Quadro do painel; mesma sessão do portão).
+  get 'ramon_painel_agentes/peca', to: 'ramon/painel_agentes_peca#show'
   get 'portal/:token', to: 'public/portal#show', as: :ramon_portal
   post 'portal/:token/upload', to: 'public/portal#upload', as: :ramon_portal_upload
 
