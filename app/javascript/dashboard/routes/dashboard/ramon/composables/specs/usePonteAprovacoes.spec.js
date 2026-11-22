@@ -94,11 +94,24 @@ describe('usePonteAprovacoes', () => {
             ],
             entrada: JSON.stringify(PEDIDO.entrada, null, 2),
             criadoEm: PEDIDO.created_at,
+            casoId: '123',
           },
         ],
       },
       ORIGEM
     );
+  });
+
+  it('sem número no caso, manda casoId nulo', async () => {
+    RamonAprovacoesAgenteAPI.get.mockResolvedValue({
+      data: {
+        pode_decidir: true,
+        pedidos: [{ ...PEDIDO, caso: 'Maria Exemplo' }],
+      },
+    });
+    await ouvir();
+    const [[msg]] = enviadas('aprovacoes');
+    expect(msg.itens[0].casoId).toBeNull();
   });
 
   it('corta a entrada em 4000 caracteres', async () => {
