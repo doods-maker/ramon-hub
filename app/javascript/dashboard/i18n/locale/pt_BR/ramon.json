@@ -2887,7 +2887,18 @@
       "IA_HISTORICO": "Histórico",
       "IA_EXECUCOES": "Execuções",
       "IA_USO": "Uso e custo",
-      "IA_MUDANCAS": "Mudanças da IA"
+      "IA_MUDANCAS": "Mudanças da IA",
+      "CAMPANHAS_WHATSAPP": "Campanhas WhatsApp",
+      "REL_AO_VIVO": "Ao vivo",
+      "REL_CONVERSAS": "Conversas",
+      "REL_CSAT": "Satisfação (CSAT)",
+      "REL_SLA": "SLA",
+      "REL_BOT": "IA (bot)",
+      "ATENDIMENTO": "Atendimento",
+      "REL_ATENDENTES": "Atendentes",
+      "REL_ETIQUETAS": "Etiquetas",
+      "REL_CAIXAS": "Caixas",
+      "REL_TIMES": "Times"
     },
     "RAIL": {
       "INTERNOS": "Internos",

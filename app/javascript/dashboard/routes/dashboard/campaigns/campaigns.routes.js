@@ -16,11 +16,14 @@ const campaignsRoutes = {
     {
       path: frontendURL('accounts/:accountId/campaigns'),
       component: CampaignsPageRouteView,
+      // ramon: só as campanhas do WhatsApp ficam no menu, em Intranet → Marketing
+      // (2026-11-22); SMS e chat do site não têm canal aqui.
+      meta: { world: 'intranet' },
       children: [
         {
           path: '',
           redirect: to => {
-            return { name: 'campaigns_ongoing_index', params: to.params };
+            return { name: 'campaigns_whatsapp_index', params: to.params };
           },
         },
         {

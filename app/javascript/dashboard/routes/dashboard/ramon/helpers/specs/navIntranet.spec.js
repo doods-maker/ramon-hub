@@ -73,6 +73,7 @@ describe('secoesIntranet', () => {
               'ramon_conteudo',
               'ramon_marketing_trafego',
               'ramon_marketing_custos',
+              'campaigns_whatsapp_index',
             ],
           ],
           [
@@ -82,6 +83,20 @@ describe('secoesIntranet', () => {
               'ramon_extrato',
               'ramon_relatorios',
               'ramon_tv',
+            ],
+          ],
+          [
+            'atendimento',
+            [
+              'account_overview_reports',
+              'conversation_reports',
+              'agent_reports_index',
+              'label_reports_index',
+              'inbox_reports_index',
+              'team_reports_index',
+              'csat_reports',
+              'sla_reports',
+              'bot_reports',
             ],
           ],
           ['configuracoes', ['ramon_funil_config', 'ramon_registro_acoes']],
@@ -226,5 +241,29 @@ describe('linkDaAba', () => {
     expect(
       linkDaAba(aba('ia_historico', 'ramon_registro_acoes')).query
     ).toEqual({ tipo: 'ia' });
+  });
+});
+
+describe('Campanhas e relatórios nativos na Intranet (2026-11-22)', () => {
+  it.each([
+    ['campaigns_whatsapp_index', 'marketing'],
+    ['account_overview_reports', 'atendimento'],
+    ['conversation_reports', 'atendimento'],
+    ['agent_reports_show', 'atendimento'],
+    ['inbox_reports_index', 'atendimento'],
+    ['label_reports', 'atendimento'],
+    ['team_reports_show', 'atendimento'],
+    ['csat_reports', 'atendimento'],
+    ['sla_reports', 'atendimento'],
+    ['bot_reports', 'atendimento'],
+    ['label_reports_show', 'atendimento'],
+    ['agent_reports', 'atendimento'],
+  ])('%s acende %s', (rota, grupo) => {
+    expect(grupoDaRota(rota, true).key).toBe(grupo);
+  });
+
+  it('agente não vê relatórios nativos nem campanhas (rotas só de admin)', () => {
+    expect(grupoDaRota('conversation_reports', false)).toBeUndefined();
+    expect(grupoDaRota('campaigns_whatsapp_index', false)).toBeUndefined();
   });
 });

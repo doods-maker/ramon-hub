@@ -81,6 +81,11 @@ const SECOES = [
           aba('ramon_conteudo', 'CONTEUDO', { adminOnly: true }),
           aba('ramon_marketing_trafego', 'TRAFEGO', { adminOnly: true }),
           aba('ramon_marketing_custos', 'CUSTOS_METAS', { adminOnly: true }),
+          // Campanhas do Chatwoot: só a do WhatsApp (resgate do Radar); SMS e chat do site
+          // não têm canal aqui e saíram do menu (2026-11-22). Precisa do número oficial.
+          aba('campaigns_whatsapp_index', 'CAMPANHAS_WHATSAPP', {
+            adminOnly: true,
+          }),
         ],
       },
       {
@@ -93,6 +98,36 @@ const SECOES = [
           aba('ramon_relatorios', 'RELATORIOS', { adminOnly: true }),
           // Placar é standalone (fora do layout): a aba só navega até ele.
           aba('ramon_tv', 'TV', { adminOnly: true }),
+        ],
+      },
+      {
+        // Relatórios nativos do atendimento (vieram do menu de Conversas, 2026-11-22):
+        // item próprio para não inchar Resultados.
+        key: 'atendimento',
+        label: 'RAMON.NAV.ATENDIMENTO',
+        icon: 'i-lucide-headset',
+        abas: [
+          aba('account_overview_reports', 'REL_AO_VIVO', { adminOnly: true }),
+          aba('conversation_reports', 'REL_CONVERSAS', { adminOnly: true }),
+          aba('agent_reports_index', 'REL_ATENDENTES', {
+            adminOnly: true,
+            acende: ['agent_reports', 'agent_reports_show'],
+          }),
+          aba('label_reports_index', 'REL_ETIQUETAS', {
+            adminOnly: true,
+            acende: ['label_reports', 'label_reports_show'],
+          }),
+          aba('inbox_reports_index', 'REL_CAIXAS', {
+            adminOnly: true,
+            acende: ['inbox_reports', 'inbox_reports_show'],
+          }),
+          aba('team_reports_index', 'REL_TIMES', {
+            adminOnly: true,
+            acende: ['team_reports', 'team_reports_show'],
+          }),
+          aba('csat_reports', 'REL_CSAT', { adminOnly: true }),
+          aba('sla_reports', 'REL_SLA', { adminOnly: true }),
+          aba('bot_reports', 'REL_BOT', { adminOnly: true }),
         ],
       },
       {
