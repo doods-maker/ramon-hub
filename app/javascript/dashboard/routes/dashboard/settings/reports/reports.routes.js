@@ -129,7 +129,7 @@ export default {
     {
       path: frontendURL('accounts/:accountId/reports'),
       component: ReportsWrapper,
-      // ramon: relatórios do atendimento vivem na Intranet → Resultados (abas de
+      // ramon: relatórios do atendimento vivem na Intranet → Atendimento (abas de
       // navIntranet.js, 2026-11-22). O meta do pai vale para as filhas.
       meta: { world: 'intranet' },
       children: [

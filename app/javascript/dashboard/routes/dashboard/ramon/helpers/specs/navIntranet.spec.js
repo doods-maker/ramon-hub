@@ -254,6 +254,10 @@ describe('Campanhas e relatórios nativos na Intranet (2026-11-22)', () => {
     ['label_reports', 'atendimento'],
     ['team_reports_show', 'atendimento'],
     ['csat_reports', 'atendimento'],
+    ['sla_reports', 'atendimento'],
+    ['bot_reports', 'atendimento'],
+    ['label_reports_show', 'atendimento'],
+    ['agent_reports', 'atendimento'],
   ])('%s acende %s', (rota, grupo) => {
     expect(grupoDaRota(rota, true).key).toBe(grupo);
   });
