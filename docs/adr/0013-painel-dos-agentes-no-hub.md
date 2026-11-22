@@ -8,7 +8,8 @@ O foreman-vision continua igual e fora do hub. A tela `Agentes` abre o painel em
 `https://chat.ramonantonio.adv.br:8443`.
 
 - **Portão:** a cada requisição, o `forward_auth` do Caddy pergunta a `GET /ramon_painel_agentes/portao`, que valida o
-  cookie de sessão do hub e a lista `RAMON_PAINEL_AGENTES_EMAILS`. Sem a env, ninguém entra.
+  cookie de sessão do hub e a lista `RAMON_PAINEL_AGENTES_EMAILS`. Sem a env, ninguém entra. A mesma regra vale para
+  `GET /ramon_painel_agentes/peca` (22/11/2026), o link "Abrir no Drive" do Quadro: só leva à peça para quem vê o painel.
 - **Porta própria, não subdomínio:** o painel usa caminhos absolutos (`/api`, `/assets`, `/events`), que colidem com os
   do hub, então não cabe em um caminho do mesmo endereço. Cookie não separa por porta, então a sessão do hub chega ao
   portão sem emitir bilhete nem criar registro de DNS.

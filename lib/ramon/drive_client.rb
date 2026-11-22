@@ -129,7 +129,7 @@ class Ramon::DriveClient
     # Peça da esteira pelo nome exato (botão "Abrir no Drive" do painel dos agentes): link do mais novo dentro da raiz.
     def peca_na_raiz(nome)
       files = service.list_files(
-        q: "name = '#{nome.to_s.gsub(/[\\']/) { |c| "\\#{c}" }}' and trashed = false", fields: 'files(id,parents,webViewLink)',
+        q: "name = '#{literal_de_query(nome)}' and trashed = false", fields: 'files(id,parents,webViewLink)',
         order_by: 'modifiedTime desc', page_size: 10, supports_all_drives: true, include_items_from_all_drives: true
       ).files.to_a
       pais = pais_memo
@@ -153,7 +153,7 @@ class Ramon::DriveClient
       texto = texto.to_s.strip
       return [] if texto.length < 3
 
-      listar("name contains '#{texto.gsub(/[\\']/) { |c| "\\#{c}" }}' and #{FILTRO_TIPOS}", 50)
+      listar("name contains '#{literal_de_query(texto)}' and #{FILTRO_TIPOS}", 50)
     end
 
     # Só pasta existente: erro de cliente do Drive (404 de id inexistente) é false; erro de servidor sobe.
@@ -187,6 +187,9 @@ class Ramon::DriveClient
       ).files.to_a
       ordenados(files)
     end
+
+    # Texto dentro de aspas simples numa query do Drive: escapa barra invertida e aspa.
+    def literal_de_query(texto) = texto.to_s.gsub(/[\\']/) { |c| "\\#{c}" }
 
     def ordenados(files) = files.map { |f| arquivo_hash(f) }.sort_by { |h| [h[:pasta] ? 0 : 1, h[:name].to_s.downcase] }
 

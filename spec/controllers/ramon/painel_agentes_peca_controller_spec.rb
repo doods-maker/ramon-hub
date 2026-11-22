@@ -11,7 +11,7 @@ RSpec.describe 'Abrir no Drive a peça da esteira', type: :request do
                                       headers: { 'Cookie' => "cw_d_session_info=#{CGI.escape(quem.create_new_auth_token.to_json)}" }
   end
 
-  around { |exemplo| with_modified_env(RAMON_PAINEL_AGENTES_EMAILS: 'eduardo@example.com', RAMON_DRIVE_ROOT_ID: 'raiz') { exemplo.run } }
+  around { |exemplo| with_modified_env(RAMON_PAINEL_AGENTES_EMAILS: 'eduardo@example.com') { exemplo.run } }
 
   before { allow(Ramon::DriveClient).to receive(:configured?).and_return(true) }
 
@@ -37,13 +37,22 @@ RSpec.describe 'Abrir no Drive a peça da esteira', type: :request do
     expect(Ramon::DriveClient).not_to have_received(:peca_na_raiz)
   end
 
-  it 'peça não achada, ou link que não é do Google: 404 com aviso' do
-    allow(Ramon::DriveClient).to receive(:peca_na_raiz).and_return(nil, 'https://malicioso.example.com/x')
-    2.times do
+  it 'peça não achada, ou link que não é https do Google: 404 com aviso' do
+    allow(Ramon::DriveClient).to receive(:peca_na_raiz).and_return(nil, 'https://malicioso.example.com/x', 'http://docs.google.com/x')
+    3.times do
       abrir('Peça.docx')
       expect(response).to have_http_status(:not_found)
       expect(response.body).to include('não encontrada')
     end
+  end
+
+  it 'Drive do hub desligado: 404 dizendo isso, sem buscar' do
+    allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+    allow(Ramon::DriveClient).to receive(:peca_na_raiz)
+    abrir('Peça.docx')
+    expect(response).to have_http_status(:not_found)
+    expect(response.body).to include('não está conectado')
+    expect(Ramon::DriveClient).not_to have_received(:peca_na_raiz)
   end
 
   it 'Drive fora do ar: 502 com aviso' do
