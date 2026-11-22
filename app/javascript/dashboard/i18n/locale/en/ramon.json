@@ -3083,7 +3083,7 @@
       "DETALHE": {
         "MOTIVOS": "Why it failed",
         "RESPOSTA": "Answer",
-        "FERRAMENTAS": "Tools requested",
+        "FERRAMENTAS": "Actions requested",
         "NENHUMA": "None",
         "RODAPE": "handed off to a human: {handoff} · {duracao}",
         "SEM_RESULTADO": "This case was not in the selected run.",
@@ -3129,11 +3129,11 @@
     },
     "EXECUCOES": {
       "TITLE": "Executions",
-      "SUBTITLE": "Everything the agent ran: which tool, with which data, and what came back.",
+      "SUBTITLE": "Everything the agent ran: which action, with which data, and what came back.",
       "TOTAL_24H": "Runs 24h",
       "ERROS_24H": "Errors 24h",
-      "TOOLS_USADAS": "Tools used",
-      "ALL_TOOLS": "All tools",
+      "TOOLS_USADAS": "Actions used",
+      "ALL_TOOLS": "All actions",
       "ALL_STATUS": "All statuses",
       "SHOW_RESULT": "show result",
       "HIDE_RESULT": "hide",
@@ -3159,7 +3159,7 @@
     },
     "FERRAMENTAS": {
       "TITLE": "AI actions",
-      "SUBTITLE": "Everything the assistants can do: what each tool does, which system it touches, where it is used and when it ran.",
+      "SUBTITLE": "What the AI can do in the system: what each action does, which system it touches, which skills use it and when it ran. Skills say when to use each one.",
       "GRUPO": "{sistema} · {n}",
       "SISTEMA": {
         "funil": "Funnel and hub cases",
@@ -3248,10 +3248,10 @@
         "CONVERSA": "Conversation #{id}"
       },
       "FERRAMENTAS": {
-        "TITULO": "Tools · 24h",
+        "TITULO": "AI actions · 24h",
         "EXECUCOES": "Runs: {n}",
         "ERROS": "Errors: {n}",
-        "NADA": "No tool ran in the last 24h.",
+        "NADA": "No action ran in the last 24h.",
         "VER": "See executions"
       },
       "AGENTE": {

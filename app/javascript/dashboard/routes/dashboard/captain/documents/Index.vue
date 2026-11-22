@@ -322,7 +322,11 @@ watch(
 
 // ?novo=1: veio do botão "Gerar FAQs de um texto ou página" em FAQs.
 onMounted(() => {
-  if (route.query.novo) handleCreateDocument();
+  if (!route.query.novo) return;
+  handleCreateDocument();
+  // tira o ?novo para recarregar/voltar não reabrir o cadastro
+  const { novo, ...resto } = route.query;
+  router.replace({ query: resto });
 });
 
 onUnmounted(() => {

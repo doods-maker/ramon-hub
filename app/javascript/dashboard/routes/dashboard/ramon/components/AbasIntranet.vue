@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
-import { grupoDaRota, abaCasa, linkDaAba } from '../helpers/navIntranet';
+import { grupoDaRota, abaBate, linkDaAba } from '../helpers/navIntranet';
 import { usePainelAgentes } from '../composables/usePainelAgentes';
 import { ABA, ABA_ATIVA, ABA_INATIVA } from '../helpers/ui';
 
@@ -41,7 +41,7 @@ const destino = aba => {
       :to="destino(aba)"
       :class="[
         ABA,
-        abaCasa(aba, route.name, route.query) ? ABA_ATIVA : ABA_INATIVA,
+        abaBate(aba, route.name, route.query) ? ABA_ATIVA : ABA_INATIVA,
       ]"
     >
       {{ t(aba.label) }}

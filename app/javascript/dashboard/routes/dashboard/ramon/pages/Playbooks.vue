@@ -804,6 +804,7 @@ onMounted(() => {
                 :class="[ABA, ABA_INATIVA]"
               >
                 {{ $t('RAMON.PLAYBOOKS.ABA_FAQS') }}
+                <span class="i-lucide-arrow-up-right size-3" />
               </router-link>
             </nav>
 

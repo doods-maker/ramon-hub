@@ -113,7 +113,7 @@
         "PARAR": "Parar de testar o perfil",
         "SAIRIA": "Sairia sozinha ({motivo})",
         "RASCUNHO": "Viraria rascunho ({motivo})",
-        "BLOQUEADAS": "Tool bloqueada (nunca): {nomes}",
+        "BLOQUEADAS": "Ação bloqueada (nunca): {nomes}",
         "MOTIVO": {
           "antes_do_marcador": "Etapa antes do Marcador",
           "acao": "{acao} está em Rascunho",

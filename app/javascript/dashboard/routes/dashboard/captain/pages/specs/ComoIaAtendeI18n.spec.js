@@ -1,8 +1,6 @@
 import { createI18n } from 'vue-i18n/dist/vue-i18n.cjs.prod.js';
 import en from 'dashboard/i18n/locale/en/ramon.json';
 import pt from 'dashboard/i18n/locale/pt_BR/ramon.json';
-import enSettings from 'dashboard/i18n/locale/en/settings.json';
-import ptSettings from 'dashboard/i18n/locale/pt_BR/settings.json';
 
 const folhas = (obj, prefixo = '') =>
   Object.entries(obj).flatMap(([k, v]) =>
@@ -18,8 +16,8 @@ describe('textos da tela Como a IA atende', () => {
     expect(folhas(textos.pt_BR).map(([k]) => k)).toEqual(
       folhas(textos.en).map(([k]) => k)
     );
-    expect(ptSettings.SIDEBAR.CAPTAIN_COMO_IA).toBe('Como a IA atende');
-    expect(enSettings.SIDEBAR.CAPTAIN_COMO_IA).toBe('How the AI works');
+    expect(pt.RAMON.NAV.IA_COMO_ATENDE).toBe('Como atende');
+    expect(en.RAMON.NAV.IA_COMO_ATENDE).toBe('How the AI responds');
   });
 
   // Trava de sintaxe: o compilador de PRODUÇÃO lança em "@" cru (linked message) e em "|" vira plural.

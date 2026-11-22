@@ -1,8 +1,6 @@
 import { createI18n } from 'vue-i18n/dist/vue-i18n.cjs.prod.js';
 import en from 'dashboard/i18n/locale/en/ramon.json';
 import pt from 'dashboard/i18n/locale/pt_BR/ramon.json';
-import enSettings from 'dashboard/i18n/locale/en/settings.json';
-import ptSettings from 'dashboard/i18n/locale/pt_BR/settings.json';
 import {
   ACOES_CHATWOOT,
   ALCANCES,
@@ -35,8 +33,8 @@ describe('textos das automações', () => {
     expect(folhas(FLUXOS_PT).map(([k]) => k)).toEqual(
       folhas(FLUXOS_EN).map(([k]) => k)
     );
-    expect(ptSettings.SIDEBAR.CAPTAIN_AUTOMACOES).toBe('Automações');
-    expect(enSettings.SIDEBAR.CAPTAIN_AUTOMACOES).toBe('Automations');
+    expect(pt.RAMON.NAV.IA_AUTOMACOES).toBe('Automações');
+    expect(en.RAMON.NAV.IA_AUTOMACOES).toBe('Automations');
   });
 
   it.each([

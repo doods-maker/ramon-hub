@@ -2,9 +2,19 @@ import { mount, flushPromises } from '@vue/test-utils';
 import RegistroAcoes from '../RegistroAcoes.vue';
 import RamonRegistroAcoesAPI from 'dashboard/api/ramonRegistroAcoes';
 import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
+import { useRoute } from 'vue-router';
 
 const rota = vi.hoisted(() => ({ query: {} }));
-vi.mock('vue-router', () => ({ useRoute: () => rota }));
+const replaceSpy = vi.hoisted(() => vi.fn());
+// Rota reativa: a mesma tela vive em duas abas (Configurações × Mudanças da IA).
+vi.mock('vue-router', async () => {
+  const { reactive } = await import('vue');
+  const reativa = reactive(rota);
+  return {
+    useRoute: () => reativa,
+    useRouter: () => ({ replace: replaceSpy }),
+  };
+});
 vi.mock('dashboard/api/ramonIaAtendimento', () => ({
   default: { desfazer: vi.fn() },
 }));
@@ -177,5 +187,19 @@ describe('RegistroAcoes.vue', () => {
   it('sem resultado mostra o vazio', async () => {
     const wrapper = await mountPage({ registros: [], total: 0 });
     expect(wrapper.find('[data-testid="registro-vazio"]').exists()).toBe(true);
+  });
+
+  it('trocar de aba (tipo=ia → sem filtro) troca o filtro; mudar o tipo na tela vai para a URL', async () => {
+    rota.query = { tipo: 'ia' };
+    const wrapper = await mountPage({ registros: [], total: 0 });
+    useRoute().query = {};
+    await flushPromises();
+    vi.advanceTimersByTime(300);
+    await flushPromises();
+    expect(RamonRegistroAcoesAPI.listar).toHaveBeenLastCalledWith({ page: 1 });
+
+    await wrapper.find('[data-testid="registro-tipo"]').setValue('lead');
+    expect(replaceSpy).toHaveBeenLastCalledWith({ query: { tipo: 'lead' } });
+    rota.query = {};
   });
 });

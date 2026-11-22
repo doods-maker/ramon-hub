@@ -27,8 +27,9 @@ do Captain ganham `world: 'intranet'`; o bloco Captain sai de `components-next/s
 Nenhuma rota muda de caminho (deep-links e avisos continuam valendo).
 
 O que a aba precisa a mais (interface pequena, tudo no `aba()`):
-- `assistente: true` → a aba é de rota com `:assistantId`. Com assistente na rota atual, o link leva o mesmo
-  `assistantId`; sem ele, vai por `captain_assistants_index` + `navigationPath` (o resolvedor que o menu já usa hoje).
+- `assistente: true` → a aba é de rota com `:assistantId` e vai sempre por `captain_assistants_index` +
+  `navigationPath` (o resolvedor que o menu antigo usava): ele lembra o último assistente e abre FAQs sempre no
+  assistente que fala com o lead (I-FQ5). Por isso não carregamos o `assistantId` da rota atual.
 - `query` → a aba só acende quando a query bate (Mudanças da IA = Registro com `tipo=ia`); o Registro de
   Configurações acende quando **não** bate. `grupoDaRota(routeName, isAdmin, painel, query)`.
 
@@ -60,12 +61,16 @@ Configurações (Intranet) fica com **Funil** e **Registro de ações**.
 3. **Documentos**: botão "Gerar FAQs de um texto ou página" no topo de FAQs abre o cadastro de documento; link
    "documentos já usados" leva à lista (que acende a aba FAQs). Texto de ajuda: "o hub escreve rascunhos de FAQ;
    a IA só usa as FAQs que você aprovar".
-4. **Assistente por etapa**: o seletor sai de `FunilConfig.vue` e vai para a etapa em Como atende
-   (`LimitesDaEtapa.vue`, mesma chamada `captain_assistant_id` do estágio). Funil ganha uma linha apontando para lá.
+4. **Assistente por etapa**: o seletor sai de `FunilConfig.vue` e vai para Como atende, num bloco próprio
+   (`comoIaAtende/AssistentePorEtapa.vue`) ao lado dos Limites gerais, só no alvo Padrão: o assistente é da Etapa e
+   vale para o escritório todo, não para o Perfil de uma tese/caixa (ficar em `LimitesDaEtapa` faria parecer que
+   muda só no perfil aberto). Funil ganha uma linha apontando para lá.
 5. **Nomes**: rótulo Ferramentas → "Ações da IA" (+ frase no topo: "o que a IA consegue fazer no sistema; as
    Skills dizem quando usar"); Skills ganha a frase "situação que a IA sabe conduzir". `config/agents/tools.yml`:
-   "Playbook da tese" → "Ler o playbook da tese", "Funil de hoje" → "Ver o funil de hoje", "Consulta de andamento"
-   → "Buscar andamento do cliente". Conferir specs que citam os títulos.
+   toda Ação começa com verbo (decisão 6): "Playbook da tese" → "Ler o playbook da tese", "Funil de hoje" → "Ver o
+   funil de hoje", "Consulta de andamento" → "Buscar andamento do cliente" e as demais sem verbo ("Horários livres" →
+   "Ver horários livres"…). Título é só de tela (a IA lê o texto da classe). Registro: a query `tipo` e o filtro
+   andam juntos (mesma tela em duas abas).
 6. **Histórico** e **Visão geral**: abas acima; atalho "Painel dos agentes" na Visão geral só para quem o backend
    libera (`usePainelAgentes`).
 7. **Prova**: vitest dos specs tocados; prints antes/depois (harness `tmp/design-harness`); smoke em bloco no

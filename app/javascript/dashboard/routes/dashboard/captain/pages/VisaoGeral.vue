@@ -130,7 +130,7 @@ const ir = (name, params = {}, query = {}) =>
         v-if="painelAgentes"
         data-testid="vg-painel-agentes"
         :to="accountScopedRoute('ramon_agentes')"
-        class="inline-flex items-center gap-1 mt-2 text-xs text-n-blue-11 hover:underline"
+        class="inline-flex items-center gap-1 mt-2 text-xs underline text-n-blue-11"
       >
         <span class="i-lucide-bot size-3.5" />
         {{ t('CAPTAIN_RAMON.VISAO_GERAL.PAINEL_AGENTES') }}

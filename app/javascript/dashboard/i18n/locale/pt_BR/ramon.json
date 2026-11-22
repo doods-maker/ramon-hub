@@ -2825,7 +2825,7 @@
           "BUSCA": "Fazer uma busca na internet",
           "COMANDO": "Rodar um comando no servidor",
           "ARQUIVO": "Gravar um arquivo",
-          "OUTRA": "Usar a ação {ferramenta}"
+          "OUTRA": "Usar a ferramenta {ferramenta}"
         },
         "CAMPOS": {
           "PARA": "Para",
@@ -3005,7 +3005,7 @@
       "CATEGORIAS": {
         "IMPULSIONAMENTO": "Impulsionamento",
         "CRIATIVO": "Criativo",
-        "FERRAMENTA": "Ação",
+        "FERRAMENTA": "Ferramenta",
         "AGENCIA": "Agência",
         "EQUIPE": "Equipe",
         "OUTRO": "Outro"

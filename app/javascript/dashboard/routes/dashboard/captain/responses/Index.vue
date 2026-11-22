@@ -287,8 +287,9 @@ onMounted(() => {
     </template>
 
     <template #controls>
-      <div v-if="isAdmin" class="flex items-center gap-3 mb-3">
+      <div class="flex items-center gap-3 mb-3">
         <Button
+          v-if="isAdmin"
           data-testid="faq-gerar-de-documento"
           size="sm"
           variant="outline"
@@ -298,12 +299,12 @@ onMounted(() => {
         />
         <button
           type="button"
-          class="text-xs underline text-n-slate-11 hover:text-n-slate-12"
+          class="text-xs underline text-n-blue-11"
           @click="gerarDeDocumento(false)"
         >
           {{ $t('INTEL.FAQ.DOCUMENTOS_USADOS') }}
         </button>
-        <span class="text-xs text-n-slate-10">
+        <span v-if="isAdmin" class="text-xs text-n-slate-10">
           {{ $t('INTEL.FAQ.GERAR_AJUDA') }}
         </span>
       </div>

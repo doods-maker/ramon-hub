@@ -227,7 +227,7 @@ export const secoesIntranet = (isAdmin, painel = false) =>
   })).filter(secao => secao.grupos.length);
 
 // A aba vale para esta rota (e, se pede query, para esta query).
-export const abaCasa = (a, routeName, query = {}) =>
+export const abaBate = (a, routeName, query = {}) =>
   a.names.includes(routeName) &&
   Object.entries(a.query || {}).every(([k, v]) => query[k] === v);
 
@@ -235,11 +235,11 @@ export const abaCasa = (a, routeName, query = {}) =>
 // Aba com query bate primeiro: Registro com tipo=ia é do Histórico da IA.
 export const grupoDaRota = (routeName, isAdmin, painel = false, query = {}) => {
   const grupos = secoesIntranet(isAdmin, painel).flatMap(s => s.grupos);
-  const com = exigeQuery =>
+  const grupoCom = exigeQuery =>
     grupos.find(g =>
-      g.abas.some(a => !!a.query === exigeQuery && abaCasa(a, routeName, query))
+      g.abas.some(a => !!a.query === exigeQuery && abaBate(a, routeName, query))
     );
-  return com(true) || com(false);
+  return grupoCom(true) || grupoCom(false);
 };
 
 // Destino da aba (o componente põe o accountId). Aba de assistente passa pelo
