@@ -1,6 +1,6 @@
 ######  Captain Agent Tools Configuration #######
 # id: Tool identifier used to resolve the class (Captain::Tools::{PascalCase(id)}Tool)
-# title: nome em português mostrado na tela (Skills, Execuções)
+# title: nome em português mostrado na tela (Skills, Execuções) — a Ação da IA começa com verbo (CONTEXT.md)
 # description: texto curto mostrado na tela
 # icon: Icon name for frontend display (frontend icon system)
 # nivel: o que a ferramenta faz no mundo — define a cor na tela:
@@ -14,14 +14,14 @@
 #######################################################
 
 - id: add_contact_note
-  title: 'Nota no contato'
+  title: 'Anotar no contato'
   description: 'Adiciona uma nota no perfil do contato'
   icon: 'note-add'
   nivel: interna
   sistema: conversa
 
 - id: add_private_note
-  title: 'Nota interna na conversa'
+  title: 'Anotar na conversa (nota interna)'
   description: 'Adiciona uma nota privada na conversa (só a equipe vê)'
   icon: 'eye-off'
   nivel: interna
@@ -84,14 +84,14 @@
   sistema: funil
 
 - id: linha_da_vida
-  title: 'Linha da vida da pessoa'
+  title: 'Ver a linha da vida da pessoa'
   description: 'Todos os casos da pessoa no hub e os marcos etários que ainda vencem'
   icon: 'timeline'
   nivel: consulta
   sistema: funil
 
 - id: documentacao_faltante
-  title: 'O que falta no caso'
+  title: 'Ver o que falta no caso'
   description: 'Documentos pendentes, lacunas da colheita e tarefas em aberto do caso'
   icon: 'clipboard'
   nivel: consulta
@@ -133,7 +133,7 @@
   sistema: funil
 
 - id: playbook_da_tese
-  title: 'Playbook da tese'
+  title: 'Ler o playbook da tese'
   description: 'Critérios, objeções, apresentação, documentos e honorário de uma tese'
   icon: 'clipboard'
   nivel: consulta
@@ -147,42 +147,42 @@
   sistema: funil
 
 - id: historico_do_contato
-  title: 'Histórico do contato'
+  title: 'Ver o histórico do contato'
   description: 'Casos, conversas e notas anteriores da pessoa no hub'
   icon: 'timeline'
   nivel: consulta
   sistema: funil
 
 - id: triagem_da_lp
-  title: 'Triagem da LP'
+  title: 'Ler a triagem da LP'
   description: 'Quiz que o lead respondeu na landing page antes de chamar: veredito, respostas e dúvidas'
   icon: 'clipboard'
   nivel: consulta
   sistema: funil
 
 - id: horarios_livres
-  title: 'Horários livres'
+  title: 'Ver horários livres'
   description: 'Horários livres do advogado para a conversa, nos próximos 5 dias úteis'
   icon: 'calendar'
   nivel: consulta
   sistema: agenda
 
 - id: agenda_do_escritorio
-  title: 'Agenda do escritório'
+  title: 'Ver a agenda do escritório'
   description: 'Reuniões, tarefas do hub (do dia e atrasadas) e prazos do AdvBox no dia'
   icon: 'calendar'
   nivel: consulta
   sistema: advbox
 
 - id: funil_hoje
-  title: 'Funil de hoje'
+  title: 'Ver o funil de hoje'
   description: 'Meta do dia, conversão por etapa com gargalo, SLA e perdas por tese'
   icon: 'columns'
   nivel: consulta
   sistema: funil
 
 - id: publicacoes_advbox
-  title: 'Publicações do processo no AdvBox'
+  title: 'Ver publicações do processo no AdvBox'
   description: 'Últimas publicações de um processo do AdvBox (data e trecho)'
   icon: 'document'
   nivel: consulta
@@ -196,7 +196,7 @@
   sistema: funil
 
 - id: roteiro_passo_atual
-  title: 'Passo atual do roteiro'
+  title: 'Ver o passo atual do roteiro'
   description: 'O que perguntar agora no roteiro de qualificação da tese do lead'
   icon: 'checkmark-circle'
   nivel: consulta
@@ -210,7 +210,7 @@
   sistema: funil
 
 - id: consulta_andamento
-  title: 'Consulta de andamento'
+  title: 'Buscar andamento do cliente'
   description: 'Quem já é cliente: confere o CPF no AdvBox e devolve a fase do processo (a do Painel do Cliente) e o link do Painel'
   icon: 'search'
   nivel: consulta
@@ -231,7 +231,7 @@
   sistema: funil
 
 - id: enviar_link_portal
-  title: 'Link do portal do cliente'
+  title: 'Enviar link do portal do cliente'
   description: 'Link seguro para o cliente enviar documentos pelo celular, com frase pronta'
   icon: 'link'
   nivel: rascunho
@@ -239,7 +239,7 @@
 
 # Etapa Documentos: a imagem do tema vai anexada à resposta da IA (uma mensagem só), só com o lead em Documentos e a chave ligada.
 - id: enviar_passo_a_passo
-  title: 'Imagem do passo a passo'
+  title: 'Enviar imagem do passo a passo'
   description: 'Anexa à resposta da IA a imagem do passo a passo do gov.br ou do Meu INSS (uma imagem por tema)'
   icon: 'image'
   nivel: rascunho
@@ -253,35 +253,35 @@
   sistema: funil
 
 - id: processo_advbox
-  title: 'Dados do processo no AdvBox'
+  title: 'Ver dados do processo no AdvBox'
   description: 'Etapa, responsável, clientes e honorários de um processo, sem o dossiê inteiro'
   icon: 'document'
   nivel: consulta
   sistema: advbox
 
 - id: movimentacoes_advbox
-  title: 'Movimentações do processo no AdvBox'
+  title: 'Ver movimentações do processo no AdvBox'
   description: 'Andamentos de um processo, mais recentes primeiro'
   icon: 'timeline'
   nivel: consulta
   sistema: advbox
 
 - id: historico_tarefas_advbox
-  title: 'Histórico de tarefas no AdvBox'
+  title: 'Ver histórico de tarefas no AdvBox'
   description: 'Tarefas já realizadas num processo'
   icon: 'clipboard'
   nivel: consulta
   sistema: advbox
 
 - id: ultimas_movimentacoes_advbox
-  title: 'Radar de movimentações no AdvBox'
+  title: 'Ver radar de movimentações no AdvBox'
   description: 'Última movimentação de cada processo do escritório'
   icon: 'timeline'
   nivel: consulta
   sistema: advbox
 
 - id: tarefas_advbox
-  title: 'Tarefas e prazos no AdvBox'
+  title: 'Ver tarefas e prazos no AdvBox'
   description: 'Tarefas do escritório por período, responsável ou processo'
   icon: 'calendar'
   nivel: consulta
@@ -295,28 +295,28 @@
   sistema: advbox
 
 - id: cliente_advbox
-  title: 'Ficha do cliente no AdvBox'
+  title: 'Ver ficha do cliente no AdvBox'
   description: 'Ficha completa de um cliente pelo id do AdvBox'
   icon: 'document'
   nivel: consulta
   sistema: advbox
 
 - id: documentos_advbox
-  title: 'Documentos no AdvBox'
+  title: 'Ver documentos no AdvBox'
   description: 'Arquivos anexados, por nome, cliente, tarefa ou transação'
   icon: 'document'
   nivel: consulta
   sistema: advbox
 
 - id: link_documento_advbox
-  title: 'Link de documento do AdvBox'
+  title: 'Gerar link de documento do AdvBox'
   description: 'Link temporário de download de um documento'
   icon: 'link'
   nivel: consulta
   sistema: advbox
 
 - id: configuracoes_advbox
-  title: 'Configurações do AdvBox'
+  title: 'Ler configurações do AdvBox'
   description: 'IDs de usuários, tipos de tarefa, origens e etapas — base para escrever no AdvBox'
   icon: 'settings'
   nivel: consulta

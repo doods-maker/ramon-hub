@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
-import { grupoDaRota } from '../helpers/navIntranet';
+import { grupoDaRota, abaBate, linkDaAba } from '../helpers/navIntranet';
 import { usePainelAgentes } from '../composables/usePainelAgentes';
 import { ABA, ABA_ATIVA, ABA_INATIVA } from '../helpers/ui';
 
@@ -17,9 +17,15 @@ const { url: painelAgentes } = usePainelAgentes();
 // Faixa de abas do item do menu: só quando o grupo tem 2+ abas visíveis.
 const abas = computed(() => {
   const lista =
-    grupoDaRota(route.name, isAdmin.value, !!painelAgentes.value)?.abas || [];
+    grupoDaRota(route.name, isAdmin.value, !!painelAgentes.value, route.query)
+      ?.abas || [];
   return lista.length > 1 ? lista : [];
 });
+
+const destino = aba => {
+  const { name, params, query } = linkDaAba(aba);
+  return accountScopedRoute(name, params, query);
+};
 </script>
 
 <template>
@@ -32,8 +38,11 @@ const abas = computed(() => {
     <router-link
       v-for="aba in abas"
       :key="aba.name"
-      :to="accountScopedRoute(aba.name)"
-      :class="[ABA, aba.names.includes(route.name) ? ABA_ATIVA : ABA_INATIVA]"
+      :to="destino(aba)"
+      :class="[
+        ABA,
+        abaBate(aba, route.name, route.query) ? ABA_ATIVA : ABA_INATIVA,
+      ]"
     >
       {{ t(aba.label) }}
     </router-link>

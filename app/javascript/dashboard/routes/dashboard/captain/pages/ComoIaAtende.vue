@@ -35,6 +35,7 @@ import ListaAlvos from './comoIaAtende/ListaAlvos.vue';
 import Trilha from './comoIaAtende/Trilha.vue';
 import LimitesDaEtapa from './comoIaAtende/LimitesDaEtapa.vue';
 import LimitesGerais from './comoIaAtende/LimitesGerais.vue';
+import AssistentePorEtapa from './comoIaAtende/AssistentePorEtapa.vue';
 import NumerosDaEtapa from './comoIaAtende/NumerosDaEtapa.vue';
 
 defineOptions({ name: 'CaptainComoIaAtende' });
@@ -629,6 +630,9 @@ onBeforeRouteLeave(
 
           <section v-if="alvoId === 'padrao' && limites" class="mt-9">
             <LimitesGerais v-model="limites" />
+          </section>
+          <section v-if="alvoId === 'padrao'" class="mt-9">
+            <AssistentePorEtapa />
           </section>
         </div>
       </main>

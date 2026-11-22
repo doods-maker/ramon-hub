@@ -3,13 +3,21 @@
 // Aba: `name` = rota de destino; `names` = rotas que acendem (deep-links
 // contextuais acendem a aba-mãe). `adminOnly` espelha o guard da rota; `soPainel`
 // só aparece para quem o backend liberou no painel dos agentes.
+// `assistente`: rota com :assistantId (Captain). `query`: a aba só acende quando
+// a query bate (ex.: Registro com tipo=ia = "Mudanças da IA").
 const aba = (name, label, extra = {}) => ({
   name,
   label: `RAMON.NAV.${label}`,
   names: [name, ...(extra.acende || [])],
   adminOnly: !!extra.adminOnly,
   soPainel: !!extra.soPainel,
+  assistente: !!extra.assistente,
+  query: extra.query || null,
 });
+// ponytail: o flag CAPTAIN da conta não é checado aqui (instalação de 1 conta, ligado);
+// o guard da rota segue barrando se um dia desligar.
+const doAssistente = (name, label, extra = {}) =>
+  aba(name, label, { ...extra, assistente: true });
 
 const SECOES = [
   {
@@ -104,8 +112,100 @@ const SECOES = [
         icon: 'i-lucide-sliders-horizontal',
         abas: [
           aba('ramon_funil_config', 'FUNIL_CONFIG', { adminOnly: true }),
-          aba('ramon_playbooks', 'PLAYBOOKS', { adminOnly: true }),
           aba('ramon_registro_acoes', 'REGISTRO_ACOES', { adminOnly: true }),
+        ],
+      },
+    ],
+  },
+  {
+    // Inteligência num lugar só (plano 2026-11-22): toda a IA do hub aqui.
+    label: 'RAMON.NAV.INTELIGENCIA',
+    grupos: [
+      {
+        key: 'ia_visao_geral',
+        label: 'RAMON.NAV.IA_VISAO_GERAL',
+        icon: 'i-lucide-sparkles',
+        abas: [aba('captain_visao_geral_index', 'IA_VISAO_GERAL')],
+      },
+      {
+        key: 'ia_como_atende',
+        label: 'RAMON.NAV.IA_COMO_ATENDE',
+        icon: 'i-lucide-route',
+        abas: [
+          aba('captain_como_ia_atende_index', 'IA_COMO_ATENDE', {
+            adminOnly: true,
+          }),
+        ],
+      },
+      {
+        key: 'ia_teses',
+        label: 'RAMON.NAV.IA_TESES',
+        icon: 'i-lucide-book-open',
+        abas: [
+          aba('ramon_playbooks', 'IA_TESES', { adminOnly: true }),
+          doAssistente('captain_assistants_responses_index', 'IA_FAQS', {
+            acende: [
+              'captain_assistants_responses_pending',
+              'captain_assistants_documents_index',
+            ],
+          }),
+        ],
+      },
+      {
+        key: 'ia_assistentes',
+        label: 'RAMON.NAV.IA_ASSISTENTES',
+        icon: 'i-lucide-bot-message-square',
+        abas: [
+          aba('captain_assistants_create_index', 'IA_ASSISTENTES'),
+          doAssistente('captain_assistants_settings_index', 'IA_REGRAS', {
+            acende: [
+              'captain_assistants_guidelines_index',
+              'captain_assistants_guardrails_index',
+            ],
+          }),
+          doAssistente('captain_assistants_scenarios_index', 'IA_SKILLS'),
+          aba('captain_ferramentas_index', 'IA_ACOES', {
+            acende: ['captain_tools_index'],
+          }),
+          doAssistente('captain_assistants_inboxes_index', 'IA_CAIXAS'),
+        ],
+      },
+      {
+        key: 'ia_automacoes',
+        label: 'RAMON.NAV.IA_AUTOMACOES',
+        icon: 'i-lucide-workflow',
+        abas: [
+          aba('captain_automacoes_index', 'IA_AUTOMACOES', {
+            adminOnly: true,
+            acende: [
+              'captain_automacoes_editor',
+              'captain_automacoes_execucao',
+            ],
+          }),
+        ],
+      },
+      {
+        key: 'ia_testar',
+        label: 'RAMON.NAV.IA_TESTAR',
+        icon: 'i-lucide-flask-conical',
+        abas: [
+          doAssistente('captain_assistants_playground_index', 'IA_TESTAR'),
+          doAssistente('captain_assistants_casos_teste_index', 'IA_CASOS', {
+            adminOnly: true,
+          }),
+        ],
+      },
+      {
+        key: 'ia_historico',
+        label: 'RAMON.NAV.IA_HISTORICO',
+        icon: 'i-lucide-history',
+        abas: [
+          aba('captain_execucoes_index', 'IA_EXECUCOES'),
+          aba('captain_ia_uso_index', 'IA_USO', { adminOnly: true }),
+          aba('ramon_registro_acoes', 'IA_MUDANCAS', {
+            adminOnly: true,
+            query: { tipo: 'ia' },
+          }),
         ],
       },
     ],
@@ -126,8 +226,31 @@ export const secoesIntranet = (isAdmin, painel = false) =>
       .filter(grupo => grupo.abas.length),
   })).filter(secao => secao.grupos.length);
 
+// A aba vale para esta rota (e, se pede query, para esta query).
+export const abaBate = (a, routeName, query = {}) =>
+  a.names.includes(routeName) &&
+  Object.entries(a.query || {}).every(([k, v]) => query[k] === v);
+
 // Grupo (já filtrado pelo papel) que contém a rota atual; undefined se nenhum.
-export const grupoDaRota = (routeName, isAdmin, painel = false) =>
-  secoesIntranet(isAdmin, painel)
-    .flatMap(secao => secao.grupos)
-    .find(grupo => grupo.abas.some(a => a.names.includes(routeName)));
+// Aba com query bate primeiro: Registro com tipo=ia é do Histórico da IA.
+export const grupoDaRota = (routeName, isAdmin, painel = false, query = {}) => {
+  const grupos = secoesIntranet(isAdmin, painel).flatMap(s => s.grupos);
+  const grupoCom = exigeQuery =>
+    grupos.find(g =>
+      g.abas.some(a => !!a.query === exigeQuery && abaBate(a, routeName, query))
+    );
+  return grupoCom(true) || grupoCom(false);
+};
+
+// Destino da aba (o componente põe o accountId). Aba de assistente passa pelo
+// resolvedor do Captain, como o menu antigo: ele lembra o último assistente e
+// abre FAQs sempre no assistente que fala com o lead (I-FQ5).
+export const linkDaAba = a => {
+  const query = { ...(a.query || {}) };
+  if (!a.assistente) return { name: a.name, params: {}, query };
+  return {
+    name: 'captain_assistants_index',
+    params: { navigationPath: a.name },
+    query,
+  };
+};

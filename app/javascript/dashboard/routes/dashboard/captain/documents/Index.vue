@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onUnmounted, ref, nextTick, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, nextTick, watch } from 'vue';
 import { useTimeoutPoll } from '@vueuse/core';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useRoute, useRouter } from 'vue-router';
@@ -319,6 +319,15 @@ watch(
   },
   { immediate: true }
 );
+
+// ?novo=1: veio do botão "Gerar FAQs de um texto ou página" em FAQs.
+onMounted(() => {
+  if (!route.query.novo) return;
+  handleCreateDocument();
+  // tira o ?novo para recarregar/voltar não reabrir o cadastro
+  const { novo, ...resto } = route.query;
+  router.replace({ query: resto });
+});
 
 onUnmounted(() => {
   stopSyncPolling();

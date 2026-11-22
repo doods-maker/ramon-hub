@@ -5,7 +5,7 @@
 // ?tipo=ia (botão Histórico da tela Como a IA atende) já abre filtrado; linha da IA tem Desfazer por alvo.
 import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { useAccount } from 'dashboard/composables/useAccount';
 import RamonRegistroAcoesAPI from 'dashboard/api/ramonRegistroAcoes';
@@ -40,6 +40,7 @@ defineOptions({ name: 'RamonRegistroAcoes' });
 const { t } = useI18n();
 const { accountScopedRoute } = useAccount();
 const route = useRoute();
+const router = useRouter();
 
 const tipoInicial = TIPOS.includes(route.query.tipo) ? route.query.tipo : '';
 const filtros = ref({
@@ -49,6 +50,23 @@ const filtros = ref({
   tipo: tipoInicial,
   q: '',
 });
+// A mesma tela vive em duas abas (Configurações → Registro e Inteligência →
+// Mudanças da IA = ?tipo=ia): a query manda no filtro e o filtro volta para a
+// query, senão a aba acesa e o que aparece se desencontram.
+watch(
+  () => route.query.tipo,
+  v => {
+    const tipo = TIPOS.includes(v) ? v : '';
+    if (filtros.value.tipo !== tipo) filtros.value.tipo = tipo;
+  }
+);
+watch(
+  () => filtros.value.tipo,
+  tipo => {
+    if ((route.query.tipo || '') === tipo) return;
+    router.replace({ query: { ...route.query, tipo: tipo || undefined } });
+  }
+);
 const pagina = ref(1);
 const registros = ref([]);
 const pessoas = ref([]);

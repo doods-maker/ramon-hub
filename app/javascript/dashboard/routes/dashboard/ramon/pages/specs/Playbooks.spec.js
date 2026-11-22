@@ -90,7 +90,11 @@ const mountPlaybooks = () => {
   const store = buildStore();
   store.dispatch = vi.fn().mockResolvedValue({});
   const wrapper = mount(Playbooks, {
-    global: { plugins: [store], mocks: { $t: k => k } },
+    global: {
+      plugins: [store],
+      mocks: { $t: k => k },
+      stubs: { RouterLink: { props: ['to'], template: '<a><slot /></a>' } },
+    },
   });
   return { wrapper, store };
 };
@@ -113,6 +117,20 @@ describe('Playbooks.vue', () => {
     expect(wrapper.find('[data-testid="playbooks-roteiro"]').exists()).toBe(
       true
     );
+  });
+
+  it('aba FAQs da tese leva às FAQs filtradas por ela (Inteligência num lugar só)', async () => {
+    rota.query = { tese: '1' };
+    const { wrapper } = mountPlaybooks();
+    await flushPromises();
+    rota.query = {};
+
+    const faqs = wrapper.findComponent('[data-testid="playbooks-aba-faqs"]');
+    expect(faqs.props('to')).toEqual({
+      name: 'captain_assistants_index',
+      params: { navigationPath: 'captain_assistants_responses_index' },
+      query: { tese: 1 },
+    });
   });
 
   it('fetches theses on mount', () => {

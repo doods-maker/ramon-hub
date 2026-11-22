@@ -65,7 +65,11 @@ const COPILOTO = {
 
 const CATALOGO = [
   { id: 'faq_lookup', title: 'Buscar nas FAQs', nivel: 'consulta' },
-  { id: 'playbook_da_tese', title: 'Playbook da tese', nivel: 'consulta' },
+  {
+    id: 'playbook_da_tese',
+    title: 'Ler o playbook da tese',
+    nivel: 'consulta',
+  },
   {
     id: 'registrar_qualificacao',
     title: 'Registrar qualificação',

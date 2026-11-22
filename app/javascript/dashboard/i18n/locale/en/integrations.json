@@ -664,7 +664,7 @@
       },
       "SCENARIOS": {
         "TITLE": "Skills",
-        "DESCRIPTION": "Situations the assistant knows how to handle: when to use each skill, how to handle it and which tools it uses.",
+        "DESCRIPTION": "Situations the assistant knows how to handle: when to use each skill, how to handle it and which AI actions it uses.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",
@@ -676,7 +676,7 @@
             "TITLE": "Example skills",
             "ADD": "Add all",
             "ADD_SINGLE": "Add this",
-            "TOOLS_USED": "Tools used:"
+            "TOOLS_USED": "Actions used:"
           },
           "NEW": {
             "CREATE": "Add a skill",
@@ -694,7 +694,7 @@
               },
               "INSTRUCTION": {
                 "LABEL": "How to handle",
-                "PLACEHOLDER": "Step by step of what the assistant does — type {'@'} to call a tool",
+                "PLACEHOLDER": "Step by step of what the assistant does — type {'@'} to call an action",
                 "ERROR": "Write how to handle this skill"
               },
               "CREATE": "Create",

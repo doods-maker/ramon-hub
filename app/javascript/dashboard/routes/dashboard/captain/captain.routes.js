@@ -202,6 +202,9 @@ export const routes = [
       name: 'captain_visao_geral_index',
       params: to.params,
     }),
+    // Inteligência num lugar só (2026-11-22): a área vive na Intranet, com as
+    // abas de navIntranet.js. O meta do pai vale para todas as filhas.
+    meta: { world: 'intranet' },
     children: [...assistantRoutes],
   },
 ];

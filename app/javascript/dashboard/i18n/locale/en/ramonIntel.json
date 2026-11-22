@@ -31,7 +31,10 @@
       },
       "USADA": "Used {n}×",
       "NUNCA_USADA": "Not used yet",
-      "USADA_AJUDA": "How many times the assistant used this FAQ in real conversations (Test does not count). Last time: {quando}."
+      "USADA_AJUDA": "How many times the assistant used this FAQ in real conversations (Test does not count). Last time: {quando}.",
+      "GERAR_DE_DOCUMENTO": "Generate FAQs from a text or page",
+      "DOCUMENTOS_USADOS": "documents already used",
+      "GERAR_AJUDA": "The hub drafts FAQs from the text; the AI only uses the ones you approve."
     },
     "SKILLS": {
       "ABA_LIGADAS": "On ({n})",
@@ -45,13 +48,13 @@
       "TESTAR": "Test this skill",
       "USO_30D": "Ran {n}× in 30 days",
       "SEM_USO_30D": "Did not run in 30 days",
-      "USO_AJUDA": "How many times this skill's tools ran in real conversations in the last 30 days. Test and test cases do not count; a tool used by two skills counts in both.",
+      "USO_AJUDA": "How many times this skill's actions ran in real conversations in the last 30 days. Test and test cases do not count; an action used by two skills counts in both.",
       "EXEMPLO_LABEL": "Sample message (shown in Test)",
       "EXEMPLO_PLACEHOLDER": "E.g.: What documents are missing in this case?",
       "PAPEIS_LABEL": "Roles that use it most (shown first in Test)"
     },
     "EXECUCOES": {
-      "ABA_FERRAMENTAS": "AI tools",
+      "ABA_FERRAMENTAS": "AI actions",
       "ABA_AGENTE": "Claude agent",
       "STATUS": {
         "ok": "OK",
@@ -99,7 +102,7 @@
       "NENHUMA_DO_TIPO": "No suggestion of this kind right now."
     },
     "TESTAR": {
-      "FERRAMENTAS": "Tools used:",
+      "FERRAMENTAS": "Actions used:",
       "FERRAMENTA_ERRO": "{nome} (error)",
       "SUGESTOES": "Try one (your role's first):",
       "CASO_PLACEHOLDER": "Test with the case… (lead name)",
@@ -110,7 +113,7 @@
         "PARAR": "Stop testing the profile",
         "SAIRIA": "Would go out on its own ({motivo})",
         "RASCUNHO": "Would become a draft ({motivo})",
-        "BLOQUEADAS": "Tool blocked (never): {nomes}",
+        "BLOQUEADAS": "Action blocked (never): {nomes}",
         "MOTIVO": {
           "antes_do_marcador": "stage before the marker",
           "acao": "{acao} is set to Draft",
@@ -121,7 +124,7 @@
           "pausa": "AI paused in the conversation",
           "fechado": "lead closed: drafts only",
           "fora_do_horario": "outside business hours",
-          "ferramenta_falhou": "a tool failed"
+          "ferramenta_falhou": "an action failed"
         }
       }
     },

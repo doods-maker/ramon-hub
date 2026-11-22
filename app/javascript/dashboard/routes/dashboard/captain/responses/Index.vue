@@ -19,6 +19,8 @@ import ResponsePageEmptyState from 'dashboard/components-next/captain/pageCompon
 import { SELECT } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { GERAL, SEM_TESE, rotulosDaFaq } from './teses';
 import TestarPergunta from './TestarPergunta.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 
 const router = useRouter();
 const route = useRoute();
@@ -187,6 +189,15 @@ const initializeFromURL = () => {
   fetchResponses(pageFromURL);
 };
 
+// Documento só serve para o hub escrever rascunhos de FAQ (ficam pendentes; a IA
+// usa só as aprovadas) — por isso a entrada mora aqui (Inteligência num lugar só).
+const { isAdmin } = useAdmin();
+const gerarDeDocumento = (novo = true) =>
+  router.push({
+    name: 'captain_assistants_documents_index',
+    query: novo ? { novo: '1' } : {},
+  });
+
 const navigateToPendingFAQs = () => {
   router.push({ name: 'captain_assistants_responses_pending' });
 };
@@ -276,6 +287,27 @@ onMounted(() => {
     </template>
 
     <template #controls>
+      <div class="flex items-center gap-3 mb-3">
+        <Button
+          v-if="isAdmin"
+          data-testid="faq-gerar-de-documento"
+          size="sm"
+          variant="outline"
+          icon="i-lucide-file-plus-2"
+          :label="$t('INTEL.FAQ.GERAR_DE_DOCUMENTO')"
+          @click="gerarDeDocumento()"
+        />
+        <button
+          type="button"
+          class="text-xs underline text-n-blue-11"
+          @click="gerarDeDocumento(false)"
+        >
+          {{ $t('INTEL.FAQ.DOCUMENTOS_USADOS') }}
+        </button>
+        <span v-if="isAdmin" class="text-xs text-n-slate-10">
+          {{ $t('INTEL.FAQ.GERAR_AJUDA') }}
+        </span>
+      </div>
       <TestarPergunta
         v-if="selectedAssistantId"
         :assistant-id="selectedAssistantId"

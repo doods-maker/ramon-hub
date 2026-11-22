@@ -22,10 +22,13 @@ import {
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { ferramentaInfo } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
 import VigiaBloco from './VigiaBloco.vue';
+import { usePainelAgentes } from 'dashboard/routes/dashboard/ramon/composables/usePainelAgentes';
 
 defineOptions({ name: 'CaptainVisaoGeral' });
 
 const { t } = useI18n();
+// Esteira de petições (agentes Claude na VPS) mora no Painel dos agentes; aqui só o atalho.
+const { url: painelAgentes } = usePainelAgentes();
 const router = useRouter();
 const { accountScopedRoute } = useAccount();
 const { isAdmin } = useAdmin();
@@ -123,6 +126,15 @@ const ir = (name, params = {}, query = {}) =>
       <p class="mt-1 text-sm text-n-slate-10">
         {{ t('CAPTAIN_RAMON.VISAO_GERAL.SUBTITLE') }}
       </p>
+      <router-link
+        v-if="painelAgentes"
+        data-testid="vg-painel-agentes"
+        :to="accountScopedRoute('ramon_agentes')"
+        class="inline-flex items-center gap-1 mt-2 text-xs underline text-n-blue-11"
+      >
+        <span class="i-lucide-bot size-3.5" />
+        {{ t('CAPTAIN_RAMON.VISAO_GERAL.PAINEL_AGENTES') }}
+      </router-link>
 
       <div
         v-if="error"

@@ -24,7 +24,8 @@ const isAssistantPresent = assistantId => {
 };
 
 const routeToView = (name, params) => {
-  router.replace({ name, params, replace: true });
+  // ramon: a query segue (ex.: ?tese= da aba FAQs da tela Teses).
+  router.replace({ name, params, query: route.query, replace: true });
 };
 
 const generateRouterParams = () => {
@@ -55,6 +56,7 @@ const rotaFinal = () => {
     ...ROTAS_DAS_FAQS, // Faq page, Document page
     'captain_assistants_scenarios_index', // Scenario page
     'captain_assistants_playground_index', // Playground page
+    'captain_assistants_casos_teste_index', // ramon: Casos de teste (aba de Testar)
     'captain_assistants_inboxes_index', // Inboxes page
     'captain_tools_index', // Tools page
     'captain_assistants_settings_index', // Settings page
