@@ -2887,7 +2887,18 @@
       "IA_HISTORICO": "History",
       "IA_EXECUCOES": "Runs",
       "IA_USO": "Usage and cost",
-      "IA_MUDANCAS": "AI changes"
+      "IA_MUDANCAS": "AI changes",
+      "CAMPANHAS_WHATSAPP": "WhatsApp campaigns",
+      "REL_AO_VIVO": "Live",
+      "REL_CONVERSAS": "Conversations",
+      "REL_CSAT": "Satisfaction (CSAT)",
+      "REL_SLA": "SLA",
+      "REL_BOT": "AI (bot)",
+      "ATENDIMENTO": "Service",
+      "REL_ATENDENTES": "Agents",
+      "REL_ETIQUETAS": "Labels",
+      "REL_CAIXAS": "Inboxes",
+      "REL_TIMES": "Teams"
     },
     "RAIL": {
       "INTERNOS": "Internal",
