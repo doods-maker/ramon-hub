@@ -15,9 +15,15 @@ module Ramon::Documentos::PassoAPasso
   JA_TEM = 'Já há uma imagem nesta resposta: só uma por mensagem.'.freeze
   SEM_IMAGEM = 'Sem imagem para este tema: explique os passos em texto.'.freeze
   FORA_DA_JANELA = 'Fora da janela de 24 h do WhatsApp: a imagem não vai.'.freeze
-  NAO_SAI = 'A imagem não vai: a conversa não está com a IA da etapa Documentos agora.'.freeze
+  NAO_SAI = 'A imagem não vai: agora a sua resposta não sairia sozinha (conversa com a equipe, rascunho ou fora da etapa do tema).'.freeze
 
   module_function
+
+  # A biblioteca de imagens é uma só: a do assistente da etapa Documentos (só ele tem a tela de envio). Quem chama a tool de
+  # outro assistente (Atendimento, assinatura do contrato) usa a mesma. @return [Integer, nil] id do assistente
+  def biblioteca_id(account)
+    account.lead_stages.where(is_won: true, label: Ramon::EtapaDeGanho::CONDUZIDAS).where.not(captain_assistant_id: nil).pick(:captain_assistant_id)
+  end
 
   # imagens: blobs do assistente (um por tema, o nome do arquivo sem extensão é o tema). estado: o do turno (tool_context.state).
   # @return [String] o que o agente fica sabendo (nada levanta: o turno segue)

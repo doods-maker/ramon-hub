@@ -17,11 +17,9 @@ class Captain::Tools::EnviarPassoAPassoTool < Captain::Tools::RamonBaseTool
 
   private
 
-  # A biblioteca é uma só: a do assistente da etapa Documentos (só ele tem a tela de envio das imagens). O de Atendimento usa
-  # a mesma na assinatura do contrato; conta sem etapa ligada fica com as do próprio assistente.
+  # Biblioteca da etapa Documentos (Ramon::Documentos::PassoAPasso.biblioteca_id); conta sem etapa ligada: a do próprio assistente.
   def biblioteca
-    id = @assistant.account.lead_stages.where(is_won: true, label: ::Ramon::EtapaDeGanho::CONDUZIDAS)
-                   .where.not(captain_assistant_id: nil).pick(:captain_assistant_id)
-    Captain::Assistant.find_by(id: id) || @assistant
+    conta = @assistant.account
+    conta.captain_assistants.find_by(id: ::Ramon::Documentos::PassoAPasso.biblioteca_id(conta)) || @assistant
   end
 end

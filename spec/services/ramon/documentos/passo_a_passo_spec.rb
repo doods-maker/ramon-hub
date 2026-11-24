@@ -76,16 +76,30 @@ RSpec.describe Ramon::Documentos::PassoAPasso do
     end
   end
 
-  describe '.preparar fora da etapa Documentos' do
-    it 'assinatura do contrato sai antes de Documentos (skill Fechar contrato); os outros temas não', :aggregate_failures do
-      expect(preparar('meu_inss_cnis', chave: nil)).to eq(described_class::NAO_SAI)
-      expect(preparar('zapsign_assinar', chave: nil)).to eq(described_class::PREPARADA)
+  describe '.preparar antes do contrato (lead numa etapa aberta, Perfil padrão: logística sai sozinha)' do
+    before do
+      aberta = account.lead_stages.find_by!(is_won: false, is_lost: false)
+      account.leads.find_by!(conversation_id: conversa.id).update_columns(lead_stage_id: aberta.id) # rubocop:disable Rails/SkipsModelValidations
+    end
+
+    it 'assinatura do contrato sai (skill Fechar contrato); os temas da etapa Documentos não', :aggregate_failures do
+      expect(preparar('meu_inss_cnis')).to eq(described_class::NAO_SAI)
+      expect(preparar('zapsign_assinar')).to eq(described_class::PREPARADA)
       expect(estado[described_class::ESTADO]).to eq(assinatura.id)
     end
 
-    it 'assinatura do contrato com a conversa já com uma pessoa: nada guardado' do
+    it 'conversa já com uma pessoa: nada guardado' do
       conversa.update!(status: :open)
-      expect(preparar('zapsign_assinar', chave: nil)).to eq(described_class::NAO_SAI)
+      expect(preparar('zapsign_assinar')).to eq(described_class::NAO_SAI)
+    end
+  end
+
+  describe '.biblioteca_id' do
+    it 'o assistente da etapa Documentos da conta; sem etapa ligada, nil', :aggregate_failures do
+      expect(described_class.biblioteca_id(account)).to be_nil
+      documentos.update_columns(captain_assistant_id: 4242) # rubocop:disable Rails/SkipsModelValidations
+      expect(described_class.biblioteca_id(account)).to eq(4242)
+      expect(described_class.biblioteca_id(create(:account))).to be_nil
     end
   end
 
