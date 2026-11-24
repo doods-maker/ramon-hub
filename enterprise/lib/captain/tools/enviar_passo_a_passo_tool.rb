@@ -12,6 +12,16 @@ class Captain::Tools::EnviarPassoAPassoTool < Captain::Tools::RamonBaseTool
     return SEM_LEAD if conversa.blank?
 
     log_tool_usage('enviar_passo_a_passo', { conversation_id: conversa.id, tema: tema })
-    ::Ramon::Documentos::PassoAPasso.preparar(conversa, tema.to_s, imagens: @assistant.passos_a_passo.blobs.to_a, estado: tool_context.state)
+    ::Ramon::Documentos::PassoAPasso.preparar(conversa, tema.to_s, imagens: biblioteca.passos_a_passo.blobs.to_a, estado: tool_context.state)
+  end
+
+  private
+
+  # A biblioteca é uma só: a do assistente da etapa Documentos (só ele tem a tela de envio das imagens). O de Atendimento usa
+  # a mesma na assinatura do contrato; conta sem etapa ligada fica com as do próprio assistente.
+  def biblioteca
+    id = @assistant.account.lead_stages.where(is_won: true, label: ::Ramon::EtapaDeGanho::CONDUZIDAS)
+                   .where.not(captain_assistant_id: nil).pick(:captain_assistant_id)
+    Captain::Assistant.find_by(id: id) || @assistant
   end
 end

@@ -19,6 +19,18 @@ RSpec.describe Captain::Tools::EnviarPassoAPassoTool, type: :model do
       .with(conversa, 'govbr_duas_etapas', imagens: [assistant.passos_a_passo.blobs.first], estado: tool_context.state)
   end
 
+  it 'usa a biblioteca do assistente da etapa Documentos, mesmo chamada pelo de Atendimento (assinatura do contrato)' do
+    documentos = create(:captain_assistant, account: account)
+    Ramon::EtapasPosVenda.criar!(account).first.update!(captain_assistant: documentos)
+    documentos.passos_a_passo.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'zapsign_assinar.png',
+                                     content_type: 'image/png')
+    allow(Ramon::Documentos::PassoAPasso).to receive(:preparar).and_return('ok')
+
+    tool.perform(tool_context, tema: 'zapsign_assinar')
+    expect(Ramon::Documentos::PassoAPasso).to have_received(:preparar)
+      .with(conversa, 'zapsign_assinar', imagens: [documentos.passos_a_passo.blobs.first], estado: tool_context.state)
+  end
+
   it 'sem conversa: não envia nada' do
     expect(tool.perform(Struct.new(:state).new({}), tema: 'govbr_duas_etapas')).to eq(described_class::SEM_LEAD)
   end

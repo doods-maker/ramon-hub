@@ -15,6 +15,10 @@ RSpec.describe Ramon::Documentos::PassoAPasso do
     ActiveStorage::Blob.create_and_upload!(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'meu_inss_cnis.png',
                                            content_type: 'image/png')
   end
+  let(:assinatura) do
+    ActiveStorage::Blob.create_and_upload!(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'zapsign_assinar.png',
+                                           content_type: 'image/png')
+  end
   let(:estado) { {} }
 
   before do
@@ -24,7 +28,7 @@ RSpec.describe Ramon::Documentos::PassoAPasso do
   end
 
   def preparar(tema, chave: 'on')
-    with_modified_env(RAMON_ETAPA_DOCUMENTOS: chave) { described_class.preparar(conversa, tema, imagens: [imagem], estado: estado) }
+    with_modified_env(RAMON_ETAPA_DOCUMENTOS: chave) { described_class.preparar(conversa, tema, imagens: [imagem, assinatura], estado: estado) }
   end
 
   def enviadas = conversa.messages.outgoing
@@ -69,6 +73,19 @@ RSpec.describe Ramon::Documentos::PassoAPasso do
       conversa.update!(status: :open)
       expect(preparar('meu_inss_cnis')).to eq(described_class::NAO_SAI)
       expect(estado).to be_empty
+    end
+  end
+
+  describe '.preparar fora da etapa Documentos' do
+    it 'assinatura do contrato sai antes de Documentos (skill Fechar contrato); os outros temas não', :aggregate_failures do
+      expect(preparar('meu_inss_cnis', chave: nil)).to eq(described_class::NAO_SAI)
+      expect(preparar('zapsign_assinar', chave: nil)).to eq(described_class::PREPARADA)
+      expect(estado[described_class::ESTADO]).to eq(assinatura.id)
+    end
+
+    it 'assinatura do contrato com a conversa já com uma pessoa: nada guardado' do
+      conversa.update!(status: :open)
+      expect(preparar('zapsign_assinar', chave: nil)).to eq(described_class::NAO_SAI)
     end
   end
 
