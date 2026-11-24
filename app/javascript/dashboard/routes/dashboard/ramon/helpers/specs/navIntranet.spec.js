@@ -82,6 +82,7 @@ describe('secoesIntranet', () => {
               'ramon_painel_time',
               'ramon_extrato',
               'ramon_relatorios',
+              'ramon_bi_escritorio',
               'ramon_tv',
             ],
           ],
@@ -141,6 +142,7 @@ describe('grupoDaRota', () => {
     ['ramon_conferencia_fases', 'clientes'],
     ['ramon_protocolo', 'clientes'],
     ['ramon_relatorios', 'resultados'],
+    ['ramon_bi_escritorio', 'resultados'],
     ['ramon_registro_acoes', 'configuracoes'],
   ])('%s acende %s', (rota, grupo) => {
     expect(grupoDaRota(rota, true).key).toBe(grupo);
