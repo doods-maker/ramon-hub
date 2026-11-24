@@ -96,6 +96,7 @@ const SECOES = [
           aba('ramon_painel_time', 'PAINEL_TIME'),
           aba('ramon_extrato', 'EXTRATO'),
           aba('ramon_relatorios', 'RELATORIOS', { adminOnly: true }),
+          aba('ramon_bi_escritorio', 'BI_ESCRITORIO', { adminOnly: true }),
           // Placar é standalone (fora do layout): a aba só navega até ele.
           aba('ramon_tv', 'TV', { adminOnly: true }),
         ],

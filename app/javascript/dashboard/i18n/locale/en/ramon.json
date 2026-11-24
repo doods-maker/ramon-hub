@@ -402,6 +402,15 @@
       "LOAD_ERROR": "Couldn't load the copilot suggestions",
       "RETRY": "Retry"
     },
+    "BI_ESCRITORIO": {
+      "TITULO": "BI do escritório",
+      "ENVIAR": "Enviar versão nova",
+      "ENVIANDO": "Enviando...",
+      "VAZIO": "Nenhuma versão enviada ainda. Envie o arquivo HTML do BI.",
+      "ENVIADO_EM": "Atualizado em {data} por {nome}",
+      "ERRO_TIPO": "Envie um arquivo .html.",
+      "ERRO_ENVIO": "Não foi possível enviar o arquivo. Tente de novo."
+    },
     "RELATORIOS": {
       "TITLE": "Reports",
       "SUBTITLE": "Commercial analysis — trends, pipeline, source and service",
@@ -2865,6 +2874,7 @@
       "POS_VENDA": "Post-sale",
       "TV": "TV scoreboard",
       "RELATORIOS": "Reports",
+      "BI_ESCRITORIO": "BI do escritório",
       "EXTRATO": "Variable pay statement",
       "PAINEL_TIME": "Team dashboard",
       "REGISTRO_ACOES": "Action log",

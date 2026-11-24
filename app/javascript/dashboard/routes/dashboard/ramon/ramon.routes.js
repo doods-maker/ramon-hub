@@ -167,6 +167,12 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/bi-escritorio'),
+    name: 'ramon_bi_escritorio',
+    component: () => import('./pages/BiEscritorio.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
+  {
     // Advogados e admin: o backend devolve só os casos que a pessoa pode validar.
     path: frontendURL('accounts/:accountId/ramon/validacao-apto'),
     name: 'ramon_validacao_apto',
