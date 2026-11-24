@@ -12,6 +12,14 @@ class Captain::Tools::EnviarPassoAPassoTool < Captain::Tools::RamonBaseTool
     return SEM_LEAD if conversa.blank?
 
     log_tool_usage('enviar_passo_a_passo', { conversation_id: conversa.id, tema: tema })
-    ::Ramon::Documentos::PassoAPasso.preparar(conversa, tema.to_s, imagens: @assistant.passos_a_passo.blobs.to_a, estado: tool_context.state)
+    ::Ramon::Documentos::PassoAPasso.preparar(conversa, tema.to_s, imagens: biblioteca.passos_a_passo.blobs.to_a, estado: tool_context.state)
+  end
+
+  private
+
+  # Biblioteca da etapa Documentos (Ramon::Documentos::PassoAPasso.biblioteca_id); conta sem etapa ligada: a do próprio assistente.
+  def biblioteca
+    conta = @assistant.account
+    conta.captain_assistants.find_by(id: ::Ramon::Documentos::PassoAPasso.biblioteca_id(conta)) || @assistant
   end
 end

@@ -5,7 +5,9 @@
 # As imagens ficam no assistente "Documentos" (ActiveStorage, nome do arquivo = tema; fora do git, o repo é público).
 module Ramon::Documentos::PassoAPasso
   TEMAS = %w[govbr_criar_conta govbr_recuperar_senha govbr_duas_etapas meu_inss_cnis meu_inss_laudos meu_inss_processo
-             meu_inss_decisao meu_inss_cat].freeze
+             meu_inss_decisao meu_inss_cat zapsign_assinar].freeze
+  # Sai fora da etapa Documentos: a assinatura do contrato vem antes dela (skill Fechar contrato do Atendimento, 24/11).
+  FORA_DA_ETAPA = %w[zapsign_assinar].freeze
   # Chave no estado do turno do agente (AgentRunnerService devolve como response['passo_a_passo']).
   ESTADO = :ramon_passo_a_passo
   PREPARADA = 'A imagem vai anexada à sua resposta, que sai como legenda dela numa mensagem só. Escreva a resposta curta, ' \
@@ -13,15 +15,21 @@ module Ramon::Documentos::PassoAPasso
   JA_TEM = 'Já há uma imagem nesta resposta: só uma por mensagem.'.freeze
   SEM_IMAGEM = 'Sem imagem para este tema: explique os passos em texto.'.freeze
   FORA_DA_JANELA = 'Fora da janela de 24 h do WhatsApp: a imagem não vai.'.freeze
-  NAO_SAI = 'A imagem não vai: a conversa não está com a IA da etapa Documentos agora.'.freeze
+  NAO_SAI = 'A imagem não vai: agora a sua resposta não sairia sozinha (conversa com a equipe, rascunho ou fora da etapa do tema).'.freeze
 
   module_function
+
+  # A biblioteca de imagens é uma só: a do assistente da etapa Documentos (só ele tem a tela de envio). Quem chama a tool de
+  # outro assistente (Atendimento, assinatura do contrato) usa a mesma. @return [Integer, nil] id do assistente
+  def biblioteca_id(account)
+    account.lead_stages.where(is_won: true, label: Ramon::EtapaDeGanho::CONDUZIDAS).where.not(captain_assistant_id: nil).pick(:captain_assistant_id)
+  end
 
   # imagens: blobs do assistente (um por tema, o nome do arquivo sem extensão é o tema). estado: o do turno (tool_context.state).
   # @return [String] o que o agente fica sabendo (nada levanta: o turno segue)
   def preparar(conversa, tema, imagens:, estado:)
     return "Tema desconhecido. Use um destes: #{TEMAS.join(', ')}." unless TEMAS.include?(tema)
-    return NAO_SAI unless sai_agora?(conversa)
+    return NAO_SAI unless sai_agora?(conversa, tema)
     return JA_TEM if estado[ESTADO]
 
     imagem = imagens.find { |blob| File.basename(blob.filename.to_s, '.*') == tema }
@@ -45,10 +53,11 @@ module Ramon::Documentos::PassoAPasso
     mensagem.save!
   end
 
-  # Conversa com a IA (pendente), lead em Documentos (chave ligada) e uma resposta da IA sairia sozinha agora (Pausa, fora
-  # do horário em rascunho etc.: Ramon::PerfilIa).
-  def sai_agora?(conversa)
-    conversa.pending? && Ramon::EtapaDeGanho.conversa_conduzida?(conversa) && Ramon::PerfilIa.de(conversa).logistica_sai_agora?
+  # Conversa com a IA (pendente), lead em Documentos (chave ligada; tema FORA_DA_ETAPA dispensa) e uma resposta da IA sairia
+  # sozinha agora (Pausa, fora do horário em rascunho etc.: Ramon::PerfilIa).
+  def sai_agora?(conversa, tema = nil)
+    conversa.pending? && (FORA_DA_ETAPA.include?(tema) || Ramon::EtapaDeGanho.conversa_conduzida?(conversa)) &&
+      Ramon::PerfilIa.de(conversa).logistica_sai_agora?
   end
 
   # Janela do canal (WhatsApp: 24 h desde a última mensagem do cliente; upload do portal não conta). A janela grátis de

@@ -186,7 +186,7 @@ assistentes:
 
           Se o lead pedir para retomar depois ("me chama semana que vem"), registre com
           [Criar tarefa de cadência](tool://criar_tarefa_esteira) usando a data que ele disse.
-      # passo a passo da assinatura: APROVADO pelo Eduardo 24/11 (…-treinamento-4juris-textos.md §5.1)
+      # passo a passo da assinatura (imagem zapsign_assinar): APROVADO pelo Eduardo 24/11 (…-treinamento-4juris-textos.md §5.1)
       - title: Fechar contrato
         description: O lead decidiu fechar — completar os dados do contrato e preparar contrato e caso, com aprovação humana (exceto no modo "sozinha até o contrato", em que o contrato sai na hora).
         exemplo: 'Decidi, quero fechar com vocês. Como faço?'
@@ -204,7 +204,9 @@ assistentes:
           Com o cadastro completo, chame [Preparar contrato no ZapSign](tool://preparar_contrato_zapsign).
           Se ela devolver "Contrato gerado" com um link, envie o link ao lead numa frase curta: é o
           contrato de honorários + procuração, para assinar pelo celular; explique o honorário mais uma
-          vez, com clareza. Na mesma mensagem, ofereça o passo a passo da FAQ "Como assino o contrato?". Nos outros casos ela só deixa uma sugestão pendente: diga ao lead que a
+          vez, com clareza. Na mesma mensagem, mande a imagem do passo a passo da assinatura com
+          [Imagem do passo a passo](tool://enviar_passo_a_passo), tema zapsign_assinar (a resposta vira a legenda: curta,
+          apontando para a imagem). Se a imagem não puder ir, ofereça o passo a passo da FAQ "Como assino o contrato?". Nos outros casos ela só deixa uma sugestão pendente: diga ao lead que a
           equipe vai enviar o contrato para assinatura pelo celular, explique o honorário mais uma vez e
           passe para humano. Nunca afirme que o contrato existe sem o link na mão. Depois que o humano
           confirmar que o caso foi fechado, [Abrir caso no AdvBox](tool://preparar_caso_advbox) — também
