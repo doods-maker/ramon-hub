@@ -38,11 +38,10 @@ assistentes:
       - codigo: A5
         grupo: auxilio-acidente
         fala: 'quanto vocês cobram?'
-        esperado: '[FAQ] só paga se receber; 30% dos atrasados + 3 parcelas; sem entrada. [NUNCA] desconto/parcelamento.'
+        # 24/11: preço = risco zero antes, número depois de explicar o direito (treinamento 4juris)
+        esperado: 'Pergunta de preço antes de entender o caso: responde o risco zero (só paga se receber, sem entrada, sem custo agora), diz que explica o valor depois de entender o caso e volta para a pergunta do roteiro. Sem o número ainda. [NUNCA] desconto/parcelamento.'
         criterios:
-          deve_usar: [faq_lookup]
-          deve_conter: ['/30\s*(%|por cento)/']
-          nao_pode_conter: ['desconto', '/parcelament|parcelar/']
+          nao_pode_conter: ['/30\s*(%|por cento)/', 'desconto', '/parcelament|parcelar/']
       - codigo: A6
         grupo: auxilio-acidente
         fala: 'vocês garantem que eu ganho?'
@@ -80,7 +79,7 @@ assistentes:
       - codigo: A13
         grupo: auxilio-acidente
         fala: 'vou pensar'
-        esperado: 'Acolhe sem pressão; lembra os 5 anos; combina retorno.'
+        esperado: 'Acolhe sem pressão e faz UMA pergunta para achar o motivo real (dúvida que ficou ou alguém com quem quer conversar antes). Não encerra a conversa nem empurra.'
       - codigo: A14
         grupo: auxilio-acidente
         fala: 'fechei, mandei os documentos, e agora?'
@@ -91,10 +90,35 @@ assistentes:
       - codigo: A15
         grupo: auxilio-acidente
         fala: 'vocês são de onde? é golpe?'
-        esperado: '[FAQ] Tubarão/SC, +20 anos, +10.000 benefícios, nunca pede dinheiro adiantado.'
+        esperado: '[FAQ] Concorda que é certo desconfiar; Tubarão/SC; nunca pede dinheiro adiantado, PIX ou taxa; canais oficiais para conferir (número, site ou Instagram).'
         criterios:
           deve_usar: [faq_lookup]
           deve_conter: ['Tubarão']
+      - codigo: A18
+        grupo: auxilio-acidente
+        fala: 'tá, já entendi que só pago se ganhar, mas qual é a porcentagem de vocês?'
+        esperado: '[FAQ] Segunda pergunta de preço: dá o número da tese na hora (30% dos atrasados + 3 benefícios), lembra que só paga se receber. [NUNCA] desconto/parcelamento.'
+        criterios:
+          deve_usar: [faq_lookup]
+          deve_conter: ['/30\s*(%|por cento)/']
+          nao_pode_conter: ['desconto', '/parcelament|parcelar/']
+      - codigo: A19
+        grupo: auxilio-acidente
+        fala: 'gostei, mas preciso falar com minha esposa antes'
+        esperado: 'Concorda que faz sentido decidir junto e oferece marcar a conversa com o advogado num horário em que a esposa possa participar. Sem pressão.'
+      - codigo: A20
+        grupo: auxilio-acidente
+        fala: 'prefiro um advogado aqui da minha cidade'
+        esperado: 'Concorda, ameniza e explica que o pedido no INSS e na Justiça é todo digital, resolve pelo celular sem viajar; escritório em Tubarão de portas abertas; termina com um próximo passo. Não fala mal de outros advogados.'
+      - codigo: A21
+        grupo: auxilio-acidente
+        fala: 'como eu tiro esse tal de CNIS?'
+        esperado: '[FAQ] Explica em poucas palavras como baixar pelo Meu INSS, com a opção que tem "remunerações". Mensagem curta.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: A22
+        grupo: auxilio-acidente
+        fala: 'já te contei tudo do acidente, quero conversar com o advogado'
+        esperado: 'Antes do convite, faz as duas perguntas (o que o problema mais atrapalha hoje e se decide com alguém) ou explica o direito em até 3 frases; o convite termina com a escolha entre dois horários reais, não com pergunta aberta. Nunca diz que a reunião está confirmada.'
       - codigo: A16
         grupo: auxilio-acidente
         fala: 'quero processar meu patrão por hora extra'
@@ -126,8 +150,9 @@ assistentes:
       - codigo: B4
         grupo: auxilio-doenca
         fala: 'quanto custa?'
-        esperado: '30% dos atrasados, mínimo 1 benefício, só se receber.'
-        criterios: { deve_conter: ['/30\s*(%|por cento)/'] }
+        # 24/11: preço = risco zero antes, número depois (igual ao A5)
+        esperado: 'Pergunta de preço antes de entender o caso: responde o risco zero (só paga se receber, sem custo agora) e volta para entender o caso. Sem o número ainda.'
+        criterios: { nao_pode_conter: ['/30\s*(%|por cento)/'] }
       - codigo: B5
         grupo: invalidez
         fala: 'eu ainda ando, então não sou inválido né'
