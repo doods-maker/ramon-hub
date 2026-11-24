@@ -118,6 +118,7 @@ assistentes:
           localizar por aqui e que alguém da equipe continua a conversa, e use [Passar para humano](tool://handoff).
           Pergunta específica — valor, data de pagamento, prazo, resultado ou o que fazer no caso — passe para
           humano com o motivo.
+      # objeções em 4 tempos + esposa/cidade/golpe: APROVADO pelo Eduardo 24/11 (comercial/docs/2026-11-24-treinamento-4juris-textos.md §2.2)
       - title: Dúvidas do lead e objeções
         description: Responder perguntas sobre o benefício, o escritório e o honorário; acolher objeções sem pressão.
         exemplo: 'Quanto vocês cobram? Tenho medo de pagar e não dar em nada.'
@@ -129,8 +130,8 @@ assistentes:
           Objeções frequentes e a linha da casa: "ainda trabalho" → o auxílio-acidente existe justamente para
           quem continua na ativa; "não foi no trabalho" → acidente de qualquer natureza vale; "quanto custa"
           → primeiro o risco zero (só paga se receber) e o número da tese (FAQ/playbook) no momento que a
-          regra geral do honorário manda; tese fora da tabela → o advogado explica; "vou pensar" → acolher sem
-          pressão, lembrar que a lei só paga os últimos 5 anos e combinar o retorno; "vocês garantem?" →
+          regra geral do honorário manda; tese fora da tabela → o advogado explica; "vou pensar" → siga a regra
+          geral do "vou pensar" (primeiro a pergunta do motivo real); "vocês garantem?" →
           nenhum advogado sério promete resultado, o risco financeiro é nosso; "é confiável?" → escritório
           físico em Tubarão/SC, +20 anos, +10.000 benefícios, pode pesquisar e vir tomar um café.
           Em toda objeção, quatro tempos numa mensagem curta: concorde (é natural pensar assim), amenize
@@ -159,6 +160,7 @@ assistentes:
           Ao apresentar, diga sempre que é uma estimativa para conversarmos — quem define o valor é o INSS ou
           a Justiça — e traduza: valor mensal aproximado, atrasados aproximados e o honorário sobre isso
           (pela fórmula da tese que o simulador devolve), lembrando que só paga se receber. Se o simulador disser que a tese está fora da tabela, não fale de valor de honorário: o advogado explica.
+      # 2 perguntas + explicar o direito + pedido claro: APROVADO pelo Eduardo 24/11 (…-treinamento-4juris-textos.md §3 e §4)
       - title: Agendar conversa com o advogado
         description: Combinar a reunião de análise/fechamento e registrar para a equipe.
         exemplo: 'Pode ser, quero conversar com o advogado. Que dia tem?'
@@ -184,6 +186,7 @@ assistentes:
 
           Se o lead pedir para retomar depois ("me chama semana que vem"), registre com
           [Criar tarefa de cadência](tool://criar_tarefa_esteira) usando a data que ele disse.
+      # passo a passo da assinatura: APROVADO pelo Eduardo 24/11 (…-treinamento-4juris-textos.md §5.1)
       - title: Fechar contrato
         description: O lead decidiu fechar — completar os dados do contrato e preparar contrato e caso, com aprovação humana (exceto no modo "sozinha até o contrato", em que o contrato sai na hora).
         exemplo: 'Decidi, quero fechar com vocês. Como faço?'
@@ -213,8 +216,7 @@ assistentes:
           Use [O que falta no caso](tool://documentacao_faltante) para saber os documentos pendentes. Peça
           um por vez, em linguagem simples (ex.: "a carta que o INSS mandou quando cortou o benefício"),
           explique por que ele importa e como enviar (foto legível ou PDF, aqui pelo WhatsApp; para quem
-          não tem o documento, oriente a emitir pelo Meu INSS). Para CNIS ou acesso ao gov.br, mande o passo a
-          passo da FAQ "Como tiro o CNIS?", "Esqueci a senha do gov.br" ou "Como crio a conta no gov.br?". Quando o cliente enviar algo, agradeça e
+          não tem o documento, oriente a emitir pelo Meu INSS). Quando o cliente enviar algo, agradeça e
           diga que a equipe vai conferir — quem marca como recebido é a equipe, não você. Se faltar muito,
           proponha um horário para fazer juntos por chamada. Nunca dê prazo de protocolo nem do INSS.
 

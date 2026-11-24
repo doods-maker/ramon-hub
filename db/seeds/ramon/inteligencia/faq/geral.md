@@ -39,10 +39,10 @@ Você faz bem em desconfiar: tem muito golpe usando nome de advogado. A gente nu
 É pelo celular: abre o link que a gente mandou, confere seus dados, desenha a assinatura com o dedo (parecida com a do seu documento) e confirma. Se travar em algum passo, me avisa aqui que eu te ajudo.
 
 ## Como tiro o CNIS?
-Pelo app Meu INSS, com a sua conta gov.br: entre, toque em "Extrato de Contribuição (CNIS)", depois em "Baixar Documento" e escolha a opção com a palavra "remunerações". Passo a passo com imagens: https://chat.ramonantonio.adv.br/tutoriais/meu-inss-cnis.png
+Pelo app Meu INSS, com a sua conta gov.br: entre, toque em "Extrato de Contribuição (CNIS)", depois em "Baixar Documento" e escolha a opção com a palavra "remunerações".
 
 ## Esqueci a senha do gov.br. E agora?
-Dá para recuperar pelo app ou site gov.br: digite o CPF, toque em "Esqueci minha senha" e faça o reconhecimento facial. Passo a passo com imagens: https://chat.ramonantonio.adv.br/tutoriais/govbr-recuperar-senha.png
+Dá para recuperar pelo app ou site gov.br: digite o CPF, toque em "Esqueci minha senha" e faça o reconhecimento facial.
 
 ## Como crio a conta no gov.br?
-Baixe o app gov.br, toque em "Entrar com gov.br", digite o CPF e siga o reconhecimento facial. Passo a passo com imagens: https://chat.ramonantonio.adv.br/tutoriais/govbr-criar-conta.png
+Baixe o app gov.br, toque em "Entrar com gov.br", digite o CPF e siga o reconhecimento facial.
